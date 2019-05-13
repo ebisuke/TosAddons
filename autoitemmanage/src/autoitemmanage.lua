@@ -19,7 +19,7 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc=""
 g.editindex = 0
 g.settframename="autoitemmanage"
-g.debug=true
+g.debug=false
 g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 --ライブラリ読み込み
 CHAT_SYSTEM("[AIM]loaded")
@@ -101,7 +101,6 @@ function AUTOITEMMANAGE_DBGOUT(msg)
                 local fd=io.open (g.logpath,"a")
                 fd:write(msg.."\n")
                 fd:flush()
-                
                 fd:close()
                 
             end
@@ -162,20 +161,26 @@ function AUTOITEMMANAGE_LOAD_SETTINGS()
             g.personalsettings.version=AUTOITEMMANAGE_DEFAULTPERSONALSETTINGS().version
         end
     end
-    AUTOITEMMANAGE_UPGRADE_SETTINGS()
-    AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
+    local upc=AUTOITEMMANAGE_UPGRADE_SETTINGS()
+    local upp=AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
+    -- ショートサーキット評価を回避するため、いったん変数に入れる
+    if upc or upp then
+        AUTOITEMMANAGE_SAVE_SETTINGS()
+    end
 end
 function AUTOITEMMANAGE_UPGRADE_SETTINGS()
+    local upgraded=false
     --1->2
     if(g.settings.version==nil or g.settings.version==1)then
         CHAT_SYSTEM("[AIM]共通設定のバージョンを更新しました 1->2")
 
         g.settings.version=2
+        upgraded=true
     end
-
+    return upgraded
 end
 function AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
-    
+    local upgraded=false
     --1->2
     if(g.personalsettings.version==nil or g.personalsettings.version==1)then
         CHAT_SYSTEM("[AIM]個人設定のバージョンを更新しました 1->2")
@@ -183,7 +188,9 @@ function AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
 
         g.personalsettings.unusecommon=g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()] or false
         g.personalsettings.version=2
+        upgraded=true
     end
+    return upgraded
 end
 
 --マップ読み込み時処理（1度だけ）
@@ -257,35 +264,57 @@ function AUTOITEMMANAGE_RESERVE_INIT(frame)
 end
 function AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE()
     --if (not g.foundasm) then
-    local frame=ui.GetFrame("accountwarehouse")
-    local btn=frame:CreateOrGetControl('button', 'showconfig', 400, 80, 100, 30)
-    btn:SetText("{ol}AIM設定")
-    btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
-    ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_ACCOUNT_WAREHOUSE()",0.5)
+    EBI_try_catch{
+        try=function()
+        AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
+
+        local frame=ui.GetFrame("accountwarehouse")
+        local btn=frame:CreateOrGetControl('button', 'showconfig', 400, 80, 100, 30)
+        btn:SetText("{ol}AIM設定")
+        btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
+        ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
+    end,
+    catch=function(error)
+        AUTOITEMMANAGE_ERROUT(error)       
+    end
+    }
     --end
 end
 function AUTOITEMMANAGE_ON_OPEN_WAREHOUSE()
     --if (not g.foundasm) then
     --ボタン登録
-    local frame=ui.GetFrame("warehouse")
-    local btn=frame:CreateOrGetControl('button', 'showconfig', 380, 80, 110, 30)
-    btn:SetText("{ol}AIM設定")
-    btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
-    ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_ACCOUNT_WAREHOUSE()",0.5)
+    EBI_try_catch{
+        try=function()
+            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
+
+            local frame=ui.GetFrame("warehouse")
+            local btn=frame:CreateOrGetControl('button', 'showconfig', 380, 80, 110, 30)
+            btn:SetText("{ol}AIM設定")
+            btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
+  
+            ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
+        end,
+        catch=function(error)
+            AUTOITEMMANAGE_ERROUT(error)       
+        end
+    }
+
     --end
 end
-function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
+function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
     EBI_try_catch {
         try = function()
-
+            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE_2')
 
             local cid = session.GetMySession():GetCID()
             local refer=AUTOITEMMANAGE_GETITEMSETTINGS()
             local sett=AUTOITEMMANAGE_GETSETTINGS()
             local accountmode=false
-            if(AUTOITEMMANAGE_ISENABLED()==false)then
+            if(AUTOITEMMANAGE_ISENABLED()==0)then
+                AUTOITEMMANAGE_DBGOUT('byebye')
                 return
             end
+            
             local frame= ui.GetFrame('accountwarehouse')
             if(frame:IsVisible()==1)then
                 --アカウント倉庫モード
@@ -327,7 +356,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
                                         local itemObj = GetIES(invItem:GetObject())
                                         -- 含まれるかチェック
 
-                                        AUTOITEMMANAGE_DBGOUT("bT"..tostring(vv.clsid))
+                                        --AUTOITEMMANAGE_DBGOUT("bT"..tostring(vv.clsid))
 
                                         --AUTOITEMMANAGE_DBGOUT(itemObj.ClassID)
                                         if itemObj.ClassID ~= nil and tonumber(itemObj.ClassID) == vv.clsid then
@@ -355,14 +384,14 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
                 for i,wd in ipairs(withdrawlist) do
                     
                     
-                    AUTOITEMMANAGE_DBGOUT('WT')
+                   
                     for j = 0, slotset:GetSlotCount() - 1 do
                         local slot = slotset:GetSlotByIndex(j)
                         if (slot ~= nil) then
                             local Icon = slot:GetIcon()
-                            AUTOITEMMANAGE_DBGOUT('WT2')
+
                             if (Icon ~= nil) then
-                                AUTOITEMMANAGE_DBGOUT('W3')
+
                                 local iconInfo = Icon:GetInfo()
                                 local invItem 
                                 if(accountmode)then
@@ -382,6 +411,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
                                         session.AddItemID(iconInfo:GetIESID(), withdrawcounthp)
                                         takeitems[#takeitems+1]={iesid=iconInfo:GetIESID(),count=withdrawcounthp}
                                         count = count + 1
+                                        AUTOITEMMANAGE_DBGOUT('ADD'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
                                     end
                                 end
                             end
@@ -419,7 +449,7 @@ function AUTOITEMMANAGE_FOREACH_TAKEITEM(iesid,count)
     local frame = ui.GetFrame("warehouse")
     item.TakeItemFromWarehouse(IT_WAREHOUSE, iesid, count, frame:GetUserIValue("HANDLE"));
 end
-function AUTOITEMMANAGE_WITHDRAW_FROM_ACCOUNT_WAREHOUSE()
+function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
     AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
 end
 function AUTOITEMMANAGE_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_JUMPER(frame)
@@ -433,8 +463,8 @@ function AUTOITEMMANAGE_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(frame)
     end
     --ポストスクリプト
     if (g.foundasm) then
-        ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_ACCOUNT_WAREHOUSE()",1)
-        --AUTOITEMMANAGE_WITHDRAW_FROM_ACCOUNT_WAREHOUSE()
+        ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()",1)
+        --AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
     end
 end
 function AUTOITEMMANAGE_SAVETOSTRUCTURE()
@@ -535,16 +565,16 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
             --checkbox 設定増えそうなら見直す
             local chkuseisenabled = frame:CreateOrGetControl('checkbox', 'isenabled', 20, 80, 100, 20)
             chkuseisenabled:SetText("{ol}このキャラで使用する")
-            chkuseisenabled:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHENGED_ENABLED")            
+            chkuseisenabled:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED_ENABLED")            
             local chkusepersonal = frame:CreateOrGetControl('checkbox', 'usepersonal', 20, 130, 100, 20)
             chkusepersonal:SetText("{ol}個人設定を使用する(解除で共通設定)")
-            chkusepersonal:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHENGED_USEPERSONAL")
+            chkusepersonal:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL")
             local chkenableaw = frame:CreateOrGetControl('checkbox', 'enableaw', 20, 110, 100, 20)
             chkenableaw:SetText("{ol}チーム倉庫")
-            chkenableaw:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHENGED")
+            chkenableaw:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED")
             local chkenablew = frame:CreateOrGetControl('checkbox', 'enablew', 150, 110, 100, 20)
             chkenablew:SetText("{ol}個人倉庫")
-            chkenablew:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHENGED")
+            chkenablew:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED")
             AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
         end,
         catch = function(error)
@@ -552,12 +582,12 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
         end
     }
 end
-function AUTOITEMMANAGE_ON_CHECKCHENGED(frame, slot, argstr, argnum)
+function AUTOITEMMANAGE_ON_CHECKCHANGED(frame, slot, argstr, argnum)
     if(frame~=nil)then
         AUTOITEMMANAGE_SAVE_SETTINGS()
     end
 end
-function AUTOITEMMANAGE_ON_CHECKCHENGED_ENABLED(frame, slot, argstr, argnum)
+function AUTOITEMMANAGE_ON_CHECKCHANGED_ENABLED(frame, slot, argstr, argnum)
     EBI_try_catch{
 
         try=function()
@@ -580,7 +610,7 @@ function AUTOITEMMANAGE_ON_CHECKCHENGED_ENABLED(frame, slot, argstr, argnum)
     }
 
 end
-function AUTOITEMMANAGE_ON_CHECKCHENGED_USEPERSONAL(frame, slot, argstr, argnum)
+function AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL(frame, slot, argstr, argnum)
     EBI_try_catch{
 
         try=function()
@@ -743,7 +773,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
     local chkenablew = GET_CHILD(frame,'enablew')
     chkenablew:SetCheck(sett.refillenablewarehouse or 0)
     local chkisenabled = GET_CHILD(frame,'isenabled')
-    if(sett.enabled==true)then
+    if(g.personalsettings.enabled==true)then
         chkisenabled:SetCheck(1)
     else
         chkisenabled:SetCheck(0)
@@ -751,7 +781,6 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
     AUTOITEMMANAGE_DBGOUT("LOAD_SUCCESSFUL")
 end
 
---表示非表示切り替え処理
 function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
     EBI_try_catch {
         try = function()
@@ -775,8 +804,9 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
             if iconInfo == nil or slot == nil or invitem == nil then
                 return
             end
-            local registered = true
+            local register = true
             local itemobj = GetIES(invitem:GetObject())
+            local isstackable = true
             if (iconInfo:GetIESID() == '0') then
                 if (liftParent:GetName() == 'pic') then
                     local parent = liftParent:GetParent()
@@ -802,10 +832,12 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                         CHAT_SYSTEM('それは登録できません')
                     else
                         slot:SetUserValue('clsid', tostring(obj.ClassID))
-
+                        if(obj.MaxStack <= 1) then
+                            isstackable=false
+                        end
                         --SET_SLOT_ITEM_CLS(slot, invitems)
                         --SET_SLOT_STYLESET(slot, invitems)
-                        registered = true
+                        register = true
                     end
                 else
                     CHAT_SYSTEM('そこからのドロップには対応していません')
@@ -818,14 +850,17 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                 else
                     slot:SetUserValue('clsid', tostring(itemobj.ClassID))
 
+                    if(itemobj.MaxStack <= 1) then
+                        isstackable=false
+                    end
                     --slot:SetUserValue("iesid",iconInfo:GetIESID())
                     --SET_SLOT_ITEM_CLS(slot, invitems)
                     --SET_SLOT_STYLESET(slot, invitems)
-                    registered = true
+                    register = true
                 end
             end
-            if registered then
-                AUTOITEMMANAGE_CHANGECOUNT(frame, count, slot:GetSlotIndex())
+            if register then
+                AUTOITEMMANAGE_CHANGECOUNT(frame, count, slot:GetSlotIndex(),isstackable)
             end
         end,
         catch = function(error)
@@ -833,10 +868,13 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
         end
     }
 end
-function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index)
+function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index,isstackable)
     g.editindex = index
-
-    INPUT_NUMBER_BOX(ui.GetFrame(g.settframename), '補充する数を入力', 'AUTOITEMMANAGE_DETERMINE', 1, 1, 32767, nil, nil, 1)
+    local maxcount=32767
+    if(isstackable==false)then
+        maxcount=1
+    end
+    INPUT_NUMBER_BOX(ui.GetFrame(g.settframename), '補充する数を入力', 'AUTOITEMMANAGE_DETERMINE', 1, 1, maxcount, nil, nil, 1)
 end
 function AUTOITEMMANAGE_DETERMINE(frame, cnt)
     --数量を書き換える
@@ -846,6 +884,21 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
             local obj = frame:GetChild('slt')
             local slotset = tolua.cast(obj, 'ui::CSlotSet')
             local slot = tolua.cast(slotset:GetSlotByIndex(g.editindex), 'ui::CSlot')
+            local clsid=tonumber(slot:GetUserValue('clsid'))
+
+            for i = 0,slotset:GetSlotCount()-1 do
+                if(i~=g.editindex)then
+                    local sslot = tolua.cast(slotset:GetSlotByIndex(i), 'ui::CSlot')
+                    if(sslot~=nil)then
+                        local sclsid=tonumber(sslot:GetUserValue('clsid'))
+                        if(sclsid==clsid)then
+                            -- 消す
+                            AUTOITEMMANAGE_CLEANSINGSLOT(sslot)
+                        end
+                    end
+                end
+            end
+
             slot:SetUserValue('count', tonumber(cnt))
             local invItem = session.GetInvItemByType(tonumber(slot:GetUserValue('clsid')))
             local obj = GetIES(invItem:GetObject())

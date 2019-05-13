@@ -1,0 +1,30 @@
+[
+    
+  {
+    "name" : "Developer Console Ex",
+    "file" : "masterplace",
+    "extension" : "ipf",
+    "fileVersion" : "v1.0.0",
+    "releaseTag" : "v1.0.0",
+    "unicode" : "📖",
+    "description" : "DeveloperConsoleの私的改造版です。ITOSのそれとは競合します。",
+    "tags" : [
+      "development",
+      "developerconsole"
+    ]
+  },
+  {
+    "name" : "AutoItemManage",
+    "file" : "autoitemmanage",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "v0.0.1",
+    "unicode" : "📖",
+    "description" : "倉庫から自動でアイテムを補充します。",
+    "tags" : [
+      "development",
+      "developerconsole"
+    ]
+  },
+
+]
