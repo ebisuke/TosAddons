@@ -13,14 +13,18 @@ local g = _G['ADDONS'][author][addonName]
 --設定ファイル保存先
 --nil=ALPHA1
 --1=ALPHA1-2
---2=ALPHA3,0.0.1
+--2=ALPHA3,0.0.1,ALPHA4,0.0.2
 g.version=2
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc=""
 g.editindex = 0
-g.settframename="autoitemmanage"
+g.framename="autoitemmanage"
 g.debug=false
+g.slotsize={48,48}
 g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
+g.isediting=false
+g.editkeydown=false
+
 --ライブラリ読み込み
 CHAT_SYSTEM("[AIM]loaded")
 local acutil  = require('acutil')
@@ -197,7 +201,7 @@ end
 function AUTOITEMMANAGE_ON_INIT(addon, frame)
     EBI_try_catch {
         try = function()
-            frame = ui.GetFrame(g.settframename)
+            frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
             g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(AUTOITEMMANAGE_GETCID()))
@@ -210,7 +214,7 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
                
                 g.loaded = true
             end
-            --acutil.addSysIcon(g.settframename, 'sysmenu_sys', g.settframename, 'AUTOITEMMANAGE_TOGGLE_FRAME')
+            --acutil.addSysIcon(g.framename, 'sysmenu_sys', g.framename, 'AUTOITEMMANAGE_TOGGLE_FRAME')
             --設定ファイル保存処理
             --AUTOITEMMANAGE_SAVE_SETTINGS()
             --メッセージ受信登録処理
@@ -468,7 +472,7 @@ function AUTOITEMMANAGE_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(frame)
     end
 end
 function AUTOITEMMANAGE_SAVETOSTRUCTURE()
-    local frame = ui.GetFrame(g.settframename)
+    local frame = ui.GetFrame(g.framename)
     local sett=AUTOITEMMANAGE_GETSETTINGS()
     if (frame == nil) then
         return
@@ -485,7 +489,7 @@ function AUTOITEMMANAGE_SAVETOSTRUCTURE()
             local val = tonumber(slot:GetUserValue('clsid'))
             local amount = tonumber(slot:GetUserValue('count'))
             local data
-            if (val == nil or amount == nil or amount == 0) then
+            if (val == nil or amount == nil or amount == 0 ) then
                 data = {}
             else
                 AUTOITEMMANAGE_DBGOUT('save'..tostring(val))
@@ -510,12 +514,13 @@ function AUTOITEMMANAGE_SAVETOSTRUCTURE()
 end
 
 function AUTOITEMMANAGE_TOGGLE_FRAME()
-    ui.ToggleFrame(g.settframename)
+    ui.ToggleFrame(g.framename)
     --AUTOITEMMANAGE_SAVE_SETTINGS()
 end
 
 function AUTOITEMMANAGE_CLOSE()
-    ui.GetFrame(g.settframename):ShowWindow(0)
+    ui.GetFrame(g.framename):ShowWindow(0)
+    AUTOITEMMANAGE_CLEAN_EDIT()
     --AUTOITEMMANAGE_SAVE_SETTINGS()
 end
 
@@ -523,7 +528,7 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
     EBI_try_catch {
         try = function()
             if(frame==nil)then
-                frame=ui.GetFrame(g.settframename)
+                frame=ui.GetFrame(g.framename)
             end
             AUTOITEMMANAGE_DBGOUT("INIT FRAME")
 
@@ -546,7 +551,7 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
             local slotset = tolua.cast(obj, 'ui::CSlotSet')
 
             slotset:SetColRow(7, 5)
-            slotset:SetSlotSize(48, 48)
+            slotset:SetSlotSize(g.slotsize[1], g.slotsize[2])
             slotset:EnableDrag(0)
             slotset:EnableDrop(1)
             slotset:EnablePop(1)
@@ -559,9 +564,13 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
                 local slot = slotset:GetSlotByIndex(i)
 
                 slot:SetEventScript(ui.RBUTTONDOWN, 'AUTOITEMMANAGE_ON_RCLICK')
-                slot:SetEventScriptArgNumber(ui.RBUTTONDOWN, i)
-            end
 
+                slot:SetEventScriptArgNumber(ui.RBUTTONDOWN, i)
+                
+            end
+            local btncopyfromteam = frame:CreateOrGetControl('button','btncopyfromteam',220,70,30,40)
+            btncopyfromteam:SetText("チーム設定コピー")
+            btncopyfromteam:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CLICK_COPYFROMTEAM")      
             --checkbox 設定増えそうなら見直す
             local chkuseisenabled = frame:CreateOrGetControl('checkbox', 'isenabled', 20, 80, 100, 20)
             chkuseisenabled:SetText("{ol}このキャラで使用する")
@@ -586,6 +595,21 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED(frame, slot, argstr, argnum)
     if(frame~=nil)then
         AUTOITEMMANAGE_SAVE_SETTINGS()
     end
+end
+function AUTOITEMMANAGE_ON_CLICK_COPYFROMTEAM(frame, slot, argstr, argnum)
+    --確認画面を出す
+    imcSound.PlaySoundEvent('button_click_big_2');
+    WARNINGMSGBOX_FRAME_OPEN("{ol}アイテム設定をチーム設定からコピーします。{nl}既存の個人アイテム設定は上書きされ削除されます。{nl}よろしいですか？",
+     'AUTOITEMMANAGE_APPROVE_COPYFROMTEAM', 'None');
+end
+function AUTOITEMMANAGE_APPROVE_COPYFROMTEAM()
+    --現在地を保存
+    AUTOITEMMANAGE_SAVETOSTRUCTURE()
+    --コピー
+    g.personalsettings.refills={unpack(g.settings.itemmanage.refills)}
+    AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+    AUTOITEMMANAGE_SAVE_SETTINGS()
+    CHAT_SYSTEM("[AIM]個人設定をチーム設定からコピーしました")
 end
 function AUTOITEMMANAGE_ON_CHECKCHANGED_ENABLED(frame, slot, argstr, argnum)
     EBI_try_catch{
@@ -614,6 +638,7 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL(frame, slot, argstr, argnum)
     EBI_try_catch{
 
         try=function()
+            AUTOITEMMANAGE_CLEAN_EDIT()
             AUTOITEMMANAGE_SAVETOSTRUCTURE()
 
             local chkusepersonal = GET_CHILD(frame, 'usepersonal')
@@ -637,15 +662,22 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL(frame, slot, argstr, argnum)
     }
 
 end
+
 function AUTOITEMMANAGE_ON_RCLICK(frame, slot, argstr, argnum)
     EBI_try_catch {
         try = function()
+            AUTOITEMMANAGE_CLEAN_EDIT()
             if keyboard.IsKeyPressed('LSHIFT') == 1 then
                 --削除モード
+                imcSound.PlaySoundEvent('button_click_big_2');
                 slot:SetUserValue('count', nil)
                 slot:SetUserValue('clsid', nil)
                 AUTOITEMMANAGE_CLEANSING()
                 AUTOITEMMANAGE_SAVE_SETTINGS()
+            else
+                imcSound.PlaySoundEvent('inven_arrange');
+                AUTOITEMMANAGE_DBGOUT("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")")
+                ReserveScript("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")",0.05)
             end
         end,
         catch = function(error)
@@ -653,6 +685,215 @@ function AUTOITEMMANAGE_ON_RCLICK(frame, slot, argstr, argnum)
 
         end
     }
+end
+function AUTOITEMMANAGE_CHANGENUMBER(argnum)
+    EBI_try_catch {
+        try = function()
+            --一旦初期値を思い出す
+            AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+            local frame=ui.GetFrame(g.framename)
+            local slotseto=frame:GetChild("slt")
+            local slotset=tolua.cast(slotseto,"ui::CSlotSet")
+            local index=argnum
+            local slot=slotset:GetSlotByIndex(index)
+
+            --データがなければ無視
+            local clsid=tonumber(slot:GetUserValue('clsid'))
+            if(clsid==nil or clsid==0)then
+                return
+            end
+            imcSound.PlaySoundEvent('button_cursor_over_3');
+            --RCLICKイベント中にスロットセットをいじってはいけない？
+            AUTOITEMMANAGE_DBGOUT("SLOT NUM EDIT")
+            --local slotset=frame
+            for i=0,slotset:GetSlotCount()-1 do
+                local curslot=slotset:GetSlotByIndex(i)
+                curslot:RemoveChild("numberinput")
+            end
+            AUTOITEMMANAGE_DBGOUT("DONE-")
+            --入力ボックスを出してみる
+            
+            --slot:SetText("")
+            --slot:SetColorTone("FFAAFFAA")
+            slot:SetSkinName("slot")
+            local sloedit=slot:CreateOrGetControl("edit","numberinput",0,0,g.slotsize[1],g.slotsize[2]/2)
+            local slo = tolua.cast(sloedit, 'ui::CEditControl')
+            --slo:SetTempText(tonumber(slot:GetUserValue('count'))or 0)
+            --slo:SetTempText(">")
+            slo:SetText("")
+            slo:SetNumberMode(1)
+            slo:SetEnableEditTag(1);
+            slo:SetMinNumber(1)
+            slo:SetMaxNumber(32767)
+            slo:SetSkinName("None")
+            slo:SetFontName('green_20_ol')
+            slo:SetGravity(ui.RIGHT, ui.TOP);
+            slo:SetEventScript(ui.ENTERKEY,"AUTOITEMMANAGE_ON_ENTER")
+            slo:SetEventScriptArgNumber(ui.ENTERKEY,index)
+            slo:SetUserValue("index",tostring(index))
+            slo:SetTextAlign("right", "top");
+            --slo:SetLostFocusingScp("AUTOITEMMANAGE_LOSTFOCUS")
+            ui.SetEscapeScp("AUTOITEMMANAGE_CLEAN_EDIT")
+            --slo:SetEventScriptArgNumber(ui.LOSTFOCUS,index)
+            slo:AcquireFocus()
+            AUTOITEMMANAGE_DBGOUT("DONE")
+            local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
+            timer:SetUpdateScript("AUTOITEMMANAGE_EDIT_KEYCHECK");
+            timer:Start(0.01);
+            g.isediting=true
+    end,
+    catch = function(error)
+        AUTOITEMMANAGE_ERROUT(error)
+
+    end
+    }
+end
+function AUTOITEMMANAGE_EDIT_KEYCHECK()
+    EBI_try_catch {
+    try=function()
+        if(g.isediting)then
+            if(g.editkeydown==false)then
+                if keyboard.IsKeyPressed('ESCAPE') == 1 then
+                    AUTOITEMMANAGE_CLEAN_EDIT()
+                    
+                elseif(1==keyboard.IsKeyPressed("TAB"))then
+                    AUTOITEMMANAGE_DBGOUT("tabbed")
+                    --タブ押した
+                    g.editkeydown=true
+                    --とりま今のを確定
+                    local current=AUTOITEMMANAGE_DETERMINENUMBER()
+                    local frame=ui.GetFrame(g.framename)
+                    local slotseto=frame:GetChild("slt")
+                    local slotset=tolua.cast(slotseto,"ui::CSlotSet")
+                    imcSound.PlaySoundEvent('icon_pick_up');
+                    --次へ
+                    if(1==keyboard.IsKeyPressed("LSHIFT"))then
+                        --リバース
+                        local rv=current-1
+                        while rv>=0 do
+                            i=rv
+                            if(i<0)then
+                                break
+                            end
+                            local slot=slotset:GetSlotByIndex(i)
+                            local clsid=tonumber(slot:GetUserValue("clsid"))
+                            if(clsid~=nil and clsid~=0)then
+                                --これを編集
+                                AUTOITEMMANAGE_CHANGENUMBER(i)
+                                break
+                            end
+                            rv=rv-1
+                        end
+                    else
+                        --順方向
+                        for i=current+1,slotset:GetSlotCount()-1 do
+                            local slot=slotset:GetSlotByIndex(i)
+                            local clsid=tonumber(slot:GetUserValue("clsid"))
+                            if(clsid~=nil and clsid~=0)then
+                                --これを編集
+                                AUTOITEMMANAGE_CHANGENUMBER(i)
+                                break
+                            end
+                        end
+                    end      
+                end
+            else    
+                if(1~=keyboard.IsKeyPressed("TAB"))then
+                    --おわり
+                    g.editkeydown=false
+                end
+            end
+        end
+    end,
+    catch = function(error)
+        AUTOITEMMANAGE_ERROUT(error)
+    end
+    }
+end
+function AUTOITEMMANAGE_CLEAN_EDIT()
+    EBI_try_catch {
+    try=function()
+        if(g.isediting)then
+            ui.SetEscapeScp("");
+            AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+            local frame=ui.GetFrame(g.framename)
+            local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
+            timer:Stop();
+            g.isediting=false;
+            imcSound.PlaySoundEvent('icon_pick_up');
+        end
+    end,
+    catch = function(error)
+        AUTOITEMMANAGE_ERROUT(error)
+    end
+    }
+end
+-- function AUTOITEMMANAGE_ON_ENTER(frame, ctrl, argstr, argnum)
+--     EBI_try_catch {
+--         try = function()
+--         local frame=ui.GetFrame(g.framename)
+--         local index=argnum
+--         local count=tonumber(ctrl:GetText())
+--         local slotseto=frame:GetChild("slt")
+--         local slotset=tolua.cast(slotseto,"ui::CSlotSet")
+--         local slot=slotset:GetSlotByIndex(index)
+--         --有効値か検証
+--         if(count~=nil and count>0)then
+--             --更新
+--             slot:SetUserValue("count",tostring(count))
+--         end
+--         slot:RemoveChild("numberinput")
+--         --更新
+--         AUTOITEMMANAGE_SAVETOSTRUCTURE()
+--         AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+
+--     end,
+--     catch = function(error)
+--         AUTOITEMMANAGE_ERROUT(error)
+
+--     end
+--     }
+
+-- end
+function AUTOITEMMANAGE_ON_ENTER(frame, ctrl, argstr, argnum)
+    --チャット画面を出さないよう遅延させる
+    ReserveScript("AUTOITEMMANAGE_DETERMINENUMBER("..tostring(argnum)..")",0.05)
+end
+function AUTOITEMMANAGE_DETERMINENUMBER(argnum)
+
+    EBI_try_catch {
+        try = function()
+            local frame=ui.GetFrame(g.framename)
+            local edit=GET_CHILD_RECURSIVELY(frame,"numberinput")
+            if(argnum==nil)then
+               
+                argnum=tonumber(edit:GetUserValue("index"))
+            end
+            local count=tonumber(edit:GetText())
+            local slotseto=frame:GetChild("slt")
+            local slotset=tolua.cast(slotseto,"ui::CSlotSet")
+            local slot=slotset:GetSlotByIndex(argnum)
+            --有効値か検証
+            if(count>0)then
+                --更新
+                slot:SetUserValue("count",tostring(count))
+            end
+            slot:RemoveChild("numberinput")
+            --更新
+            AUTOITEMMANAGE_SAVETOSTRUCTURE()
+            AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+
+        end,
+        catch = function(error)
+            AUTOITEMMANAGE_ERROUT(error)
+
+        end
+    }
+    AUTOITEMMANAGE_CLEAN_EDIT()
+    return argnum
+end
+function AUTOITEMMANAGE_LOSTFOCUS()
+    AUTOITEMMANAGE_CLEAN_EDIT()
 end
 function AUTOITEMMANAGE_ISUSEPERSONALSETTINGS()
 
@@ -712,7 +953,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
 
     if(frame==nil)then
         AUTOITEMMANAGE_DBGOUT('GETFRAME')
-        frame=ui.GetFrame(g.settframename)
+        frame=ui.GetFrame(g.framename)
     end
     AUTOITEMMANAGE_DBGOUT('LOADING3')
     
@@ -766,6 +1007,12 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
             end
         }
     end
+    local btncopyfromteam = GET_CHILD(frame,'btncopyfromteam')
+    if(AUTOITEMMANAGE_ISUSEPERSONALSETTINGS()==1)then
+        btncopyfromteam:SetVisible(1)
+    else
+        btncopyfromteam:SetVisible(0)
+    end
     local chkusepersonal = GET_CHILD(frame, 'usepersonal')
     chkusepersonal:SetCheck(AUTOITEMMANAGE_ISUSEPERSONALSETTINGS())
     local chkenableaw = GET_CHILD(frame,'enableaw')
@@ -784,6 +1031,9 @@ end
 function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
     EBI_try_catch {
         try = function()
+            if(g.isediting==true)then
+                CHAT_SYSTEM("数量の編集中はドロップできません")
+            end
             AUTOITEMMANAGE_DBGOUT('dropped')
             local liftIcon = ui.GetLiftIcon()
             local liftParent = liftIcon:GetParent()
@@ -874,7 +1124,7 @@ function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index,isstackable)
     if(isstackable==false)then
         maxcount=1
     end
-    INPUT_NUMBER_BOX(ui.GetFrame(g.settframename), '補充する数を入力', 'AUTOITEMMANAGE_DETERMINE', 1, 1, maxcount, nil, nil, 1)
+    INPUT_NUMBER_BOX(ui.GetFrame(g.framename), '補充する数を入力', 'AUTOITEMMANAGE_DETERMINE', 1, 1, maxcount, nil, nil, 1)
 end
 function AUTOITEMMANAGE_DETERMINE(frame, cnt)
     --数量を書き換える
@@ -915,7 +1165,7 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
     }
 end
 function AUTOITEMMANAGE_CLEANSING()
-    local frame = ui.GetFrame(g.settframename)
+    local frame = ui.GetFrame(g.framename)
     local obj = frame:GetChild('slt')
     local slotset = tolua.cast(obj, 'ui::CSlotSet')
 
@@ -941,6 +1191,7 @@ function AUTOITEMMANAGE_TOGGLE_FRAME()
         g.settings.enable = true
     else
         --表示->非表示
+        AUTOITEMMANAGE_CLEAN_EDIT()
         g.frame:ShowWindow(0)
         g.settings.show = false
     end
