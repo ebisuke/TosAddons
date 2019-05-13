@@ -24,6 +24,7 @@ g.slotsize={48,48}
 g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 g.isediting=false
 g.editkeydown=false
+
 --ライブラリ読み込み
 CHAT_SYSTEM("[AIM]loaded")
 local acutil  = require('acutil')
@@ -565,9 +566,11 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
                 slot:SetEventScript(ui.RBUTTONDOWN, 'AUTOITEMMANAGE_ON_RCLICK')
 
                 slot:SetEventScriptArgNumber(ui.RBUTTONDOWN, i)
-
+                
             end
-
+            local btncopyfromteam = frame:CreateOrGetControl('button','btncopyfromteam',220,70,30,40)
+            btncopyfromteam:SetText("チーム設定コピー")
+            btncopyfromteam:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CLICK_COPYFROMTEAM")      
             --checkbox 設定増えそうなら見直す
             local chkuseisenabled = frame:CreateOrGetControl('checkbox', 'isenabled', 20, 80, 100, 20)
             chkuseisenabled:SetText("{ol}このキャラで使用する")
@@ -592,6 +595,21 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED(frame, slot, argstr, argnum)
     if(frame~=nil)then
         AUTOITEMMANAGE_SAVE_SETTINGS()
     end
+end
+function AUTOITEMMANAGE_ON_CLICK_COPYFROMTEAM(frame, slot, argstr, argnum)
+    --確認画面を出す
+    imcSound.PlaySoundEvent('button_click_big_2');
+    WARNINGMSGBOX_FRAME_OPEN("{ol}アイテム設定をチーム設定からコピーします。{nl}既存の個人アイテム設定は上書きされ削除されます。{nl}よろしいですか？",
+     'AUTOITEMMANAGE_APPROVE_COPYFROMTEAM', 'None');
+end
+function AUTOITEMMANAGE_APPROVE_COPYFROMTEAM()
+    --現在地を保存
+    AUTOITEMMANAGE_SAVETOSTRUCTURE()
+    --コピー
+    g.personalsettings.refills={unpack(g.settings.itemmanage.refills)}
+    AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+    AUTOITEMMANAGE_SAVE_SETTINGS()
+    CHAT_SYSTEM("[AIM]個人設定をチーム設定からコピーしました")
 end
 function AUTOITEMMANAGE_ON_CHECKCHANGED_ENABLED(frame, slot, argstr, argnum)
     EBI_try_catch{
@@ -651,12 +669,13 @@ function AUTOITEMMANAGE_ON_RCLICK(frame, slot, argstr, argnum)
             AUTOITEMMANAGE_CLEAN_EDIT()
             if keyboard.IsKeyPressed('LSHIFT') == 1 then
                 --削除モード
-
+                imcSound.PlaySoundEvent('button_click_big_2');
                 slot:SetUserValue('count', nil)
                 slot:SetUserValue('clsid', nil)
                 AUTOITEMMANAGE_CLEANSING()
                 AUTOITEMMANAGE_SAVE_SETTINGS()
             else
+                imcSound.PlaySoundEvent('inven_arrange');
                 AUTOITEMMANAGE_DBGOUT("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")")
                 ReserveScript("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")",0.05)
             end
@@ -683,7 +702,7 @@ function AUTOITEMMANAGE_CHANGENUMBER(argnum)
             if(clsid==nil or clsid==0)then
                 return
             end
-
+            imcSound.PlaySoundEvent('button_cursor_over_3');
             --RCLICKイベント中にスロットセットをいじってはいけない？
             AUTOITEMMANAGE_DBGOUT("SLOT NUM EDIT")
             --local slotset=frame
@@ -736,6 +755,7 @@ function AUTOITEMMANAGE_EDIT_KEYCHECK()
             if(g.editkeydown==false)then
                 if keyboard.IsKeyPressed('ESCAPE') == 1 then
                     AUTOITEMMANAGE_CLEAN_EDIT()
+                    
                 elseif(1==keyboard.IsKeyPressed("TAB"))then
                     AUTOITEMMANAGE_DBGOUT("tabbed")
                     --タブ押した
@@ -745,6 +765,7 @@ function AUTOITEMMANAGE_EDIT_KEYCHECK()
                     local frame=ui.GetFrame(g.framename)
                     local slotseto=frame:GetChild("slt")
                     local slotset=tolua.cast(slotseto,"ui::CSlotSet")
+                    imcSound.PlaySoundEvent('icon_pick_up');
                     --次へ
                     if(1==keyboard.IsKeyPressed("LSHIFT"))then
                         --リバース
@@ -799,6 +820,7 @@ function AUTOITEMMANAGE_CLEAN_EDIT()
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:Stop();
             g.isediting=false;
+            imcSound.PlaySoundEvent('icon_pick_up');
         end
     end,
     catch = function(error)
@@ -984,6 +1006,12 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                 AUTOITEMMANAGE_ERROUT(error)
             end
         }
+    end
+    local btncopyfromteam = GET_CHILD(frame,'btncopyfromteam')
+    if(AUTOITEMMANAGE_ISUSEPERSONALSETTINGS()==1)then
+        btncopyfromteam:SetVisible(1)
+    else
+        btncopyfromteam:SetVisible(0)
     end
     local chkusepersonal = GET_CHILD(frame, 'usepersonal')
     chkusepersonal:SetCheck(AUTOITEMMANAGE_ISUSEPERSONALSETTINGS())
