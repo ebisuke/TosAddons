@@ -37,7 +37,7 @@ function EBI_try_catch(what)
     return result
 end
 function EBI_IsNoneOrNil(val)
-    return val == nil or val == "None"
+    return val == nil or val == "None" or val=="nil"
 end
 function AUTOITEMMANAGE_DEFAULTSETTINGS()
     return {
@@ -289,7 +289,7 @@ function AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE()
     --if (not g.foundasm) then
     EBI_try_catch{
         try=function()
-            ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",0.5)
+            ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",1)
             AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
 
             local frame=ui.GetFrame("accountwarehouse")
@@ -309,7 +309,7 @@ function AUTOITEMMANAGE_ON_OPEN_WAREHOUSE()
     --ボタン登録
     EBI_try_catch{
         try=function()
-            ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",0.5)
+            ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",1)
             local frame=ui.GetFrame(g.framename)
             AUTOITEMMANAGE_INIT_FRAME(frame)
             AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
@@ -395,11 +395,17 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                                         --AUTOITEMMANAGE_DBGOUT(itemObj.ClassID)
                                         if itemObj.ClassID ~= nil and tonumber(itemObj.ClassID) == vv.clsid then
                                             --それはバンドル可能？
-                                            if(itemObj.MaxStack <=1 and not EBI_IsNoneOrNil(vv.iesid))then
-                                                --iesidで
-                                                if(invItem:GetIESID()==vv.iesid)then
-                                                    AUTOITEMMANAGE_DBGOUT('DT'..tostring(vv.clsid))
-                                                    withdrawlist[#withdrawlist].having=1
+                                            if(itemObj.MaxStack <=1)then
+                                                if not EBI_IsNoneOrNil(vv.iesid)then
+                                                    --iesidで
+                                                    if(invItem:GetIESID()==vv.iesid)then
+                                                        AUTOITEMMANAGE_DBGOUT('DT'..tostring(vv.clsid))
+                                                        withdrawlist[#withdrawlist].having=1
+                                                    end
+                                                else
+                                                    AUTOITEMMANAGE_DBGOUT('YOUHAVE'..tostring(vv.clsid))
+                                                      --全部引き出したいため計数を無効化
+                                                    --    withdrawlist[#withdrawlist].having=1
                                                 end
                                             else
                                                 AUTOITEMMANAGE_DBGOUT('DT'..tostring(vv.clsid))
@@ -1082,18 +1088,21 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                             local invitem =AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(item['iesid'])
                             if(invitem~=nil)then
                                 useclsid=false
+                                AUTOITEMMANAGE_DBGOUT("TYPEA "..item['iesid'])
                             else
                                 --currently invalid
                                 useclsid=true
+                                AUTOITEMMANAGE_DBGOUT("TYPEB")
                             end
                         else
                             useclsid=true
+                            AUTOITEMMANAGE_DBGOUT("TYPEC")
                         end
                         local isstackable=false
                         if(useclsid)then
                             AUTOITEMMANAGE_DBGOUT("BBB"..tostring(item['clsid']))
                             local invitem=AUTOITEMMANAGE_ACQUIRE_ITEM_BY_CLASSID(item['clsid'])
-                            if(invitem~=nil)then
+                            if(invitem~=nil)then  
                                 local obj = GetIES(invitem:GetObject())
                                 --SET_SLOT_INFO_FOR_WAREHOUSE(slot, invitem,"wholeitem")
                                 if(obj.MaxStack > 1)then
@@ -1101,7 +1110,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                                     SET_SLOT_COUNT_TEXT(slot, item['count'])
                                 end
                             else
-                                if( item['count']==1)then
+                                if( item['count']<=1)then
                                     isstackable=false
                                     
                                 else
@@ -1116,7 +1125,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                             AUTOITEMMANAGE_DBGOUT("GENE")
                         else
                             local invitem =AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(item['iesid'])
-                            if(invitem~=nil)then
+                            if( invitem~=nil)then
                             
                                 local obj = GetIES(invitem:GetObject())
                                 if(obj.MaxStack > 1)then
