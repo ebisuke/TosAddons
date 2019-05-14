@@ -19,7 +19,7 @@ if (!(Test-Path $addonname)  ) {
     mkdir $addonname
 }
 cd ../..
-cp  src/* obj/addon_d.ipf/$addonname/ 
+cp -Force src/* obj/addon_d.ipf/$addonname/ 
 
 cd obj
 $aswslpath = (Get-Location | Where {$_.Path}).ToString().Replace("\","/")
