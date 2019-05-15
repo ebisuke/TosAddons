@@ -28,6 +28,6 @@ $aswslpath = wsl wslpath -a "$aswslpath"
 echo $aswslpath
 
 wsl ipf -c 9 tmp.ipf $aswslpath
-
 mv -Force tmp.ipf ../bin/$prefix$addonname"-"$emoji"-"$version".ipf"
+
 cd ../
