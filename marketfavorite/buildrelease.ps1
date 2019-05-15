@@ -1,8 +1,8 @@
-﻿$addonname="autoitemmanage"
+﻿$addonname="marketfavorite"
 $emoji="📖"
 $prefix=""
-$version="v0.0.2"
-cd E:\ToSProject\TosAddons\autoitemmanage
+$version="v1.0.0"
+cd E:\ToSProject\TosAddons\marketfavorite
 if (!(Test-Path bin)) {
     mkdir bin 
 }
