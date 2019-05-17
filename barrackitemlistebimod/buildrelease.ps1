@@ -1,7 +1,7 @@
-﻿$addonname="autoitemmanage"
+﻿$addonname="barrackitemlistebimod"
 $emoji="📖"
-$prefix="__"
-$version="v0.0.2"
+$prefix=""
+$version="v2.0.3"
 
 if (!(Test-Path bin)) {
     mkdir bin 
@@ -28,6 +28,6 @@ $aswslpath = wsl wslpath -a "$aswslpath"
 echo $aswslpath
 
 wsl ipf -c 9 tmp.ipf $aswslpath
-mv -Force tmp.ipf ../bin/$prefix$addonname"-"$emoji"-"$version".ipf"
 
+mv -Force tmp.ipf ../bin/$prefix$addonname"-"$version".ipf"
 cd ../

@@ -2,7 +2,7 @@
 $emoji="📖"
 $prefix=""
 $version="v0.0.2"
-cd E:\ToSProject\TosAddons\autoitemmanage
+
 if (!(Test-Path bin)) {
     mkdir bin 
 }
