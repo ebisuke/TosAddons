@@ -1,8 +1,8 @@
 ﻿$addonname="autoitemmanage"
 $emoji="📖"
 $prefix="__"
-$version="v0.0.2"
-cd E:\ToSProject\TosAddons\autoitemmanage
+$version="v0.0.4"
+
 if (!(Test-Path bin)) {
     mkdir bin 
 }

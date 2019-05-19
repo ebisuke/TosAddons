@@ -1,8 +1,10 @@
-﻿$addonname="autoitemmanage"
+﻿$addonname="highlevelersmarket"
 $emoji="📖"
-$prefix=""
-$version="v0.0.4"
 
+$version="v0.0.1"
+
+
+$prefix="__"
 if (!(Test-Path bin)) {
     mkdir bin 
 }
@@ -28,6 +30,6 @@ $aswslpath = wsl wslpath -a "$aswslpath"
 echo $aswslpath
 
 wsl ipf -c 9 tmp.ipf $aswslpath
+mv -Force tmp.ipf ../bin/$prefix$addonname"-"$emoji"-"$version".ipf"
 
-mv -Force tmp.ipf ../bin/$prefix$addonname"-"$version".ipf"
 cd ../

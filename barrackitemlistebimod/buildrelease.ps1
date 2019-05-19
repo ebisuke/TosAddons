@@ -1,7 +1,7 @@
-﻿$addonname="autoitemmanage"
+﻿$addonname="barrackitemlistebimod"
 $emoji="📖"
 $prefix=""
-$version="v0.0.4"
+$version="v2.0.3"
 
 if (!(Test-Path bin)) {
     mkdir bin 
