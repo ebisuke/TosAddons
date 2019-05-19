@@ -1,7 +1,8 @@
-﻿$addonname="autoitemmanage"
+﻿$addonname="highlevelersmarket"
 $emoji="📖"
+
+$version="v0.0.1"
 $prefix=""
-$version="v0.0.4"
 
 if (!(Test-Path bin)) {
     mkdir bin 
