@@ -14,7 +14,7 @@ local g = _G['ADDONS'][author][addonName]
 --nil=ALPHA1
 --1=ALPHA1-2
 --2=ALPHA3,0.0.1,ALPHA4,0.0.2
---3=ALPHA5,0.0.3
+--3=ALPHA5,0.0.3,0.0.4
 g.version=3
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc=""
@@ -241,6 +241,7 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
             --addon:RegisterMsg("MARKET_ITEM_LIST", "AUTOITEMMANAGE_MARKET_ITEMLIST");
             addon:RegisterMsg('OPEN_DLG_ACCOUNTWAREHOUSE', 'AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE')
             addon:RegisterMsg('OPEN_DLG_WAREHOUSE', 'AUTOITEMMANAGE_ON_OPEN_WAREHOUSE')
+            addon:RegisterMsg('OPEN_CAMP_UI', 'AUTOITEMMANAGE_ON_OPEN_CAMP_UI')
             addon:RegisterMsg('GAME_START_3SEC', 'AUTOITEMMANAGE_RESERVE_INIT')
             --コンテキストメニュー
             --frame:SetEventScript(ui.RBUTTONDOWN, 'AUTOITEMMANAGE_CONTEXT_MENU')
@@ -284,6 +285,30 @@ function AUTOITEMMANAGE_RESERVE_INIT(frame)
     
     
 
+end
+function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
+        --if (not g.foundasm) then
+    --ボタン登録
+    EBI_try_catch{
+        try=function()
+            ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",1)
+            local frame=ui.GetFrame(g.framename)
+            AUTOITEMMANAGE_INIT_FRAME(frame)
+            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
+
+            local frame=ui.GetFrame("camp_ui")
+            local btn=frame:CreateOrGetControl('button', 'showconfig', 240, 590, 110, 30)
+            btn:SetText("{ol}AIM設定")
+            btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
+  
+            ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
+        end,
+        catch=function(error)
+            AUTOITEMMANAGE_ERROUT(error)       
+        end
+    }
+
+    --end
 end
 function AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE()
     --if (not g.foundasm) then
@@ -343,6 +368,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
             local refer=AUTOITEMMANAGE_GETITEMSETTINGS()
             local sett=AUTOITEMMANAGE_GETSETTINGS()
             local accountmode=false
+            local campmode=false
             if(AUTOITEMMANAGE_ISENABLED()==0)then
                 AUTOITEMMANAGE_DBGOUT('byebye')
                 return
@@ -358,7 +384,12 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                 end                
             else
                 accountmode=false
-                frame= ui.GetFrame('warehouse')
+                if(ui.GetFrame("camp_ui"):IsVisible()==1)then
+                    frame= ui.GetFrame('camp_ui')
+                    campmode=true
+                else
+                    frame= ui.GetFrame('warehouse')
+                end
                 if(sett.refillenablewarehouse==nil or sett.refillenablewarehouse==0)then
                     AUTOITEMMANAGE_DBGOUT('bye')
                     return
@@ -497,7 +528,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                             local count=1
                             CHAT_SYSTEM("[AIM]個人倉庫からアイテムを引き出します")
                             for _,v in ipairs(takeitems)do
-                                ReserveScript( string.format("AUTOITEMMANAGE_FOREACH_TAKEITEM(\"%s\",%d)",  v.iesid, v.count) , count*0.3)
+                                ReserveScript( string.format("AUTOITEMMANAGE_FOREACH_TAKEITEM(\"%s\",%d,\"%s\")",  v.iesid, v.count,tostring(campmode)) , count*0.3)
                                 
                                 count=count+1
                             end
@@ -512,8 +543,16 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
         end
     }
 end
-function AUTOITEMMANAGE_FOREACH_TAKEITEM(iesid,count)
-    local frame = ui.GetFrame("warehouse")
+function AUTOITEMMANAGE_FOREACH_TAKEITEM(iesid,count,campmode)
+
+    local frame
+    if( campmode)then
+        AUTOITEMMANAGE_DBGOUT("CAMPMODE")
+        frame=ui.GetFrame("camp_ui")
+    else
+        AUTOITEMMANAGE_DBGOUT("WAREHOUSEMODE")
+        frame=ui.GetFrame("warehouse")
+    end
     item.TakeItemFromWarehouse(IT_WAREHOUSE, iesid, count, frame:GetUserIValue("HANDLE"));
 end
 function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
@@ -964,10 +1003,16 @@ function AUTOITEMMANAGE_DETERMINENUMBER(argnum)
             local slotseto=frame:GetChild("slt")
             local slotset=tolua.cast(slotseto,"ui::CSlotSet")
             local slot=slotset:GetSlotByIndex(argnum)
-            --有効値か検証
-            if(count>0)then
-                --更新
-                slot:SetUserValue("count",tostring(count))
+            if(count == nil)then
+                --fail
+                
+            else
+ 
+                --有効値か検証
+                if(count>0)then
+                    --更新
+                    slot:SetUserValue("count",tostring(count))
+                end
             end
             slot:RemoveChild("numberinput")
             --更新

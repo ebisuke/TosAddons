@@ -8,27 +8,31 @@ end
 function EBI_UNPACK(str,index)
 
   local curpos=index
-  local typ=EBI_UNPACK_INT32(str:sub(curpos,4))
+  local typ=EBI_UNPACK_INT32(str:sub(curpos,curpos+4-1))
   curpos=curpos+4
-  local siz=EBI_UNPACK_INT32(str:sub(curpos,4))
-  curpos=curpos+4  
+  local siz=EBI_UNPACK_INT32(str:sub(curpos,curpos+4-1))
+  curpos=curpos+4
+  print("hoge")
+  print(tostring(typ)..":"..tostring(siz))
   --read type
   local result
-  local payload = str:sub(curpos,siz)
-  curpos=curpos+siz
+  local payload = str:sub(curpos,curpos+siz-1)
+  
   if (typ==0x00000001)then
     --int
     
     result=EBI_UNPACK_INT32(payload)
   elseif (typ==0x00000002)then
     --string
-    result=str:sub(index+8,siz)
+    result=str:sub(curpos,curpos+siz)
    
   elseif (typ==0x00000003)then
     --table
-    local count=EBI_UNPACK_INT32(str:sub(curpos,4))
+    local count=EBI_UNPACK_INT32(str:sub(curpos,curpos+4-1))
     curpos=curpos+4
     result={}
+    print("COUNT:"..tostring(count))
+
     for i=1,count do
       local incri,key=EBI_UNPACK(str:sub(curpos,-1),curpos)
       curpos=curpos+incri
@@ -37,30 +41,34 @@ function EBI_UNPACK(str,index)
       result[key]=val
     end
   end
+  curpos=curpos+siz
   return curpos,result
 end
 function EBI_PACK(data)
   local payload=""
   local size
   if(type(data)=="number")then
-    payload=EBI_PACK_INT32(1)
+
+    payload=payload..EBI_PACK_INT32(1)
     payload=payload..EBI_PACK_INT32(4)
     payload=payload..EBI_PACK_INT32(data)
     size=4+8
+
   elseif (type(data)=="string")then
     payload=payload..EBI_PACK_INT32(2)
     payload=payload..EBI_PACK_INT32(#data)
+    payload=payload..data
     size=#data+8
 
-    payload=payload..data
+    
   elseif (type(data)=="table")then
-    print("table")
-    payload=payload..EBI_PACK_INT32(2)
+
 
     local tablestr=""
     local count=0
     local siz=0
     for k,v in pairs(data)do
+      --  print(tostring(k)..":"..tostring(v))
       local s,r=EBI_PACK(k)
       tablestr=tablestr..r
       siz=siz+s
@@ -69,7 +77,8 @@ function EBI_PACK(data)
       siz=siz+s
       count=count+1  
     end
-    payload=payload..EBI_PACK_INT32(3)..EBI_PACK_INT32(#tablestr)..EBI_PACK_INT32(count)..tablestr
+    payload=payload..EBI_PACK_INT32(3)..EBI_PACK_INT32(#tablestr+4)..EBI_PACK_INT32(count)..tablestr
+    print(tostring(#tablestr+4))
     size=siz+8+4
   end
   return size,payload
@@ -83,9 +92,9 @@ function EBI_PACK_INT32(n)
 
 end
 function EBI_UNPACK_INT32(n)
-  print(tostring(n))
+  print(tostring(#n))
   local b1, b2, b3, b4 = n:sub(1, 4):byte(1, 4)
-  
+  print(string.format("%d %d %d %d",b1,b2,b3,b4))
   if b1 < 0x80 then
       return ((b1 * 0x100 + b2) * 0x100 + b3) * 0x100 + b4
   else
@@ -101,10 +110,18 @@ function EBI_LOAD(filepath)
 
             local fd=io.open(filepath,"rb")
             if fd~=nil then
-                local alldata=fd:read("*a");
+                local alldata=""
+                local partdata;
+                repeat
+                    partdata=fd:read(4096);
+                    if(partdata~=nil)then
+                        alldata=alldata..partdata
+                    end
+                until partdata==nil
+                print("alldata:"..tostring(#alldata))
                 fd:close()
                 
-                return EBI_UNPACK(alldata,0)
+                return EBI_UNPACK(alldata,1)
             else
                 return nil;
             end
@@ -119,8 +136,8 @@ function EBI_SAVE(filepath,table)
 
     EBI_try_catch{
         try=function()
-            local alldata=EBI_PACK(table)
-
+            local s,alldata=EBI_PACK(table)
+            print("len:"..tostring(#alldata))
             local fd=io.open(filepath,"wb+")
             fd:write(alldata)
             fd:flush()

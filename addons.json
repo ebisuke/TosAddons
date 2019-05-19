@@ -17,8 +17,8 @@
     "name" : "AutoItemManage",
     "file" : "autoitemmanage",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "autoitemmanage_v0.0.2",
+    "fileVersion" : "v0.0.4",
+    "releaseTag" : "autoitemmanage_v0.0.4",
     "unicode" : "📖",
     "description" : "倉庫から自動でアイテムを補充します。",
     "tags" : [
