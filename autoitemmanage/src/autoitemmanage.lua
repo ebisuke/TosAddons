@@ -14,13 +14,13 @@ local g = _G['ADDONS'][author][addonName]
 --nil=ALPHA1
 --1=ALPHA1-2
 --2=ALPHA3,0.0.1,ALPHA4,0.0.2
---3=ALPHA5,0.0.3,0.0.4
+--3=ALPHA5,0.0.3,0.0.4,0.0.5
 g.version=3
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc=""
 g.editindex = 0
 g.framename="autoitemmanage"
-g.debug=false
+g.debug=true
 g.slotsize={48,48}
 g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 g.isediting=false
@@ -243,6 +243,9 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
             addon:RegisterMsg('OPEN_DLG_WAREHOUSE', 'AUTOITEMMANAGE_ON_OPEN_WAREHOUSE')
             addon:RegisterMsg('OPEN_CAMP_UI', 'AUTOITEMMANAGE_ON_OPEN_CAMP_UI')
             addon:RegisterMsg('GAME_START_3SEC', 'AUTOITEMMANAGE_RESERVE_INIT')
+            addon:RegisterMsg('TARGET_SET', 'AUTOITEMMANAGE_UPDATETARGET');
+            addon:RegisterMsg('TARGET_CLEAR', 'AUTOITEMMANAGE_UPDATETARGET');
+            addon:RegisterMsg('TARGET_UPDATE', 'AUTOITEMMANAGE_UPDATETARGET');
             --コンテキストメニュー
             --frame:SetEventScript(ui.RBUTTONDOWN, 'AUTOITEMMANAGE_CONTEXT_MENU')
             --ドラッグ
@@ -266,6 +269,12 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
             AUTOITEMMANAGE_ERROUT(error)
         end
     }
+end
+
+function AUTOITEMMANAGE_UPDATETARGET(frame, msg, argStr, argNum)
+
+    local target = session.GetTargetHandle()
+    local entitycls=GetClass("Monster", info.GetMonsterClassName(handle));
 end
 function AUTOITEMMANAGE_RESERVE_INIT(frame)
     EBI_try_catch{
@@ -1017,6 +1026,7 @@ function AUTOITEMMANAGE_DETERMINENUMBER(argnum)
             slot:RemoveChild("numberinput")
             --更新
             AUTOITEMMANAGE_SAVETOSTRUCTURE()
+            AUTOITEMMANAGE_SAVE_SETTINGS()
             AUTOITEMMANAGE_LOADFROMSTRUCTURE()
 
         end,
@@ -1263,7 +1273,9 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
     EBI_try_catch {
         try = function()
             if(g.isediting==true)then
-                CHAT_SYSTEM("[AIM]数量の編集中はドロップできません")
+                --CHAT_SYSTEM("[AIM]数量の編集中はドロップできません")
+                ui.SysMsg("[AIM]数量の編集中はドロップできません")
+                return
             end
             AUTOITEMMANAGE_DBGOUT('dropped')
             local liftIcon = ui.GetLiftIcon()
