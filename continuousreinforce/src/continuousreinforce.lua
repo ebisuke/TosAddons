@@ -96,12 +96,14 @@ function CONTINUOUSREINFORCE_REINFORCE_EXEC(checkReuildFlag)
 
 			if(CONTINUOUSREINFORCE_VALUES.morustate==false)then
 				CONTINUOUSREINFORCE_VALUES.morustate=true
-				CHAT_SYSTEM("[CR]連続強化を開始します。やめるときはESCを押してください。")
-				ReserveScript("CONTINUOUSREINFORCE_STARTTIMER()",1.5)
-			--	CONTINUOUSREINFORCE_STARTTIMER();
-
-				ReserveScript("ui.SetEscapeScp(\"CONTINUOUSREINFORCE_MORUCANCEL()\")",0.05)
 				CONTINUOUSREINFORCE_JUDGE_DELAYEDMODE()
+				if(CONTINUOUSREINFORCE_VALUES.delayedmode==false)then
+					CHAT_SYSTEM("[CR]連続強化を開始します。やめるときはESCを押してください。")
+					ReserveScript("CONTINUOUSREINFORCE_STARTTIMER()",1.5)
+				--	CONTINUOUSREINFORCE_STARTTIMER();
+
+					ReserveScript("ui.SetEscapeScp(\"CONTINUOUSREINFORCE_MORUCANCEL()\")",0.05)
+				end
 			end
 		end,
 		catch=function(error)
