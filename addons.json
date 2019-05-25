@@ -50,13 +50,15 @@
     "tags" : [
       "market"
     ]
-  },  
-    {
+
+  },
+  {
     "name" : "Continuous Reinforce",
     "file" : "continuousreinforce",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "continuousreinforce-v0.0.1",
+    "fileVersion" : "v0.0.2",
+    "releaseTag" : "continuousreinforce-v0.0.2",
+
     "unicode" : "📖",
     "description" : "連続で金床強化できるようにするアドオンです",
     "tags" : [

@@ -246,6 +246,7 @@ function CONTINUOUSREINFORCE_NEXTMORU()
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
+
 			local invMoru = GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.moruiesid)
 			if(invMoru==nil or invMoru.count==0)then
 				--fil
@@ -254,6 +255,12 @@ function CONTINUOUSREINFORCE_NEXTMORU()
 
 				return
 
+			end
+			if(invMoru.count==1)then
+				--fil
+				CHAT_SYSTEM("[CR]金床が1個しかありません 連続強化を終了します")
+				CONTINUOUSREINFORCE_MORUSTOP()
+				return
 			end
 			if(invItem:GetObject()==nil or GetIES(invItem:GetObject())==nil)then
 				--アイテムを喪失した
@@ -275,8 +282,8 @@ function CONTINUOUSREINFORCE_NEXTMORU()
 			local pc = GetMyPCObject();
 			local price = GET_REINFORCE_PRICE(fromItemObj, moruObj, pc)	
 			local retPrice, retCouponList = SCR_REINFORCE_COUPON_PRECHECK(pc, price)	
-			if(fromItemObj.PR<0)then
-				CHAT_SYSTEM("[CR]ポテンシャルがなくなりました 連続強化を終了します")
+			if(fromItemObj.PR==0)then
+				CHAT_SYSTEM("[CR]ポテンシャルが0です 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
