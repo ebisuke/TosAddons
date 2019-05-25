@@ -18,7 +18,7 @@
     "file" : "autoitemmanage",
     "extension" : "ipf",
     "fileVersion" : "v0.0.5",
-    "releaseTag" : "autoitemmanage_v0.0.5",
+"releaseTag" : "autoitemmanage_v0.0.5",
     "unicode" : "📖",
     "description" : "倉庫から自動でアイテムを補充します。",
     "tags" : [
@@ -50,6 +50,17 @@
     "tags" : [
       "market"
     ]
+  },
+  {
+    "name" : "Continuous Reinforce",
+    "file" : "continuousreinforce",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "continuousreinforce-v1.0.0",
+    "unicode" : "📖",
+    "description" : "連続で金床強化できるようにするアドオンです",
+    "tags" : [
+      "reinforce"
+    ]
   }
-
 ]
