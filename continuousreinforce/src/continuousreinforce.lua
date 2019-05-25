@@ -1,3 +1,13 @@
+local addonName = "continuousreinforce"
+local addonNameLower = string.lower(addonName)
+--作者名
+local author = 'ebisuke'
+
+--アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
+_G['ADDONS'] = _G['ADDONS'] or {}
+_G['ADDONS'][author] = _G['ADDONS'][author] or {}
+_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
+local g = _G['ADDONS'][author][addonName]
 
 CONTINUOUSREINFORCE_VALUES={
 	moru=nil,
@@ -9,6 +19,15 @@ CONTINUOUSREINFORCE_VALUES={
 	pricealert=false,
 	delayedmode=false
 }
+g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
+--デフォルト設定
+if(not g.loaded)then
+
+	g.settings = {
+			delay=50
+	}
+
+end
 local acutil  = require('acutil')
 if not CONTINUOUSREINFORCE_SETTINGS then
 	CONTINUOUSREINFORCE_SETTINGS={}
@@ -23,6 +42,25 @@ function EBI_try_catch(what)
 		what.catch(result)
 	end
 	return result
+end
+function CONTINUOUSREINFORCE_LOAD_SETTINGS()
+
+	g.settings={}
+	local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+	if err then
+			--設定ファイル読み込み失敗時処理
+			CHAT_SYSTEM(string.format('[%s] cannot load setting files', addonName))
+
+		else
+			--設定ファイル読み込み成功時処理
+			g.settings = t
+
+	end
+	g.loaded = true;
+end
+function CONTINUOUSREINFORCE_SAVE_SETTINGS()
+
+	acutil.saveJSON(g.settingsFileLoc, g.settings);
 end
 function CONTINUOUSREINFORCE_PROCESS_COMMAND(command)
     local cmd = "";
@@ -58,6 +96,14 @@ function CONTINUOUSREINFORCE_ON_INIT(addon, frame)
 		OLD_REINFORCE_131014_EXEC=REINFORCE_131014_EXEC;
 		REINFORCE_131014_EXEC=CONTINUOUSREINFORCE_REINFORCE_EXEC_JUMPER
 	end
+	if (OLD_REINFORCE_131014_OPEN==nil)then
+		OLD_REINFORCE_131014_OPEN=REINFORCE_131014_OPEN;
+		REINFORCE_131014_OPEN=CONTINUOUSREINFORCE_REINFORCE_OPEN_JUMPER
+	end
+	if not g.loaded then
+		CONTINUOUSREINFORCE_LOAD_SETTINGS()
+	end
+
 	acutil.slashCommand("/cr", CONTINUOUSREINFORCE_PROCESS_COMMAND);
 
 end
@@ -81,7 +127,36 @@ function CONTINUOUSREINFORCE_REINFORCE_EXEC_JUMPER(checkReuildFlag)
 	end
 
 end
+function CONTINUOUSREINFORCE_REINFORCE_OPEN_JUMPER(frame)
+	if(OLD_REINFORCE_131014_OPEN~=nil)then
+		OLD_REINFORCE_131014_OPEN(frame)
+	end
+	CONTINUOUSREINFORCE_REINFORCE_OPEN(frame)
+end
+function CONTINUOUSREINFORCE_REINFORCE_OPEN(frame)
+	EBI_try_catch{
+		try=function()
+			--リサイズ
+			frame:Resize(390,430)
+			local editraw =frame:CreateOrGetControl("edit","delaytime",260,275,80,30)
+			local edit = tolua.cast(editraw, 'ui::CEditControl')
+			edit:SetNumberMode(1)
+			edit:SetEnableEditTag(1);
+			
+			edit:SetText(tostring(g.settings.delay or 1))
+			edit:SetMinNumber(1)
+			edit:SetMaxNumber(500)
+			edit:SetFontName('white_20_ol')
+			local richtextraw =frame:CreateOrGetControl("richtext","setsumei",40,270,100,60)
+			richtextraw:SetText("{@st41b}連続金床{nl}ディレイ時間(10ms単位)")
 
+		end,
+		catch=function(error)
+			CHAT_SYSTEM(error)
+		end
+	}
+
+end
 function CONTINUOUSREINFORCE_REINFORCE_EXEC(checkReuildFlag)
 	EBI_try_catch{
 		try=function()
@@ -92,12 +167,14 @@ function CONTINUOUSREINFORCE_REINFORCE_EXEC(checkReuildFlag)
 			CONTINUOUSREINFORCE_VALUES.item, CONTINUOUSREINFORCE_VALUES.moru = REINFORCE_131014_GET_ITEM(frame);
 			CONTINUOUSREINFORCE_VALUES.itemiesid = CONTINUOUSREINFORCE_VALUES.item:GetIESID()
 			CONTINUOUSREINFORCE_VALUES.moruiesid = CONTINUOUSREINFORCE_VALUES.moru:GetIESID()
-			
-
+			local editdelay=frame:GetChild("delaytime")
+			g.settings.delay=tonumber(editdelay:GetText())
+			CONTINUOUSREINFORCE_SAVE_SETTINGS()
 			if(CONTINUOUSREINFORCE_VALUES.morustate==false)then
-				CONTINUOUSREINFORCE_VALUES.morustate=true
+				
 				CONTINUOUSREINFORCE_JUDGE_DELAYEDMODE()
 				if(CONTINUOUSREINFORCE_VALUES.delayedmode==false)then
+					CONTINUOUSREINFORCE_VALUES.morustate=true
 					CHAT_SYSTEM("[CR]連続強化を開始します。やめるときはESCを押してください。")
 					ReserveScript("CONTINUOUSREINFORCE_STARTTIMER()",1.5)
 				--	CONTINUOUSREINFORCE_STARTTIMER();
@@ -138,8 +215,8 @@ function CONTINUOUSREINFORCE_STARTTIMER()
 end
 function CONTINUOUSREINFORCE_MORUCHECK_DELAY(frame, timer, str, num, totalTime)
 	--print("delay"..tostring(totalTime))
-
-	ReserveScript("CONTINUOUSREINFORCE_MORUCHECK()",0.01)
+	CONTINUOUSREINFORCE_MORUCHECK()
+--	ReserveScript("CONTINUOUSREINFORCE_MORUCHECK()",0.01)
 	
 end
 function CONTINUOUSREINFORCE_MORUCHECK()
@@ -213,15 +290,17 @@ function CONTINUOUSREINFORCE_MORUCHECK()
 				return
 			end
 			--CHAT_SYSTEM("[CR]次の金床強化に移ります")
-			local delay=0.01
+			local delay=g.settings.delay/100.0
 			--金床が消えてしまう可能性がある場合はエラーを抑止するため遅延させる
 			if(CONTINUOUSREINFORCE_VALUES.delayedmode==true)then
 				delay=2
 			end
+			local timer = GET_CHILD(ui.GetFrame("continuousreinforce"), "addontimer", "ui::CAddOnTimer");
+
+			timer:Stop();
 			ReserveScript("CONTINUOUSREINFORCE_NEXTMORU()",delay)
 			
-			local timer = GET_CHILD(ui.GetFrame("continuousreinforce"), "addontimer", "ui::CAddOnTimer");
-			timer:Stop();
+
 		end,catch=function(error)
 			CHAT_SYSTEM(error)
 		end
@@ -231,7 +310,9 @@ end
 function CONTINUOUSREINFORCE_NEXTMORU()
 	EBI_try_catch{
 		try=function()
-			if(CONTINUOUSREINFORCE_VALUES.morustate==false or CONTINUOUSREINFORCE_VALUES.moruplace==true or CONTINUOUSREINFORCE_SETTINGS.enable==false)then
+			if(CONTINUOUSREINFORCE_VALUES.morustate==false or 
+			CONTINUOUSREINFORCE_VALUES.moruplace==true or 
+			CONTINUOUSREINFORCE_SETTINGS.enable==false)then
 				return
 			end
 			local fromItem, fromMoru = CONTINUOUSREINFORCE_VALUES.item, CONTINUOUSREINFORCE_VALUES.moru
