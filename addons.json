@@ -50,6 +50,7 @@
     "tags" : [
       "market"
     ]
+
   },
   {
     "name" : "Continuous Reinforce",
@@ -62,5 +63,6 @@
     "tags" : [
       "reinforce"
     ]
+
   }
 ]
