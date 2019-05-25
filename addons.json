@@ -58,11 +58,11 @@
     "extension" : "ipf",
     "fileVersion" : "v0.0.2",
     "releaseTag" : "continuousreinforce-v0.0.2",
+
     "unicode" : "📖",
     "description" : "連続で金床強化できるようにするアドオンです",
     "tags" : [
       "reinforce"
     ]
-
   }
 ]
