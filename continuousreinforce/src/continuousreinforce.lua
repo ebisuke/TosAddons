@@ -6,7 +6,8 @@ CONTINUOUSREINFORCE_VALUES={
 	moruiesid=nil,
 	morustate=false,
 	moruplace=false,
-	pricealert=false
+	pricealert=false,
+	delayedmode=false
 }
 local acutil  = require('acutil')
 if not CONTINUOUSREINFORCE_SETTINGS then
@@ -100,6 +101,7 @@ function CONTINUOUSREINFORCE_REINFORCE_EXEC(checkReuildFlag)
 			--	CONTINUOUSREINFORCE_STARTTIMER();
 
 				ReserveScript("ui.SetEscapeScp(\"CONTINUOUSREINFORCE_MORUCANCEL()\")",0.05)
+				CONTINUOUSREINFORCE_JUDGE_DELAYEDMODE()
 			end
 		end,
 		catch=function(error)
@@ -108,6 +110,21 @@ function CONTINUOUSREINFORCE_REINFORCE_EXEC(checkReuildFlag)
 	}
 
 
+end
+function CONTINUOUSREINFORCE_JUDGE_DELAYEDMODE()
+	local fromItem, fromMoru = CONTINUOUSREINFORCE_VALUES.item, CONTINUOUSREINFORCE_VALUES.moru
+	local delay=false
+	--moru(金床)残数が1ならディレイモード
+	if(fromMoru.count==1)then
+		delay=true
+	end
+	--ポテが0ならディレイモード
+	local fromItemObj = GetIES(fromItem:GetObject());
+	
+	if(fromItemObj.PR==0)then
+		delay=true
+	end
+	 CONTINUOUSREINFORCE_VALUES.delayedmode=delay
 end
 function CONTINUOUSREINFORCE_STARTTIMER()
 	local frame=ui.GetFrame("continuousreinforce");
@@ -194,7 +211,12 @@ function CONTINUOUSREINFORCE_MORUCHECK()
 				return
 			end
 			--CHAT_SYSTEM("[CR]次の金床強化に移ります")
-			ReserveScript("CONTINUOUSREINFORCE_NEXTMORU()",0.25)
+			local delay=0.01
+			--金床が消えてしまう可能性がある場合はエラーを抑止するため遅延させる
+			if(CONTINUOUSREINFORCE_VALUES.delayedmode==true)then
+				delay=2
+			end
+			ReserveScript("CONTINUOUSREINFORCE_NEXTMORU()",delay)
 			
 			local timer = GET_CHILD(ui.GetFrame("continuousreinforce"), "addontimer", "ui::CAddOnTimer");
 			timer:Stop();
@@ -217,65 +239,69 @@ function CONTINUOUSREINFORCE_NEXTMORU()
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
-			if(GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.itemiesid)==nil)then
+			local invItem = GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.itemiesid)
+			if(invItem==nil or invItem.count==0)then
 				--fil
-				CHAT_SYSTEM("[CR]アイテムがなくなりました 連続強化を終了します")
+				CHAT_SYSTEM("[CR]アイテムがなくなりました 連続強化を終了します.")
+				CONTINUOUSREINFORCE_MORUSTOP()
+				return
+			end
+			local invMoru = GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.moruiesid)
+			if(invMoru==nil or invMoru.count==0)then
+				--fil
+				CHAT_SYSTEM("[CR]金床がなくなりました 連続強化を終了します.")
 				CONTINUOUSREINFORCE_MORUSTOP()
 
 				return
 
 			end
-			if(GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.moruiesid)==nil)then
-				--fil
-				CHAT_SYSTEM("[CR]金床がなくなりました 連続強化を終了します")
-				CONTINUOUSREINFORCE_MORUSTOP()
-
-				return
-
-			end
-			if(fromItem:GetObject()==nil or GetIES(fromItem:GetObject())==nil)then
+			if(invItem:GetObject()==nil or GetIES(invItem:GetObject())==nil)then
 				--アイテムを喪失した
 				CHAT_SYSTEM("[CR]アイテムがなくなりました 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
-			if(fromMoru:GetObject()==nil or GetIES(fromMoru:GetObject())==nil)then
+			if(invMoru:GetObject()==nil or GetIES(invMoru:GetObject())==nil)then
 				--アイテムを喪失した
 				CHAT_SYSTEM("[CR]金床がなくなりました 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
-			CONTINUOUSREINFORCE_VALUES.moruplace=true;
+
 			--お金のチェック
-			local fromItemObj = GetIES(fromItem:GetObject());
+			local fromItemObj = GetIES(invItem:GetObject());
 			local curReinforce = fromItemObj.Reinforce_2;
-			local moruObj = GetIES(fromMoru:GetObject());
+			local moruObj = GetIES(invMoru:GetObject());
 			local pc = GetMyPCObject();
 			local price = GET_REINFORCE_PRICE(fromItemObj, moruObj, pc)	
 			local retPrice, retCouponList = SCR_REINFORCE_COUPON_PRECHECK(pc, price)	
-			if(fromItemObj.PR==0)then
+			if(fromItemObj.PR<0)then
 				CHAT_SYSTEM("[CR]ポテンシャルがなくなりました 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
-			if(CONTINUOUSREINFORCE_VALUES.pricealert==false)then
-				CHAT_SYSTEM(string.format("[CR]必要なシルバーは%s ポテ %d/%d",retPrice,fromItemObj.PR,fromItemObj.MaxPR))
-				CONTINUOUSREINFORCE_VALUES.pricealert=true
-			end
+
 			if IsGreaterThanForBigNumber(retPrice, GET_TOTAL_MONEY_STR()) == 1 then
 				CHAT_SYSTEM("[CR]シルバーが不足しています 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return;
 			end
+			
+			if(CONTINUOUSREINFORCE_VALUES.pricealert==false)then
+				CHAT_SYSTEM(string.format("[CR]必要なシルバーは%s ポテ %d/%d",retPrice,fromItemObj.PR,fromItemObj.MaxPR))
+				CONTINUOUSREINFORCE_VALUES.pricealert=true
+			end
 
+			CONTINUOUSREINFORCE_VALUES.moruplace=true;
 			--良ければmoruする
 			session.ResetItemList();
-			session.AddItemID(fromItem:GetIESID());
-			session.AddItemID(fromMoru:GetIESID());
+			session.AddItemID(CONTINUOUSREINFORCE_VALUES.itemiesid);
+			session.AddItemID(CONTINUOUSREINFORCE_VALUES.moruiesid);
 			local resultlist = session.GetItemIDList();
 			item.DialogTransaction("ITEM_REINFORCE_131014", resultlist);
 			local timer = GET_CHILD(ui.GetFrame("continuousreinforce"), "addontimer", "ui::CAddOnTimer");
 			timer:Start(0.01);
+			CONTINUOUSREINFORCE_JUDGE_DELAYEDMODE()
 			ReserveScript("CONTINUOUSREINFORCE_VALUES.moruplace=false;CONTINUOUSREINFORCE_VALUES.pricealert=false",0.5);
 		end,
 		catch=function(error)
