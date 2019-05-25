@@ -2,10 +2,17 @@
 CONTINUOUSREINFORCE_VALUES={
 	moru=nil,
 	item=nil,
+	itemiesid=nil,
+	moruiesid=nil,
 	morustate=false,
-	moruplace=false
+	moruplace=false,
+	pricealert=false
 }
-
+local acutil  = require('acutil')
+if not CONTINUOUSREINFORCE_SETTINGS then
+	CONTINUOUSREINFORCE_SETTINGS={}
+	CONTINUOUSREINFORCE_SETTINGS.enable=true
+end
 function EBI_stringstartswith(String,Start)
 	return string.sub(String,1,string.len(Start))==Start
  end
@@ -16,7 +23,31 @@ function EBI_try_catch(what)
 	end
 	return result
 end
-
+function CONTINUOUSREINFORCE_PROCESS_COMMAND(command)
+    local cmd = "";
+  
+    if #command > 0 then
+      cmd = table.remove(command, 1);
+    else
+      local msg = "usage{nl}/cr on 連続強化を有効(デフォルト) {nl}/cr off 連続強化を無効"
+      return ui.MsgBox(msg,"","Nope")
+    end
+  
+    if cmd == "on" then
+      --有効
+	    CONTINUOUSREINFORCE_SETTINGS.enable=true
+        CHAT_SYSTEM("[CR]連続強化を有効化しました");
+        AUTOITEMMANAGE_SAVE_SETTINGS()
+      return;
+    elseif cmd == "off" then
+      --無効
+	    CONTINUOUSREINFORCE_SETTINGS.enable=false
+        CHAT_SYSTEM("[CR]連続強化を無効化しました");
+        AUTOITEMMANAGE_SAVE_SETTINGS()
+      return;
+    end
+    CHAT_SYSTEM(string.format("[%s] Invalid Command", addonName));
+  end
 function CONTINUOUSREINFORCE_ON_INIT(addon, frame)
 	-- if(OLD_REINFORCE_131014_MSGBOX==nil and CONTINUOUSREINFORCE_REINFORCE_JUMPER~=OLD_REINFORCE_131014_MSGBOX)then
 	-- 	OLD_REINFORCE_131014_MSGBOX=REINFORCE_131014_MSGBOX;
@@ -26,7 +57,8 @@ function CONTINUOUSREINFORCE_ON_INIT(addon, frame)
 		OLD_REINFORCE_131014_EXEC=REINFORCE_131014_EXEC;
 		REINFORCE_131014_EXEC=CONTINUOUSREINFORCE_REINFORCE_EXEC_JUMPER
 	end
-	CHAT_SYSTEM("[CR]init")
+	acutil.slashCommand("/cr", CONTINUOUSREINFORCE_PROCESS_COMMAND);
+
 end
 
 -- function CONTINUOUSREINFORCE_REINFORCE_JUMPER(frame)
@@ -52,8 +84,15 @@ end
 function CONTINUOUSREINFORCE_REINFORCE_EXEC(checkReuildFlag)
 	EBI_try_catch{
 		try=function()
+			if(CONTINUOUSREINFORCE_SETTINGS.enable==false)then
+				return
+			end
 			local frame = ui.GetFrame("reinforce_131014");
 			CONTINUOUSREINFORCE_VALUES.item, CONTINUOUSREINFORCE_VALUES.moru = REINFORCE_131014_GET_ITEM(frame);
+			CONTINUOUSREINFORCE_VALUES.itemiesid = CONTINUOUSREINFORCE_VALUES.item:GetIESID()
+			CONTINUOUSREINFORCE_VALUES.moruiesid = CONTINUOUSREINFORCE_VALUES.moru:GetIESID()
+			
+
 			if(CONTINUOUSREINFORCE_VALUES.morustate==false)then
 				CONTINUOUSREINFORCE_VALUES.morustate=true
 				CHAT_SYSTEM("[CR]連続強化を開始します。やめるときはESCを押してください。")
@@ -90,6 +129,9 @@ function CONTINUOUSREINFORCE_MORUCHECK()
 			if(CONTINUOUSREINFORCE_VALUES.morustate==false )then
 				return
 			end
+			if(CONTINUOUSREINFORCE_SETTINGS.enable==false)then
+				return
+			end
 		--moruしているアイテムがロック状態か調べる
 			local fromItem, fromMoru = CONTINUOUSREINFORCE_VALUES.item, CONTINUOUSREINFORCE_VALUES.moru
 			if(fromItem==nil or fromMoru==nil) then
@@ -117,7 +159,7 @@ function CONTINUOUSREINFORCE_MORUCHECK()
 			local myPC = GetMyPCObject();
 			local myHnd=session.GetMyHandle();
 			--近くに自分の金床があるかチェック
-			local fndList, fndCount = SelectObject(self, 100, 'ALL');
+			local fndList, fndCount = SelectObject(self, 200, 'ALL');
 			local myName=world.GetActor(myHnd)
 
 			
@@ -128,9 +170,9 @@ function CONTINUOUSREINFORCE_MORUCHECK()
 				mon		= GetClassByType("Monster", actr:GetType());
 			
 					if(itm.ClassID==41432 or itm.ClassID==47412)then
+						local stat=info.GetStat(hnd)
 
-						print("hp"..tostring(itm.HP))
-						if(actr:GetName():match(myName:GetName())and itm.HP>0)then
+						if(actr:GetName():match(myName:GetName())and stat.HP>0)then
 							--anvilある
 
 							return
@@ -152,7 +194,7 @@ function CONTINUOUSREINFORCE_MORUCHECK()
 				return
 			end
 			--CHAT_SYSTEM("[CR]次の金床強化に移ります")
-			ReserveScript("CONTINUOUSREINFORCE_NEXTMORU()",0.05)
+			ReserveScript("CONTINUOUSREINFORCE_NEXTMORU()",0.25)
 			
 			local timer = GET_CHILD(ui.GetFrame("continuousreinforce"), "addontimer", "ui::CAddOnTimer");
 			timer:Stop();
@@ -165,13 +207,41 @@ end
 function CONTINUOUSREINFORCE_NEXTMORU()
 	EBI_try_catch{
 		try=function()
-			if(CONTINUOUSREINFORCE_VALUES.morustate==false or CONTINUOUSREINFORCE_VALUES.moruplace==true)then
+			if(CONTINUOUSREINFORCE_VALUES.morustate==false or CONTINUOUSREINFORCE_VALUES.moruplace==true or CONTINUOUSREINFORCE_SETTINGS.enable==false)then
 				return
 			end
 			local fromItem, fromMoru = CONTINUOUSREINFORCE_VALUES.item, CONTINUOUSREINFORCE_VALUES.moru
 			if(fromItem.isLockState)then
 				--locked
 				CHAT_SYSTEM("[CR]アイテムがロックされています 連続強化を終了します")
+				CONTINUOUSREINFORCE_MORUSTOP()
+				return
+			end
+			if(GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.itemiesid)==nil)then
+				--fil
+				CHAT_SYSTEM("[CR]アイテムがなくなりました 連続強化を終了します")
+				CONTINUOUSREINFORCE_MORUSTOP()
+
+				return
+
+			end
+			if(GET_ITEM_BY_GUID(CONTINUOUSREINFORCE_VALUES.moruiesid)==nil)then
+				--fil
+				CHAT_SYSTEM("[CR]金床がなくなりました 連続強化を終了します")
+				CONTINUOUSREINFORCE_MORUSTOP()
+
+				return
+
+			end
+			if(fromItem:GetObject()==nil or GetIES(fromItem:GetObject())==nil)then
+				--アイテムを喪失した
+				CHAT_SYSTEM("[CR]アイテムがなくなりました 連続強化を終了します")
+				CONTINUOUSREINFORCE_MORUSTOP()
+				return
+			end
+			if(fromMoru:GetObject()==nil or GetIES(fromMoru:GetObject())==nil)then
+				--アイテムを喪失した
+				CHAT_SYSTEM("[CR]金床がなくなりました 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
 				return
 			end
@@ -183,8 +253,15 @@ function CONTINUOUSREINFORCE_NEXTMORU()
 			local pc = GetMyPCObject();
 			local price = GET_REINFORCE_PRICE(fromItemObj, moruObj, pc)	
 			local retPrice, retCouponList = SCR_REINFORCE_COUPON_PRECHECK(pc, price)	
-			
-			CHAT_SYSTEM("[CR]必要なシルバーは"..retPrice)
+			if(fromItemObj.PR==0)then
+				CHAT_SYSTEM("[CR]ポテンシャルがなくなりました 連続強化を終了します")
+				CONTINUOUSREINFORCE_MORUSTOP()
+				return
+			end
+			if(CONTINUOUSREINFORCE_VALUES.pricealert==false)then
+				CHAT_SYSTEM(string.format("[CR]必要なシルバーは%s ポテ %d/%d",retPrice,fromItemObj.PR,fromItemObj.MaxPR))
+				CONTINUOUSREINFORCE_VALUES.pricealert=true
+			end
 			if IsGreaterThanForBigNumber(retPrice, GET_TOTAL_MONEY_STR()) == 1 then
 				CHAT_SYSTEM("[CR]シルバーが不足しています 連続強化を終了します")
 				CONTINUOUSREINFORCE_MORUSTOP()
@@ -199,7 +276,7 @@ function CONTINUOUSREINFORCE_NEXTMORU()
 			item.DialogTransaction("ITEM_REINFORCE_131014", resultlist);
 			local timer = GET_CHILD(ui.GetFrame("continuousreinforce"), "addontimer", "ui::CAddOnTimer");
 			timer:Start(0.01);
-			ReserveScript("CONTINUOUSREINFORCE_VALUES.moruplace=false",0.2);
+			ReserveScript("CONTINUOUSREINFORCE_VALUES.moruplace=false;CONTINUOUSREINFORCE_VALUES.pricealert=false",0.5);
 		end,
 		catch=function(error)
 			CHAT_SYSTEM(error)
@@ -216,6 +293,5 @@ function CONTINUOUSREINFORCE_MORUSTOP()
 	timer:Stop();
 	CONTINUOUSREINFORCE_VALUES.morustate=false
 	CONTINUOUSREINFORCE_VALUES.moruplace=false
-	print("stopped")
 	ui.SetEscapeScp("")
 end
