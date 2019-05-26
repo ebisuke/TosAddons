@@ -13,7 +13,7 @@ local g = _G["ADDONS"][author][addonName]
 -- 設定ファイル保存先
 g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
-g.debug = true
+g.debug = false
 -- ライブラリ読み込み
 local acutil = require('acutil')
 
@@ -878,21 +878,22 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
         end
         
         PINNEDQUEST_SAVE_SETTINGS()
-        
+        PINNEDQUEST_DBGOUT("OK")
         ReserveScript("PINNEDQUEST_UPDATEQUESTLIST()",0.25)
-        ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.75)
+        --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.75)
     end,
     catch = function(error)PINNEDQUEST_ERROUT(error) end
 }
 
 end
+
 function PINNEDQUEST_ENSUREQUEST()
     --PINNEDQUEST_ENSUREQUEST_DELAYED()
     ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",0.5)
 end
 
 function PINNEDQUEST_UPDATEQUESTLIST()
-    UPDATE_ALLQUEST(ui.GetFrame("quest"));
+    --UPDATE_ALLQUEST(ui.GetFrame("quest"));
     local questframe2 = ui.GetFrame("questinfoset_2")
     UPDATE_QUESTINFOSET_2(questframe2)
     
