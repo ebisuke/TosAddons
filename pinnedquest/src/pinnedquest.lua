@@ -66,6 +66,11 @@ end
 CHAT_SYSTEM(string.format("%s.lua is loaded", addonName))
 
 function PINNEDQUEST_SAVE_SETTINGS()
+    g.personalsettingsFileLoc = string.format(
+        '../addons/%s/settings_%s.json',
+        addonNameLower,
+        tostring(
+            session.GetMySession():GetCID()))
     acutil.saveJSON(g.settingsFileLoc, g.settings)
     acutil.saveJSON(g.personalsettingsFileLoc, g.personalsettings)
 end
@@ -74,11 +79,7 @@ end
 function PINNEDQUEST_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-            g.personalsettingsFileLoc = string.format(
-                '../addons/%s/settings_%s.json',
-                addonNameLower,
-                tostring(
-                    session.GetMySession():GetCID()))
+           
             
             g.addon = addon
             frame = ui.GetFrame("pinnedquest")
@@ -128,6 +129,11 @@ function PINNEDQUEST_ON_INIT(addon, frame)
     }
 end
 function PINNEDQUEST_LOAD_SETTINGS()
+    g.personalsettingsFileLoc = string.format(
+        '../addons/%s/settings_%s.json',
+        addonNameLower,
+        tostring(
+            session.GetMySession():GetCID()))
     g.settings = {}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
@@ -155,7 +161,7 @@ function PINNEDQUEST_LOAD_SETTINGS()
     else
         -- 設定ファイル読み込み成功時処理
         g.personalsettings = t
-    
+        
     end
 end
 function PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER(frame)
@@ -193,6 +199,12 @@ function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     frameg:SetLayerLevel(95)
     local btnr=frameg:CreateOrGetControl("button", "btnrefresh", 180, 80, 60, 40)
     local chkenable = frameg:CreateOrGetControl("checkbox", "chkenable", 240, 80, 100,20)
+    tolua.cast(chkenable,"ui::CCheckBox")
+    if(g.personalsettings.enabled==true)then
+        chkenable:SetCheck(1)
+    else
+        chkenable:SetCheck(0)
+    end
     chkenable:SetText("{ol}このキャラで使用する")
     chkenable:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_ON_CHECK_CHANGED")
     btnr:SetText("更新")
@@ -295,9 +307,12 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                 if questIES.QuestMode == 'MAIN' then
                                     else
                                     if result == 'POSSIBLE' then
-                                        local lv = GetMyPCObject().Lv
+                                        --local lv = GetMyPCObject().Lv
                                         
-                                        if (math.abs(questIES.Level - lv) > 10) then
+                                        --if (math.abs(questIES.Level - lv) > 10) then
+                                         --   pass = false
+                                        local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
+                                        if(result1==1)then
                                             pass = false
                                         elseif (subcount >= sublimit) then
                                             pass = false
@@ -619,7 +634,8 @@ function PINNEDQUEST_ISLINKEDQUEST(pinnedclsid, searchclsid)
     -- リストを持ってくる
     local lists = PINNEDQUEST_GETLINKQUEST(searchclsid)
     for _, v in pairs(lists) do
-        if v == questIES.ClassName then 
+        local questIESSearch=GetClass('QuestProgressCheck', v)
+        if v == questIES.ClassName and questIESSearch.QuestMode == questIES.QuestMode then 
             PINNEDQUEST_DBGOUT("HIT:"..questIES.ClassName)
             return true
          end
@@ -660,7 +676,7 @@ function PINNEDQUEST_ISVALID(clsid)
             end
         end
     end
-    PINNEDQUEST_DBGOUT("none"..tostring(clsid).."/"..result)
+    PINNEDQUEST_DBGOUT("none"..tostring(clsid).."/"..tostring(result))
     return false
 end
 function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
@@ -668,6 +684,10 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
     local pc = GetMyPCObject()
     local sobjIES = GET_MAIN_SOBJ()
     local clsList, cnt = GetClassList("QuestProgressCheck")
+    if(typ==nil)then
+        local questIES = GetClassByType('QuestProgressCheck', pinnedclsid)
+        typ=questIES.QuestMode
+    end
     for i = 0, cnt - 1 do
         local add = false
         
@@ -690,7 +710,7 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
                                 
 
                                 
-                                PINNEDQUEST_DBGOUT("MAIN")
+                                --PINNEDQUEST_DBGOUT("MAIN")
                                 if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid,
                                     questIES.ClassID)) then
                                     add = true
@@ -698,13 +718,13 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
                                     
                             elseif typ == "SUB" and questIES.QuestMode == 'SUB' then
                                 -- sub派生ｸｴか調べる
-                                PINNEDQUEST_DBGOUT("SUB")
+                                --PINNEDQUEST_DBGOUT("SUB")
                                 if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid,
                                     questIES.ClassID)) then
                                     add = true
                                 end
                             elseif typ == "REPEAT" and (questIES.QuestMode == 'SUB' or questIES.QuestMode == 'REPEAT') then
-                                PINNEDQUEST_DBGOUT("REPEAT")
+                                --PINNEDQUEST_DBGOUT("REPEAT")
 
                                 if(questIES.QuestMode == 'REPEAT' or questIES.QuestMode == 'SUB') then
                                 -- repeat派生ｸｴか調べる
@@ -749,7 +769,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
             if (g.personalsettings.pinnedquest[tostring(questID)]) then
                 -- トラッキング中
                 doremove = false
-                AUTOITEMMANAGE_DBGOUT("track")
+                PINNEDQUEST_DBGOUT("track")
             else
                 
                 check[questID]=true
@@ -757,7 +777,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
             end
             if (doremove == true) then
                 removelist[questID] = true
-                AUTOITEMMANAGE_DBGOUT("rem"..tostring(questID))
+                PINNEDQUEST_DBGOUT("rem"..tostring(questID))
             end
         end
         local additpin={}
@@ -777,7 +797,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                                 -- 含まれていないのでたす
                                 additpin[tostring(kk)]=true
                                 
-                                AUTOITEMMANAGE_DBGOUT("tasu")
+                                PINNEDQUEST_DBGOUT("tasu")
                             end
                             break
                          end
@@ -833,9 +853,27 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
 
         for k,v in pairs(g.personalsettings.pinnedparty) do
             if(v)then
-                CHECK_PARTY_QUEST_ADD(ui.GetFrame("quest"), k)
-                cnt=cnt+1
-                break
+                
+                if(PINNEDQUEST_ISVALID(tonumber(k)))then
+                    party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
+                        0)
+                    party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
+                        -1)
+                    CHECK_PARTY_QUEST_ADD(ui.GetFrame("quest"), k)
+                    cnt=cnt+1
+                    break
+                else
+                    --クエストが消えたので後釜を探す
+                    local after=PINNEDQUEST_FINDREQUIREDQUEST(tonumber(k))
+                    for kk,vv in pairs(after)do
+                        --あった
+                        g.personalsettings.pinnedparty[tostring(kk)]=true
+                        CHECK_PARTY_QUEST_ADD(ui.GetFrame("quest"), kk)
+                        break
+                    end
+                    --古いのは消す
+                    g.personalsettings.pinnedparty[k]=false
+                end
             end
         end
         
@@ -849,8 +887,8 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
 
 end
 function PINNEDQUEST_ENSUREQUEST()
-    PINNEDQUEST_ENSUREQUEST_DELAYED()
-    --ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",0.01)
+    --PINNEDQUEST_ENSUREQUEST_DELAYED()
+    ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",0.5)
 end
 
 function PINNEDQUEST_UPDATEQUESTLIST()
