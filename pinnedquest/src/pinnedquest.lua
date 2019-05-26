@@ -13,7 +13,8 @@ local g = _G["ADDONS"][author][addonName]
 -- 設定ファイル保存先
 g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
-g.debug = false
+g.isquestdialog=false
+g.debug = true
 -- ライブラリ読み込み
 local acutil = require('acutil')
 
@@ -97,12 +98,15 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             -- ドラッグ
             frame:SetEventScript(ui.LBUTTONUP, "PINNEDQUEST_END_DRAG")
             addon:RegisterMsg('GET_NEW_QUEST', 'PINNEDQUEST_ENSUREQUEST')
+            addon:RegisterMsg('GAME_START_3SEC', 'PINNEDQUEST_ENSUREQUEST')
             
             --addon:RegisterMsg('QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('AVANDON_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('QUEST_DELETED', 'PINNEDQUEST_ENSUREQUEST')
             --addon:RegisterMsg('CUSTOM_QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('CUSTOM_QUEST_DELETE', 'PINNEDQUEST_ENSUREQUEST')
+            addon:RegisterMsg('DIALOG_ADD_SELECT', 'PINNEDQUEST_HOOKDIALOG_ADD_SELECT')
+            addon:RegisterMsg('DIALOG_CLOSE', 'PINNEDQUEST_HOOKDIALOG_CLOSE');
             --addon:RegisterMsg('QUEST_UPDATE_', 'PINNEDQUEST_ENSUREQUEST')
             
             -- フレーム初期化処理
@@ -621,7 +625,7 @@ function PINNEDQUEST_GETLINKQUEST(clsid)
     local clsnames = {}
     for i = 1, 4 do
         local val = TryGetProp(questIES, 'QuestName' .. tostring(i), 'None')
-        PINNEDQUEST_DBGOUT("NEXT:"..val)
+        PINNEDQUEST_DBGOUT(string.format("NEXT%d:%s",i,val))
         if (val ~= "None") then clsnames[#clsnames + 1] = val else
             break
         end
@@ -630,12 +634,13 @@ function PINNEDQUEST_GETLINKQUEST(clsid)
 end
 function PINNEDQUEST_ISLINKEDQUEST(pinnedclsid, searchclsid)
     local questIES = GetClassByType('QuestProgressCheck', pinnedclsid)
+    local questIESsearch = GetClassByType('QuestProgressCheck', searchclsid)
     PINNEDQUEST_DBGOUT("COMPARE:"..questIES.ClassName)
     -- リストを持ってくる
     local lists = PINNEDQUEST_GETLINKQUEST(searchclsid)
     for _, v in pairs(lists) do
         local questIESSearch=GetClass('QuestProgressCheck', v)
-        if v == questIES.ClassName and questIESSearch.QuestMode == questIES.QuestMode then 
+        if v == questIES.ClassName and questIESsearch.QuestMode == questIES.QuestMode then 
             PINNEDQUEST_DBGOUT("HIT:"..questIES.ClassName)
             return true
          end
@@ -686,6 +691,10 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
     local clsList, cnt = GetClassList("QuestProgressCheck")
     if(typ==nil)then
         local questIES = GetClassByType('QuestProgressCheck', pinnedclsid)
+        if(questIES==nil)then
+            PINNEDQUEST_DBGOUT("FAIL"..tostring(pinnedclsid))
+            return {}
+        end
         typ=questIES.QuestMode
     end
     for i = 0, cnt - 1 do
@@ -740,7 +749,7 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
                 
                 end
         end
-        if (add == true) then list[questIES] = true end
+        if (add == true) then list[questIES.ClassID] = true end
     end
     return list
 end
@@ -776,7 +785,12 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                
             end
             if (doremove == true) then
-                removelist[questID] = true
+                if( g.isquestdialog==true)then
+                    --トラックする
+                    g.personalsettings.pinnedquest[tostring(questID)]=true
+                else
+                    removelist[questID] = true
+                end
                 PINNEDQUEST_DBGOUT("rem"..tostring(questID))
             end
         end
@@ -785,25 +799,34 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
         for k, v in pairs(g.personalsettings.pinnedquest) do
             if(v)then
                 local questID=tonumber(k)
-                
+                local doremove=true
                 for kk, vv in pairs(check) do
                      if(check[kk])then
                          --ok
                          local result=PINNEDQUEST_ISLINKEDQUEST(k,kk)
-
-                         
                          if(result==true)then
                             if (not g.personalsettings.pinnedquest[tostring(kk)]) then
                                 -- 含まれていないのでたす
                                 additpin[tostring(kk)]=true
+                                removelist[kk]=nil
+                                PINNEDQUEST_DBGOUT("tasu"..tostring(kk))
                                 
-                                PINNEDQUEST_DBGOUT("tasu")
                             end
+                            doremove=false
                             break
-                         end
+                        else
+                            
+                        end
                      end
                     
                  end
+                if(doremove)then
+                    --孤立したピン止めを消す
+                    if not PINNEDQUEST_ISVALID(questID) then
+                        PINNEDQUEST_DBGOUT("REMOVE ORPHANED"..tostring(questID))
+                        g.personalsettings.pinnedquest[k]=nil
+                    end
+                end
             end
         end
         for k,v in pairs(additpin) do
@@ -817,7 +840,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                 -- 有効なクエストか調べる
                 if (not PINNEDQUEST_ISVALID(clsid)) then
                     PINNEDQUEST_DBGOUT("invalid"..tostring(clsid))
-                    g.personalsettings.pinnedquest[tostring(clsid)] = false
+                    g.personalsettings.pinnedquest[tostring(clsid)] = nil
                 else
                     addlist[clsid] = true
                     PINNEDQUEST_DBGOUT("add"..tostring(clsid))
@@ -834,8 +857,8 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                 local questID = quest.GetCheckQuest(i)
                 if (removelist[questID]) then
                     quest.RemoveCheckQuestByIndex(i)
-                    
-                    PINNEDQUEST_DBGOUT("REMOVED")
+
+                    PINNEDQUEST_DBGOUT("REMOVED"..tostring(questID))
                     break
                 end
             end
@@ -867,6 +890,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                     local after=PINNEDQUEST_FINDREQUIREDQUEST(tonumber(k))
                     for kk,vv in pairs(after)do
                         --あった
+                        PINNEDQUEST_DBGOUT("FOUND ALTER PARTY"..tostring(kk))
                         g.personalsettings.pinnedparty[tostring(kk)]=true
                         CHECK_PARTY_QUEST_ADD(ui.GetFrame("quest"), kk)
                         break
@@ -889,7 +913,7 @@ end
 
 function PINNEDQUEST_ENSUREQUEST()
     --PINNEDQUEST_ENSUREQUEST_DELAYED()
-    ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",0.5)
+    ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",1.75)
 end
 
 function PINNEDQUEST_UPDATEQUESTLIST()
@@ -897,4 +921,28 @@ function PINNEDQUEST_UPDATEQUESTLIST()
     local questframe2 = ui.GetFrame("questinfoset_2")
     UPDATE_QUESTINFOSET_2(questframe2)
     
+end
+
+function PINNEDQUEST_HOOKDIALOG_ADD_SELECT(frame, msg, argStr, argNum)
+	if argNum == 1 then
+        --reward found
+        local questCls = GetClass("QuestProgressCheck", argStr);
+        local cls = GetClass("QuestProgressCheck_Auto", argStr);
+        local pc = GetMyPCObject();
+        
+        if questCls == nil or cls == nil then
+            return ;
+        end
+        g.isquestdialog=true
+        PINNEDQUEST_DBGOUT("QUEST DIALOG FOUND")
+
+	end
+end
+function PINNEDQUEST_HOOKDIALOG_CLOSE_CHANGESTATE()
+    g.isquestdialog=false
+end
+function PINNEDQUEST_HOOKDIALOG_CLOSE(frame, msg, argStr, argNum)
+    if( g.isquestdialog==true)then
+        ReserveScript("PINNEDQUEST_HOOKDIALOG_CLOSE_CHANGESTATE()",2)
+    end
 end
