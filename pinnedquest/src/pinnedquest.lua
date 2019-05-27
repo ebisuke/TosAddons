@@ -14,7 +14,7 @@ local g = _G["ADDONS"][author][addonName]
 g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
 g.isquestdialog=false
-g.debug = true
+g.debug = false
 -- ライブラリ読み込み
 local acutil = require('acutil')
 
@@ -179,7 +179,7 @@ function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     local btnclean = frame:CreateOrGetControl("button", "pqclean", 410, 90, 100,
         40)
     btnclean:SetText("PQ更新")
-    btnclean:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_ENSUREQUEST")
+    btnclean:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_REFRESH")
 
     local frameg = ui.GetFrame("pinnedquest")
     frameg:Resize(500, 500)
@@ -212,7 +212,7 @@ function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     chkenable:SetText("{ol}このキャラで使用する")
     chkenable:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_ON_CHECK_CHANGED")
     btnr:SetText("更新")
-    btnr:SetEventScript(ui.LBUTTONDOWN,"PINNEDQUEST_UPDATELIST_QUEST")
+    btnr:SetEventScript(ui.LBUTTONDOWN,"PINNEDQUEST_REFRESH")
     -- frameg:CreateOrGetControl("richtext","label8",400,120,100,20):SetText("{ol}前提")
     PINNEDQUEST_UPDATELIST_QUEST(frameg)
 end
@@ -230,6 +230,9 @@ function PINNEDQUEST_ON_CHECK_CHANGED(frame,ctrl)
         g.personalsettings.enabled=false;
     end
     PINNEDQUEST_SAVE_SETTINGS()
+    PINNEDQUEST_UPDATEQUESTLIST()
+    PINNEDQUEST_UPDATELIST_QUEST()
+    
 end
 function PINNEDQUEST_CALCQUESTRANK(aaa)
     
@@ -491,7 +494,11 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
     }
 
 end
-
+function PINNEDQUEST_REFRESH()
+    PINNEDQUEST_ENSUREQUEST()
+    PINNEDQUEST_UPDATEQUESTLIST()
+    PINNEDQUEST_UPDATELIST_QUEST()
+end
 function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
     EBI_try_catch{
         try = function()
@@ -501,11 +508,12 @@ function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
                 if (ctrl:IsChecked() == 1) then
                     g.personalsettings.pinnedquest[tostring(questClassID)] = true
                 else
-                    g.personalsettings.pinnedquest[tostring(questClassID)] = false
+                    g.personalsettings.pinnedquest[tostring(questClassID)] = nil
                 end
                 PINNEDQUEST_SAVE_SETTINGS()
                 PINNEDQUEST_ENSUREQUEST()
-                --PINNEDQUEST_UPDATEQUESTLIST()
+
+
             elseif argStr == "pp" then
                 if (ctrl:IsChecked() == 1) then
                     g.personalsettings.pinnedparty = {}
@@ -515,6 +523,7 @@ function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
                 end
                 PINNEDQUEST_SAVE_SETTINGS()
                 PINNEDQUEST_ENSUREQUEST()
+
             elseif argStr == "cq" then
                 -- チェック入れる
                 if (ctrl:IsChecked() == 1) then
@@ -903,7 +912,9 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
         
         PINNEDQUEST_SAVE_SETTINGS()
         PINNEDQUEST_DBGOUT("OK")
-        ReserveScript("PINNEDQUEST_UPDATEQUESTLIST()",0.25)
+        --PINNEDQUEST_UPDATEQUESTLIST()
+        --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.5)
+        --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.3)
         --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.75)
     end,
     catch = function(error)PINNEDQUEST_ERROUT(error) end
