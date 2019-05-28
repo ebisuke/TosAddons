@@ -22,3 +22,7 @@ pinnedquest/bin/__pinnedquest-📖-v0.0.1.ipf
 pinnedquest/obj/addon_d.ipf/pinnedquest/pinnedquest.lua
 pinnedquest/obj/addon_d.ipf/pinnedquest/pinnedquest.xml
 pinnedquest/bin/pinnedquest-v0.0.1.ipf
+postboxgetitemfixer/bin/__postboxgetitemfixer-📖-v0.0.1.ipf
+postboxgetitemfixer/obj/addon_d/postboxgetitemfixer/postboxgetitemfixer.lua
+postboxgetitemfixer/obj/addon_d/postboxgetitemfixer/postboxgetitemfixer.xml
+tmp.ipf
