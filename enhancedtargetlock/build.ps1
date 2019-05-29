@@ -1,4 +1,4 @@
-﻿$addonname="postboxgetitemfixer"
+﻿$addonname="enhancedtargetlock"
 $emoji="📖"
 $version="v0.0.1"
 $prefix="__"
