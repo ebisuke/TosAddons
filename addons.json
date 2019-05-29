@@ -75,5 +75,18 @@
     "tags" : [
       "quest"
     ]
+  },
+  {
+    "name" : "PostboxGetItem Fixer",
+    "file" : "postboxgetitemfixer",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "postboxgetitemfixer-v0.0.1",
+    "unicode" : "📖",
+    "description" : "メッセージボックスでアイテムを受け取る際のキャラ順を正しくします。アドオンを有効にするには一度なんらかのキャラでゲーム開始する必要があります。これはToS起動毎に行う必要があります。",
+    "tags" : [
+      "barrack",
+      "postbox"
+    ]
   }
 ]
