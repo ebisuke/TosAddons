@@ -32,3 +32,8 @@ enhancedtargetlock/obj/addon_d.ipf/enhancedtargetlock/enhancedtargetlock.lua
 postboxgetitemfixer/obj/addon_d.ipf/postboxgetitemfixer/postboxgetitemfixer.lua
 postboxgetitemfixer/obj/addon_d.ipf/postboxgetitemfixer/postboxgetitemfixer.xml
 postboxgetitemfixer/bin/postboxgetitemfixer-v0.0.1.ipf
+enhancedtargetlock/obj/addon_d.ipf/enhancedtargetlock/embbeddedbattlemode.lua
+enhancedtargetlock/obj/addon_d.ipf/enhancedtargetlock/embbeddedbattlemode.xml
+enhancedtargetlock/obj/addon_d.ipf/enhancedtargetlock/embbededbattlemode.lua
+enhancedtargetlock/obj/addon_d.ipf/enhancedtargetlock/embbededbattlemode.xml
+enhancedtargetlock/bin/enhancedtargetlock-v0.0.1.ipf
