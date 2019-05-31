@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uiframe name="enhancedtargetlock" x="0" y="0" width="10" height="10">
-	<frame fasthide="true" layout_gravity="left top"/>
-	<input moveable="false" hittestframe="false"/>
-	<layer layerlevel="10"/>
-	<draw drawframe="false" drawtitlebarframe="false" drawtitlebar="false"/>
-	<option closebutton="false" hideable="false"/>
+<uiframe name="enhancedtargetlock" x="300" y="300" width="600" height="20" create="open">
+    <frame layout_gravity="left top" scale_align="left top"/>
+    <option visible="false" closebutton="false" hideable="false" useimageitem="true"/>
+    <layer layerlevel="30"/>
+    <draw drawtitlebar="false" drawframe="false"/>
+    <input hittest="true" hittestframe="true" movable="true"/>
 	<controls>
 		<timer name="addontimer" rect="0 0 10 10"/>
+		<richtext hittest="false" name="textbox" margin="0 0 0 0" rect="0 0 600 20" format="{ol}%s" param1="text" param1_def="ETL" textalign="left top" resizebytext="false" spacey="0" maxwidth="0" fontname="white_16_ol" fixwidth="true" updateparent="false" drawbackground="false" slideshow="false" layout_gravity="left top"/>
+
 	</controls>
 </uiframe>
