@@ -64,7 +64,7 @@ local firstpos = nil
 function ENHANCEDTARGETLOCK_SAVE_SETTINGS()
     acutil.saveJSON(g.settingsFileLoc, g.settings);
 end
-
+ENH=nil
 function ENHANCEDTARGETLOCK_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -124,8 +124,11 @@ end
 function ENHANCEDTARGETLOCK_ENABLE()
     return EBI_try_catch{
         try = function()
-            
+
+
             if (ENHANCEDTARGETLOCK_LOCKED == 0) then
+                local frame = ui.GetFrame("enhancedtargetlock")
+                frame:ShowWindow(1)
                 local findenemy = ENHANCEDTARGETLOCK_FINDNEAREST_BOSS()
                 if (findenemy ~= nil) then
                     local enemyActor = world.GetActor(findenemy)
@@ -133,7 +136,7 @@ function ENHANCEDTARGETLOCK_ENABLE()
                     --CHAT_SYSTEM("[ETL]Locked" .. monsterClass.Name)
                     ENHANCEDTARGETLOCK_SETTEXT(monsterClass.Name,1)
                     ENHANCEDTARGETLOCK_CT = findenemy
-                    local frame = ui.GetFrame("enhancedtargetlock")
+                   
                     local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
                     ENHANCEDTARGETLOCK_TARGETTING()
                     --timer:SetUpdateScript("ENHANCEDTARGETLOCK_TARGETTING");
@@ -157,7 +160,7 @@ function ENHANCEDTARGETLOCK_SETTEXT(text,mode)
         textbox:SetTextByKey("text","ETL");
     elseif(mode == 1)then
 
-        textbox:SetFormat("{ol}{#0077FF}");
+        textbox:SetFormat("{ol}{#22bbFF}");
         if(text~=nil)then
             textbox:SetTextByKey("text","ETL:"..text);
         else
@@ -175,7 +178,7 @@ function ENHANCEDTARGETLOCK_SETTEXT(text,mode)
         end
     end
     textbox:Invalidate()        
-    
+    frame:ShowWindow(1);
 
 end
 function ENHANCEDTARGETLOCK_DISABLE()
@@ -359,7 +362,9 @@ function ENHANCEDTARGETLOCK_PROCESS_COMMAND(command)
         ENHANCEDTARGETLOCK_TARGETTING();
     end
     if cmd == "initpos" then
-        ui.GetFrame("enhancedtargetlock"):SetOffset(300,300);
+        local frame=ui.GetFrame("enhancedtargetlock")
+        frame:ShowWindow(1);
+        frame:SetOffset(300,300);
         ENHANCEDTARGETLOCK_SAVE_SETTINGS();
     end
 end

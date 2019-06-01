@@ -93,8 +93,8 @@
     "name" : "Enhanced TargetLock",
     "file" : "enhancedtargetlock",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "enhancedtargetlock-v0.0.1",
+    "fileVersion" : "v0.0.2",
+    "releaseTag" : "enhancedtargetlock-v0.0.2",
     "unicode" : "📖",
     "description" : "ボスへのタゲがそれてしまい、再ターゲットが困難な時に支援するアドオンです。",
     "tags" : [
