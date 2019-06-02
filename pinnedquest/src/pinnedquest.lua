@@ -13,7 +13,7 @@ local g = _G["ADDONS"][author][addonName]
 -- 設定ファイル保存先
 g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
-g.isquestdialog=false
+g.isquestdialog=0
 g.debug = false
 -- ライブラリ読み込み
 local acutil = require('acutil')
@@ -536,7 +536,7 @@ function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
                 else
                     quest.RemoveCheckQuest(questClassID)
                 end
-                PINNEDQUEST_UPDATEQUESTLIST()
+
             elseif argStr == "cp" then
                 -- party
                 if (ctrl:IsChecked() == 1) then
@@ -547,10 +547,11 @@ function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
                     party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
                         -1)
                 end
-                PINNEDQUEST_UPDATEQUESTLIST()
+
             end
             --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST(ui.GetFrame(\"pinnedquest\"), true)",0.05)
-
+            PINNEDQUEST_UPDATEQUESTLIST()
+            ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.5)
         -- UPDATE_ALLQUEST(ui.GetFrame("quest"))
         end,
         catch = function(error)PINNEDQUEST_ERROUT(error) end
@@ -793,10 +794,11 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                 check[questID]=true
                
             end
-            if (doremove == true) then
-                if( g.isquestdialog==true)then
+            if (doremove == true or g.isquestdialog>0) then
+                if( g.isquestdialog>0)then
                     --トラックする
                     g.personalsettings.pinnedquest[tostring(questID)]=true
+                    PINNEDQUEST_DBGOUT("pinned by dialog")
                 else
                     removelist[questID] = true
                 end
@@ -856,10 +858,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                 end
             end
         end
-        -- 消す
-        PINNEDQUEST_DBGOUT("REMOVE" .. tostring(#removelist))
-        PINNEDQUEST_DBGOUT("ADD" .. tostring(#addlist))
-        
+        -- 消す        
         for k, v in pairs(removelist) do
             local ccnt = quest.GetCheckQuestCount()
             for i = 0, ccnt - 1 do
@@ -912,7 +911,6 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
         
         PINNEDQUEST_SAVE_SETTINGS()
         PINNEDQUEST_DBGOUT("OK")
-        --PINNEDQUEST_UPDATEQUESTLIST()
         --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.5)
         --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.3)
         --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",0.75)
@@ -924,7 +922,7 @@ end
 
 function PINNEDQUEST_ENSUREQUEST()
     --PINNEDQUEST_ENSUREQUEST_DELAYED()
-    ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",1.75)
+    ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()",0.01)
 end
 
 function PINNEDQUEST_UPDATEQUESTLIST()
@@ -944,16 +942,20 @@ function PINNEDQUEST_HOOKDIALOG_ADD_SELECT(frame, msg, argStr, argNum)
         if questCls == nil or cls == nil then
             return ;
         end
-        g.isquestdialog=true
+        g.isquestdialog=g.isquestdialog+1
         PINNEDQUEST_DBGOUT("QUEST DIALOG FOUND")
 
 	end
 end
 function PINNEDQUEST_HOOKDIALOG_CLOSE_CHANGESTATE()
-    g.isquestdialog=false
+    if(g.isquestdialog>0)then
+        g.isquestdialog=g.isquestdialog-1
+        PINNEDQUEST_DBGOUT("QUEST DIALOG CLOSED")
+    end
 end
 function PINNEDQUEST_HOOKDIALOG_CLOSE(frame, msg, argStr, argNum)
-    if( g.isquestdialog==true)then
-        ReserveScript("PINNEDQUEST_HOOKDIALOG_CLOSE_CHANGESTATE()",2)
+    if( g.isquestdialog>0)then
+        ReserveScript("PINNEDQUEST_HOOKDIALOG_CLOSE_CHANGESTATE()",0.75)
+        PINNEDQUEST_DBGOUT("HOOK CLOSE QUEST DIALOG")
     end
 end
