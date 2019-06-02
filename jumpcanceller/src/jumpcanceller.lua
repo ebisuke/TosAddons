@@ -16,15 +16,19 @@ function JUMPCANCELLER_ON_INIT(addon, frame)
             frame=ui.GetFrame("jumpcanceller");
             frame:ShowWindow(1)
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
-            
+            addon:RegisterMsg('FPS_UPDATE', 'JUMPCANCELLER_SHOWWINDOW');
             timer:SetUpdateScript("JUMPCANCELLER_WATCHKEY");
-            timer:Start(0.01)
+            timer:Start(0.00)
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
         end
     }
 
+end
+function JUMPCANCELLER_SHOWWINDOW()
+    frame=ui.GetFrame("jumpcanceller");
+    frame:ShowWindow(1)
 end
 function JUMPCANCELLER_WATCHKEY()
     EBI_try_catch{
