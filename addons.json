@@ -106,8 +106,8 @@
     "name" : "JumpCanceller",
     "file" : "jumpcanceller",
     "extension" : "ipf",
-    "fileVersion" : "v1.0.0",
-    "releaseTag" : "jumpcanceller-v1.0.0",
+    "fileVersion" : "v1.0.1",
+    "releaseTag" : "jumpcanceller-v1.0.1",
     "unicode" : "📖",
     "description" : "ニーリングショット・バズーカ状態をジャンプで解除できるようにします",
     "tags" : [
