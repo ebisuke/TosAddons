@@ -101,5 +101,18 @@
       "target",
       "boss"
     ]
+  },
+  {
+    "name" : "JumpCanceller",
+    "file" : "jumpcanceller",
+    "extension" : "ipf",
+    "fileVersion" : "v1.0.0",
+    "releaseTag" : "enhancedtargetlock-v1.0.0",
+    "unicode" : "📖",
+    "description" : "ニーリングショット・バズーカ状態をジャンプで解除できるようにします",
+    "tags" : [
+      "kneelingshot",
+      "bazooka"
+    ]
   }
 ]
