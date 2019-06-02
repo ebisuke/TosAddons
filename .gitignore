@@ -39,3 +39,13 @@ enhancedtargetlock/obj/addon_d.ipf/enhancedtargetlock/embbededbattlemode.xml
 enhancedtargetlock/bin/enhancedtargetlock-v0.0.1.ipf
 enhancedtargetlock/bin/enhancedtargetlock-v0.0.2.ipf
 enhancedtargetlock/bin/__enhancedtargetlock-📖-v0.0.2.ipf
+findportalshop/obj/addon_d.ipf/jumpcanceller/jumpcanceller.xml
+findportalshop/bin/__findportalshop-📖-v0.0.1.ipf
+findportalshop/obj/addon_d.ipf/findportalshop/findportalshop.lua
+findportalshop/obj/addon_d.ipf/findportalshop/findportalshop.xml
+findportalshop/obj/addon_d.ipf/jumpcanceller/jumpcanceller.lua
+jumpcanceller/obj/addon_d.ipf/jumpcanceller/jumpcanceller.xml
+jumpcanceller/bin/__jumpcanceller-📖-v0.0.1.ipf
+jumpcanceller/obj/addon_d.ipf/jumpcanceller/jumpcanceller.lua
+jumpcanceller/bin/jumpcanceller-v1.0.0.ipf
+jumpcanceller/bin/__jumpcanceller-📖-v1.0.0.ipf
