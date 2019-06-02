@@ -26,7 +26,7 @@ if not g.loaded then
             -- フレーム表示場所
             position = {x = 0, y = 0}
     }
-    g.personalsettings = {enabled=false,pinnedquest = {}, pinnedparty = {}}
+    g.personalsettings = {enabled=true,pinnedquest = {}, pinnedparty = {}}
 end
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -161,7 +161,7 @@ function PINNEDQUEST_LOAD_SETTINGS()
         -- 設定ファイル読み込み失敗時処理
         CHAT_SYSTEM(string.format('[%s] cannot load personal setting files',
             addonName))
-        g.personalsettings = {enabled=false,pinnedquest = {}, pinnedparty = {}}
+        g.personalsettings = {enabled=true,pinnedquest = {}, pinnedparty = {}}
     else
         -- 設定ファイル読み込み成功時処理
         g.personalsettings = t
@@ -763,7 +763,10 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
     end
     return list
 end
-
+function PINNEDQUEST_PARTYQUEST_PIN(clsid)
+    g.personalsettings.pinnedparty={}
+    g.personalsettings.pinnedparty[clsid]=true
+end
 function PINNEDQUEST_ENSUREQUEST_DELAYED()
   -- 今現在トラッキングしているクエスト以外は除外する
   EBI_try_catch{
@@ -798,6 +801,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                 if( g.isquestdialog>0)then
                     --トラックする
                     g.personalsettings.pinnedquest[tostring(questID)]=true
+                    --ついでにPTクエストにする
                     PINNEDQUEST_DBGOUT("pinned by dialog")
                 else
                     removelist[questID] = true
@@ -896,6 +900,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                 else
                     --クエストが消えたので後釜を探す
                     local after=PINNEDQUEST_FINDREQUIREDQUEST(tonumber(k))
+                    local kk
                     for kk,vv in pairs(after)do
                         --あった
                         PINNEDQUEST_DBGOUT("FOUND ALTER PARTY"..tostring(kk))
@@ -904,7 +909,9 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                         break
                     end
                     --古いのは消す
-                    g.personalsettings.pinnedparty[k]=false
+                    if kk ~= k then
+                        g.personalsettings.pinnedparty[k]=false
+                    end
                 end
             end
         end
