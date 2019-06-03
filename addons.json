@@ -68,8 +68,8 @@
     "name" : "PinnedQuest",
     "file" : "pinnedquest",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "pinnedquest-v0.0.2",
+    "fileVersion" : "v0.0.3",
+    "releaseTag" : "pinnedquest-v0.0.3",
     "unicode" : "📖",
     "description" : "興味のないクエストが一覧に表示されるのを防ぎます。また、クエストのParty共有が勝手に切り替わるのを防ぎます。",
     "tags" : [
