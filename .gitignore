@@ -58,3 +58,8 @@ shophelpertool/obj/addon_d.ipf/shophelpertool/shophelpertool.xml
 shophelpertool/bin/__shophelpertool-📖-v1.0.0.ipf
 shophelpertool/bin/shophelpertool-v1.0.0.ipf
 shophelpertool/obj/addon_d.ipf/shophelpertool/shophelpertool.lua
+pseudoforecast/obj/addon_d.ipf/pseudoforecast/pseudoforecast.xml
+pseudoforecast/obj/addon_d.ipf/pseudoforecast/pseudoforecast.lua
+pseudoforecast/obj/addon_d.ipf/pseudoforecast/xmlSimple.lua
+pseudoforecast/bin/__pseudoforecast-📖-v0.0.1.ipf
+pseudoforecast/bin/pseudoforecast-v0.0.1.ipf
