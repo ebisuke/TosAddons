@@ -63,3 +63,10 @@ pseudoforecast/obj/addon_d.ipf/pseudoforecast/pseudoforecast.lua
 pseudoforecast/obj/addon_d.ipf/pseudoforecast/xmlSimple.lua
 pseudoforecast/bin/__pseudoforecast-📖-v0.0.1.ipf
 pseudoforecast/bin/pseudoforecast-v0.0.1.ipf
+.idea/TosAddons.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.vscode/launch.json
+pseudoforecast/converter/skill_bytool.xml
