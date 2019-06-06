@@ -70,3 +70,4 @@ pseudoforecast/bin/pseudoforecast-v0.0.1.ipf
 .idea/workspace.xml
 .vscode/launch.json
 pseudoforecast/converter/skill_bytool.xml
+pseudoforecast/obj/addon_d.ipf/pseudoforecast/skills.lua

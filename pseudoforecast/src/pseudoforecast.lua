@@ -11,7 +11,8 @@ local acutil = require('acutil')
 --mode 1 from ies
 --mode 2 from xml
 PSEUDOFORECAST_MODE = 2
-PSEUDOFORECAST_COROUTINE=nil
+PSEUDOFORECAST_ENABLE=false
+PSEUDOFORECAST_CASTING_SKILLID=nil
 PSEUDOFORECAST_YOFFSET=10
 PSEUDOFORECAST_DATA={
 	
@@ -21,19 +22,21 @@ PSEUDOFORECAST_DATA={
 	}
 
 }
-if(PSEUDOFORECAST_MODE==2)then
-	PSEUDOFORECAST_LOADSKILLS()
-end
+
 -- ライブラリ読み込み
 function PSEUDOFORECAST_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-			if(OLD_ICON_USE == nil or ICON_USE ~= PSEUDOFORECAST_ICON_USE)then
+			if(OLD_ICON_USE == nil or ICON_USE ~= PSEUDOFORECAST_ICON_USE_JUMPER)then
 				OLD_ICON_USE=ICON_USE;
-				ICON_USE=PSEUDOFORECAST_ICON_USE
-				CHAT_SYSTEM("UPDATED")
+				ICON_USE=PSEUDOFORECAST_ICON_USE_JUMPER
+
 			end
-            CHAT_SYSTEM("INITIALIZED")
+			addon:RegisterMsg('DYNAMIC_CAST_BEGIN', 'PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG');
+			addon:RegisterMsg('DYNAMIC_CAST_END', 'PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG');
+			--addon:RegisterMsg('GAME_START_SE', 'PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG');
+			PSEUDOFORECAST_LOADSKILLS()
+			acutil.slashCommand("/pf", PSEUDOFORECAST_PROCESS_COMMAND);
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
@@ -41,14 +44,41 @@ function PSEUDOFORECAST_ON_INIT(addon, frame)
     }
 
 end
-
+function PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG(frame, msg, argStr, maxTime, isVisivle)
+	if(not PSEUDOFORECAST_ENABLE)then
+		return
+	end
+	if msg == 'DYNAMIC_CAST_BEGIN' then
+		local sList = StringSplit(argStr, "#");
+		local sklName = argStr;
+		if 1 < #sList then
+			sklName = sList[1];
+		end
+		local sklObj = GetSkill(GetMyPCObject(), sklName);
+		if nil ~= sklObj then
+			PSEUDOFORECAST_CASTING_SKILLID=sklObj.ClassID
+		end
+	elseif msg == 'DYNAMIC_CAST_END' and PSEUDOFORECAST_CASTING_SKILLID then
+		PSEUDOFORECAST_SKILL(PSEUDOFORECAST_CASTING_SKILLID)
+		PSEUDOFORECAST_CASTING_SKILLID=nil
+	end
+end
 function PSEUDOFORECAST_LOADSKILLS()
 	EBI_try_catch{
 		try = function()
 			PSEUDOFORECAST_DATA={}
-			dofile("../addons/pseudoforecast/skills.lua")
+			local succ,_=pcall(dofile,"../addons/pseudoforecast/skills.lua")
+			if(not succ)then
+				--succ,_=pcall(dofile,"skills.lua")
+				if(not PSEUDOFORECAST_rawdata)then
+					CHAT_SYSTEM("FORECASTDATA LOADING FAILURE")
+					return
+
+				end
+				data=PSEUDOFORECAST_rawdata
+			end
 			local t = data
-			CHAT_SYSTEM(tostring(t))
+
 			PSEUDOFORECAST_DATA=t
 
 		end,
@@ -59,64 +89,70 @@ function PSEUDOFORECAST_LOADSKILLS()
 	}
 
 end
-
-
-function PSEUDOFORECAST_WAITFORCOROUTINE()
-
-	if(coroutine.status(PSEUDOFORECAST_COROUTINE)=="dead")then
-		CHAT_SYSTEM("COMPLETE COROUTINE")
-		return
-	else
-		ReserveScript("PSEUDOFORECAST_WAITFORCOROUTINE()",0.00)
-	end
-
+function PSEUDOFORECAST_ICON_USE_JUMPER(object, reAction)
+   
+	EBI_try_catch{
+		try = function()
+			PSEUDOFORECAST_ICON_USE(object, reAction)
+		
+		end,
+		catch = function(error)
+			CHAT_SYSTEM(error)
+			
+		end
+	}
+	--finally
+	OLD_ICON_USE(object, reAction)
 end
-
 function PSEUDOFORECAST_ICON_USE(object, reAction)
-    OLD_ICON_USE(object, reAction)
+	if(not PSEUDOFORECAST_ENABLE)then
+		return
+	end
     local iconPt = object;
     if iconPt ~= nil then
         local icon = tolua.cast(iconPt, 'ui::CIcon');
         
         local iconInfo = icon:GetInfo();
-        if iconInfo:GetCategory() == 'Skill' then
-            PSEUDOFORECAST_SKILL(iconInfo.type)
+		if iconInfo:GetCategory() == 'Skill' then
+			local class = GetClassByType("Skill", iconInfo.type)
+			local myActor = GetMyActor();
+			local skillobj=session.GetSkill(iconInfo.type)
+			--CHAT_SYSTEM(string.format("%s,%s,%d,%d",tostring(myActor:IsSkillState()),class.ClassName,skillobj:GetRemainRefreshTimeMS(),skillobj:GetCurrentCoolDownTime()))
+			if(myActor:IsSkillState()==false and 
+			skillobj:GetRemainRefreshTimeMS()<=0 and 
+			skillobj:GetCurrentCoolDownTime()<=0)then
+				local result,casttime=pcall(SCR_GET_SKL_CastTime,class)
+				if(result and casttime>0)then
+					--キャストが必要なら今は呼ばない
+
+				else
+					--それは使える？
+					if(control.IsSkillIconUsable(iconInfo.type)==1)then
+						PSEUDOFORECAST_SKILL(iconInfo.type)
+					end
+				end
+			end
         end
     end
-    CHAT_SYSTEM("CALL")
+ 
 end
 function PSEUDOFORECAST_SKILL(skillclsid)
     EBI_try_catch{
         try = function()
             if (PSEUDOFORECAST_MODE == 1) then
-                -- local duration = 1
-                -- --iesから読み込む
-				-- local class = GetClassByType("Skill", skillclsid)
-				-- CHAT_SYSTEM(class.SplType)
-				-- CHAT_SYSTEM(string.format("SPR:%d,SLA:%d,LEN:%d",SCR_Get_SplRange(class),SCR_SPLANGLE(class), SCR_Get_WaveLength(class)))
-				-- if(class.Target~="Actor")then
-				-- 	if (class.SplType == "Square") then
 
-				-- 		PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(SCR_Get_SplRange(class), SCR_Get_WaveLength(class), duration)
-				-- 	elseif (class.SplType == "Circle") then
-				-- 		PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(SCR_Get_WaveLength(class), duration)
-				-- 	elseif (class.SplType == "Fan") then
-				-- 		PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(SCR_Get_SplRange(class), SCR_SPLANGLE(class)*2, duration)
-				-- 	end
-				-- end
 			elseif(PSEUDOFORECAST_MODE==2)then
 				--xml(lua)から読み込む
 				local duration = 1
                 --iesから読み込む
 				local class = GetClassByType("Skill", skillclsid)
-				
-				CHAT_SYSTEM(string.format("Name:%s,SPR:%d,SLA:%d,LEN:%d",class.ClassName,SCR_Get_SplRange(class),SCR_SPLANGLE(class), SCR_Get_WaveLength(class)))
+				SCR_GET_SKL_CAST(class)
 				local xmlskls=PSEUDOFORECAST_DATA[class.ClassName]
 				if(xmlskls)then
 					if(class.Target~="Actor")then
 						for i=1,#xmlskls do
 							local xmlskl=xmlskls[i]
-							CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
+							--CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
 							ReserveScript(string.format('PSEUDOFORECAST_DELAYED_SKILLACTION("%s",%d)',
 							class.ClassName,i),xmlskl.timestart/1000.0)
 						end
@@ -135,9 +171,9 @@ function PSEUDOFORECAST_SKILL(skillclsid)
 end
 function PSEUDOFORECAST_DELAYED_SKILLACTION(classname,index)
 	local xmlskl=PSEUDOFORECAST_DATA[classname][index]
-	local duration=(xmlskl.timeend-xmlskl.timestart)/1000.0
+	local duration=math.max(0.5,(xmlskl.timeend-xmlskl.timestart)/1000.0)
 	if(xmlskl.timestart%10~=9)then
-		CHAT_SYSTEM(xmlskl.typ)
+
 		if (xmlskl.typ == "Square") then
 
 			PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(xmlskl.width, 
@@ -220,4 +256,23 @@ function PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(width, length,push,rotate, durati
 	PSEUDOFORECAST_DRAWSQUARE(pos.x+push*math.cos(angle/180*math.pi), pos.y+PSEUDOFORECAST_YOFFSET, pos.z+push*math.sin(angle/180*math.pi),
 	 dp.x, dp.y+PSEUDOFORECAST_YOFFSET, dp.z, width, duration)
 
+end
+function PSEUDOFORECAST_PROCESS_COMMAND(command)
+    local cmd = "";
+    
+    if #command > 0 then
+        cmd = table.remove(command, 1);
+    else
+        local msg = "usage{nl}/pf on 有効化{nl}/pf off 無効化"
+        return ui.MsgBox(msg, "", "Nope")
+    end
+    
+    if cmd == "on" then
+		PSEUDOFORECAST_ENABLE=true
+		CHAT_SYSTEM("[PF]ENABLED")
+	end
+    if cmd == "off" then
+		PSEUDOFORECAST_ENABLE=false
+		CHAT_SYSTEM("[PF]DISABLED")
+    end
 end

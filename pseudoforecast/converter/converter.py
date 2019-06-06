@@ -75,3 +75,5 @@ for skill in root:
         #             PSEUDOFORECAST_DATA[skill.attrib["Name"]].append(skilltable(scp,"Scp"))
 
 luadata.serialize(PSEUDOFORECAST_DATA,"skills.lua")
+with open("skills.lua","a") as f:
+    f.write("\nPSEUDOFORECAST_rawdata=data")
