@@ -126,5 +126,17 @@
     "tags" : [
       "shop"
     ]
+  },
+  {
+    "name" : "Pseudo Forecast",
+    "file" : "pseudoforecast",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "pseudoforecast-v0.0.1",
+    "unicode" : "📖",
+    "description" : "Forecastを疑似体験できる",
+    "tags" : [
+      "forecast"
+    ]
   }
 ]
