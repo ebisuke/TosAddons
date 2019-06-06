@@ -1,162 +1,119 @@
-function EBI_try_catch(what)
-    local status, result = pcall(what.try)
-    if not status then
-        what.catch(result)
-    end
-    return result
-end
-function EBI_UNPACK(str,index)
-
-  local curpos=index
-  local typ=EBI_UNPACK_INT32(str:sub(curpos,curpos+4-1))
-  curpos=curpos+4
-  local siz=EBI_UNPACK_INT32(str:sub(curpos,curpos+4-1))
-  curpos=curpos+4
-  print("hoge")
-  print(tostring(typ)..":"..tostring(siz))
-  --read type
-  local result
-  local payload = str:sub(curpos,curpos+siz-1)
-  
-  if (typ==0x00000001)then
-    --int
-    
-    result=EBI_UNPACK_INT32(payload)
-  elseif (typ==0x00000002)then
-    --string
-    result=str:sub(curpos,curpos+siz)
-   
-  elseif (typ==0x00000003)then
-    --table
-    local count=EBI_UNPACK_INT32(str:sub(curpos,curpos+4-1))
-    curpos=curpos+4
-    result={}
-    print("COUNT:"..tostring(count))
-
-    for i=1,count do
-      local incri,key=EBI_UNPACK(str:sub(curpos,-1),curpos)
-      curpos=curpos+incri
-      local incri2,val=EBI_UNPACK(str:sub(curpos,-1),curpos)
-      curpos=curpos+incri2
-      result[key]=val
-    end
-  end
-  curpos=curpos+siz
-  return curpos,result
-end
-function EBI_PACK(data)
-  local payload=""
-  local size
-  if(type(data)=="number")then
-
-    payload=payload..EBI_PACK_INT32(1)
-    payload=payload..EBI_PACK_INT32(4)
-    payload=payload..EBI_PACK_INT32(data)
-    size=4+8
-
-  elseif (type(data)=="string")then
-    payload=payload..EBI_PACK_INT32(2)
-    payload=payload..EBI_PACK_INT32(#data)
-    payload=payload..data
-    size=#data+8
-
-    
-  elseif (type(data)=="table")then
-
-
-    local tablestr=""
-    local count=0
-    local siz=0
-    for k,v in pairs(data)do
-      --  print(tostring(k)..":"..tostring(v))
-      local s,r=EBI_PACK(k)
-      tablestr=tablestr..r
-      siz=siz+s
-      s,r=EBI_PACK(v)
-      tablestr=tablestr..r
-      siz=siz+s
-      count=count+1  
-    end
-    payload=payload..EBI_PACK_INT32(3)..EBI_PACK_INT32(#tablestr+4)..EBI_PACK_INT32(count)..tablestr
-    print(tostring(#tablestr+4))
-    size=siz+8+4
-  end
-  return size,payload
-end
-function EBI_PACK_INT32(n)
-  return string.char(
-        math.floor(n / 0x1000000) % 0x100,
-        math.floor(n / 0x10000) % 0x100,
-        math.floor(n / 0x100) % 0x100,
-        n % 0x100)
-
-end
-function EBI_UNPACK_INT32(n)
-  print(tostring(#n))
-  local b1, b2, b3, b4 = n:sub(1, 4):byte(1, 4)
-  print(string.format("%d %d %d %d",b1,b2,b3,b4))
-  if b1 < 0x80 then
-      return ((b1 * 0x100 + b2) * 0x100 + b3) * 0x100 + b4
-  else
-      return ((((b1 - 0xFF) * 0x100 + (b2 - 0xFF)) * 0x100 + (b3 - 0xFF)) * 0x100 + (b4 - 0xFF)) - 1
-  end
-
-
-end
-function EBI_LOAD(filepath)
-
-    EBI_try_catch{
-        try=function()
-
-            local fd=io.open(filepath,"rb")
-            if fd~=nil then
-                local alldata=""
-                local partdata;
-                repeat
-                    partdata=fd:read(4096);
-                    if(partdata~=nil)then
-                        alldata=alldata..partdata
-                    end
-                until partdata==nil
-                print("alldata:"..tostring(#alldata))
-                fd:close()
-                
-                return EBI_UNPACK(alldata,1)
-            else
-                return nil;
-            end
-        end,
-        catch=function(error)
-            CHAT_SYSTEM(error)
-        end
-    }
-
-end
-function EBI_SAVE(filepath,table)
-
-    EBI_try_catch{
-        try=function()
-            local s,alldata=EBI_PACK(table)
-            print("len:"..tostring(#alldata))
-            local fd=io.open(filepath,"wb+")
-            fd:write(alldata)
-            fd:flush()
-            fd:close()
-        end,
-        catch=function(error)
-            CHAT_SYSTEM(error)
-        end
-}
-
-end
 _G['ADDONS'] = _G['ADDONS'] or {};
-_G['ADDONS']['BARRACKITEMLISTEBIMOD'] = _G['ADDONS']['BARRACKITEMLISTEBIMOD'] or {};
+_G['ADDONS']['BARRACKITEMLIST'] = _G['ADDONS']['BARRACKITEMLIST'] or {};
 local acutil = require('acutil')
-local g = _G['ADDONS']['BARRACKITEMLISTEBIMOD']
+local g = _G['ADDONS']['BARRACKITEMLIST']
+g.settingPath = '../addons/barrackitemlist/'
 
-g.settingPath = '../addons/BARRACKITEMLISTEBIMOD/'
-g.userlist  = acutil.loadJSON(g.settingPath..'userlist.json',nil) or {}
+--referenced from http://d.hatena.ne.jp/Ko-Ta/20100830/p1
+-- lua
+-- テーブルシリアライズ
+local function value2str(v)
+	local vt = type(v);
+	
+	if (vt=="nil")then
+		return "nil";
+	end;
+	if (vt=="number")then
+		return string.format("%d",v);
+	end;
+	if (vt=="string")then
+		return string.format('"%s"',v);
+	end;
+	if (vt=="boolean")then
+		if (v==true)then
+			return "true";
+		else
+			return "false";
+		end;
+	end;
+	if (vt=="function")then
+		return '"*function"';
+	end;
+	if (vt=="thread")then
+		return '"*thread"';
+	end;
+	if (vt=="userdata")then
+		return '"*userdata"';
+	end;
+	return '"UnsupportFormat"';
+end;
 
+local function field2str(v)
+	local vt = type(v);
+	
+	if (vt=="number")then
+		return string.format("[%d]",v);
+	end;
+	if (vt=="string")then
+		return string.format("%s",v);
+	end;
+	return 'UnknownField';
+end;
+
+local function serialize(t)
+	local f,v,buf;
+	
+	-- テーブルじゃない場合
+	if not(type(t)=="table")then
+		return value2str(t);
+	end
+	
+	buf = "";
+	f,v = next(t,nil);
+	while f do
+		-- ,を付加する
+		if (buf~="")then
+			buf = buf .. ",";
+		end;
+		-- 値
+		if (type(v)=="table")then
+			buf = buf .. field2str(f) .. "=" .. serialize(v);
+		else
+			buf = buf .. field2str(f) .. "=" .. value2str(v);
+		end;
+		-- 次の要素
+		f,v = next(t,f);
+	end
+	
+	buf = "{" .. buf .. "}";
+	return buf;
+end;
+local function loadfromfile_internal(path,dummy)
+    local result,data=pcall(dofile,path)
+    if(result)then
+        return data
+    else
+        return dummy
+    end
+end
+local function loadfromfile(path,dummy)
+    local env = {dofile=dofile,pcall=pcall}
+    local lff=loadfromfile_internal
+    setfenv(lff, env)
+    local result,data=pcall(lff,path,dummy)
+    if(result)then
+        return data
+    else
+
+        return dummy
+    end
+end;
+local function savetofile(path,data)
+    
+    local s="return "..serialize(data)
+    --CHAT_SYSTEM(tostring(#s))
+    local fn=io.open(path,"w+")
+    fn:write(s)
+    fn:flush()
+    fn:close()
+end;
+function BARRACKITEMLIST_DBG_CLEANUP()
+    g.itemlist ={}
+    g.userlist={}
+end
+
+g.userlist  = loadfromfile(g.settingPath..'userlist_fl.lua',nil) or {}
+g.warehouseList = loadfromfile(g.settingPath..'warehouse_fl.lua',nil) or {}
 g.nodeList = {
         {"Unused" , "シルバー"}
         ,{"Weapon" , "武器"}
@@ -174,74 +131,61 @@ g.nodeList = {
         ,{"Premium" ,"プレミアム"}
         ,{"warehouse","倉庫"}
     }
-g.setting = acutil.loadJSON(g.settingPath..'setting.json',nil)
+g.setting = loadfromfile(g.settingPath..'setting_fl.lua',nil)
 if not g.setting then
     g.setting = {}
     g.setting.col = 14
     g.setting.hideNode = {}
     g.setting.OpenNodeAll = false
-    acutil.saveJSON(g.settingPath..'setting.json',g.setting)
+    savetofile(g.settingPath..'setting_fl.lua',g.setting)
 end
 
 g.itemlist = g.itemlist or {}
-
-
-function OPEN_BARRACKITEMLISTEBIMOD()
-	ui.ToggleFrame('barrackitemlistebimod')
+for k,v in pairs(g.userlist) do
+    if not g.itemlist[k] then
+        g.itemlist[k] = loadfromfile(g.settingPath..k..'_fl.lua',nil)
+    end
 end
 
+function OPEN_BARRACKITEMLIST()
+	ui.ToggleFrame('barrackitemlist')
+end
 
-function TESTF_ON_MARKET_MINMAX_INFO(frame, msg, argStr, argNum)
-    CHAT_SYSTEM(argStr)
-  end
-
-function BARRACKITEMLISTEBIMOD_ON_INIT(addon,frame)
-
-
+function BARRACKITEMLIST_ON_INIT(addon,frame)
     local cid = info.GetCID(session.GetMyHandle())
     g.userlist[cid] = info.GetPCName(session.GetMyHandle())
-    acutil.saveJSON(g.settingPath..'userlist.json',g.userlist)
-    acutil.slashCommand('/itemlist', BARRACKITEMLISTEBIMOD_COMMAND)
-    acutil.slashCommand('/il',BARRACKITEMLISTEBIMOD_COMMAND)
+    savetofile(g.settingPath..'userlist_fl.lua',g.userlist)
+    acutil.slashCommand('/itemlist', BARRACKITEMLIST_COMMAND)
+    acutil.slashCommand('/il',BARRACKITEMLIST_COMMAND)
     
-    acutil.setupEvent(addon,'GAME_TO_BARRACK','BARRACKITEMLISTEBIMOD_SAVE_LIST')
-    acutil.setupEvent(addon,'GAME_TO_LOGIN','BARRACKITEMLISTEBIMOD_SAVE_LIST')
-    acutil.setupEvent(addon,'DO_QUIT_GAME','BARRACKITEMLISTEBIMOD_SAVE_LIST')
-    acutil.setupEvent(addon,'WAREHOUSE_CLOSE','BARRACKITEMLISTEBIMOD_SAVE_WAREHOUSE')
+    acutil.setupEvent(addon,'GAME_TO_BARRACK','BARRACKITEMLIST_SAVE_LIST')
+    acutil.setupEvent(addon,'GAME_TO_LOGIN','BARRACKITEMLIST_SAVE_LIST')
+    acutil.setupEvent(addon,'DO_QUIT_GAME','BARRACKITEMLIST_SAVE_LIST')
+    acutil.setupEvent(addon,'WAREHOUSE_CLOSE','BARRACKITEMLIST_SAVE_WAREHOUSE')
     -- acutil.setupEvent(addon, 'SELECT_CHARBTN_LBTNUP', 'SELECT_CHARBTN_LBTNUP_EVENT')
 
-    -- addon:RegisterMsg('GAME_START_3SEC','BARRACKITEMLISTEBIMOD_CREATE_VAR_ICONS')
-    acutil.addSysIcon("barrackitemlistebimod", "sysmenu_inv", "Barrack Item List", "OPEN_BARRACKITEMLISTEBIMOD")    
+    -- addon:RegisterMsg('GAME_START_3SEC','BARRACKITEMLIST_CREATE_VAR_ICONS')
+    acutil.addSysIcon("barrackitemlist", "sysmenu_inv", "Barrack Item List", "OPEN_BARRACKITEMLIST")    
     local droplist = tolua.cast(frame:GetChild("droplist"), "ui::CDropList");
     droplist:ClearItems()
     droplist:AddItem(1,'None')
     for k,v in pairs(g.userlist) do
-        droplist:AddItem(k,"{s20}"..v.."{/}",0,'BARRACKITEMLISTEBIMOD_SHOW_LIST()');
+        droplist:AddItem(k,"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
     end
     tolua.cast(frame:GetChild('tab'), "ui::CTabControl"):SelectTab(0)
     frame:GetChild('saveBtn'):SetTextTooltip('現在のキャラのインベントリを保存する')
-    BARRACKITEMLISTEBIMOD_CREATE_SETTINGMENU()
-    BARRACKITEMLISTEBIMOD_TAB_CHANGE(frame)
+    BARRACKITEMLIST_CREATE_SETTINGMENU()
+    BARRACKITEMLIST_TAB_CHANGE(frame)
     frame:ShowWindow(0)
-    BARRACKITEMLISTEBIMOD_SAVE_LIST()
-    acutil.setupEvent(addon,"MARKET_MINMAX_INFO", "TESTF_ON_MARKET_MINMAX_INFO");
+    BARRACKITEMLIST_SAVE_LIST()
 end
 
 -- function SELECT_CHARBTN_LBTNUP_EVENT(addonFrame, eventMsg)
 --     local parent, ctrl, cid, argNum = acutil.getEventArgs(eventMsg);
---     BARRACKITEMLISTEBIMOD_SHOW_LIST(cid)
+--     BARRACKITEMLIST_SHOW_LIST(cid)
 -- end
-function BARRACKITEMLISTEBIMOD_LOAD_LIST()
-  g.warehouseList = EBI_LOAD(g.settingPath..'warehouse.bin',nil) or {}
-  for k,v in pairs(g.userlist) do
-    ---if not g.itemlist[k] then
-        g.itemlist[k] = EBI_LOAD(g.settingPath..k..'.bin',nil)
 
-      --end
-  end
-  hoaa=g
-end
-function BARRACKITEMLISTEBIMOD_TAB_CHANGE(frame, obj, argStr, argNum)
+function BARRACKITEMLIST_TAB_CHANGE(frame, obj, argStr, argNum)
     local treeGbox = frame:GetChild('treeGbox')
     local droplist = frame:GetChild("droplist")
     local searchGbox = frame:GetChild('searchGbox')
@@ -254,15 +198,15 @@ function BARRACKITEMLISTEBIMOD_TAB_CHANGE(frame, obj, argStr, argNum)
         droplist:ShowWindow(1)
 		searchGbox:ShowWindow(0)
         settingGbox:ShowWindow(0)
-        BARRACKITEMLISTEBIMOD_SHOW_LIST()
-        BARRACKITEMLISTEBIMOD_SAVE_SETTINGMENU()
+        BARRACKITEMLIST_SHOW_LIST()
+        BARRACKITEMLIST_SAVE_SETTINGMENU()
 	elseif (tabIndex == 1) then
 		treeGbox:ShowWindow(0)
         droplist:ShowWindow(0)
 		searchGbox:ShowWindow(1)
         settingGbox:ShowWindow(0)
-        BARRACKITEMLISTEBIMOD_SAVE_SETTINGMENU()
-        BARRACKITEMLISTEBIMOD_SHOW_SEARCH_ITEMS()
+        BARRACKITEMLIST_SAVE_SETTINGMENU()
+        BARRACKITEMLIST_SHOW_SEARCH_ITEMS()
     else
         treeGbox:ShowWindow(0)
         droplist:ShowWindow(0)
@@ -271,12 +215,12 @@ function BARRACKITEMLISTEBIMOD_TAB_CHANGE(frame, obj, argStr, argNum)
 	end
 end
 
-function BARRACKITEMLISTEBIMOD_COMMAND(command)
-    BARRACKITEMLISTEBIMOD_CREATE_SETTINGMENU()
-    ui.ToggleFrame('barrackitemlistebimod')
+function BARRACKITEMLIST_COMMAND(command)
+    BARRACKITEMLIST_CREATE_SETTINGMENU()
+    ui.ToggleFrame('barrackitemlist')
 end 
 
-function BARRACKITEMLISTEBIMOD_SAVE_LIST()
+function BARRACKITEMLIST_SAVE_LIST()
     local list = {}
     session.BuildInvItemSortedList()
 	local invItemList = session.GetInvItemSortedList();
@@ -290,12 +234,12 @@ function BARRACKITEMLISTEBIMOD_SAVE_LIST()
         end
 	end
     local cid = info.GetCID(session.GetMyHandle())
-    EBI_SAVE(g.settingPath..cid..'.bin',list)
+    savetofile(g.settingPath..cid..'_fl.lua',list)
     g.itemlist[cid] = list  
 end
 
-function BARRACKITEMLISTEBIMOD_SHOW_LIST(cid)
-    local frame = ui.GetFrame('barrackitemlistebimod')
+function BARRACKITEMLIST_SHOW_LIST(cid)
+    local frame = ui.GetFrame('barrackitemlist')
     frame:ShowWindow(1)
     local gbox = GET_CHILD(frame,'treeGbox','ui::CGroupBox');
     local droplist = GET_CHILD(frame,'droplist', "ui::CDropList")
@@ -308,13 +252,9 @@ function BARRACKITEMLISTEBIMOD_SHOW_LIST(cid)
     end
     local list = g.itemlist[cid]
     if not list then
-        list ,e = EBI_LOAD(g.settingPath..cid..'.bin')
-        if(e==nil) then 
-          CHAT_SYSTEM("BBBB")
-          return
-         end
+        list ,e = loadfromfile(g.settingPath..cid..'_fl.lua',{})
+        if(e) then return end
     end
-    CHAT_SYSTEM("AAAA")
     g.warehouseList[tostring(cid)] = g.warehouseList[tostring(cid)] or {}
     list.warehouse =  g.warehouseList[tostring(cid)].warehouse or {};
     local tree = gbox:CreateOrGetControl('tree','tree'..cid,25,50,545,0)
@@ -337,17 +277,15 @@ function BARRACKITEMLISTEBIMOD_SHOW_LIST(cid)
                 else
                     tree:Add(value[2]);
                     parentCategory = tree:FindByCaption(value[2]);
-                    slotset = BARRACKITEMLISTEBIMOD_MAKE_SLOTSET(tree,value[1])
+                    slotset = BARRACKITEMLIST_MAKE_SLOTSET(tree,value[1])
                     tree:Add(parentCategory,slotset, 'slotset_'..value[1]);
                     for i ,v in ipairs(nodeItemList) do
                         slot = slotset:GetSlotByIndex(i - 1)
-
-
                         slot:SetText(string.format(v[2]))
                         slot:SetTextMaxWidth(1000)
                         icon = CreateIcon(slot)
                         icon:SetImage(v[3])
-                        icon:SetTextTooltip(string.format("%s : %s",BARRACKITEMLISTEBIMOD_GETNAMEBYCLASSID(v[1]),v[2]))
+                        icon:SetTextTooltip(string.format("%s : %s",v[1],v[2]))
                         if (i % g.setting.col) == 0 then
                             slotset:ExpandRow()
                         end
@@ -362,7 +300,7 @@ function BARRACKITEMLISTEBIMOD_SHOW_LIST(cid)
     tree:ShowWindow(1)
     frame:ShowWindow(1)
 end
-function BARRACKITEMLISTEBIMOD_MAKE_SLOTSET(tree, name)
+function BARRACKITEMLIST_MAKE_SLOTSET(tree, name)
     local col = g.setting.col
     local slotsize = math.floor(tree:GetWidth() / (col + 1))
     local slotsetTitle = 'slotset_titile_'..name
@@ -383,16 +321,14 @@ function BARRACKITEMLISTEBIMOD_MAKE_SLOTSET(tree, name)
 	return newslotset;
 end
 
-function BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(itemlist,itemName,iswarehouse)
+function BARRACKITEMLIST_SEARCH_ITEMS(itemlist,itemName,iswarehouse)
     local items = {}
     for cid,name in pairs(g.userlist) do
         if itemlist[cid] then
             for group,list in pairs(itemlist[cid]) do
                 if group ~= 'warehouse' or iswarehouse then
                     for i ,v in ipairs(list) do
-
-                        local name=BARRACKITEMLISTEBIMOD_GETNAMEBYCLASSID(v[1])
-                        if string.find(name,itemName) then
+                        if string.find(v[1],itemName) then
                             items[cid] = items[cid] or {}
                             table.insert(items[cid],v)
                         end
@@ -403,12 +339,9 @@ function BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(itemlist,itemName,iswarehouse)
     end
     return items
 end
-function BARRACKITEMLISTEBIMOD_GETNAMEBYCLASSID(clsid)
-  local itemCls=GetClassByType("Item",clsid)
-  return dictionary.ReplaceDicIDInCompStr(itemCls.Name)
-end
-function BARRACKITEMLISTEBIMOD_SHOW_SEARCH_ITEMS(frame, obj, argStr, argNum)
-    local frame = ui.GetFrame('barrackitemlistebimod')
+
+function BARRACKITEMLIST_SHOW_SEARCH_ITEMS(frame, obj, argStr, argNum)
+    local frame = ui.GetFrame('barrackitemlist')
     local searchGbox = frame:GetChild('searchGbox')
     local editbox = tolua.cast(searchGbox:GetChild('searchEdit'), "ui::CEditControl");
     local tree = searchGbox:CreateOrGetControl('tree','saerchTree',25,50,545,0)
@@ -419,23 +352,23 @@ function BARRACKITEMLISTEBIMOD_SHOW_SEARCH_ITEMS(frame, obj, argStr, argNum)
     tree:SetFitToChild(true,60); 
     tree:SetFontName("white_20_ol");
     if editbox:GetText() == '' or not editbox:GetText() then return end
-    local invItems = BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(g.itemlist,editbox:GetText(),false)
-    local warehouseItems = BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(g.warehouseList,editbox:GetText(),true)
+    local invItems = BARRACKITEMLIST_SEARCH_ITEMS(g.itemlist,editbox:GetText(),false)
+    local warehouseItems = BARRACKITEMLIST_SEARCH_ITEMS(g.warehouseList,editbox:GetText(),true)
     tree:Add('インベントリ')
-    _BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(tree,invItems,'_i')
+    _BARRACKITEMLIST_SEARCH_ITEMS(tree,invItems,'_i')
     tree:Add('倉庫')
-    _BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(tree,warehouseItems,'_w')
+    _BARRACKITEMLIST_SEARCH_ITEMS(tree,warehouseItems,'_w')
     tree:OpenNodeAll()
     tree:ShowWindow(1)
 end
 
-function _BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(tree,items,type)
+function _BARRACKITEMLIST_SEARCH_ITEMS(tree,items,type)
     local nodeName,parentCategory
     local slot,slotset,icon
     for k,value in pairs(items) do
         tree:Add(g.userlist[k]..type);
         parentCategory = tree:FindByCaption(g.userlist[k]..type);
-        slotset = BARRACKITEMLISTEBIMOD_MAKE_SLOTSET(tree,k..type)
+        slotset = BARRACKITEMLIST_MAKE_SLOTSET(tree,k..type)
         tree:Add(parentCategory,slotset, 'slotset_'..k..type);
         for i ,v in ipairs(value) do
             slot = slotset:GetSlotByIndex(i - 1)
@@ -453,13 +386,12 @@ function _BARRACKITEMLISTEBIMOD_SEARCH_ITEMS(tree,items,type)
 
 end
 
-function BARRACKITEMLISTEBIMOD_SAVE_WAREHOUSE()
+function BARRACKITEMLIST_SAVE_WAREHOUSE()
     local frame = ui.GetFrame('warehouse')
     local slotset = frame:GetChild("gbox"):GetChild('slotset')
     tolua.cast(slotset,'ui::CSlotSet')
     local items = {}
     local slot , item
-    
 	for i = 0 , slotset:GetSlotCount() -1 do
          slot = slotset:GetSlotByIndex(i)
          item = GetItemData(GetObjBySlot(slot))
@@ -470,7 +402,7 @@ function BARRACKITEMLISTEBIMOD_SAVE_WAREHOUSE()
     local cid = tostring(info.GetCID(session.GetMyHandle()))
     g.warehouseList[cid] = {}
     g.warehouseList[cid].warehouse = items
-    EBI_SAVE(g.settingPath..'warehouse.bin',g.warehouseList)
+    savetofile(g.settingPath..'warehouse_fl.lua',g.warehouseList)
 end
 
  function GetItemData(obj,item)
@@ -494,7 +426,7 @@ end
             end
         end
     end
-    return {obj.ClassID,itemCount,iconImg}
+    return {itemName,itemCount,iconImg}
 end
 
  function GetObjBySlot(slot)
@@ -505,8 +437,8 @@ end
     return GetObjectByGuid(IESID) ,info ,IESID
 end
 
-function BARRACKITEMLISTEBIMOD_CREATE_SETTINGMENU()
-    local frame = ui.GetFrame('barrackitemlistebimod')
+function BARRACKITEMLIST_CREATE_SETTINGMENU()
+    local frame = ui.GetFrame('barrackitemlist')
     local settingGbox = frame:GetChild('settingGbox')
     local hideNodeGbox = settingGbox:GetChild('hideNodeGbox')
 
@@ -534,8 +466,8 @@ function BARRACKITEMLISTEBIMOD_CREATE_SETTINGMENU()
     end
 end
 
-function BARRACKITEMLISTEBIMOD_SAVE_SETTINGMENU() 
-    local frame = ui.GetFrame('barrackitemlistebimod')
+function BARRACKITEMLIST_SAVE_SETTINGMENU() 
+    local frame = ui.GetFrame('barrackitemlist')
     local settingGbox = frame:GetChild('settingGbox')
     local hideNodeGbox = settingGbox:GetChild('hideNodeGbox')
     -- save slotsize droplist
@@ -558,10 +490,10 @@ function BARRACKITEMLISTEBIMOD_SAVE_SETTINGMENU()
     else
         g.setting.OpenNodeAll = false
     end
-    acutil.saveJSON(g.settingPath..'setting.json',g.setting)
+    savetofile(g.settingPath..'setting_fl.lua',g.setting)
 end
 
-function BARRACKITEMLISTEBIMOD_CREATE_VAR_ICONS()
+function BARRACKITEMLIST_CREATE_VAR_ICONS()
     local frame = ui.GetFrame("sysmenu");
 	if false == VARICON_VISIBLE_STATE_CHANTED(frame, "necronomicon", "necronomicon")
 	and false == VARICON_VISIBLE_STATE_CHANTED(frame, "grimoire", "grimoire")
@@ -585,14 +517,14 @@ function BARRACKITEMLISTEBIMOD_CREATE_VAR_ICONS()
     if _G["EXPCARDCALCULATOR"] then
     	rightMargin = SYSMENU_CREATE_VARICON(frame, status, "expcardcalculator", "expcardcalculator", "addonmenu_expcard", rightMargin, offsetX, "Experience Card Calculator") or rightMargin
 	end
-    rightMargin = SYSMENU_CREATE_VARICON(frame, status, "barrackitemlistebimod", "barrackitemlistebimod", "sysmenu_inv", rightMargin, offsetX, "barrack item list");
+    rightMargin = SYSMENU_CREATE_VARICON(frame, status, "barrackitemlist", "barrackitemlist", "sysmenu_inv", rightMargin, offsetX, "barrack item list");
     local expcardcalculatorButton = GET_CHILD(frame, "expcardcalculator", "ui::CButton");
 	if expcardcalculatorButton ~= nil then
 		expcardcalculatorButton:SetTextTooltip("{@st59}expcardcalculator");
 	end
 
-	local BARRACKITEMLISTEBIMODButton = GET_CHILD(frame, "barrackitemlistebimod", "ui::CButton");
-	if BARRACKITEMLISTEBIMODButton ~= nil then
-		BARRACKITEMLISTEBIMODButton:SetTextTooltip("{@st59}barrackitemlistebimod");
+	local barrackitemlistButton = GET_CHILD(frame, "barrackitemlist", "ui::CButton");
+	if barrackitemlistButton ~= nil then
+		barrackitemlistButton:SetTextTooltip("{@st59}barrackitemlist");
 	end
 end
