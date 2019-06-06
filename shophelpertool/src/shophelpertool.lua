@@ -1,5 +1,5 @@
 --OLD_SHOP_ITEM_LIST_GET
-function try_catch(what)
+function EBI_try_catch(what)
 	local status, result = pcall(what.try)
 	if not status then
 		what.catch(result)
@@ -20,7 +20,7 @@ end
 SHOPHELPERTOOL_FOODBOX=false
 function SHOPHELPERTOOL_SHOP_ITEM_LIST_GET(frame)
 
-	try_catch{
+	EBI_try_catch{
 		try=function()
 
 			if frame == nil then
@@ -130,7 +130,7 @@ function SHOPHELPERTOOL_GENERATEBUTTON(SHOPITEM_listSet,listindex,drawindex,clsi
 end
 
 function SHOPHELPERTOOL_BUY(frame, ctrl, argstr, argnum)
-	try_catch{
+	EBI_try_catch{
 		try=function()
 			local clsid = tonumber(argstr)
 			if(SHOPHELPERTOOL_FOODBOX==true)then
