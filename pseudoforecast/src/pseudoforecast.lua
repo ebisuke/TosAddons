@@ -192,7 +192,7 @@ function PSEUDOFORECAST_DELAYED_SKILLACTION(classname,index)
 			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width,push,xmlskl.rotate, duration)
 		elseif (xmlskl.typ == "Fan") then
 			PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.length,
-			xmlskl.angle*180.0/math.pi*4,push,(xmlskl.rotate)*180.0/math.pi, duration)
+			xmlskl.angle*180.0/math.pi*4,0,(xmlskl.rotate)*180.0/math.pi, duration)
 		end
 	end
 end
