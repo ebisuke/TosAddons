@@ -37,6 +37,7 @@ def skilltable(frm,mode):
             "typ": patfrm[pick(frm.attrib, "Type")],
             "rotate":pick(frm.attrib,"RotAngle"),
             "dist": pick(frm.attrib, "Dist"),
+            "postype": pick(frm.attrib, "PosType"),
             "mode":mode
         }
     elif mode=="Scp":

@@ -131,8 +131,8 @@
     "name" : "Pseudo Forecast",
     "file" : "pseudoforecast",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "pseudoforecast-v0.0.2",
+    "fileVersion" : "v0.0.3",
+    "releaseTag" : "pseudoforecast-v0.0.3",
     "unicode" : "📖",
     "description" : "Forecastを疑似体験できる",
     "tags" : [

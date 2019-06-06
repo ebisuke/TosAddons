@@ -178,17 +178,21 @@ end
 function PSEUDOFORECAST_DELAYED_SKILLACTION(classname,index)
 	local xmlskl=PSEUDOFORECAST_DATA[classname][index]
 	local duration=math.max(0.5,(xmlskl.timeend-xmlskl.timestart)/1000.0)
+	local push =xmlskl.length
+	if(tonumber(xmlskl.postype)==1)then
+		push=0
+	end
 	if(xmlskl.timestart%10~=9)then
 
 		if (xmlskl.typ == "Square") then
 
 			PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width, 
-			xmlskl.length,xmlskl.dist,xmlskl.rotate*180.0/math.pi, duration)
+			push,0,xmlskl.rotate*180.0/math.pi, duration)
 		elseif (xmlskl.typ == "Circle") then
-			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width,xmlskl.length+xmlskl.dist,xmlskl.rotate, duration)
+			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width,push,xmlskl.rotate, duration)
 		elseif (xmlskl.typ == "Fan") then
 			PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.length,
-			xmlskl.angle*180.0/math.pi*4,xmlskl.dist,(xmlskl.rotate)*180.0/math.pi, duration)
+			xmlskl.angle*180.0/math.pi*4,push,(xmlskl.rotate)*180.0/math.pi, duration)
 		end
 	end
 end
