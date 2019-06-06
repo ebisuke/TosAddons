@@ -71,3 +71,12 @@ pseudoforecast/bin/pseudoforecast-v0.0.1.ipf
 .vscode/launch.json
 pseudoforecast/converter/skill_bytool.xml
 pseudoforecast/obj/addon_d.ipf/pseudoforecast/skills.lua
+cleverninja/src/cleverninja.xml
+cleverninja/buildall.ps1
+cleverninja/bin/__cleverninja-📖-v0.0.0.ipf
+cleverninja/bin/cleverninja-v0.0.0.ipf
+cleverninja/obj/addon_d.ipf/cleverninja/cleverninja.lua
+cleverninja/obj/addon_d.ipf/cleverninja/cleverninja.xml
+cleverninja/src/cleverninja.lua
+pseudoforecast/bin/__pseudoforecast-📖-v0.0.2.ipf
+pseudoforecast/bin/pseudoforecast-v0.0.2.ipf

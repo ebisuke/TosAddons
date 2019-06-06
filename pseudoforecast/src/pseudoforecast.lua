@@ -8,9 +8,7 @@ function EBI_try_catch(what)
 end
 
 local acutil = require('acutil')
---mode 1 from ies
---mode 2 from xml
-PSEUDOFORECAST_MODE = 2
+
 PSEUDOFORECAST_ENABLE=false
 PSEUDOFORECAST_CASTING_SKILLID=nil
 PSEUDOFORECAST_YOFFSET=10
@@ -22,6 +20,8 @@ PSEUDOFORECAST_DATA={
 	}
 
 }
+PSEUDOFORECAST_ORIGIN={x=0,y=0,z=0}
+PSEUDOFORECAST_ANGLE=0
 
 -- ライブラリ読み込み
 function PSEUDOFORECAST_ON_INIT(addon, frame)
@@ -34,7 +34,7 @@ function PSEUDOFORECAST_ON_INIT(addon, frame)
 			end
 			addon:RegisterMsg('DYNAMIC_CAST_BEGIN', 'PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG');
 			addon:RegisterMsg('DYNAMIC_CAST_END', 'PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG');
-			--addon:RegisterMsg('GAME_START_SE', 'PSEUDOFORECAST_DYNAMIC_CASTINGBAR_ON_MSG');
+	
 			PSEUDOFORECAST_LOADSKILLS()
 			acutil.slashCommand("/pf", PSEUDOFORECAST_PROCESS_COMMAND);
         end,
@@ -121,46 +121,52 @@ function PSEUDOFORECAST_ICON_USE(object, reAction)
 			if(myActor:IsSkillState()==false and 
 			skillobj:GetRemainRefreshTimeMS()<=0 and 
 			skillobj:GetCurrentCoolDownTime()<=0)then
-				local result,casttime=pcall(SCR_GET_SKL_CastTime,class)
-				if(result and casttime>0)then
-					--キャストが必要なら今は呼ばない
 
-				else
-					--それは使える？
-					if(control.IsSkillIconUsable(iconInfo.type)==1)then
-						PSEUDOFORECAST_SKILL(iconInfo.type)
-					end
+				--それは使える？
+				if(control.IsSkillIconUsable(iconInfo.type)==1)then
+					ReserveScript(string.format("PSEUDOFORECAST_JUDGSKILL(%d)",iconInfo.type),0.01)
 				end
+			
 			end
         end
     end
  
 end
+function PSEUDOFORECAST_JUDGSKILL(skillclsid)
+	--CHAT_SYSTEM(tostring(PSEUDOFORECAST_CASTING_SKILLID)..","..tostring(skillclsid))
+	if(not PSEUDOFORECAST_CASTING_SKILLID)then
+		PSEUDOFORECAST_SKILL(skillclsid)
+	end
+end
 function PSEUDOFORECAST_SKILL(skillclsid)
     EBI_try_catch{
         try = function()
-            if (PSEUDOFORECAST_MODE == 1) then
 
-			elseif(PSEUDOFORECAST_MODE==2)then
-				--xml(lua)から読み込む
-				local duration = 1
-                --iesから読み込む
-				local class = GetClassByType("Skill", skillclsid)
-				SCR_GET_SKL_CAST(class)
-				local xmlskls=PSEUDOFORECAST_DATA[class.ClassName]
-				if(xmlskls)then
-					if(class.Target~="Actor")then
-						for i=1,#xmlskls do
-							local xmlskl=xmlskls[i]
-							--CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
-							ReserveScript(string.format('PSEUDOFORECAST_DELAYED_SKILLACTION("%s",%d)',
-							class.ClassName,i),xmlskl.timestart/1000.0)
-						end
-
-						
+			--xml(lua)から読み込む
+			local duration = 1
+			--iesから読み込む
+			local class = GetClassByType("Skill", skillclsid)
+			--SCR_GET_SKL_CAST(class)
+			local xmlskls=PSEUDOFORECAST_DATA[class.ClassName]
+			local actor = GetMyActor()
+			local pos = actor:GetPos()
+			local angle = fsmactor.GetAngle(actor)
+			PSEUDOFORECAST_ORIGIN={x=pos.x,y=pos.y,z=pos.z}
+			PSEUDOFORECAST_ANGLE=angle
+			
+			if(xmlskls)then
+				if(class.Target~="Actor")then
+					for i=1,#xmlskls do
+						local xmlskl=xmlskls[i]
+						--CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
+						ReserveScript(string.format('PSEUDOFORECAST_DELAYED_SKILLACTION("%s",%d)',
+						class.ClassName,i),xmlskl.timestart/1000.0)
 					end
+
+					
 				end
 			end
+			
         end,
         
         catch = function(error)
@@ -176,13 +182,13 @@ function PSEUDOFORECAST_DELAYED_SKILLACTION(classname,index)
 
 		if (xmlskl.typ == "Square") then
 
-			PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(xmlskl.width, 
-			xmlskl.length,0,xmlskl.rotate*180.0/math.pi, duration)
+			PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width, 
+			xmlskl.length,xmlskl.dist,xmlskl.rotate*180.0/math.pi, duration)
 		elseif (xmlskl.typ == "Circle") then
-			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(xmlskl.width,xmlskl.length,xmlskl.rotate, duration)
+			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width,xmlskl.length+xmlskl.dist,xmlskl.rotate, duration)
 		elseif (xmlskl.typ == "Fan") then
-			PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(xmlskl.length,
-			xmlskl.angle*180.0/math.pi*4,0,(xmlskl.rotate)*180.0/math.pi, duration)
+			PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.length,
+			xmlskl.angle*180.0/math.pi*4,xmlskl.dist,(xmlskl.rotate)*180.0/math.pi, duration)
 		end
 	end
 end
@@ -198,11 +204,12 @@ function PSEUDOFORECAST_DRAWFAN(x, y, z, ampx, ampy, length, arcangle, duration,
         end
     end
 end
-function PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(length, arcangle,push,rotate, duration)
+function PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(origin,oangle,length, arcangle,push,rotate, duration)
     
     local actor = GetMyActor()
-    local pos = actor:GetPos()
-    local angle = fsmactor.GetAngle(actor)+rotate
+    local pos = origin
+    --local angle = fsmactor.GetAngle(actor)+rotate
+	local angle=oangle+rotate
 	PSEUDOFORECAST_DRAWFAN(
 		pos.x+push*math.cos(angle/180.0*math.pi), 
 		pos.y+PSEUDOFORECAST_YOFFSET, 
@@ -225,11 +232,12 @@ function PSEUDOFORECAST_DRAWPOS(x, y, z, radius, duration, continued)
         end
     end
 end
-function PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(radius,push,rotate,duration)
+function PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(origin,oangle,radius,push,rotate,duration)
     
     local actor = GetMyActor()
-    local pos = actor:GetPos()
-    local angle = fsmactor.GetAngle(actor)
+    local pos = origin
+	--local angle = fsmactor.GetAngle(actor)
+	local angle=oangle+rotate
 	PSEUDOFORECAST_DRAWPOS(pos.x+push*math.cos(angle/180*math.pi), pos.y+PSEUDOFORECAST_YOFFSET, 
 	pos.z+push*math.sin(angle/180*math.pi), radius, duration)
 end
@@ -243,18 +251,22 @@ function PSEUDOFORECAST_DRAWSQUARE(x, y, z, xx, yy, zz, width, duration, continu
         PSEUDOFORECAST_DRAWSQUARE_IMPL(x, y, z, xx, yy, zz, width, duration)
     end
 end
-function PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(width, length,push,rotate, duration)
+function PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(origin,oangle,width, length,push,rotate, duration)
     
     local actor = GetMyActor()
-    local pos = actor:GetPos()
-	local angle = fsmactor.GetAngle(actor) * math.pi / 180.0
+    local pos = origin
+	--local angle = fsmactor.GetAngle(actor) * math.pi / 180.0
+	local angle=(oangle)* math.pi / 180.0
     local dp = {
-        x = math.cos(angle+rotate/180.0*math.pi) * length + pos.x+push*math.sin(angle/180*math.pi),
+        x = math.cos((oangle+rotate)/180.0*math.pi) * (length+push)+pos.x ,
         y = pos.y,
-        z = math.sin(angle+rotate/180.0*math.pi) * length + pos.z+push*math.cos(angle/180*math.pi)
+        z = math.sin((oangle+rotate)/180.0*math.pi) * (length+push)+pos.z 
     }
-	PSEUDOFORECAST_DRAWSQUARE(pos.x+push*math.cos(angle/180*math.pi), pos.y+PSEUDOFORECAST_YOFFSET, pos.z+push*math.sin(angle/180*math.pi),
-	 dp.x, dp.y+PSEUDOFORECAST_YOFFSET, dp.z, width, duration)
+	PSEUDOFORECAST_DRAWSQUARE(
+		pos.x+push*math.cos((oangle+rotate)/180.0*math.pi),
+		pos.y+PSEUDOFORECAST_YOFFSET,
+	 	pos.z+push*math.sin((oangle+rotate)/180.0*math.pi),
+	 	dp.x, dp.y+PSEUDOFORECAST_YOFFSET, dp.z, width, duration)
 
 end
 function PSEUDOFORECAST_PROCESS_COMMAND(command)

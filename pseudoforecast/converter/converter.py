@@ -27,7 +27,7 @@ def pick(attr,name):
         return 0
 def skilltable(frm,mode):
     if mode=="MainSkl":
-        print(str(pick(frm.attrib,"Name")))
+        #print(str(pick(frm.attrib,"Name")))
         return {
             "timestart":pick(frm.attrib,"Time"),
             "timeend":pick(frm.attrib,"AniTime"),
@@ -36,6 +36,7 @@ def skilltable(frm,mode):
             "length":pick(frm.attrib,"Length"),
             "typ": patfrm[pick(frm.attrib, "Type")],
             "rotate":pick(frm.attrib,"RotAngle"),
+            "dist": pick(frm.attrib, "Dist"),
             "mode":mode
         }
     elif mode=="Scp":
