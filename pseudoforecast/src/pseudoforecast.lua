@@ -121,20 +121,22 @@ function PSEUDOFORECAST_ICON_USE(object, reAction)
 			if(myActor:IsSkillState()==false and 
 			skillobj:GetRemainRefreshTimeMS()<=0 and 
 			skillobj:GetCurrentCoolDownTime()<=0)then
-				local result,casttime=pcall(SCR_GET_SKL_CastTime,class)
-				if(result and casttime>0)then
-					--キャストが必要なら今は呼ばない
 
-				else
-					--それは使える？
-					if(control.IsSkillIconUsable(iconInfo.type)==1)then
-						PSEUDOFORECAST_SKILL(iconInfo.type)
-					end
+				--それは使える？
+				if(control.IsSkillIconUsable(iconInfo.type)==1)then
+					ReserveScript(string.format("PSEUDOFORECAST_JUDGSKILL(%d)",iconInfo.type),0.01)
 				end
+			
 			end
         end
     end
  
+end
+function PSEUDOFORECAST_JUDGSKILL(skillclsid)
+	--CHAT_SYSTEM(tostring(PSEUDOFORECAST_CASTING_SKILLID)..","..tostring(skillclsid))
+	if(not PSEUDOFORECAST_CASTING_SKILLID)then
+		PSEUDOFORECAST_SKILL(skillclsid)
+	end
 end
 function PSEUDOFORECAST_SKILL(skillclsid)
     EBI_try_catch{
@@ -146,7 +148,7 @@ function PSEUDOFORECAST_SKILL(skillclsid)
 				local duration = 1
                 --iesから読み込む
 				local class = GetClassByType("Skill", skillclsid)
-				SCR_GET_SKL_CAST(class)
+				--SCR_GET_SKL_CAST(class)
 				local xmlskls=PSEUDOFORECAST_DATA[class.ClassName]
 				if(xmlskls)then
 					if(class.Target~="Actor")then
