@@ -6,11 +6,11 @@ function EBI_try_catch(what)
     end
     return result
 end
-local status, xml = pcall(require, "xmlSimple");
+
 local acutil = require('acutil')
 --mode 1 from ies
 --mode 2 from xml
-PSEUDOFORECAST_MODE = 1
+PSEUDOFORECAST_MODE = 2
 PSEUDOFORECAST_COROUTINE=nil
 PSEUDOFORECAST_YOFFSET=10
 PSEUDOFORECAST_DATA={
@@ -21,6 +21,9 @@ PSEUDOFORECAST_DATA={
 	}
 
 }
+if(PSEUDOFORECAST_MODE==2)then
+	PSEUDOFORECAST_LOADSKILLS()
+end
 -- ライブラリ読み込み
 function PSEUDOFORECAST_ON_INIT(addon, frame)
     EBI_try_catch{
@@ -39,62 +42,24 @@ function PSEUDOFORECAST_ON_INIT(addon, frame)
 
 end
 
-function PSEUDOFORECAST_LOADXML()
+function PSEUDOFORECAST_LOADSKILLS()
 	EBI_try_catch{
-        try = function()
-		local ps=xml.newParser():loadFile("../addons/pseudoforecast/skill_bytool.xml");
-		CHAT_SYSTEM(tostring(ps))
-		PSEUDOFORECAST_DATA={}
-		--ロードしていくが
-		PSEUDOFORECAST_LOADINGXML()
-	end,
-	catch = function(error)
-		CHAT_SYSTEM(error)
-	end
+		try = function()
+			PSEUDOFORECAST_DATA={}
+			dofile("../addons/pseudoforecast/skills.lua")
+			local t = data
+			CHAT_SYSTEM(tostring(t))
+			PSEUDOFORECAST_DATA=t
+
+		end,
+		catch = function(error)
+			CHAT_SYSTEM(error)
+			
+		end
 	}
 
 end
 
-function PSEUDOFORECAST_LOADINGXML(ps)
-	local colo = coroutine.create(function()
-		EBI_try_catch{
-		try = function()
-			local skills = ps["ToolSkill"]:children();
-			for i = 1, #skills do
-				local skill = skills[i];
-				local mainskil=skill["MainSkl"]
-				local hitlist=mainskil["HitList"]
-				if(hitlist)then
-					for j = 1, #hitlist do
-						local hit=hitlist[i]
-						if(PSEUDOFORECAST_DATA[skill["@Name"]]==nil)then
-							PSEUDOFORECAST_DATA[skill["@Name"]]={}
-						end
-						PSEUDOFORECAST_DATA[skill["@Name"]][#PSEUDOFORECAST_DATA[skill["@Name"]]+1]=
-						{
-							timestart=hit["@Time"],
-							timeend=hit["@AniTime"],
-							angle=hit["@Angle"],
-							width=hit["@Width"],
-							length=hit["@Length"],
-						}
-						
-					end
-				end
-				if(i%5==0)then
-					coroutine.yield()
-				end
-			end
-		end,
-		catch = function(error)
-			CHAT_SYSTEM(error)
-		end
-		}
-		end
-	)
-	PSEUDOFORECAST_COROUTINE=colo
-	PSEUDOFORECAST_WAITFORCOROUTINE()
-end
 
 function PSEUDOFORECAST_WAITFORCOROUTINE()
 
@@ -124,22 +89,42 @@ function PSEUDOFORECAST_SKILL(skillclsid)
     EBI_try_catch{
         try = function()
             if (PSEUDOFORECAST_MODE == 1) then
-                local duration = 1
+                -- local duration = 1
+                -- --iesから読み込む
+				-- local class = GetClassByType("Skill", skillclsid)
+				-- CHAT_SYSTEM(class.SplType)
+				-- CHAT_SYSTEM(string.format("SPR:%d,SLA:%d,LEN:%d",SCR_Get_SplRange(class),SCR_SPLANGLE(class), SCR_Get_WaveLength(class)))
+				-- if(class.Target~="Actor")then
+				-- 	if (class.SplType == "Square") then
+
+				-- 		PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(SCR_Get_SplRange(class), SCR_Get_WaveLength(class), duration)
+				-- 	elseif (class.SplType == "Circle") then
+				-- 		PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(SCR_Get_WaveLength(class), duration)
+				-- 	elseif (class.SplType == "Fan") then
+				-- 		PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(SCR_Get_SplRange(class), SCR_SPLANGLE(class)*2, duration)
+				-- 	end
+				-- end
+			elseif(PSEUDOFORECAST_MODE==2)then
+				--xml(lua)から読み込む
+				local duration = 1
                 --iesから読み込む
 				local class = GetClassByType("Skill", skillclsid)
-				CHAT_SYSTEM(class.SplType)
-				CHAT_SYSTEM(string.format("SPR:%d,SLA:%d,LEN:%d",SCR_Get_SplRange(class),SCR_SPLANGLE(class), SCR_Get_WaveLength(class)))
-				if(class.Target~="Actor")then
-					if (class.SplType == "Square") then
+				
+				CHAT_SYSTEM(string.format("Name:%s,SPR:%d,SLA:%d,LEN:%d",class.ClassName,SCR_Get_SplRange(class),SCR_SPLANGLE(class), SCR_Get_WaveLength(class)))
+				local xmlskls=PSEUDOFORECAST_DATA[class.ClassName]
+				if(xmlskls)then
+					if(class.Target~="Actor")then
+						for i=1,#xmlskls do
+							local xmlskl=xmlskls[i]
+							CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
+							ReserveScript(string.format('PSEUDOFORECAST_DELAYED_SKILLACTION("%s",%d)',
+							class.ClassName,i),xmlskl.timestart/1000.0)
+						end
 
-						PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(SCR_Get_SplRange(class), SCR_Get_WaveLength(class), duration)
-					elseif (class.SplType == "Circle") then
-						PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(SCR_Get_WaveLength(class), duration)
-					elseif (class.SplType == "Fan") then
-						PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(SCR_Get_SplRange(class), SCR_SPLANGLE(class)*2, duration)
+						
 					end
 				end
-            end
+			end
         end,
         
         catch = function(error)
@@ -148,7 +133,23 @@ function PSEUDOFORECAST_SKILL(skillclsid)
     }
 
 end
+function PSEUDOFORECAST_DELAYED_SKILLACTION(classname,index)
+	local xmlskl=PSEUDOFORECAST_DATA[classname][index]
+	local duration=(xmlskl.timeend-xmlskl.timestart)/1000.0
+	if(xmlskl.timestart%10~=9)then
+		CHAT_SYSTEM(xmlskl.typ)
+		if (xmlskl.typ == "Square") then
 
+			PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(xmlskl.width, 
+			xmlskl.length,0,xmlskl.rotate*180.0/math.pi, duration)
+		elseif (xmlskl.typ == "Circle") then
+			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(xmlskl.width,xmlskl.length,xmlskl.rotate, duration)
+		elseif (xmlskl.typ == "Fan") then
+			PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(xmlskl.length,
+			xmlskl.angle*180.0/math.pi*4,0,(xmlskl.rotate)*180.0/math.pi, duration)
+		end
+	end
+end
 function PSEUDOFORECAST_DRAWFAN_IMPL(x, y, z, ampx, ampy, length, arcangle)
     debug.DrawFan(x, y, z, ampx, ampy, arcangle, length)
 end
@@ -161,13 +162,19 @@ function PSEUDOFORECAST_DRAWFAN(x, y, z, ampx, ampy, length, arcangle, duration,
         end
     end
 end
-function PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(length, arcangle, duration)
+function PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(length, arcangle,push,rotate, duration)
     
     local actor = GetMyActor()
     local pos = actor:GetPos()
-    local angle = fsmactor.GetAngle(actor)
-	PSEUDOFORECAST_DRAWFAN(pos.x, pos.y+PSEUDOFORECAST_YOFFSET, pos.z,
-	 math.cos(angle / 180.0 * math.pi), math.sin(angle / 180.0 * math.pi), length, arcangle / 2.0,duration)
+    local angle = fsmactor.GetAngle(actor)+rotate
+	PSEUDOFORECAST_DRAWFAN(
+		pos.x+push*math.cos(angle/180.0*math.pi), 
+		pos.y+PSEUDOFORECAST_YOFFSET, 
+		pos.z+push*math.sin(angle/180.0*math.pi),
+		 math.cos(angle / 180.0 * math.pi), 
+		 math.sin(angle / 180.0 * math.pi), 
+		 length, 
+		 arcangle / 2.0,duration)
 end
 function PSEUDOFORECAST_DRAWPOS_IMPL(x, y, z, radius)
     debug.DrawPos(x, y, z, radius)
@@ -182,12 +189,13 @@ function PSEUDOFORECAST_DRAWPOS(x, y, z, radius, duration, continued)
         end
     end
 end
-function PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(radius, duration)
+function PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(radius,push,rotate,duration)
     
     local actor = GetMyActor()
     local pos = actor:GetPos()
     local angle = fsmactor.GetAngle(actor)
-    PSEUDOFORECAST_DRAWPOS(pos.x, pos.y+PSEUDOFORECAST_YOFFSET, pos.z, radius, duration)
+	PSEUDOFORECAST_DRAWPOS(pos.x+push*math.cos(angle/180*math.pi), pos.y+PSEUDOFORECAST_YOFFSET, 
+	pos.z+push*math.sin(angle/180*math.pi), radius, duration)
 end
 function PSEUDOFORECAST_DRAWSQUARE_IMPL(x, y, z, xx, yy, zz, width, duration)
 	debug.DrawSquare(x, y, z, xx, yy, zz, width, duration)
@@ -199,16 +207,17 @@ function PSEUDOFORECAST_DRAWSQUARE(x, y, z, xx, yy, zz, width, duration, continu
         PSEUDOFORECAST_DRAWSQUARE_IMPL(x, y, z, xx, yy, zz, width, duration)
     end
 end
-function PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(width, length, duration)
+function PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(width, length,push,rotate, duration)
     
     local actor = GetMyActor()
     local pos = actor:GetPos()
-    local angle = fsmactor.GetAngle(actor) * math.pi / 180.0
+	local angle = fsmactor.GetAngle(actor) * math.pi / 180.0
     local dp = {
-        x = math.cos(angle) * length + pos.x,
+        x = math.cos(angle+rotate/180.0*math.pi) * length + pos.x+push*math.sin(angle/180*math.pi),
         y = pos.y,
-        z = math.sin(angle) * length + pos.z
+        z = math.sin(angle+rotate/180.0*math.pi) * length + pos.z+push*math.cos(angle/180*math.pi)
     }
-    PSEUDOFORECAST_DRAWSQUARE(pos.x, pos.y+PSEUDOFORECAST_YOFFSET, pos.z, dp.x, dp.y+PSEUDOFORECAST_YOFFSET, dp.z, width, duration)
+	PSEUDOFORECAST_DRAWSQUARE(pos.x+push*math.cos(angle/180*math.pi), pos.y+PSEUDOFORECAST_YOFFSET, pos.z+push*math.sin(angle/180*math.pi),
+	 dp.x, dp.y+PSEUDOFORECAST_YOFFSET, dp.z, width, duration)
 
 end
