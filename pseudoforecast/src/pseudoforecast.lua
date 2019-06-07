@@ -179,22 +179,24 @@ function PSEUDOFORECAST_DELAYED_SKILLACTION(classname,index)
 	local xmlskl=PSEUDOFORECAST_DATA[classname][index]
 	local duration=math.max(0.5,(xmlskl.timeend-xmlskl.timestart)/1000.0)
 	local push =xmlskl.length
+	if(xmlskl.timestart%10==9)then
+		return
+	end
 	if(tonumber(xmlskl.postype)==1)then
 		push=0
 	end
-	if(xmlskl.timestart%10~=9)then
 
-		if (xmlskl.typ == "Square") then
+	if (xmlskl.typ == "Square") then
 
-			PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width, 
-			push,0,xmlskl.rotate*180.0/math.pi, duration)
-		elseif (xmlskl.typ == "Circle") then
-			PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width,push,xmlskl.rotate, duration)
-		elseif (xmlskl.typ == "Fan") then
-			PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.length,
-			xmlskl.angle*180.0/math.pi*4,0,(xmlskl.rotate)*180.0/math.pi, duration)
-		end
+		PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width, 
+		xmlskl.length,0,xmlskl.rotate*180.0/math.pi, duration)
+	elseif (xmlskl.typ == "Circle") then
+		PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.width,push,xmlskl.rotate, duration)
+	elseif (xmlskl.typ == "Fan") then
+		PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(PSEUDOFORECAST_ORIGIN,PSEUDOFORECAST_ANGLE,xmlskl.length,
+		xmlskl.angle*180.0/math.pi*4,0,(xmlskl.rotate)*180.0/math.pi, duration)
 	end
+	
 end
 function PSEUDOFORECAST_DRAWFAN_IMPL(x, y, z, ampx, ampy, length, arcangle)
     debug.DrawFan(x, y, z, ampx, ampy, arcangle, length)
