@@ -654,15 +654,15 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             ui.SysMsg("[AWW]設定と一致した個所を脱ぎます")
             AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
-            for _, d in ipairs(items) do
+            for _, d in pairs(tbl) do
                 if (d.isLockState) then
-                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d), delay)
+                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d.iesid), delay)
                     delay = delay + 0.4
                 end
             end
-            for _, d in ipairs(items) do
+            for _, d in pairs(tbl) do
                 
-                ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")", d), delay)
+                ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d.iesid), delay)
                 delay = delay + 0.6
             end
             ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
@@ -672,7 +672,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
     end)
 end
 function AWWARDROBE_INTERLOCK(state)
-    if(state)then
+    if(state ~= nil)then
         g.interlocked=state
     end
     return g.interlocked
