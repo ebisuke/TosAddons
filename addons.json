@@ -138,5 +138,19 @@
     "tags" : [
       "forecast"
     ]
+  },
+  {
+    "name" : "Account Warehouse Wardrobe",
+    "file" : "awwardrobe",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.2",
+    "releaseTag" : "awwardrobe-v0.0.2",
+    "unicode" : "📖",
+    "description" : "チーム倉庫内にある装備を他のキャラクターに渡す支援をします",
+    "tags" : [
+      "warehouse",
+      "accountwarehouse",
+      "equipment"
+    ]
   }
 ]

@@ -250,7 +250,10 @@ function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
     btnawwdeposit:SetText("預入")
     btnawwdeposit:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_DEPOSIT")
     btnawwdeposit:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_UNWEARALL")
-    local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 260, 120, 60, 30)
+    local btnawwchange = frame:CreateOrGetControl("button", "btnawwchange", 250, 120, 60, 30)
+    btnawwchange:SetText("入替")
+    btnawwchange:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_CHANGE")
+    local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 380, 120, 60, 30)
     btnawwconfig:SetText("AWW設定")
     btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
     local cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
@@ -264,6 +267,20 @@ function AWWARDROBE_END_DRAG()
     g.settings.position.x = g.frame:GetX()
     g.settings.position.y = g.frame:GetY()
     AWWARDROBE_SAVE_SETTINGS()
+end
+function AWWARDROBE_ON_CHANGE()
+    AWWARDROBE_try(function()
+        local awframe = ui.GetFrame("accountwarehouse")
+        --選択しているものを取得
+        local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
+        local selected = cbwardrobe:GetSelItemCaption()
+        local tbl = g.settings.wardrobe[selected]
+        g.personalsettings.defaultname = selected
+        AWWARDROBE_DBGOUT(selected)
+        AWWARDROBE_SAVE_SETTINGS()
+        --UNWEAR
+        AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl)
+    end)
 end
 function AWWARDROBE_ON_DEPOSIT()
     AWWARDROBE_try(function()
@@ -615,6 +632,124 @@ function AWWARDROBE_GETEMPTYSLOTCOUNT()
     local remain = tonumber(s2) - tonumber(s)
     return remain
 end
+function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
+    AWWARDROBE_try(function()
+        local delay = 0
+        local awframe = ui.GetFrame("accountwarehouse")
+        local equipItemList = session.GetEquipItemList();
+        local items = {}
+        if(AWWARDROBE_INTERLOCK())then
+        
+            ui.SysMsg("[AWW]他が動作中です")
+            return
+        end
+        if (awframe:IsVisible() == 0) then
+            
+            ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
+            return
+        end
+        local count = 0
+        for _, _ in pairs(tbl) do
+            count = count + 1
+        end
+        --空きがある？
+        local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
+        if (remain < count) then
+            ui.SysMsg("[AWW]チーム倉庫の空きが足りません")
+        else
+            for i = 0, equipItemList:Count() - 1 do
+                local equipItem = equipItemList:GetEquipItemByIndex(i)
+                local spname = item.GetEquipSpotName(equipItem.equipSpot);
+                if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
+                    ReserveScript(string.format("AWWARDROBE_UNWEAR(%d)", equipItem.equipSpot), delay)
+                    delay = delay + 0.4
+                    items[#items + 1] = equipItem:GetIESID()
+                end
+            --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+            end
+            
+            ui.SysMsg("[AWW]設定と一致した装備を入れ替えます")
+            AWWARDROBE_INTERLOCK(true)
+            --ついでに入れる
+            for _, d in ipairs(items) do
+                if (items.isLockState) then
+                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d.iesid), delay)
+                    delay = delay + 0.4
+                end
+            end
+            --出庫
+            session.ResetItemList()
+            local count = 0
+            local slotset = GET_CHILD_RECURSIVELY(awframe, 'slotset')
+            local withdrawn = {}
+            local totalcount = 0
+            for k, v in pairs(tbl) do
+                AWWARDROBE_DBGOUT("OUT " .. v.iesid)
+                totalcount = totalcount + 1
+                local judge = false
+                for j = 0, slotset:GetSlotCount() - 1 do
+                    local slot = slotset:GetSlotByIndex(j)
+                    if (slot ~= nil) then
+                        local Icon = slot:GetIcon()
+                        
+                        if (Icon ~= nil) then
+                            local iconInfo = Icon:GetInfo()
+                            if (v.iesid == iconInfo:GetIESID()) then
+                                --take
+                                session.AddItemID(iconInfo:GetIESID(), 1)
+                                --count = count + 1
+                                withdrawn[k] = v
+                                judge = true
+                                break
+                            end
+                        end
+                    end
+                end
+                if (judge == false) then
+                    --検索
+                    if (GET_ITEM_BY_GUID(v.iesid)) then
+                        judge = true
+                    end
+                end
+                if (judge) then
+                    count = count + 1
+                end
+            end
+            if (count < totalcount) then
+                ui.SysMsg("[AWW]足りない装備がありますが、このまま続行します")
+            end
+
+            --真っ先に引き出す
+            item.TakeItemFromWarehouse_List(
+                IT_ACCOUNT_WAREHOUSE,
+                session.GetItemIDList(),
+                awframe:GetUserIValue('HANDLE')
+            )
+
+            --ここから先の処理はディレイを入れる
+            delay = delay+2.5
+            for k, v in pairs(tbl) do
+                --それぞれ装備していく
+                ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
+                delay = delay + 0.5
+            end
+            for _, d in  ipairs(items) do
+                if (GET_ITEM_BY_GUID(d).isLockState) then
+                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d), delay)
+                    delay = delay + 0.4
+                end
+            end
+            for _, d in ipairs(items) do
+
+                ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d), delay)
+                delay = delay + 0.6
+            end
+            ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
+        end
+    
+    
+    end)
+end
 function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
     AWWARDROBE_try(function()
         local delay = 0
@@ -655,10 +790,10 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
             for _, d in pairs(tbl) do
-                if (d.isLockState) then
+                --if (GET_ITEM_BY_GUID(d.iesid).isLockState) then
                     ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d.iesid), delay)
                     delay = delay + 0.4
-                end
+                --end
             end
             for _, d in pairs(tbl) do
                 
@@ -728,10 +863,10 @@ function AWWARDROBE_UNWEARALL(frame)
             --ついでに入れる
             for _, d in ipairs(items) do
                 local obj = d
-                if (d.isLockState) then
+                --if (d.isLockState) then
                     ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", obj:GetIESID()), delay)
                     delay = delay + 0.4
-                end
+                --end
             end
             for _, d in ipairs(items) do
                 local obj = d
@@ -837,7 +972,7 @@ end
 function AWWARDROBE_LOCKITEM(itemguid, state)
     if (state == 0) then
         --unlock
-        local itemobj = GET_ITEM_BY_GUID(itemguid)
+        local itemobj = session.GetInvItemByGuid(itemguid)
         if (itemobj.isLockState == true) then
             session.inventory.SendLockItem(itemguid, 0)
         end
@@ -866,9 +1001,10 @@ function AWWARDROBE_DEPOSITITEM(itemguid)
         end
         
         --預入
-        local itemObj = GET_ITEM_BY_GUID(itemguid);
-        item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, itemguid, 1, awframe:GetUserIValue("HANDLE"));
-    
+        local itemObj = session.GetInvItemByGuid(itemguid);
+        if(itemObj)then
+            item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, itemguid, 1, awframe:GetUserIValue("HANDLE"));
+        end
     end)
 end
 
