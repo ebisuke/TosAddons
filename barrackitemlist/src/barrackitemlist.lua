@@ -103,7 +103,7 @@ end;
 local function savetofile(path,data)
     
     local s="return "..serialize(data)
-    CHAT_SYSTEM(tostring(#s))
+    --CHAT_SYSTEM(tostring(#s))
     local fn=io.open(path,"w+")
     fn:write(s)
     fn:flush()
@@ -177,7 +177,7 @@ function BARRACKITEMLIST_ON_INIT(addon,frame)
     acutil.addSysIcon("barrackitemlist", "sysmenu_inv", "Barrack Item List", "OPEN_BARRACKITEMLIST")    
     local droplist = tolua.cast(frame:GetChild("droplist"), "ui::CDropList");
     droplist:ClearItems()
-    droplist:AddItem(1,'None')
+    --droplist:AddItem(1,'None')
     for k,v in pairs(g.userlist) do
         droplist:AddItem(treat(k),"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
     end
@@ -243,7 +243,7 @@ function BARRACKITEMLIST_SAVE_LIST()
         end
 	end
     local cid = info.GetCID(session.GetMyHandle())
-    savetofile(g.settingPath..treat(k)..'_fl.lua',list)
+    savetofile(g.settingPath..treat(cid)..'_fl.lua',list)
     g.itemlist[treat(cid)] = list  
 end
 
@@ -254,19 +254,20 @@ function BARRACKITEMLIST_SHOW_LIST(cid)
     local droplist = GET_CHILD(frame,'droplist', "ui::CDropList")
     if not cid then cid= droplist:GetSelItemKey() end
     for k,v in pairs(g.userlist) do
-        local child = gbox:GetChild("tree"..k) 
+        
+        local child = gbox:GetChild("tree"..treat(k)) 
         if child then
             child:ShowWindow(0)
         end
     end
     local list = g.itemlist[treat(cid)]
     if not list then
-        list ,e = loadfromfile(g.settingPath..treat(k)..'_fl.lua',{})
+        list ,e = loadfromfile(g.settingPath..treat(cid)..'_fl.lua',{})
         if(e) then return end
     end
     g.warehouseList[treat(cid)] = g.warehouseList[treat(cid)] or {}
     list.warehouse =  g.warehouseList[treat(cid)].warehouse or {};
-    local tree = gbox:CreateOrGetControl('tree','tree'..cid,25,50,545,0)
+    local tree = gbox:CreateOrGetControl('tree','tree'..treat(cid),25,50,545,0)
     -- if tree:GetUserValue('exist_data') ~= '1' then
         -- tree:SetUserValue('exist_data',1) 
         tolua.cast(tree,'ui::CTreeControl')
