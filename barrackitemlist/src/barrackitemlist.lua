@@ -83,15 +83,17 @@ local function loadfromfile_internal(path,dummy)
     if(result)then
         return data
     else
+        --print("FAIL"..data)
         return dummy
     end
 end
 local function loadfromfile(path,dummy)
-    local env = {dofile=dofile,pcall=pcall}
+    local env = {dofile=dofile,pcall=pcall,print=print}
     local lff=loadfromfile_internal
     setfenv(lff, env)
     local result,data=pcall(lff,path,dummy)
     if(result)then
+        --print("SUCC"..path.."/"..tostring(data))
         return data
     else
 
@@ -101,12 +103,19 @@ end;
 local function savetofile(path,data)
     
     local s="return "..serialize(data)
-    --CHAT_SYSTEM(tostring(#s))
+    CHAT_SYSTEM(tostring(#s))
     local fn=io.open(path,"w+")
     fn:write(s)
     fn:flush()
     fn:close()
 end;
+local function treat(key)
+    if(tonumber(key)~=nil)then
+        return "c"..tostring(key)
+    else
+        return key
+    end
+end
 function BARRACKITEMLIST_DBG_CLEANUP()
     g.itemlist ={}
     g.userlist={}
@@ -142,8 +151,8 @@ end
 
 g.itemlist = g.itemlist or {}
 for k,v in pairs(g.userlist) do
-    if not g.itemlist[k] then
-        g.itemlist[k] = loadfromfile(g.settingPath..k..'_fl.lua',nil)
+    if not g.itemlist[treat(k)] then
+        g.itemlist[treat(k)] = loadfromfile(g.settingPath..treat(k)..'_fl.lua',nil)
     end
 end
 
@@ -153,7 +162,7 @@ end
 
 function BARRACKITEMLIST_ON_INIT(addon,frame)
     local cid = info.GetCID(session.GetMyHandle())
-    g.userlist[cid] = info.GetPCName(session.GetMyHandle())
+    g.userlist[treat(cid)] = info.GetPCName(session.GetMyHandle())
     savetofile(g.settingPath..'userlist_fl.lua',g.userlist)
     acutil.slashCommand('/itemlist', BARRACKITEMLIST_COMMAND)
     acutil.slashCommand('/il',BARRACKITEMLIST_COMMAND)
@@ -170,7 +179,7 @@ function BARRACKITEMLIST_ON_INIT(addon,frame)
     droplist:ClearItems()
     droplist:AddItem(1,'None')
     for k,v in pairs(g.userlist) do
-        droplist:AddItem(k,"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
+        droplist:AddItem(treat(k),"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
     end
     tolua.cast(frame:GetChild('tab'), "ui::CTabControl"):SelectTab(0)
     frame:GetChild('saveBtn'):SetTextTooltip('現在のキャラのインベントリを保存する')
@@ -234,8 +243,8 @@ function BARRACKITEMLIST_SAVE_LIST()
         end
 	end
     local cid = info.GetCID(session.GetMyHandle())
-    savetofile(g.settingPath..cid..'_fl.lua',list)
-    g.itemlist[cid] = list  
+    savetofile(g.settingPath..treat(k)..'_fl.lua',list)
+    g.itemlist[treat(cid)] = list  
 end
 
 function BARRACKITEMLIST_SHOW_LIST(cid)
@@ -250,13 +259,13 @@ function BARRACKITEMLIST_SHOW_LIST(cid)
             child:ShowWindow(0)
         end
     end
-    local list = g.itemlist[cid]
+    local list = g.itemlist[treat(cid)]
     if not list then
-        list ,e = loadfromfile(g.settingPath..cid..'_fl.lua',{})
+        list ,e = loadfromfile(g.settingPath..treat(k)..'_fl.lua',{})
         if(e) then return end
     end
-    g.warehouseList[tostring(cid)] = g.warehouseList[tostring(cid)] or {}
-    list.warehouse =  g.warehouseList[tostring(cid)].warehouse or {};
+    g.warehouseList[treat(cid)] = g.warehouseList[treat(cid)] or {}
+    list.warehouse =  g.warehouseList[treat(cid)].warehouse or {};
     local tree = gbox:CreateOrGetControl('tree','tree'..cid,25,50,545,0)
     -- if tree:GetUserValue('exist_data') ~= '1' then
         -- tree:SetUserValue('exist_data',1) 
@@ -324,13 +333,13 @@ end
 function BARRACKITEMLIST_SEARCH_ITEMS(itemlist,itemName,iswarehouse)
     local items = {}
     for cid,name in pairs(g.userlist) do
-        if itemlist[cid] then
-            for group,list in pairs(itemlist[cid]) do
+        if itemlist[treat(cid)] then
+            for group,list in pairs(itemlist[treat(cid)]) do
                 if group ~= 'warehouse' or iswarehouse then
                     for i ,v in ipairs(list) do
                         if string.find(v[1],itemName) then
-                            items[cid] = items[cid] or {}
-                            table.insert(items[cid],v)
+                            items[treat(cid)] = items[treat(cid)] or {}
+                            table.insert(items[treat(cid)],v)
                         end
                     end
                 end
@@ -400,8 +409,8 @@ function BARRACKITEMLIST_SAVE_WAREHOUSE()
          end
     end
     local cid = tostring(info.GetCID(session.GetMyHandle()))
-    g.warehouseList[cid] = {}
-    g.warehouseList[cid].warehouse = items
+    g.warehouseList[treat(cid)] = {}
+    g.warehouseList[treat(cid)].warehouse = items
     savetofile(g.settingPath..'warehouse_fl.lua',g.warehouseList)
 end
 
