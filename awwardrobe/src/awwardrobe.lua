@@ -313,7 +313,7 @@ function AWWARDROBE_INITIALIZE_FRAME()
     btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_REGISTER_CURRENTEQUIP")
     local btnclear = frame:CreateOrGetControl("button", "btnclear", 300, 300, 150, 40)
     btnclear:SetText("装備をリセット")
-    btnclear:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CLEARALLEQIEPS")
+    btnclear:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CLEARALLEQUIPS")
     
     local btnsave = frame:CreateOrGetControl("button", "btnsave", 300, 360, 100, 40)
     btnsave:SetText("設定保存")
@@ -444,7 +444,7 @@ end
 function AWWARDROBE_LOADEQFROMSTRUCTURE(table, enableeffect)
     local frame = ui.GetFrame(g.framename)
     --一旦クリア
-    AWWARDROBE_CLEARALLEQIEPS(frame)
+    AWWARDROBE_CLEARALLEQUIPS(frame)
     
     for k, v in pairs(table) do
         local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
@@ -881,7 +881,7 @@ function AWWARDROBE_REGISTER_CURRENTEQUIP(frame)
     --現在の装備を登録
     AWWARDROBE_try(function()
             --先にクリア
-            AWWARDROBE_CLEARALLEQIEPS(frame)
+            AWWARDROBE_CLEARALLEQUIPS(frame)
             local equipItemList = session.GetEquipItemList();
             local items = {}
             for i = 0, equipItemList:Count() - 1 do
@@ -917,7 +917,7 @@ function AWWARDROBE_CLEAREQUIP(frame, spname)
     
     end)
 end
-function AWWARDROBE_CLEARALLEQIEPS(frame)
+function AWWARDROBE_CLEARALLEQUIPS(frame)
     
     
     for k, _ in pairs(g.effectingspot) do

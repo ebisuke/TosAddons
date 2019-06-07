@@ -19,7 +19,7 @@
 		<slot name="HAT_T_bg" parent="gbox_Dressed" rect="0 0 50 50" margin="0 0 0 0" layout_gravity="center top" draw="true" skin="market_hairacc_2" hittestbox="true"/>
 		<slot name="HAT_L_bg" parent="gbox_Dressed" rect="0 0 50 50" margin="52 0 0 0" layout_gravity="center top" draw="true" skin="market_hairacc_3" hittestbox="true"/>
 		<slot name="HAT" parent="gbox_Dressed" rect="0 0 50 50" margin="-52 0 0 0" layout_gravity="center top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="hat" hittestbox="false" texttooltip="{@st59}헤어 코스튬1{/}"/>
-		<slot name="HAT_T" parent="gbox_Dressed" rrect="0 0 50 50" margin="0 0 0 0" layout_gravity="center top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="hat" hittestbox="false" texttooltip="{@st59}헤어 코스튬2{/}"/>
+		<slot name="HAT_T" parent="gbox_Dressed" rect="0 0 50 50" margin="0 0 0 0" layout_gravity="center top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="hat" hittestbox="false" texttooltip="{@st59}헤어 코스튬2{/}"/>
 		<slot name="HAT_L" parent="gbox_Dressed" rect="0 0 50 50" margin="52 0 0 0" layout_gravity="center top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="hat" hittestbox="false" texttooltip="{@st59}헤어 코스튬3{/}"/>
 		<!-- Middle Left -->
 		<slot name="SHIRT_bg" parent="gbox_Equipped" rect="0 0 60 60" margin="-93 70 0 0" layout_gravity="center top" draw="true" skin="shirt" hittestbox="true"/>
