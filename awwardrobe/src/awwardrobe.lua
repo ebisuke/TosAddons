@@ -219,6 +219,7 @@ function AWWARDROBE_ON_INIT(addon, frame)
             frame:ShowWindow(1)
             AWWARDROBE_INITIALIZE_FRAME()
             frame:ShowWindow(0)
+            g.interlocked=false
         end,
         catch = function(error)
             AWWARDROBE_ERROUT(error)
@@ -518,7 +519,6 @@ function AWWARDROBE_SLOT_ON_RBUTTONDOWN(frame, ctrl, argstr, argnum)
     --現在の装備を登録
     AWWARDROBE_try(function()
             
-            
             AWWARDROBE_CLEAREQUIP(frame, argstr)
             imcSound.PlaySoundEvent('inven_unequip');
             AWWARDROBE_PLAYSLOTANIMATION(frame, argstr)
@@ -554,7 +554,7 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
                     return
                 end
             else
-                if (not string.find(spotname,argstr)) then
+                if (not string.find(spotname, argstr)) then
                     --NG
                     ui.SysMsg("[AWW]この部位には装着できません")
                     AWWARDROBE_DBGOUT(tostring(spotname))
@@ -621,14 +621,19 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
         local awframe = ui.GetFrame("accountwarehouse")
         local equipItemList = session.GetEquipItemList();
         local items = {}
+        if(AWWARDROBE_INTERLOCK())then
+        
+            ui.SysMsg("[AWW]他が動作中です")
+            return
+        end
         if (awframe:IsVisible() == 0) then
             
             ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
             return
         end
-        local count=0
-        for _,_ in pairs(tbl)do
-            count=count+1
+        local count = 0
+        for _, _ in pairs(tbl) do
+            count = count + 1
         end
         --空きがある？
         local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
@@ -647,7 +652,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             end
             
             ui.SysMsg("[AWW]設定と一致した個所を脱ぎます")
-            
+            AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
             for _, d in ipairs(items) do
                 if (d.isLockState) then
@@ -660,11 +665,17 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")", d), delay)
                 delay = delay + 0.6
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました")', delay)
+            ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
         end
     
     
     end)
+end
+function AWWARDROBE_INTERLOCK(state)
+    if(state)then
+        g.interlocked=state
+    end
+    return g.interlocked
 end
 function AWWARDROBE_UNWEARALL(frame)
     AWWARDROBE_try(function()
@@ -672,6 +683,11 @@ function AWWARDROBE_UNWEARALL(frame)
         local awframe = ui.GetFrame("accountwarehouse")
         local equipItemList = session.GetEquipItemList();
         local items = {}
+        if(AWWARDROBE_INTERLOCK())then
+        
+            ui.SysMsg("[AWW]他が動作中です")
+            return
+        end
         if (awframe:IsVisible() == 0) then
             
             ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
@@ -708,7 +724,7 @@ function AWWARDROBE_UNWEARALL(frame)
             end
             
             ui.SysMsg("[AWW]全部脱ぎます")
-            
+            AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
             for _, d in ipairs(items) do
                 local obj = d
@@ -722,7 +738,7 @@ function AWWARDROBE_UNWEARALL(frame)
                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")", obj:GetIESID()), delay)
                 delay = delay + 0.6
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました")', delay)
+            ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
         end
     
     
@@ -734,6 +750,11 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
             local awframe = ui.GetFrame("accountwarehouse")
             local equipItemList = session.GetEquipItemList();
             local items = {}
+            if(AWWARDROBE_INTERLOCK())then
+        
+                ui.SysMsg("[AWW]他が動作中です")
+                return
+            end
             if (awframe:IsVisible() == 0) then
                 
                 ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
@@ -743,11 +764,11 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
             local count = 0
             local slotset = GET_CHILD_RECURSIVELY(awframe, 'slotset')
             local withdrawn = {}
-            local totalcount=0
+            local totalcount = 0
             for k, v in pairs(tbl) do
                 AWWARDROBE_DBGOUT("OUT " .. v.iesid)
-                totalcount=totalcount+1
-                local judge=false
+                totalcount = totalcount + 1
+                local judge = false
                 for j = 0, slotset:GetSlotCount() - 1 do
                     local slot = slotset:GetSlotByIndex(j)
                     if (slot ~= nil) then
@@ -760,25 +781,28 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                                 session.AddItemID(iconInfo:GetIESID(), 1)
                                 --count = count + 1
                                 withdrawn[k] = v
-                                judge=true
+                                judge = true
                                 break
                             end
                         end
                     end
                 end
-                if(judge==false)then
+                if (judge == false) then
                     --検索
-                    if(GET_ITEM_BY_GUID(v.iesid))then
-                        judge=true
+                    if (GET_ITEM_BY_GUID(v.iesid)) then
+                        judge = true
                     end
                 end
-                if(judge)then
+                if (judge) then
                     count = count + 1
                 end
             end
             if (count < totalcount) then
                 ui.SysMsg("[AWW]足りない装備がありますが、このまま続行します")
+            else
+                ui.SysMsg("[AWW]倉庫・インベントリから装備します")
             end
+            AWWARDROBE_INTERLOCK(true)
             --真っ先に引き出す
             item.TakeItemFromWarehouse_List(
                 IT_ACCOUNT_WAREHOUSE,
@@ -792,7 +816,7 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                 ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
                 delay = delay + 0.5
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました")', delay)
+            ReserveScript('ui.SysMsg("[AWW]終わりました"); AWWARDROBE_INTERLOCK(false)', delay)
     end)
 end
 function AWWARDROBE_WEAR(guid, spot)
