@@ -100,7 +100,7 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             addon:RegisterMsg('GET_NEW_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('GAME_START_3SEC', 'PINNEDQUEST_ENSUREQUEST')
             
-            --addon:RegisterMsg('QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
+            addon:RegisterMsg('QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('AVANDON_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('QUEST_DELETED', 'PINNEDQUEST_ENSUREQUEST')
             --addon:RegisterMsg('CUSTOM_QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
@@ -709,7 +709,7 @@ function PINNEDQUEST_ISLINKEDQUEST(pinnedclsid, searchclsid)
     end
     return false
 end
-function PINNEDQUEST_ISVALID(clsid)
+function PINNEDQUEST_ISVALID(clsid,includeabandon)
     if (clsid == 0) then
         return false
     end
@@ -738,8 +738,10 @@ function PINNEDQUEST_ISVALID(clsid)
                     end
                 --end
                 else
-                    
+                    if(includeabandon)then
+                        return true
                     end
+                end
             end
         end
     end
@@ -886,7 +888,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                     end
                     if (doremove) then
                         --孤立したピン止めを消す
-                        if not PINNEDQUEST_ISVALID(questID) then
+                        if not PINNEDQUEST_ISVALID(questID,true) then
                             PINNEDQUEST_DBGOUT("REMOVE ORPHANED" .. tostring(questID))
                             g.personalsettings.pinnedquest[k] = nil
                         end
@@ -937,7 +939,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
             for k, v in pairs(g.personalsettings.pinnedparty) do
                 if (v) then
                     
-                    if (PINNEDQUEST_ISVALID(tonumber(k))) then
+                    if (PINNEDQUEST_ISVALID(tonumber(k),true)) then
                         party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
                             0)
                         party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
