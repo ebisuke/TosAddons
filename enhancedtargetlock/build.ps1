@@ -1,6 +1,6 @@
 ﻿$addonname="enhancedtargetlock"
 $emoji="📖"
-$version="v0.0.2"
+$version="v0.1.0"
 $prefix="__"
 if (!(Test-Path bin)) {
     mkdir bin 
