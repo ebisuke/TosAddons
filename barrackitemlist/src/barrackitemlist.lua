@@ -291,7 +291,7 @@ function BARRACKITEMLIST_SHOW_LIST(cid)
                     tree:Add(parentCategory,slotset, 'slotset_'..value[1]);
                     for i ,v in ipairs(nodeItemList) do
                         slot = slotset:GetSlotByIndex(i - 1)
-                        slot:SetText(string.format(v[2]))
+                        slot:SetText(string.format('{s14}{#f0dcaa}{b}{ol}%s',v[2]))
                         slot:SetTextMaxWidth(1000)
                         icon = CreateIcon(slot)
                         icon:SetImage(v[3])
@@ -382,7 +382,7 @@ function _BARRACKITEMLIST_SEARCH_ITEMS(tree,items,type)
         tree:Add(parentCategory,slotset, 'slotset_'..k..type);
         for i ,v in ipairs(value) do
             slot = slotset:GetSlotByIndex(i - 1)
-            slot:SetText(string.format('{s20}%s',v[2]))
+            slot:SetText(string.format('{s14}{#f0dcaa}{b}{ol}%s',v[2]))
             slot:SetTextAlign(30,30)
             -- slot:SetTextMaxWidth(1000)
             icon = CreateIcon(slot)
