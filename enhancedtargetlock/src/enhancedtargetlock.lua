@@ -48,6 +48,7 @@ ENHANCEDTARGETLOCK_ENABLE = false
 ENHANCEDTARGETLOCK_CT = nil
 ENHANCEDTARGETLOCK_LOOPER = false
 ENHANCEDTARGETLOCK_LOCKED = 0
+ENHANCEDTARGETLOCK_FIXEDLOCK_STATE = false
 local testbox = {
     {0, 0, 0},
     {0, 5, 0},
@@ -64,11 +65,11 @@ local firstpos = nil
 function ENHANCEDTARGETLOCK_SAVE_SETTINGS()
     acutil.saveJSON(g.settingsFileLoc, g.settings);
 end
-ENH=nil
+ENH = nil
 function ENHANCEDTARGETLOCK_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-            frame=ui.GetFrame("enhancedtargetlock");
+            frame = ui.GetFrame("enhancedtargetlock");
             g.addon = addon;
             g.frame = frame;
             
@@ -90,6 +91,7 @@ function ENHANCEDTARGETLOCK_ON_INIT(addon, frame)
             addon:RegisterMsg('TARGET_SET', 'ENHANCEDTARGETLOCK_ON_TARGET');
             addon:RegisterMsg('TARGET_UPDATE', 'ENHANCEDTARGETLOCK_ON_TARGET_UPDATE');
             addon:RegisterMsg('TARGET_CLEAR', 'ENHANCEDTARGETLOCK_ON_TARGET_CLEAR');
+            addon:RegisterMsg('FPS_UPDATE', 'ENHANCEDTARGETLOCK_ON_FPS_UPDATE');
             acutil.slashCommand("/etl", ENHANCEDTARGETLOCK_PROCESS_COMMAND);
             --ドラッグ
             frame:SetEventScript(ui.LBUTTONUP, "ENHANCEDTARGETLOCK_END_DRAG");
@@ -122,10 +124,11 @@ function ENHANCEDTARGETLOCK_DISABLE_JUMPER()
 --return CTRLTARGETUI_CLOSE_OLD()
 end
 function ENHANCEDTARGETLOCK_ENABLE()
+    
     return EBI_try_catch{
         try = function()
-
-
+            ENHANCEDTARGETLOCK_FIXEDLOCK_STATE = true
+            
             if (ENHANCEDTARGETLOCK_LOCKED == 0) then
                 local frame = ui.GetFrame("enhancedtargetlock")
                 frame:ShowWindow(1)
@@ -134,13 +137,14 @@ function ENHANCEDTARGETLOCK_ENABLE()
                     local enemyActor = world.GetActor(findenemy)
                     local monsterClass = GetClassByType("Monster", enemyActor:GetType());
                     --CHAT_SYSTEM("[ETL]Locked" .. monsterClass.Name)
-                    ENHANCEDTARGETLOCK_SETTEXT(monsterClass.Name,1)
+                    ENHANCEDTARGETLOCK_SETTEXT(monsterClass.Name, 1)
+                    ReserveScript("ENHANCEDTARGETLOCK_UPDATETEXT()",0.05)
                     ENHANCEDTARGETLOCK_CT = findenemy
-                   
+                    
                     local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
                     ENHANCEDTARGETLOCK_TARGETTING()
-                    --timer:SetUpdateScript("ENHANCEDTARGETLOCK_TARGETTING");
-                    --timer:Start(0.5);
+                --timer:SetUpdateScript("ENHANCEDTARGETLOCK_TARGETTING");
+                --timer:Start(0.5);
                 end
             end
         end,
@@ -148,50 +152,66 @@ function ENHANCEDTARGETLOCK_ENABLE()
             print(error)
         end
     }
+
 --return CTRLTARGETUI_OPEN_OLD()
 end
-function ENHANCEDTARGETLOCK_SETTEXT(text,mode)
-    local frame = ui.GetFrame("enhancedtargetlock")
-    local textbox=frame:GetChild("textbox")
-    tolua.cast(textbox,"ui::CRichText")
-    local temp=textbox:GetTextByKey("text")
-    if(mode==0)then
-        textbox:SetFormat("{ol}");
-        textbox:SetTextByKey("text","ETL");
-    elseif(mode == 1)then
-
-        textbox:SetFormat("{ol}{#22bbFF}");
-        if(text~=nil)then
-            textbox:SetTextByKey("text","ETL:"..text);
-        else
-            textbox:SetTextByKey("text","");
-            textbox:SetTextByKey("text",temp);
-        end
-    elseif(mode == 2)then
-  
-        textbox:SetFormat("{ol}{#FF0000}");
-        if(text~=nil)then       
-            textbox:SetTextByKey("text","ETL:"..text);
-        else 
-            textbox:SetTextByKey("text","");
-            textbox:SetTextByKey("text",temp);
-        end
-    end
-    textbox:Invalidate()        
-    frame:ShowWindow(1);
-
-end
 function ENHANCEDTARGETLOCK_DISABLE()
+    
+    ENHANCEDTARGETLOCK_FIXEDLOCK_STATE = false
     if ENHANCEDTARGETLOCK_LOCKED == 0 then
+        
         --CHAT_SYSTEM("CHG2")
         ENHANCEDTARGETLOCK_CT = nil
         local frame = ui.GetFrame("enhancedtargetlock")
         local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
         --timer:Stop();
-        ENHANCEDTARGETLOCK_SETTEXT("",0)
+        ENHANCEDTARGETLOCK_SETTEXT("", 0)
     end
 --return CTRLTARGETUI_CLOSE_OLD()
 end
+function ENHANCEDTARGETLOCK_SETTEXT(text, mode)
+    local frame = ui.GetFrame("enhancedtargetlock")
+    local textbox = frame:GetChild("textbox")
+    tolua.cast(textbox, "ui::CRichText")
+    local temp = textbox:GetTextByKey("text")
+    if (mode == 0) then
+
+        textbox:SetFormat("{ds}{@s14}{ol}{#FFFFFF}");
+        textbox:SetTextByKey("text", "");
+        textbox:SetTextByKey("text", "ETL");
+    elseif (mode == 1) then
+        
+        textbox:SetFormat("{ds}{ol}{#22ddFF}");
+        if (text ~= nil) then
+            textbox:SetTextByKey("text", "ETL:" .. text);
+        else
+            textbox:SetTextByKey("text", "");
+            textbox:SetTextByKey("text", temp);
+        end
+    elseif (mode == 2) then
+        
+        textbox:SetFormat("{ds}{ol}{#FF0000}");
+        if (text ~= nil) then
+            textbox:SetTextByKey("text", "ETL:" .. text);
+        else
+            textbox:SetTextByKey("text", "");
+            textbox:SetTextByKey("text", temp);
+        end
+    elseif (mode == 3) then
+        --target lost
+        textbox:SetFormat("{ds}{ol}{#666666}");
+        if (text ~= nil) then
+            textbox:SetTextByKey("text", "ETL:" .. text);
+        else
+            textbox:SetTextByKey("text", "");
+            textbox:SetTextByKey("text", temp);
+        end
+    end
+    textbox:Invalidate()
+    frame:ShowWindow(1);
+
+end
+
 function ENHANCEDTARGETLOCK_FINDNEAREST_BOSS()
     return EBI_try_catch{
         try = function()
@@ -260,9 +280,8 @@ function ENHANCEDTARGETLOCK_TARGETTING_ON()
             else
                 if (session.GetTargetHandle() ~= ENHANCEDTARGETLOCK_CT and ENHANCEDTARGETLOCK_LOCKED == 0) then
                     --DRT_ATTACH_TO_TARGET_C(myactor,nil,ENHANCEDTARGETLOCK_CT,nil,"")
-
-                    local frame=ui.GetFrame('enhancedtargetlock')
-                    ENHANCEDTARGETLOCK_SETTEXT(nil,2)
+                    local frame = ui.GetFrame('enhancedtargetlock')
+                    ENHANCEDTARGETLOCK_SETTEXT(nil, 2)
                     firstpos = {mouse.GetX(), mouse.GetY()}
                     ENHANCEDTARGETLOCK_LOCKED = 1
                     ENHANCEDTARGETLOCK_FORCEDTARGET()
@@ -288,13 +307,13 @@ function ENHANCEDTARGETLOCK_FORCEDTARGET()
                 local crx = pts.x
                 local cry = pts.y
                 
-
+                
                 if (option.GetClientWidth() >= 3000) then
                     
                     --4k対応
                     crx = crx * 2
                     cry = cry * 2
-
+                
                 end
                 --ensure
                 if (crx >= 0 and cry >= 0 and crx < option.GetClientWidth() and cry < option.GetClientHeight()) then
@@ -331,10 +350,10 @@ function ENHANCEDTARGETLOCK_TARGET_END()
         EMBEDDEDBATTLEMODE_SET_BM(0)
         mouse.SetPos(firstpos[1], firstpos[2]);
         ENHANCEDTARGETLOCK_MOUSEMODE = false
-
+    
     end
-
-    ENHANCEDTARGETLOCK_SETTEXT(nil,1)
+    
+    ENHANCEDTARGETLOCK_SETTEXT(nil, 1)
     ENHANCEDTARGETLOCK_LOCKED = 0
 end
 function ENHANCEDTARGETLOCK_ON_TARGET()
@@ -347,6 +366,28 @@ function ENHANCEDTARGETLOCK_ON_TARGET_UPDATE()
 end
 function ENHANCEDTARGETLOCK_ON_TARGET_CLEAR()
 
+end
+
+function ENHANCEDTARGETLOCK_ON_FPS_UPDATE(frame)
+    ENHANCEDTARGETLOCK_UPDATETEXT()
+ 
+end
+function ENHANCEDTARGETLOCK_UPDATETEXT()
+    if (ENHANCEDTARGETLOCK_LOCKED == 0) then
+        
+        if (ENHANCEDTARGETLOCK_FIXEDLOCK_STATE == true and ENHANCEDTARGETLOCK_CT ~= nil) then
+            
+            --ターゲットしていなければ色を変える
+            if (ENHANCEDTARGETLOCK_CT == session.GetTargetHandle()) then
+                ENHANCEDTARGETLOCK_SETTEXT(nil, 1)
+            else
+                ENHANCEDTARGETLOCK_SETTEXT(nil, 3)
+            end
+        else
+            
+            ENHANCEDTARGETLOCK_SETTEXT(nil, 0)
+        end
+    end
 end
 function ENHANCEDTARGETLOCK_PROCESS_COMMAND(command)
     local cmd = "";
@@ -362,9 +403,9 @@ function ENHANCEDTARGETLOCK_PROCESS_COMMAND(command)
         ENHANCEDTARGETLOCK_TARGETTING();
     end
     if cmd == "initpos" then
-        local frame=ui.GetFrame("enhancedtargetlock")
+        local frame = ui.GetFrame("enhancedtargetlock")
         frame:ShowWindow(1);
-        frame:SetOffset(300,300);
+        frame:SetOffset(300, 300);
         ENHANCEDTARGETLOCK_SAVE_SETTINGS();
     end
 end
