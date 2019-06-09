@@ -87,20 +87,21 @@ function DEVELOPERCONSOLE_OPEN()
 		dofileButton:SetText("dofile");
 		dofileButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_DOFILE_CHOOSE")
 	end
-	local explorerButton = devconsole:CreateOrGetControl("button","explorerButton",0,0,0,0);
-	if explorerButton ~= nil then
-		explorerButton:Resize(100, 40);
-		explorerButton:SetOffset(690, 270);
-		explorerButton:SetText("explorer");
-		explorerButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_EXPLORER")
-	end
 	local escapeBracketButton = devconsole:CreateOrGetControl("button","escapeBracketButton",0,0,0,0);
 	if escapeBracketButton ~= nil then
 		escapeBracketButton:Resize(100, 40);
-		escapeBracketButton:SetOffset(690, 225);
+		escapeBracketButton:SetOffset(690, 270);
 		escapeBracketButton:SetText("｛｝escape");
 		escapeBracketButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_ESCAPEBRACKET")
 	end
+	local explorerButton = devconsole:CreateOrGetControl("button","explorerButton",0,0,0,0);
+	if explorerButton ~= nil then
+		explorerButton:Resize(100, 40);
+		explorerButton:SetOffset(690, 20);
+		explorerButton:SetText("explorer");
+		explorerButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_EXPLORER")
+	end
+
 	local textlog = devconsole:GetChild("textview_log");
 	if textlog ~= nil then
 		--textlog:Resize(675, 435);
@@ -121,9 +122,9 @@ function DEVELOPERCONSOLE_DOFILE_CHOOSE(frame)
 	INPUT_STRING_BOX_CB(frame,"Input a file path","DEVELOPERCONSOLE_DOFILE","",0,"",256,false)
 end
 function DEVELOPERCONSOLE_DOFILE(frame,argStr)
-	local s = argStr:gsub("\\","\\\\")
+	local s = string.gsub(argStr,"\\","\\\\")
 	local text
-	if(s[1]=="\"")then
+	if(string.find(s,"\"")==1)then
 		text = "dofile("..s..");"
 	else
 		text = "dofile(\""..s.."\");"
@@ -142,9 +143,9 @@ function DEVELOPERCONSOLE_ESCAPEBRACKET(frame)
 	DEVELOPERCONSOLE_LOG={}
 	for i,k in ipairs(text) do
 		local s=k;
-		s=s:gsub("{","｛")
-		s=s:gsub("}","｝")
-		
+		s=string.gsub(s,"{","｛")
+		s=string.gsub(s,"}","｝")
+
 		DEVELOPERCONSOLE_ADDTEXT(s)
 	end
 end
@@ -169,14 +170,16 @@ function CLEAR_CONSOLE()
 		if textlog ~= nil then
 			tolua.cast(textlog, "ui::CTextView");
 			textlog:Clear();
-			textlog:AddText("Developer Console", "white_16_ol");
-			textlog:AddText("Enter command and press execute!", "white_16_ol");
+			DEVELOPERCONSOLE_LOG={}
+			DEVELOPERCONSOLE_ADDTEXT("Developer Console");
+			DEVELOPERCONSOLE_ADDTEXT("Enter command and press execute!");
 		end
 	end
 end
 function DEVELOPERCONSOLE_ADDTEXT(text)
 	local frame = ui.GetFrame("developerconsole");
 	local textlog = frame:GetChild("textview_log");
+	tolua.cast(textlog, "ui::CTextView");
 	textlog:AddText(text, "white_16_ol");
 	DEVELOPERCONSOLE_LOG=DEVELOPERCONSOLE_LOG or {}
 	DEVELOPERCONSOLE_LOG[#DEVELOPERCONSOLE_LOG+1]=text
@@ -191,7 +194,7 @@ function DEVELOPERCONSOLE_PRINT_TEXT(text)
 
 	if textlog ~= nil then
 		tolua.cast(textlog, "ui::CTextView");
-		DEVELOPERCONSOLE_ADDTEXT(text, "white_16_ol");
+		DEVELOPERCONSOLE_ADDTEXT(text);
 	end
 end
 function DEVELOPERCONSOLE_UPDATE(frame)
