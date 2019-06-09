@@ -112,7 +112,9 @@ function ADVANCEDNUMBERDIALOG_ON_CLICK_CHANGEBUTTON(frame, ctrl, argstr, argnum)
 	local minimum=ADVANCEDNUMBERDIALOG_RECENTMINMAX[1];
 	local maximum=ADVANCEDNUMBERDIALOG_RECENTMINMAX[2];
 	local current=tonumber(input:GetText());
-
+	if(current==nil)then
+		current=0
+	end
 	--足し算で現在値が1なら特殊処理
 	if(argnum>1 and current==1)then
 		argnum=argnum-1
