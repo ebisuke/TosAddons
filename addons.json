@@ -166,5 +166,21 @@
       "accountwarehouse",
       "item"
     ]
+  },
+  {
+    "name" : "Lycanthropy Bugfix For Patch 250501",
+    "file" : "lycanthropypatch1",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "lycanthropypatch1-v0.0.1",
+    "unicode" : "📖",
+    "description" : "パッチ250501でドルイドのライカンスロピー・シェイプシフティング・トランスフォーム時にクイックスロットが消えてしまうバグを暫定的に修正しました。",
+    "tags" : [
+      "bugfix",
+      "lycanthropy",
+      "shapeshifting",
+      "transform",
+      "druid"
+    ]
   }
 ]
