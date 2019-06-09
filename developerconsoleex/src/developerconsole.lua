@@ -25,7 +25,7 @@ function DEVELOPERCONSOLE_ON_INIT(addon, frame)
 		end
 		DEVELOPERCONSOLE_SETTINGSLOADED = true
 	end
-
+	DEVELOPERCONSOLE_LOG={}
 	CLEAR_CONSOLE();
 end
 function DEVELOPERCONSOLE_SAVE_SETTINGS()
@@ -46,7 +46,9 @@ function DEVELOPERCONSOLE_OPEN()
 	--devconsole:ShowTitleBarFrame(1);
 	devconsole:ShowWindow(0);
 	devconsole:SetSkinName("chat_window");
+
 	devconsole:ShowWindow(1);
+	devconsole:EnableMove(1);
 	--devconsole:Resize(800, 500);
 
 	local input = devconsole:GetChild("input");
@@ -78,7 +80,27 @@ function DEVELOPERCONSOLE_OPEN()
 		clearButton:SetOffset(690, 360);
 		clearButton:SetText("Clear");
 	end
-
+	local dofileButton = devconsole:CreateOrGetControl("button","dofileButton",0,0,0,0);
+	if dofileButton ~= nil then
+		dofileButton:Resize(100, 40);
+		dofileButton:SetOffset(690, 315);
+		dofileButton:SetText("dofile");
+		dofileButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_DOFILE_CHOOSE")
+	end
+	local explorerButton = devconsole:CreateOrGetControl("button","explorerButton",0,0,0,0);
+	if explorerButton ~= nil then
+		explorerButton:Resize(100, 40);
+		explorerButton:SetOffset(690, 270);
+		explorerButton:SetText("explorer");
+		explorerButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_EXPLORER")
+	end
+	local escapeBracketButton = devconsole:CreateOrGetControl("button","escapeBracketButton",0,0,0,0);
+	if escapeBracketButton ~= nil then
+		escapeBracketButton:Resize(100, 40);
+		escapeBracketButton:SetOffset(690, 225);
+		escapeBracketButton:SetText("｛｝escape");
+		escapeBracketButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_ESCAPEBRACKET")
+	end
 	local textlog = devconsole:GetChild("textview_log");
 	if textlog ~= nil then
 		--textlog:Resize(675, 435);
@@ -95,7 +117,37 @@ function DEVELOPERCONSOLE_OPEN()
 	timer:SetUpdateScript("DEVELOPERCONSOLE_UPDATE");
 	timer:Start(0.01);
 end
-
+function DEVELOPERCONSOLE_DOFILE_CHOOSE(frame)
+	INPUT_STRING_BOX_CB(frame,"Input a file path","DEVELOPERCONSOLE_DOFILE","",0,"",256,false)
+end
+function DEVELOPERCONSOLE_DOFILE(frame,argStr)
+	local s = argStr:gsub("\\","\\\\")
+	local text
+	if(s[1]=="\"")then
+		text = "dofile("..s..");"
+	else
+		text = "dofile(\""..s.."\");"
+	end
+	
+	local input = frame:GetChild("input");
+	input:SetText(text)
+end
+function DEVELOPERCONSOLE_EXPLORER(frame)
+	debug.OpenDataDir("")
+end
+function DEVELOPERCONSOLE_ESCAPEBRACKET(frame)
+	local textview_log=GET_CHILD(frame,"textview_log","ui::CTextView")
+	textview_log:Clear()
+	local text=DEVELOPERCONSOLE_LOG or {}
+	DEVELOPERCONSOLE_LOG={}
+	for i,k in ipairs(text) do
+		local s=k;
+		s=s:gsub("{","｛")
+		s=s:gsub("}","｝")
+		
+		DEVELOPERCONSOLE_ADDTEXT(s)
+	end
+end
 function DEVELOPERCONSOLE_CLOSE()
 	local frame = ui.GetFrame("developerconsole");
 	if(frame~=nil)then
@@ -122,7 +174,13 @@ function CLEAR_CONSOLE()
 		end
 	end
 end
-
+function DEVELOPERCONSOLE_ADDTEXT(text)
+	local frame = ui.GetFrame("developerconsole");
+	local textlog = frame:GetChild("textview_log");
+	textlog:AddText(text, "white_16_ol");
+	DEVELOPERCONSOLE_LOG=DEVELOPERCONSOLE_LOG or {}
+	DEVELOPERCONSOLE_LOG[#DEVELOPERCONSOLE_LOG+1]=text
+end
 function DEVELOPERCONSOLE_PRINT_TEXT(text)
 	if text == nil or text == "" then
 		return;
@@ -133,7 +191,7 @@ function DEVELOPERCONSOLE_PRINT_TEXT(text)
 
 	if textlog ~= nil then
 		tolua.cast(textlog, "ui::CTextView");
-		textlog:AddText(text, "white_16_ol");
+		DEVELOPERCONSOLE_ADDTEXT(text, "white_16_ol");
 	end
 end
 function DEVELOPERCONSOLE_UPDATE(frame)
@@ -193,12 +251,12 @@ function DEVELOPERCONSOLE_ENTER_KEY(frame, control, argStr, argNum)
 			if commandText ~= nil and commandText ~= "" then
 				DEVELOPERCONSOLE_IGNORE_FLAG=false
 				local s = "[Execute] " .. commandText;
-				textlog:AddText(s, "white_16_ol");
+				DEVELOPERCONSOLE_ADDTEXT(s);
 				local f = assert(loadstring(commandText));
 				local status, error = pcall(f);
 
 				if not status then
-					textlog:AddText(tostring(error), "white_16_ol");
+					DEVELOPERCONSOLE_ADDTEXT(tostring(error));
 				end
 				if(DEVELOPERCONSOLE_IGNORE_FLAG==false)then
 					if(#DEVELOPERCONSOLE_SETTINGS.history == 0 or DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history]~=commandText)then
