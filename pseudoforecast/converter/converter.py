@@ -53,7 +53,9 @@ def skilltable(frm,mode):
         }
     return {}
 for skill in root:
-    if( skill.attrib["Name"].startswith("Mon_")):
+    #if( skill.attrib["Name"].startswith("Mon_")):
+    #    continue
+    if (skill.attrib["Name"].find(" ")!=-1 or skill.attrib["Name"].find("-")!=-1):
         continue
     mainskil=skill.find("MainSkl")
     if mainskil:
