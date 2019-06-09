@@ -1,7 +1,7 @@
 ﻿$addonname="lycanthropypatch1"
 $emoji="📖"
 $prefix="__"
-$version="v0.0.4"
+$version="v0.1.0"
 
 if (!(Test-Path bin)) {
     mkdir bin 

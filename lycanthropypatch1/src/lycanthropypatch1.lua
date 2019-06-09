@@ -49,8 +49,8 @@ function QUICKSLOTNEXPBAR_MY_MONSTER_SKILL(isOn, monName, buffType)
 			slot:EnableDrop(0);
 			local icon = slot:GetIcon();
 			if icon ~= nil and icon:GetInfo():GetCategory()=='Skill' then
-				icon:SetEnable(0);
-				icon:SetEnableUpdateScp('None');
+			 	icon:SetEnable(0);
+				--icon:SetEnableUpdateScp('None');
 			end
 		end
 		frame:SetUserValue('SKL_MAX_CNT',list:Count()+1)
@@ -117,8 +117,8 @@ function JOYSTICK_QUICKSLOT_MY_MONSTER_SKILL(isOn, monName, buffType)
 			slot:EnableDrop(0);
 			local icon = slot:GetIcon();
 			if icon ~= nil and icon:GetInfo():GetCategory()=='Skill' then
-				icon:SetEnable(0);
-				icon:SetEnableUpdateScp('None');
+			 	icon:SetEnable(0);
+				--icon:SetEnableUpdateScp('None');
 			end
 		end
 		local lastSlot = GET_CHILD_RECURSIVELY(frame, "slot"..list:Count() +1, "ui::CSlot");
