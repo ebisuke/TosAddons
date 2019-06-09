@@ -1,7 +1,7 @@
 ﻿$addonname="advancednumberdialog"
 $emoji="📖"
 $prefix="__"
-$version="v1.0.1"
+$version="v1.0.2"
 
 if (!(Test-Path bin)) {
     mkdir bin 
