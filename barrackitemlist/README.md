@@ -6,8 +6,10 @@ https://github.com/writ312/myTosAddons
 別のBarrackItemListと同時に導入してはいけません。
 # リリースノート
 ## v3.2.0
-検索の際に大文字・小文字を無視するようにした。   
-Changed to no case sensitive in search.
+検索の際に大文字・小文字を無視するようにした。
+Changed to no case sensitive in search.  
+英語をサポート（ITOSでは試してません）
+Supported English. But I have not confirmed in ITOS.
 
 ## v3.1.0
 視認性・操作性の向上。   

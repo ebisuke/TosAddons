@@ -88,12 +88,11 @@ local function loadfromfile_internal(path,dummy)
     end
 end
 local function loadfromfile(path,dummy)
-    local env = {dofile=dofile,pcall=pcall,print=print}
+    local env = {dofile=dofile,pcall=pcall}
     local lff=loadfromfile_internal
     setfenv(lff, env)
     local result,data=pcall(lff,path,dummy)
     if(result)then
-        --print("SUCC"..path.."/"..tostring(data))
         return data
     else
 
@@ -101,7 +100,6 @@ local function loadfromfile(path,dummy)
     end
 end;
 local function savetofile(path,data)
-    
     local s="return "..serialize(data)
     --CHAT_SYSTEM(tostring(#s))
     local fn=io.open(path,"w+")
@@ -116,29 +114,66 @@ local function treat(key)
         return key
     end
 end
+
+local translationtable={
+    Unused          ={jp="シルバー"     ,en="Silver"},
+    Weapon          ={jp="武器"         ,en="Weapon"},
+    SubWeapon       ={jp="サブ武器"     ,en="SubWeapon"},
+    Armor           ={jp="アーマー"     ,en="Armor"},
+    Drug            ={jp="消費アイテム" ,en="Consumable"},
+    Recipe          ={jp="レシピ"       ,en="Recipe"},
+    Material        ={jp="素材"         ,en="Material"},
+    Gem             ={jp="ジェム"       ,en="Gem"},
+    Card            ={jp="カード"       ,en="Card"},
+    Collection      ={jp="コレクション" ,en="Collection"},
+    Quest           ={jp="クエスト"     ,en="Quest"},
+    Event           ={jp="イベント"     ,en="Event"},
+    Cube            ={jp="キューブ"     ,en="Cube"},
+    Premium         ={jp="プレミアム"   ,en="Premium"},
+    warehouse       ={jp="倉庫"        ,en="Storage"},
+    SaveInventoryTip={jp="現在のキャラのインベントリを保存する"       ,en="Save the current character inventory"},
+    SilverIs        ={jp="シルバー： "                              ,en="Silver: "},
+    Inventory_2     ={jp="インベントリ"                             ,en="Inventory"},
+    Warehouse_2     ={jp="倉庫"                                    ,en="Storage"},
+    SlotPerRow      ={jp="一行のスロット数"                         ,en="Slots per line"},
+    NodeOpen        ={jp="{s30}{#000000}始めからノードを展開する"    ,en="{s30}{#000000}All open"},
+    ItemListTab     ={jp="アイテムリスト"                           ,en="List"},
+    SearchListTab   ={jp="アイテム検索"                             ,en="Search"},
+    SettingTab      ={jp="設定"                                    ,en="Settings"},
+    
+}
+
+local function L_(str)
+    if(option.GetCurrentCountry()=="Japanese")then
+        return translationtable[str].jp
+    else
+        return translationtable[str].en
+    end
+end
+
 function BARRACKITEMLIST_DBG_CLEANUP()
     g.itemlist ={}
-    g.userlist={}
+    g.userlist ={}
 end
 
 g.userlist  = loadfromfile(g.settingPath..'userlist_fl.lua',nil) or {}
 g.warehouseList = loadfromfile(g.settingPath..'warehouse_fl.lua',nil) or {}
 g.nodeList = {
-        {"Unused" , "シルバー"}
-        ,{"Weapon" , "武器"}
-        ,{"SubWeapon" , "サブ武器"}
-        ,{"Armor" , "アーマー"}
-        ,{"Drug" , "消費アイテム"}
-        ,{"Recipe" ,"レシピ"}
-        ,{"Material","素材"}
-        ,{"Gem","ジェム"}
-        ,{"Card","カード"}
-        ,{"Collection","コレクション"}
-        ,{"Quest" ,"クエスト"}
-        ,{"Event" ,"イベント"}
-        ,{"Cube" , "キューブ"}
-        ,{"Premium" ,"プレミアム"}
-        ,{"warehouse","倉庫"}
+        {"Unused" , L_("Unused")}
+        ,{"Weapon" , L_("Weapon")}
+        ,{"SubWeapon" ,  L_("SubWeapon")}
+        ,{"Armor" ,  L_("Armor")}
+        ,{"Drug" , L_("Drug")}
+        ,{"Recipe" , L_("Recipe")}
+        ,{"Material", L_("Material")}
+        ,{"Gem", L_("Gem")}
+        ,{"Card", L_("Card")}
+        ,{"Collection", L_("Collection")}
+        ,{"Quest" , L_("Quest")}
+        ,{"Event" , L_("Event")}
+        ,{"Cube" ,  L_("Cube")}
+        ,{"Premium" , L_("Premium")}
+        ,{"warehouse", L_("warehouse")}
     }
 g.setting = loadfromfile(g.settingPath..'setting_fl.lua',nil)
 if not g.setting then
@@ -185,8 +220,28 @@ function BARRACKITEMLIST_ON_INIT(addon,frame)
     frame:GetChild('saveBtn'):SetTextTooltip('現在のキャラのインベントリを保存する')
     BARRACKITEMLIST_CREATE_SETTINGMENU()
     BARRACKITEMLIST_TAB_CHANGE(frame)
+
+    -- translation xml
+    BARRACKITEMLIST_TRANSLATION(frame)
+
+
+    frame:Invalidate()
     frame:ShowWindow(0)
     BARRACKITEMLIST_SAVE_LIST()
+end
+function BARRACKITEMLIST_TRANSLATION(frame)
+    if(frame==nil)then
+        frame=ui.GetFrame("barrackitemlist")
+    end
+    GET_CHILD_RECURSIVELY(frame,"openNodeChbox"):SetText(L_("NodeOpen"))
+    GET_CHILD_RECURSIVELY(frame,"slotColTxt"):SetText(L_("SlotPerRow"))
+    local tc=GET_CHILD_RECURSIVELY(frame,"tab","ui::CTabControl")
+    tc:ClearItemAll()
+    tc:AddItemWithName(L_("ItemListTab"),"ItemListTab")
+    tc:AddItemWithName(L_("SearchListTab"),"SearchListTab")
+    tc:AddItemWithName(L_("SettingTab"),"SettingTab")
+
+
 end
 
 -- function SELECT_CHARBTN_LBTNUP_EVENT(addonFrame, eventMsg)
@@ -283,7 +338,7 @@ function BARRACKITEMLIST_SHOW_LIST(cid)
             local nodeItemList = list[value[1]]
             if nodeItemList and not g.setting.hideNode[i] then
                 if value[1] == "Unused" then
-                    tree:Add("シルバー : " .. acutil.addThousandsSeparator(nodeItemList[1][2]));
+                    tree:Add(L_("SilverIs") .. acutil.addThousandsSeparator(nodeItemList[1][2]));
                 else
                     tree:Add(value[2]);
                     parentCategory = tree:FindByCaption(value[2]);
@@ -332,12 +387,14 @@ function BARRACKITEMLIST_MAKE_SLOTSET(tree, name)
 end
 
 function BARRACKITEMLIST_SEARCH_ITEMS(itemlist,itemName,iswarehouse)
+
     local items = {}
     for cid,name in pairs(g.userlist) do
         if itemlist[treat(cid)] then
             for group,list in pairs(itemlist[treat(cid)]) do
                 if group ~= 'warehouse' or iswarehouse then
                     for i ,v in ipairs(list) do
+                        
                         if string.find(string.lower(v[1]),string.lower(itemName)) then
                             items[treat(cid)] = items[treat(cid)] or {}
                             table.insert(items[treat(cid)],v)
@@ -364,9 +421,9 @@ function BARRACKITEMLIST_SHOW_SEARCH_ITEMS(frame, obj, argStr, argNum)
     if editbox:GetText() == '' or not editbox:GetText() then return end
     local invItems = BARRACKITEMLIST_SEARCH_ITEMS(g.itemlist,editbox:GetText(),false)
     local warehouseItems = BARRACKITEMLIST_SEARCH_ITEMS(g.warehouseList,editbox:GetText(),true)
-    tree:Add('インベントリ')
+    tree:Add(L_("Inventory_2"))
     _BARRACKITEMLIST_SEARCH_ITEMS(tree,invItems,'_i')
-    tree:Add('倉庫')
+    tree:Add(L_("Warehouse_2"))
     _BARRACKITEMLIST_SEARCH_ITEMS(tree,warehouseItems,'_w')
     tree:OpenNodeAll()
     tree:ShowWindow(1)
