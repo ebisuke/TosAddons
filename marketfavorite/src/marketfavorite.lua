@@ -1073,6 +1073,19 @@ end
 
 ---------
 
+local translationtable={
+    Favorites       ={jp="お気に入り"     						,en="Favorites"},
+    HavntopenMarket ={jp="マーケット画面を開いていません"         ,en="Please open the market window."},
+}
+
+local function L_(str)
+    if(option.GetCurrentCountry()=="Japanese")then
+        return translationtable[str].jp
+    else
+        return translationtable[str].en
+    end
+end
+
 
 function MARKETFAVORITE_SAVE_SETTINGS()
     MARKETFAVORITE_SAVETOSTRUCTURE()
@@ -1136,7 +1149,7 @@ end
 function MARKETFAVORITE_ON_OPEN_MARKET()
     local frame = ui.GetFrame('market')
     local obj = frame:CreateOrGetControl('button', 'openbtn', 270, 30, 70, 40)
-    obj:SetText("お気に入り")
+    obj:SetText(L_("Favorites"))
     obj:SetEventScript(ui.LBUTTONDOWN,"MARKETFAVORITE_TOGGLE_FRAME")
 end
 function MARKETFAVORITE_SAVETOSTRUCTURE()
@@ -1279,12 +1292,7 @@ function MARKETFAVORITE_MARKET_ITEMLIST(frame)
 
                     pic = GET_CHILD_RECURSIVELY(ctrl1, 'pic')
                 end
-                --if(pic~=nil)then
-                --pic:SetEventScript(ui.RBUTTONDOWN,"MARKETFAVORITE_ON_ADDRCLICK")
-                --pic:SetEventScriptArgNumber(ui.RBUTTONDOWN, i);
 
-                --end
-                -- statements
             end
         end,
         catch = function(error)
@@ -1332,7 +1340,7 @@ function MARKETFAVORITE_ON_DROP(frame, ctrl)
                     local invitems = GetClassByType("Item",obj.ClassID)
                     -- IESを生成
                     if(invitems==nil)then
-                        CHAT_SYSTEM('それは登録できません')
+                        
                     else
                         slot:SetUserValue('clsid', tostring(obj.ClassID))
                     
@@ -1340,7 +1348,7 @@ function MARKETFAVORITE_ON_DROP(frame, ctrl)
                         SET_SLOT_STYLESET(slot, invitems)
                     end
                 else
-                    CHAT_SYSTEM('そこからのドロップには対応していません')
+    
                     return
                 end
             else
@@ -1348,7 +1356,7 @@ function MARKETFAVORITE_ON_DROP(frame, ctrl)
                 
                 local invitems = GetClassByType("Item",itemobj.ClassID)
                 if(invitems==nil)then
-                    CHAT_SYSTEM('それは登録できません')
+                   
                 else
                     slot:SetUserValue('clsid', tostring(itemobj.ClassID))
                     --slot:SetUserValue("iesid",iconInfo:GetIESID())
@@ -1363,36 +1371,6 @@ function MARKETFAVORITE_ON_DROP(frame, ctrl)
         end
     }
 end
--- function MARKETFAVORITE_ON_ADDRCLICK(frame, slot, argstr, argnum)
---     return
--- 	EBI_try_catch{
---         try=function()
---         local mySession = session.GetMySession();
---         local cid = mySession:GetCID();
---         local count = session.market.GetItemCount();
---         local marketItem = session.market.GetItemByIndex(argnum);
---         local itemObj = GetIES(marketItem:GetObject());
-
---         if(ui.GetFrame("market"):IsVisible()==0)then
---             CHAT_SYSTEM("マーケットを開いていません")
---         end
---         local parent=slot:GetParent()
---         AUTO_CAST(parent)
-
---         CHAT_SYSTEM("COMEON")
---         local icon=slot:GetIcon()
---         local iconInfo = icon:GetInfo();
-
---         local invitem = GET_ITEM_BY_GUID(iconInfo:GetIESID());
---         CHAT_SYSTEM(parent:GetName()..":"..tostring(itemObj.ClassID))
-
---     end,
--- 	catch=function(error)
--- 		CHAT_SYSTEM(error)
--- 		print(error)
--- 	end
--- 	}
--- end
 
 function MARKETFAVORITE_ON_RCLICK(frame, slot, argstr, argnum)
     EBI_try_catch {
@@ -1404,7 +1382,7 @@ function MARKETFAVORITE_ON_RCLICK(frame, slot, argstr, argnum)
                 MARKETFAVORITE_LOADFROMSTRUCTURE()
             else
                 if (ui.GetFrame('market'):IsVisible() == 0) then
-                    CHAT_SYSTEM('マーケット画面を開いていません')
+                    CHAT_SYSTEM(L_("HavntopenMarket"))
                     return
                 end
                 local frame = ui.GetFrame('market')
@@ -1420,7 +1398,8 @@ function MARKETFAVORITE_ON_RCLICK(frame, slot, argstr, argnum)
                 end
                 MARKET_BUYMODE(frame)
                 MARKET_INIT_CATEGORY(frame)
-                MARKET_REFRESH_SEARCH_OPTION(frame, nil)
+				--MARKET_REFRESH_SEARCH_OPTION(frame, nil)
+				
                 local searchtext = GET_CHILD_RECURSIVELY(frame, 'searchEdit')
                 local realname = dictionary.ReplaceDicIDInCompStr(invitem.Name)
                 realname = utf8sub(realname,1,math.min(#realname,16))
