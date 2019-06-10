@@ -18,6 +18,9 @@ Shift+右クリックで登録を解除します
 https://gist.github.com/Stepets/3b4dbaf5e6e6a60f3862
 
 # リリースノート
+## v1.1.0
+英語対応。 supported multiligal(EN,JP).  
+ITOS向けバグフィックス。 Bugfix in ITOS environment.
 
 ## v1.0.0
 初回

@@ -118,3 +118,5 @@ advancednumberdialog/bin/advancednumberdialog-v1.0.2.ipf
 advancednumberdialog/bin/__advancednumberdialog-📖-v1.0.2.ipf
 barrackitemlist/bin/__barrackitemlist-📖-v3.2.0.ipf
 barrackitemlist/bin/barrackitemlist-v3.2.0.ipf
+marketfavorite/obj/addon_d.ipf/marketfavorite/marketfavorite.lua
+marketfavorite/obj/addon_d.ipf/marketfavorite/marketfavorite.xml
