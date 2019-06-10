@@ -160,7 +160,7 @@
     "fileVersion" : "v3.2.0",
     "releaseTag" : "barrackitemlist-v3.2.0",
     "unicode" : "📖",
-    "description" : "BarrackItemListのロード処理を高速化しました",
+    "description" : "Faster loading of BarrackItemList. BarrackItemListのロード処理を高速化しました。",
     "tags" : [
       "warehouse",
       "item"
