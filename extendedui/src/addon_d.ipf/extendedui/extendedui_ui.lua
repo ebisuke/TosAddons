@@ -20,7 +20,10 @@ function EXTENDEDUI_ON_CHECK_HIDE(frame, ctrl, argStr)
 	end
 end
 
+function extui.islargedisplay()
 
+	return option.GetClientWidth() >= 3000
+end
 function extui.openside()
 	extui.oldSlider = {};
 
@@ -496,28 +499,27 @@ function EXTENDEDUI_ON_MINI_SAVE()
 end
 
 function extui.OpenMiniFrame()
-	
-
 	extui.oldSelectedFrameParent = nil;
 	extui.selectedFrameParent = nil;
 	extui.selectedFrame = nil;
-
-	local frm = ui.CreateNewFrame("extendedui", "EXTENDEDUI_MINI_FRAME");
-	frm:Resize(350 , 120);
+	local crx = 1
+	local cry = 1
 	
-	local divx=1
-	local divy=2
-	if (option.GetClientWidth() >= 3000) then
-                    
+	
+	if (extui.islargedisplay()) then
+		
 		--4k対応
-		divx = divx * 2
-		divy = divy * 2
+		crx =2
+		cry =2
 	
 	end
-	frm:MoveFrame((ui.GetSceneWidth()/divx/2)-175, (ui.GetSceneHeight()/divy/2)-50);
+	local frm = ui.CreateNewFrame("extendedui", "EXTENDEDUI_MINI_FRAME");
+	frm:Resize(350 , 120);
+	frm:MoveFrame((ui.GetSceneWidth()/crx/2)-175, (ui.GetSceneHeight()/cry/2)-50);
 	frm:SetSkinName("pip_simple_frame");
 	frm:RunUpdateScript("EXTENDEDUI_MINI_UPDATE");
-
+	frm:EnableMove(1)
+	frm:EnableHittestFrame(1)
 	extui.PopulateMiniFrame(frm);
 end
 
@@ -915,7 +917,7 @@ function EXTENDEDUI_ON_BUTTON_FRAME_PRESS(frame, ctrl, argStr, exclude)
 					local frm = ui.CreateNewFrame("extendedui", "extuidragframe"..k);
 					frm:Resize(w , h);
 					frm:MoveFrame(x, y);
-					frm:EnableMove(1)
+
 					frm:RunUpdateScript("EXTENDEDUI_ON_DRAGGING");
 					frm:SetEventScript(ui.LBUTTONDOWN, "EXTENDEDUI_ON_DRAG_START_END");
 					frm:SetEventScriptArgString(ui.LBUTTONDOWN, "start");
@@ -1219,12 +1221,24 @@ function extui.InitSideFrame()
 		EXTENDEDUI_ON_CLOSE_UI();
 		return;
 	end
-
+	local crx = 1
+	local cry = 1
+	
+	
+	if (extui.islargedisplay()) then
+		
+		--4k対応
+		crx =2
+		cry =2
+	
+	end
 	local frm = ui.CreateNewFrame("extendedui", "EXTENDEDUI_SIDE_FRAME");
+	tolua.cast(frm,"ui::CFrame")
 	frm:Resize(365 , 600);
-	frm:MoveFrame((ui.GetSceneWidth()/2)-400, (ui.GetSceneHeight()/2)-300);
+	frm:MoveFrame((ui.GetSceneWidth()/crx/2)-400, (ui.GetSceneHeight()/cry/2)-300);
 	frm:SetSkinName("test_frame_low");
-
+	frm:EnableMove(1)
+	frm:EnableHittestFrame(1)
 	local ctrl = frm
 	ctrl = tolua.cast(ctrl, "ui::CFrame");
 	extui.sideFrame = ctrl;

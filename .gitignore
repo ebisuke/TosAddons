@@ -142,3 +142,10 @@ extendedui/obj/ui.ipf/baseskinset/extui.xml
 extendedui/obj/ui.ipf/skin/extui.tga
 developerconsoleex/bin/__developerconsoleex-📖-v1.1.0.ipf
 developerconsoleex/bin/developerconsoleex-v1.1.0.ipf
+extendedui/obj/addon_d.ipf/extendedui/extendedui.xml
+extendedui/obj/addon_d.ipf/extendedui/extendedui.lua
+extendedui/obj/addon_d.ipf/extendedui/extendedui_frame.lua
+extendedui/obj/addon_d.ipf/extendedui/extendedui_lang.lua
+extendedui/obj/addon_d.ipf/extendedui/extendedui_set.lua
+extendedui/obj/addon_d.ipf/extendedui/extendedui_ui.lua
+extendedui/obj/addon_d.ipf/extendedui/extendedui_util.lua
