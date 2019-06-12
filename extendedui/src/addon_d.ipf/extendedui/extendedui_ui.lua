@@ -502,20 +502,15 @@ function extui.OpenMiniFrame()
 	extui.oldSelectedFrameParent = nil;
 	extui.selectedFrameParent = nil;
 	extui.selectedFrame = nil;
-	local crx = 1
-	local cry = 1
-	
+	local div = 1
 	
 	if (extui.islargedisplay()) then
-		
-		--4k対応
-		crx =2
-		cry =2
-	
+		--Supported 4k Resolution
+		div =2
 	end
 	local frm = ui.CreateNewFrame("extendedui", "EXTENDEDUI_MINI_FRAME");
 	frm:Resize(350 , 120);
-	frm:MoveFrame((ui.GetSceneWidth()/crx/2)-175, (ui.GetSceneHeight()/cry/2)-50);
+	frm:MoveFrame((ui.GetSceneWidth()/div/2)-175, (ui.GetSceneHeight()/div/2)-50);
 	frm:SetSkinName("pip_simple_frame");
 	frm:RunUpdateScript("EXTENDEDUI_MINI_UPDATE");
 	frm:EnableMove(1)
@@ -1221,21 +1216,18 @@ function extui.InitSideFrame()
 		EXTENDEDUI_ON_CLOSE_UI();
 		return;
 	end
-	local crx = 1
-	local cry = 1
-	
+	local div = 1
 	
 	if (extui.islargedisplay()) then
 		
-		--4k対応
-		crx =2
-		cry =2
+		--Supported 4k Resolution
+		div =2
 	
 	end
 	local frm = ui.CreateNewFrame("extendedui", "EXTENDEDUI_SIDE_FRAME");
 	tolua.cast(frm,"ui::CFrame")
 	frm:Resize(365 , 600);
-	frm:MoveFrame((ui.GetSceneWidth()/crx/2)-400, (ui.GetSceneHeight()/cry/2)-300);
+	frm:MoveFrame((ui.GetSceneWidth()/div/2)-400, (ui.GetSceneHeight()/div/2)-300);
 	frm:SetSkinName("test_frame_low");
 	frm:EnableMove(1)
 	frm:EnableHittestFrame(1)

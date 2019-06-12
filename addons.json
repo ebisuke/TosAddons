@@ -170,8 +170,8 @@
     "name" : "Lycanthropy Bugfix For Patch 250501",
     "file" : "lycanthropypatch1",
     "extension" : "ipf",
-    "fileVersion" : "v0.1.0",
-    "releaseTag" : "lycanthropypatch1-v0.1.0",
+    "fileVersion" : "v1.0.0",
+    "releaseTag" : "lycanthropypatch1-v1.0.0",
     "unicode" : "📖",
     "description" : "パッチ250501でドルイドのライカンスロピー・シェイプシフティング・トランスフォーム・ソーサラーのオベイ・降りた時にクイックスロットが消えてしまうバグを暫定的に修正しました。",
     "tags" : [
