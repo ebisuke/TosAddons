@@ -124,7 +124,7 @@ end
 function DEVELOPERCONSOLE_DOFILE(frame,argStr)
 	local s = string.gsub(argStr,"\\","\\\\")
 	local text
-	if(string.find(s,"\"")==1)then
+	if s[1]=="\""then
 		text = "dofile("..s..");"
 	else
 		text = "dofile(\""..s.."\");"
