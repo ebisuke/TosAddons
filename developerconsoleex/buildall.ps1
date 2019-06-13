@@ -1,4 +1,4 @@
-﻿$addonname="developerconsoleex"
+﻿$addonname="developerconsole"
 $emoji="📖"
 $prefix="__"
 $version="v1.1.0"

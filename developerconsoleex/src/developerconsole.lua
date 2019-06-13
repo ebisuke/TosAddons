@@ -1,7 +1,5 @@
 local acutil = require("acutil");
-DEVELOPERCONSOLE_SETTINGS={
-	history={}
-}
+
 DEVELOPERCONSOLE_SETTINGSLOCATION = string.format('../addons/%s/settings.json', "developerconsole")
 DEVELOPERCONSOLE_KEYDOWNFLAG = false
 DEVELOPERCONSOLE_CURSOR = 0
@@ -15,6 +13,9 @@ function DEVELOPERCONSOLE_ON_INIT(addon, frame)
 	acutil.setupHook(DEVELOPERCONSOLE_PRINT_TEXT, "print");
 	acutil.addSysIcon('developerconsole', 'sysmenu_sys', 'developerconsole', 'DEVELOPERCONSOLE_TOGGLE_FRAME')
 	if not DEVELOPERCONSOLE_SETTINGSLOADED then
+		DEVELOPERCONSOLE_SETTINGS={
+			history={}
+		}
 		local t, err = acutil.loadJSON(DEVELOPERCONSOLE_SETTINGSLOCATION, DEVELOPERCONSOLE_SETTINGS)
 		if err then
 			--設定ファイル読み込み失敗時処理
@@ -119,17 +120,17 @@ function DEVELOPERCONSOLE_OPEN()
 	timer:Start(0.01);
 end
 function DEVELOPERCONSOLE_DOFILE_CHOOSE(frame)
-	INPUT_STRING_BOX_CB(frame,"Input a file path","DEVELOPERCONSOLE_DOFILE","",0,"",256,false)
+	INPUT_STRING_BOX_CB(frame,"Input a file path","DEVELOPERCONSOLE_DOFILE","",nil,nil,256,false)
 end
 function DEVELOPERCONSOLE_DOFILE(frame,argStr)
 	local s = string.gsub(argStr,"\\","\\\\")
 	local text
-	if s[1]=="\""then
+	if string.find(s,"\"") ~= nil then
 		text = "dofile("..s..");"
 	else
 		text = "dofile(\""..s.."\");"
 	end
-	
+
 	local input = frame:GetChild("input");
 	input:SetText(text)
 end
