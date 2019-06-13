@@ -39,6 +39,42 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val=="nil"
 end
+
+local translationtable={
+
+	Tsettingsupdt12 = {jp="[AIM]共通設定のバージョンを更新しました 1->2",  eng="[AIM]Team settings updated 1->2"},
+    Tsettingsupdt23 = {jp="[AIM]共通設定のバージョンを更新しました 2->3",  eng="[AIM]Team settings updated 2->3"},
+	Csettingsupdt12 = {jp="[AIM]個人設定のバージョンを更新しました 1->2",  eng="[AIM]Character settings updated 1->2"},
+	Csettingsupdt23 = {jp="[AIM]個人設定のバージョンを更新しました 2->3",  eng="[AIM]Character settings updated 2->3"},
+	Configbtn = {jp="{ol}AIM設定",  eng="{ol}AIM Config"},
+	TempDWarn= {jp="[AIM]現在自動補充を一時停止しています",  eng="[AIM] is temporarily disabled."},
+	Tsmsg = {jp="[AIM]チーム倉庫からアイテムを引き出します",  eng="[AIM]Retrieved items from Team storage."},
+	Psmsg = {jp="[AIM]個人倉庫からアイテムを引き出します",  eng="[AIM]Retrieved items from Personal storage."},
+	Copybtn = {jp="チーム設定コピー",  eng="{s14}Copy Team settings"},
+	Disablecheck = {jp="{ol}{#FF0000}自動補充を一時的に無効化",  eng="{ol}{#FF0000}Disable AIM"},
+	Enablecheck = {jp="{ol}このキャラで使用する",  eng="{ol}Use on this char"},
+	Charcheck = {jp="{ol}個人設定を使用する(解除で共通設定)",  eng="{ol}Settings for this char only"},
+	Tscheck = {jp="{ol}チーム倉庫",  eng="{ol}Team storage"},
+	Pscheck = {jp="{ol}個人倉庫",  eng="{ol}Personal storage"},
+	CopyWarn = {jp="{ol}アイテム設定をチーム設定からコピーします。{nl}既存の個人アイテム設定は上書きされ削除されます。{nl}よろしいですか？",  eng="{ol}Copy Team settings. {nl}Character settings will be overwritten! Proceed?"},
+	Copymsg = {jp="[AIM]個人設定をチーム設定からコピーしました",  eng="[AIM]Team settings copied."},
+	DropWarn = {jp="[AIM]数量の編集中はドロップできません",  eng="[AIM]Cant drop while editing quantity"},
+	RegiWarn = {jp="それは登録できません",  eng="Cant register it"},
+	ClassidWarn = {jp="このアイテムをGUIDで管理しますか？{nl}いいえを押すとClassIDで管理します。{nl}期間のあるアイテムをGUIDで指定すると、{nl}見かけ上期間満了になることがあります",  eng="Do you want to manage this item by GUID? {nl} Press No to manage with ClassID."},
+	Usagemsg = {jp="usage{nl}/aim on 自動補充の一時停止を解除{nl}/aim off 自動補充の一時停止",  eng="Usage:{nl}/aim on -> enable AIM{nl}/aim off -> disable AIM"},
+	Enablemsg = {jp="[AIM]自動補充の一時停止を解除しました",  eng="[AIM]Enabled"},
+	Disablemsg = {jp="[AIM]自動補充を一時停止しました",  eng="[AIM]Disabled"},
+	
+}
+
+local function L_(str)
+    if(option.GetCurrentCountry()=="Japanese")then
+        return translationtable[str].jp
+    else
+        return translationtable[str].eng
+    end
+end
+
 function AUTOITEMMANAGE_DEFAULTSETTINGS()
     return {
         version=g.version,
@@ -182,14 +218,14 @@ function AUTOITEMMANAGE_UPGRADE_SETTINGS()
     local upgraded=false
     --1->2
     if(g.settings.version==nil or g.settings.version==1)then
-        CHAT_SYSTEM("[AIM]共通設定のバージョンを更新しました 1->2")
+        CHAT_SYSTEM(L_("Tsettingsupdt12"))
 
         g.settings.version=2
         upgraded=true
     end
      --1->2
      if(g.settings.version==2)then
-        CHAT_SYSTEM("[AIM]共通設定のバージョンを更新しました 2->3")
+        CHAT_SYSTEM(L_("Tsettingsupdt23"))
         g.settings.itemmanagetempdisabled=false
         g.settings.version=3
         upgraded=true
@@ -200,7 +236,7 @@ function AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
     local upgraded=false
     --1->2
     if(g.personalsettings.version==nil or g.personalsettings.version==1)then
-        CHAT_SYSTEM("[AIM]個人設定のバージョンを更新しました 1->2")
+        CHAT_SYSTEM(L_("Csettingsupdt12"))
         g.personalsettings.enabled=true
 
         g.personalsettings.unusecommon=g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()] or false
@@ -208,7 +244,7 @@ function AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
         upgraded=true
     end  
     if(g.personalsettings.version==2)then
-        CHAT_SYSTEM("[AIM]個人設定のバージョンを更新しました 2->3")
+        CHAT_SYSTEM(L_("Csettingsupdt23"))
         g.personalsettings.enabled=true
         g.personalsettings.version=3
         upgraded=true
@@ -307,7 +343,7 @@ function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
 
             local frame=ui.GetFrame("camp_ui")
             local btn=frame:CreateOrGetControl('button', 'showconfig', 240, 590, 110, 30)
-            btn:SetText("{ol}AIM設定")
+            btn:SetText(L_("Configbtn"))
             btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
   
             ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
@@ -328,7 +364,7 @@ function AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE()
 
             local frame=ui.GetFrame("accountwarehouse")
             local btn=frame:CreateOrGetControl('button', 'showconfig', 400, 80, 100, 30)
-            btn:SetText("{ol}AIM設定")
+            btn:SetText(L_("Configbtn"))
             btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
             ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
     end,
@@ -350,7 +386,7 @@ function AUTOITEMMANAGE_ON_OPEN_WAREHOUSE()
 
             local frame=ui.GetFrame("warehouse")
             local btn=frame:CreateOrGetControl('button', 'showconfig', 380, 80, 110, 30)
-            btn:SetText("{ol}AIM設定")
+            btn:SetText(L_("Configbtn"))
             btn:SetEventScript(ui.LBUTTONDOWN,"AUTOITEMMANAGE_TOGGLE_FRAME")
   
             ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
@@ -524,10 +560,10 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                 end
                 if (count > 0) then
                     if(g.settings.itemmanagetempdisabled)then
-                        ui.SysMsg("[AIM]現在自動補充を一時停止しています")
+                        ui.SysMsg(L_("TempDWarn"))
                     else
                         if(accountmode)then
-                            CHAT_SYSTEM("[AIM]チーム倉庫からアイテムを引き出します")
+                            CHAT_SYSTEM(L_("Tsmsg"))
                             item.TakeItemFromWarehouse_List(
                                 IT_ACCOUNT_WAREHOUSE,
                                 session.GetItemIDList(),
@@ -535,7 +571,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                             )
                         else
                             local count=1
-                            CHAT_SYSTEM("[AIM]個人倉庫からアイテムを引き出します")
+                            CHAT_SYSTEM(L_("Psmsg"))
                             for _,v in ipairs(takeitems)do
                                 ReserveScript( string.format("AUTOITEMMANAGE_FOREACH_TAKEITEM(\"%s\",%d,\"%s\")",  v.iesid, v.count,tostring(campmode)) , count*0.3)
                                 
@@ -681,23 +717,23 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
                 
             end
             local btncopyfromteam = frame:CreateOrGetControl('button','btncopyfromteam',250,70,30,40)
-            btncopyfromteam:SetText("チーム設定コピー")
+            btncopyfromteam:SetText(L_("Copybtn"))
             btncopyfromteam:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CLICK_COPYFROMTEAM")      
             --checkbox 設定増えそうなら見直す
             local chktemporarydisabled = frame:CreateOrGetControl('checkbox', 'temporarydisabled', 20, 80, 100, 20)
-            chktemporarydisabled:SetText("{ol}{#FF0000}自動補充を一時的に無効化")
+            chktemporarydisabled:SetText(L_("Disablecheck"))
             chktemporarydisabled:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED_TEMPDISABLED")       
             local chkuseisenabled = frame:CreateOrGetControl('checkbox', 'isenabled', 20, 110, 100, 20)
-            chkuseisenabled:SetText("{ol}このキャラで使用する")
+            chkuseisenabled:SetText(L_("Enablecheck"))
             chkuseisenabled:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED_ENABLED")            
             local chkusepersonal = frame:CreateOrGetControl('checkbox', 'usepersonal', 20, 160, 100, 20)
-            chkusepersonal:SetText("{ol}個人設定を使用する(解除で共通設定)")
+            chkusepersonal:SetText(L_("Charcheck"))
             chkusepersonal:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL")
             local chkenableaw = frame:CreateOrGetControl('checkbox', 'enableaw', 20, 140, 100, 20)
-            chkenableaw:SetText("{ol}チーム倉庫")
+            chkenableaw:SetText(L_("Tscheck"))
             chkenableaw:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED")
             local chkenablew = frame:CreateOrGetControl('checkbox', 'enablew', 150, 140, 100, 20)
-            chkenablew:SetText("{ol}個人倉庫")
+            chkenablew:SetText(L_("Pscheck"))
             chkenablew:SetEventScript(ui.LBUTTONUP,"AUTOITEMMANAGE_ON_CHECKCHANGED")
             AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
         end,
@@ -714,7 +750,7 @@ end
 function AUTOITEMMANAGE_ON_CLICK_COPYFROMTEAM(frame, slot, argstr, argnum)
     --確認画面を出す
     imcSound.PlaySoundEvent('button_click_big_2');
-    WARNINGMSGBOX_FRAME_OPEN("{ol}アイテム設定をチーム設定からコピーします。{nl}既存の個人アイテム設定は上書きされ削除されます。{nl}よろしいですか？",
+    WARNINGMSGBOX_FRAME_OPEN(L_("CopyWarn"),
      'AUTOITEMMANAGE_APPROVE_COPYFROMTEAM', 'None');
 end
 function AUTOITEMMANAGE_APPROVE_COPYFROMTEAM()
@@ -724,7 +760,7 @@ function AUTOITEMMANAGE_APPROVE_COPYFROMTEAM()
     g.personalsettings.refills={unpack(g.settings.itemmanage.refills)}
     AUTOITEMMANAGE_LOADFROMSTRUCTURE()
     AUTOITEMMANAGE_SAVE_SETTINGS()
-    CHAT_SYSTEM("[AIM]個人設定をチーム設定からコピーしました")
+    CHAT_SYSTEM(L_("Copymsg"))
 end
 function AUTOITEMMANAGE_ON_CHECKCHANGED_TEMPDISABLED(frame, slot, argstr, argnum)
     EBI_try_catch{
@@ -787,7 +823,7 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL(frame, slot, argstr, argnum)
             else
                 AUTOITEMMANAGE_DBGOUT("UNUSE PERSONAL")
                 g.personalsettings.unusecommon=false
-                g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()]=false
+                --g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()]=false
             end
 
             AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
@@ -1274,7 +1310,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
         try = function()
             if(g.isediting==true)then
                 --CHAT_SYSTEM("[AIM]数量の編集中はドロップできません")
-                ui.SysMsg("[AIM]数量の編集中はドロップできません")
+                ui.SysMsg(L_("DropWarn"))
                 return
             end
             AUTOITEMMANAGE_DBGOUT('dropped')
@@ -1379,7 +1415,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                 else
                     local invitems = GetClassByType('Item', itemobj.ClassID)
                     if (invitems == nil) then
-                        CHAT_SYSTEM('それは登録できません')
+                        CHAT_SYSTEM(L_("RegiWarn"))
                     else
                         slot:SetUserValue('clsid', tostring(itemobj.ClassID))
                         
@@ -1415,10 +1451,10 @@ function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index,isstackable)
     local maxcount=32767
     if(isstackable==false)then
         imcSound.PlaySoundEvent('button_click_big_2');
-        ui.MsgBox("このアイテムをGUIDで管理しますか？{nl}いいえを押すとClassIDで管理します。{nl}期間のあるアイテムをGUIDで指定すると、{nl}見かけ上期間満了になることがあります",
+        ui.MsgBox(L_("ClassidWarn"),
          'AUTOITEMMANAGE_DETERMINENONSTACKABLE_AS_IESID', 'AUTOITEMMANAGE_DETERMINENONSTACKABLE_AS_CLSID');
     else
-        INPUT_NUMBER_BOX(ui.GetFrame(g.framename), '補充する数を入力', 'AUTOITEMMANAGE_DETERMINE', 1, 1, maxcount, nil, nil, 1)
+        INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'How much to be refill', 'AUTOITEMMANAGE_DETERMINE', 1, 1, maxcount, nil, nil, 1)
     end
 end
 function AUTOITEMMANAGE_DETERMINENONSTACKABLE_AS_CLSID()
@@ -1570,20 +1606,20 @@ function AUTOITEMMANAGE_PROCESS_COMMAND(command)
     if #command > 0 then
       cmd = table.remove(command, 1);
     else
-      local msg = "usage{nl}/aim on 自動補充の一時停止を解除{nl}/aim off 自動補充の一時停止"
+      local msg = L_("Usagemsg")
       return ui.MsgBox(msg,"","Nope")
     end
   
     if cmd == "on" then
       --有効
         g.settings.itemmanagetempdisabled=false
-        CHAT_SYSTEM("[AIM]自動補充の一時停止を解除しました");
+        CHAT_SYSTEM(L_("Enablemsg"));
         AUTOITEMMANAGE_SAVE_SETTINGS()
       return;
     elseif cmd == "off" then
       --無効
         g.settings.itemmanagetempdisabled=true
-        CHAT_SYSTEM("[AIM]自動補充を一時停止しました");
+        CHAT_SYSTEM(L_("Disablemsg"));
         AUTOITEMMANAGE_SAVE_SETTINGS()
       return;
     end
