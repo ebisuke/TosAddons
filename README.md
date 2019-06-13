@@ -1,5 +1,7 @@
 # TosAddons
 Tos向けのアドオン  
-jtosのみ
+
   
 説明は各アドオンのREADME参照  
+連絡先  
+https://www.twitter.com/ebisuke_tos
