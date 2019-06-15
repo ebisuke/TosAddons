@@ -151,3 +151,9 @@ extendedui/obj/addon_d.ipf/extendedui/extendedui_ui.lua
 extendedui/obj/addon_d.ipf/extendedui/extendedui_util.lua
 lycanthropypatch1/bin/__lycanthropypatch1-📖-v1.0.0.ipf
 lycanthropypatch1/bin/lycanthropypatch1-v1.0.0.ipf
+discordintegration/obj/addon_d.ipf/discordintegration/discordintegration.lua
+discordintegration/obj/addon_d.ipf/discordintegration/discordintegration.xml
+discordintegration/obj/addon_d.ipf/discordintegration/discordintegrationch.lua
+discordintegration/obj/addon_d.ipf/discordintegration/discordintegrationch.xml
+discordintegration/bin/discordintegration-v0.0.1.ipf
+discordintegration/bin/__discordintegration-📖-v0.0.1.ipf
