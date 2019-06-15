@@ -14,7 +14,7 @@ g.version = 0
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "discordintegration"
-g.debug = false
+g.debug = true
 g.reqrxloc = string.format('../addons/%s/reqdata_rx.lua', addonNameLower)
 g.intervalrxloc = string.format('../addons/%s/intdata_rx.lua', addonNameLower)
 g.execpath = string.format('../addons/%s/bridge/dibridge.exe', addonNameLower)
@@ -36,10 +36,13 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
-
-function diapi_reqrx()
+g.token=nil
+function diapi_reqrx(token)
+    if(token ~= nil and token ~= g.token)then
+        return nil
+    end
     local fpath = filelocation .. "req_rx.json";
-    
+    g.token=nil
     
     local state, json = pcall(acutil.loadJSON, fpath, {})
     if (state) then
@@ -52,13 +55,16 @@ function diapi_reqrx()
     end
 end
 
-function diapi_req(url)
+function diapi_req(url,token)
+    
     debug.ShellExecute(execlocation .. " -X " .. url)
     diapi_state = url
+    g.token=token
 end
-function diapi_reqb(url)
+function diapi_reqb(url,token)
     debug.ShellExecute(execlocation .. " -B " .. url)
     diapi_state = url
+    g.token=token
 end
 
 
@@ -181,13 +187,13 @@ function DISCORDINTEGRATION_INITFRAME(frame)
     gbox:ShowWindow(1)
 end
 function DISCORDINTEGRATION_REFRESH_GUILDLIST()
-    diapi_req("/users/@me/guilds")
-    ReserveScript("DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()", 2)
+    diapi_req("/users/@me/guilds","guilds")
+    ReserveScript("DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()", 1)
     CHAT_SYSTEM("gbb")
 end
 function DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()
     frame = ui.GetFrame(g.framename)
-    local res = diapi_reqrx()
+    local res = diapi_reqrx("guilds")
     local dlGuildList = frame:GetChild("dlGuildList")
     tolua.cast(dlGuildList, "ui::CDropList")
     dlGuildList:ClearItems()
@@ -200,16 +206,16 @@ function DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()
 end
 function DISCORDINTEGRATION_SELECTED_GUILDLIST()
     frame = ui.GetFrame(g.framename)
-    local res = diapi_reqrx()
+
     local dlGuildList = frame:GetChild("dlGuildList")
     tolua.cast(dlGuildList, "ui::CDropList")
     local idx = dlGuildList:GetSelItemIndex()
     --今宵は家畜のみ・・・
     local id = "589098443738185746"
     --リストアップ
-    diapi_reqb("/guilds/" .. id .. "/channels")
+    diapi_reqb("/guilds/" .. id .. "/channels","channels")
     CHAT_SYSTEM("gld")
-    ReserveScript("DISCORDINTEGRATION_SELECTED_GUILDLIST_DELAY()", 2)
+    ReserveScript("DISCORDINTEGRATION_SELECTED_GUILDLIST_DELAY()", 1)
 
 
 end
@@ -218,7 +224,7 @@ function DISCORDINTEGRATION_SELECTED_GUILDLIST_DELAY()
         function()
             
             frame = ui.GetFrame(g.framename)
-            local res = diapi_reqrx()
+            local res = diapi_reqrx("channels")
             local gbox = frame:GetChild("gbox")
             tolua.cast("ui::CGroupBox", gbox)
             --一覧作成
@@ -252,7 +258,9 @@ function DISCORDINTEGRATION_SHOW_CHAT(frame,ctrl,argstr,argnum)
     local chatframe=ui.CreateNewFrame("dichat","dichat_"..argstr)
     chatframe:Resize(500,300)
     chatframe:SetUserValue("id",argstr)
+    
     chatframe:ShowWindow(1)
+    DICHAT_POPUP_OPEN(chatframe)
 end,
 catch = function(error)
     DISCORDINTEGRATION_ERROUT(error)
@@ -291,8 +299,8 @@ function DISCORDINTEGRATION_PROCESS_COMMAND(command)
     end
     CHAT_SYSTEM("POC")
     print("poc")
-    diapi_req("/users/@me")
-    ReserveScript("CHAT_SYSTEM(\"RECV\");print(tostring(diapi_reqrx())", 2)
+    diapi_req("/users/@me","me")
+    ReserveScript("CHAT_SYSTEM(\"RECV\");print(tostring(diapi_reqrx(),\"me\")", 1)
     if cmd == "on" then
         --有効
         g.settings.itemmanagetempdisabled = false
