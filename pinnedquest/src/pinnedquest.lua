@@ -15,6 +15,7 @@ g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
 g.isquestdialog = 0
 g.debug = false
+g.debugshowall = false
 -- ライブラリ読み込み
 local acutil = require('acutil')
 
@@ -379,7 +380,9 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                     pass = false
                                 end
                             end
-                            
+                            if(g.debugshowall)then
+                                pass=true
+                            end
                             if (pass) then
                                 local pictraw =
                                     grpbox:CreateOrGetControl("picture",
@@ -709,7 +712,7 @@ function PINNEDQUEST_ISLINKEDQUEST(pinnedclsid, searchclsid)
     end
     return false
 end
-function PINNEDQUEST_ISVALID(clsid,includeabandon)
+function PINNEDQUEST_ISVALID(clsid, includeabandon)
     if (clsid == 0) then
         return false
     end
@@ -733,12 +736,18 @@ function PINNEDQUEST_ISVALID(clsid,includeabandon)
                         PINNEDQUEST_DBGOUT("imp" .. tostring(clsid) .. "/" .. result)
                         return false
                     elseif result == 'POSSIBLE' or result == 'PROGRESS' or result == 'SUCCESS' then
+                        local pass=true
+                        local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
+                        if (result1 == 1) then
+                            pass = false
+                        end
+ 
                         PINNEDQUEST_DBGOUT(tostring(clsid) .. "/" .. result)
-                        return true
+                        return pass
                     end
                 --end
                 else
-                    if(includeabandon)then
+                    if (includeabandon) then
                         return true
                     end
                 end
@@ -774,30 +783,36 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
                 local result = SCR_QUEST_CHECK_C(pc, questClassName)
                 if result == 'COMPLETE' or result == 'IMPOSSIBLE' then
                     -- 完了したり不可能なものは触らない
+                    
                     elseif result == 'POSSIBLE' or result == 'PROGRESS' or result == 'SUCCESS' then
-                    local result1
-                    
-                    if typ == "MAIN" and questIES.QuestMode == 'MAIN' then
-                        -- main派生ｸｴか調べる
-                        --PINNEDQUEST_DBGOUT("MAIN")
-                        if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid,
-                            questIES.ClassID)) then
-                            add = true
-                        end
-                    
-                    elseif typ == "SUB" and questIES.QuestMode == 'SUB' then
-                        -- sub派生ｸｴか調べる
-                        --PINNEDQUEST_DBGOUT("SUB")
-                        if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid,
-                            questIES.ClassID)) then
-                            add = true
-                        end
-                    elseif typ == "REPEAT" and (questIES.QuestMode == 'SUB' or questIES.QuestMode == 'REPEAT') then
-                        --PINNEDQUEST_DBGOUT("REPEAT")
-                        if (questIES.QuestMode == 'REPEAT' or questIES.QuestMode == 'SUB') then
-                            -- repeat派生ｸｴか調べる
-                            if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid, questIES.ClassID)) then
+                    local pass = true
+                    local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
+                    if (result1 == 1) then
+                        pass = false
+                    end
+                    if (pass) then
+                        if typ == "MAIN" and questIES.QuestMode == 'MAIN' then
+                            -- main派生ｸｴか調べる
+                            --PINNEDQUEST_DBGOUT("MAIN")
+                            if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid,
+                                questIES.ClassID)) then
                                 add = true
+                            end
+                        
+                        elseif typ == "SUB" and questIES.QuestMode == 'SUB' then
+                            -- sub派生ｸｴか調べる
+                            --PINNEDQUEST_DBGOUT("SUB")
+                            if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid,
+                                questIES.ClassID)) then
+                                add = true
+                            end
+                        elseif typ == "REPEAT" and (questIES.QuestMode == 'SUB' or questIES.QuestMode == 'REPEAT') then
+                            --PINNEDQUEST_DBGOUT("REPEAT")
+                            if (questIES.QuestMode == 'REPEAT' or questIES.QuestMode == 'SUB') then
+                                -- repeat派生ｸｴか調べる
+                                if (PINNEDQUEST_ISLINKEDQUEST(pinnedclsid, questIES.ClassID)) then
+                                    add = true
+                                end
                             end
                         end
                     end
@@ -852,8 +867,8 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                         --ついでにPTクエストにする
                         PINNEDQUEST_DBGOUT("pinned by dialog")
                         if (g.settings.enablesetpartywhenaccept) then
-
-                            g.personalsettings.pinnedparty={}
+                            
+                            g.personalsettings.pinnedparty = {}
                             g.personalsettings.pinnedparty[tostring(questID)] = true
                         end
                     else
@@ -888,7 +903,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                     end
                     if (doremove) then
                         --孤立したピン止めを消す
-                        if not PINNEDQUEST_ISVALID(questID,true) then
+                        if not PINNEDQUEST_ISVALID(questID, true) then
                             PINNEDQUEST_DBGOUT("REMOVE ORPHANED" .. tostring(questID))
                             g.personalsettings.pinnedquest[k] = nil
                         end
@@ -939,7 +954,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
             for k, v in pairs(g.personalsettings.pinnedparty) do
                 if (v) then
                     
-                    if (PINNEDQUEST_ISVALID(tonumber(k),true)) then
+                    if (PINNEDQUEST_ISVALID(tonumber(k), true)) then
                         party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
                             0)
                         party.ReqChangeMemberProperty(PARTY_NORMAL, "Shared_Quest",
