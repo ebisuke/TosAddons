@@ -737,9 +737,11 @@ function PINNEDQUEST_ISVALID(clsid, includeabandon)
                         return false
                     elseif result == 'POSSIBLE' or result == 'PROGRESS' or result == 'SUCCESS' then
                         local pass=true
-                        local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
-                        if (result1 == 1) then
-                            pass = false
+                        if result == 'POSSIBLE' then
+                            local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
+                            if (result1 == 1) then
+                                pass = false
+                            end
                         end
  
                         PINNEDQUEST_DBGOUT(tostring(clsid) .. "/" .. result)
@@ -786,9 +788,11 @@ function PINNEDQUEST_FINDREQUIREDQUEST(pinnedclsid, typ)
                     
                     elseif result == 'POSSIBLE' or result == 'PROGRESS' or result == 'SUCCESS' then
                     local pass = true
-                    local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
-                    if (result1 == 1) then
-                        pass = false
+                    if result == 'POSSIBLE' then
+                        local result1, subQuestZoneList = HIDE_IN_QUEST_LIST(GetMyPCObject(), questIES, nil, {})
+                        if (result1 == 1) then
+                            pass = false
+                        end
                     end
                     if (pass) then
                         if typ == "MAIN" and questIES.QuestMode == 'MAIN' then

@@ -1,7 +1,7 @@
 ﻿$addonname="pinnedquest"
 $emoji="📖"
 $prefix="__"
-$version="v0.0.5"
+$version="v0.0.6"
 
 if (!(Test-Path bin)) {
     mkdir bin 
