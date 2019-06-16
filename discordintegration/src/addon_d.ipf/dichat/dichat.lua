@@ -4,6 +4,7 @@ function DICHAT_POPUP_OPEN(frame)
     frame:SetTitleName(id)
 	frame:Invalidate()
 	local title=frame:GetChild("name")
+	title:SetTextByKey("title",id)
 	title:Invalidate()
     CHAT_SYSTEM("INIT")
     
@@ -11,7 +12,7 @@ function DICHAT_POPUP_OPEN(frame)
     DICHAT_ACQUIRE_NEWMESSAGE(frame)
 	local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
 	timer:SetUpdateScript("DICHAT_UPDATE");
-	timer:Start(5);
+	timer:Start(20);
 end
 
 
@@ -51,18 +52,21 @@ function DICHAT_UPDATE(frame)
     local id=frame:GetUserValue("id")
 
 
-    diapi_reqb("/channels/"..id.."/messages")
-    ReserveScript(string.format("DICHAT_UPDATE_DELAY(\"%s\")",frame:GetName()),1)
+    diapi_reqb("/channels/"..id.."/messages","messages_"..id)
+    ReserveScript(string.format("DICHAT_UPDATE_DELAY(\"%s\")",frame:GetName()),10)
 end
 function DICHAT_UPDATE_DELAY(framename)
 	EBI_try_catch{
         try = function()
 		local frame=ui.GetFrame(framename)
 		local id=frame:GetUserValue("id")
-		local recv=diapi_reqrx()
+		DISCORDINTEGRATION_DBGOUT("IN")
+		local recv=diapi_reqrx("messages_"..id)
 		if(recv==nil)then
+			DISCORDINTEGRATION_DBGOUT("OUT")
 			return
 		end
+		DISCORDINTEGRATION_DBGOUT("GO")
 		DI_DRAW_CHAT_MSG("chatgbox_TOTAL",0,frame,recv)
 		DISCORDINTEGRATION_DBGOUT("OK")
 	end,
@@ -76,6 +80,7 @@ function DI_DRAW_CHAT_MSG(groupboxname, startindex, chatframe,messages)
 	local mainchatFrame = ui.GetFrame("chatframe");
 	local groupbox = GET_CHILD(chatframe, groupboxname);
 	local size = #messages;
+
 	DISCORDINTEGRATION_DBGOUT("1")
 	if groupbox == nil then
 		return 1;
@@ -90,11 +95,13 @@ function DI_DRAW_CHAT_MSG(groupboxname, startindex, chatframe,messages)
 	local ypos = 0;
 	DISCORDINTEGRATION_DBGOUT("SIZ "..tostring(size))
 	for i = startindex, size-1  do
+
+		
 		local clusterinfo = messages[i+1];
 		if clusterinfo == nil then
 			return 0;
 		end
-
+		
 		local clustername = "cluster_" .. clusterinfo.id;
 
 		local chatCtrl = GET_CHILD(groupbox, clustername);

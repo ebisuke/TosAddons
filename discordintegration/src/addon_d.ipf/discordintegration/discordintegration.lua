@@ -15,10 +15,11 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "discordintegration"
 g.debug = true
-g.reqrxloc = string.format('../addons/%s/reqdata_rx.lua', addonNameLower)
-g.intervalrxloc = string.format('../addons/%s/intdata_rx.lua', addonNameLower)
+g.reqrxloc = string.format('../addons/%s/req_rx.lua', addonNameLower)
+g.intervalrxloc = string.format('../addons/%s/int_rx.lua', addonNameLower)
 g.execpath = string.format('../addons/%s/bridge/dibridge.exe', addonNameLower)
 
+g.currentguildlist={}
 local filelocation = "../addons/discordintegration/"
 local execlocation = "..\\addons\\discordintegration\\dibridge\\dibridge.exe"
 
@@ -36,35 +37,35 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
-g.token=nil
+
 function diapi_reqrx(token)
-    if(token ~= nil and token ~= g.token)then
-        return nil
-    end
-    local fpath = filelocation .. "req_rx.json";
-    g.token=nil
-    
-    local state, json = pcall(acutil.loadJSON, fpath, {})
+
+    local fpath =string.format('../addons/%s/req_rx_%s.lua', addonNameLower,token)
+
+    local state, json = pcall(dofile, fpath, {})
     if (state) then
         os.remove(fpath)
         local state = diapi_state
         diapi_state = nil;
+        
         return json, state
     else
+        DISCORDINTEGRATION_DBGOUT(state);
         return nil, nil
     end
 end
 
 function diapi_req(url,token)
-    
-    debug.ShellExecute(execlocation .. " -X " .. url)
+    DISCORDINTEGRATION_DBGOUT(url)
+    debug.ShellExecute(execlocation .. " -X " .. url .. " " .. token)
     diapi_state = url
-    g.token=token
+
 end
 function diapi_reqb(url,token)
-    debug.ShellExecute(execlocation .. " -B " .. url)
+    DISCORDINTEGRATION_DBGOUT(url)
+    debug.ShellExecute(execlocation .. " -B " .. url.. " " .. token)
     diapi_state = url
-    g.token=token
+
 end
 
 
@@ -189,7 +190,7 @@ end
 function DISCORDINTEGRATION_REFRESH_GUILDLIST()
     diapi_req("/users/@me/guilds","guilds")
     ReserveScript("DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()", 1)
-    CHAT_SYSTEM("gbb")
+    DISCORDINTEGRATION_DBGOUT("gbb")
 end
 function DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()
     frame = ui.GetFrame(g.framename)
@@ -197,12 +198,17 @@ function DISCORDINTEGRATION_REFRESH_GUILDLIST_DELAY()
     local dlGuildList = frame:GetChild("dlGuildList")
     tolua.cast(dlGuildList, "ui::CDropList")
     dlGuildList:ClearItems()
-    CHAT_SYSTEM("recv")
+    DISCORDINTEGRATION_DBGOUT("recv")
+    if(res==nil)then
+        return
+    end
     for i, v in ipairs(res) do
-        CHAT_SYSTEM("recva")
+        DISCORDINTEGRATION_DBGOUT("recva")
         dlGuildList:AddItem(i - 1, v.name)
     end
     dlGuildList:Invalidate()
+    g.currentguildlist=res
+
 end
 function DISCORDINTEGRATION_SELECTED_GUILDLIST()
     frame = ui.GetFrame(g.framename)
@@ -211,10 +217,10 @@ function DISCORDINTEGRATION_SELECTED_GUILDLIST()
     tolua.cast(dlGuildList, "ui::CDropList")
     local idx = dlGuildList:GetSelItemIndex()
     --今宵は家畜のみ・・・
-    local id = "589098443738185746"
+    local id = g.currentguildlist[idx+1].id
     --リストアップ
     diapi_reqb("/guilds/" .. id .. "/channels","channels")
-    CHAT_SYSTEM("gld")
+    DISCORDINTEGRATION_DBGOUT("gld")
     ReserveScript("DISCORDINTEGRATION_SELECTED_GUILDLIST_DELAY()", 1)
 
 
@@ -225,14 +231,17 @@ function DISCORDINTEGRATION_SELECTED_GUILDLIST_DELAY()
             
             frame = ui.GetFrame(g.framename)
             local res = diapi_reqrx("channels")
+            if(res==nil)then
+                return
+            end
             local gbox = frame:GetChild("gbox")
             tolua.cast("ui::CGroupBox", gbox)
             --一覧作成
             gbox:RemoveAllChild()
             for i, v in ipairs(res) do
                 if(v.type==4)then
-                    local btn=gbox:CreateOrGetControl("richtext", "label"..tostring(i), 0, 30 * i, 300, 30)
-                    btn:SetText("{ol}"..v.name)
+                    --local btn=gbox:CreateOrGetControl("richtext", "label"..tostring(i), 0, 30 * i, 300, 30)
+                    --btn:SetText("{ol}"..v.name)
                 else
                     local btn=gbox:CreateOrGetControl("button", "btn"..tostring(i), 0, 30 * i, 300, 30)
                     btn:SetText(v.name)
