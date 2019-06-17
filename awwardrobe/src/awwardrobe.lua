@@ -34,6 +34,51 @@ g.effectingspot = {
     PANTS = true, --下半身
     SHIRT = true --上半身
 }
+local translationtable={
+
+	btnawwwithdraw = {jp="引出",  eng="Withdraw"},
+	btnawwdeposit = {jp="預入",  eng="Deposit"},
+    btnawwchange = {jp="入替",  eng="Swap"},
+    btnawwconfig = {jp="AWW設定",  eng="AWW Conf"},
+	tipbtnawwwithdraw = {jp="指定した装備セットを倉庫から引き出し、装備します",  eng="Withdraws and equips the specified equipment set from the account storage."},
+	tipbtnawwdeposit = {jp="指定した装備セットの装備と装着位置が一致する装備を外し、倉庫に預けます",  eng="Remove the equipment that matches the equipment position of the specified equipment set {nl} and deposit it in the account storage."},
+    tipbtnawwchange = {jp="指定した装備セットの装備と入れ替えます",  eng="Swap with the equipment of the specified equipment set."},
+    tipbtnawwconfig = {jp="AWWの設定画面を開きます",  eng="Show the setting frame of AWW."},
+    tipcbwardrobe = {jp="AWWで交換する装備セットを指定します",  eng="Specify the equipment set to be swapped by AWW."},
+    btnregister = {jp="現在の装備をセット",  eng="Set Current Equips"},
+    btnclear = {jp="装備をリセット",  eng="Clear Settings"},
+    
+    btnsave = {jp="設定保存",  eng="Save Settings"},
+    btndelete = {jp="{#FF6666}設定削除",  eng="{#FF6666}Delete Settings"},
+    labelsettingsname = {jp="{ol}保存する設定名:",  eng="{ol}Settings Name:"},
+    labelcurrentsettings = {jp="{ol}現在の設定:",  eng="{ol}Settings:"},
+    
+    alertnosettings={jp="[AWW]設定 %s は存在しません",  eng="[AWW]Settings %s not found."},
+    alertinvalidname={jp="[AWW]有効な名前を入れてください",  eng="[AWW]Invalid name."},
+    alertsettingssaved={jp="[AWW]設定 %s 保存しました",  eng="[AWW]Settings %s saved."},
+    alertnodeletesettings={jp="[AWW]設定 %s がないです",  eng="[AWW]Settings %s not found."},
+    alertdeletesettings={jp="[AWW]設定 %s を削除しました",  eng="[AWW]Settings %s deleted."},
+    alertcantequip={jp="[AWW]この部位には装着できません",  eng="[AWW]Cannot be equipped on that part."},
+    alertworkingothers={jp="[AWW]他が動作中です",  eng="[AWW]Other processing is in progress."},
+    alertopenaw={jp="[AWW]チーム倉庫画面を開いてください",  eng="[AWW]Please open the account storage."},
+    alertinsufficientslot={jp="[AWW]チーム倉庫の空きが足りません",  eng="[AWW]Insufficient empty slot."},
+    alertchangeequip={jp="[AWW]設定と一致した装備を入れ替えます",  eng="[AWW]Swap equips."},
+    alertinsufficientequips={jp="[AWW]足りない装備がありますが、このまま続行します",  eng="[AWW]Not enough equipment but continue."},
+    alertcomplete={jp="[AWW]終わりました",  eng="[AWW]Complete."},
+    alertdeposit={jp="[AWW]設定と一致した個所を脱ぎます",  eng="[AWW]Deposit equips."},
+    alertwithdraw={jp="[AWW]倉庫・インベントリから装備します",  eng="[AWW]Withdraw and wear equips."},
+    alertunwear={jp="[AWW]全部脱ぎます",  eng="[AWW]Unwear equips."},
+    alertplzselect={jp="[AWW]装備セットを選択してください",  eng="[AWW]Please select an equipment set."},
+}
+
+local function L_(str)
+    if(option.GetCurrentCountry()=="Japanese")then
+        return translationtable[str].jp
+    else
+        return translationtable[str].eng
+    end
+end
+
 local function split(str, ts)
     -- 引数がないときは空tableを返す
     if ts == nil then return {} end
@@ -243,23 +288,27 @@ end
 function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
     local frame = ui.GetFrame("accountwarehouse")
     --initialize
-    local btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 60, 30)
-    btnawwwithdraw:SetText("引出")
+    local btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 70, 30)
+    btnawwwithdraw:SetText(L_("btnawwwithdraw"))
+    btnawwwithdraw:SetTextTooltip(L_("tipbtnawwwithdraw"))
     btnawwwithdraw:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_WITHDRAW")
-    local btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 180, 120, 60, 30)
-    btnawwdeposit:SetText("預入")
+    local btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 190, 120, 70, 30)
+    btnawwdeposit:SetText(L_("btnawwdeposit"))
     btnawwdeposit:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_DEPOSIT")
     btnawwdeposit:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_UNWEARALL")
-    local btnawwchange = frame:CreateOrGetControl("button", "btnawwchange", 250, 120, 60, 30)
-    btnawwchange:SetText("入替")
+    btnawwdeposit:SetTextTooltip(L_("tipbtnawwdeposit"))
+    local btnawwchange = frame:CreateOrGetControl("button", "btnawwchange", 270, 120, 70, 30)
+    btnawwchange:SetText(L_("btnawwchange"))
+    btnawwchange:SetTextTooltip(L_("tipbtnawwchange"))
     btnawwchange:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_CHANGE")
-    local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 380, 120, 60, 30)
-    btnawwconfig:SetText("AWW設定")
+    local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 350, 120, 70, 30)
+    btnawwconfig:SetText(L_("btnawwconfig"))
+    btnawwconfig:SetTextTooltip(L_("tipbtnawwconfig"))
     btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
     local cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
     tolua.cast(cbwardrobe, "ui::CDropList")
     cbwardrobe:SetSkinName("droplist_normal")
-    
+    cbwardrobe:SetTextTooltip(L_("tipcbwardrobe"))
     AWWARDROBE_UPDATE_DROPBOXAW()
 end
 --フレーム場所保存処理
@@ -275,11 +324,15 @@ function AWWARDROBE_ON_CHANGE()
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
         local selected = cbwardrobe:GetSelItemCaption()
         local tbl = g.settings.wardrobe[selected]
-        g.personalsettings.defaultname = selected
-        AWWARDROBE_DBGOUT(selected)
-        AWWARDROBE_SAVE_SETTINGS()
-        --UNWEAR
-        AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl)
+        if(tbl)then
+            g.personalsettings.defaultname = selected
+            AWWARDROBE_DBGOUT(selected)
+            AWWARDROBE_SAVE_SETTINGS()
+                    --UNWEAR
+            AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl)
+        else
+            ui.SysMsg(L_("alertplzselect"))
+        end
     end)
 end
 function AWWARDROBE_ON_DEPOSIT()
@@ -289,11 +342,15 @@ function AWWARDROBE_ON_DEPOSIT()
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
         local selected = cbwardrobe:GetSelItemCaption()
         local tbl = g.settings.wardrobe[selected]
-        g.personalsettings.defaultname = selected
-        AWWARDROBE_DBGOUT(selected)
-        AWWARDROBE_SAVE_SETTINGS()
-        --UNWEAR
-        AWWARDROBE_UNWEAR_MATCHED(ui.GetFrame(g.framename), tbl)
+        if(tbl)then
+            g.personalsettings.defaultname = selected
+            AWWARDROBE_DBGOUT(selected)
+            AWWARDROBE_SAVE_SETTINGS()
+            --UNWEAR
+            AWWARDROBE_UNWEAR_MATCHED(ui.GetFrame(g.framename), tbl)
+        else
+            ui.SysMsg(L_("alertplzselect"))
+        end
     end)
 end
 function AWWARDROBE_ON_WITHDRAW()
@@ -303,10 +360,14 @@ function AWWARDROBE_ON_WITHDRAW()
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
         local selected = cbwardrobe:GetSelItemCaption()
         local tbl = g.settings.wardrobe[selected]
-        g.personalsettings.defaultname = selected
-        AWWARDROBE_SAVE_SETTINGS()
-        --WEAR
-        AWWARDROBE_WEAR_MATCHED(ui.GetFrame(g.framename), tbl)
+        if(tbl)then
+            g.personalsettings.defaultname = selected
+            AWWARDROBE_SAVE_SETTINGS()
+            --WEAR
+            AWWARDROBE_WEAR_MATCHED(ui.GetFrame(g.framename), tbl)
+        else
+            ui.SysMsg(L_("alertplzselect"))
+        end
     end)
 end
 
@@ -325,22 +386,23 @@ function AWWARDROBE_INITIALIZE_FRAME()
     -- local btnmappa=frame:CreateOrGetControl("button","btnmappa",20,300,50,50)
     -- btnmappa:SetText("全脱がし")
     -- btnmappa:SetEventScript(ui.LBUTTONDOWN,"AWWARDROBE_UNWEARALL")
-    local btnregister = frame:CreateOrGetControl("button", "btnregister", 300, 240, 150, 40)
-    btnregister:SetText("現在の装備をセット")
+    local btnregister = frame:CreateOrGetControl("button", "btnregister", 300, 240, 200, 40)
+    btnregister:SetText(L_("btnregister"))
     btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_REGISTER_CURRENTEQUIP")
-    local btnclear = frame:CreateOrGetControl("button", "btnclear", 300, 300, 150, 40)
-    btnclear:SetText("装備をリセット")
+    
+    local btnclear = frame:CreateOrGetControl("button", "btnclear", 300, 300, 200, 40)
+    btnclear:SetText(L_("btnclear"))
     btnclear:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CLEARALLEQUIPS")
     
-    local btnsave = frame:CreateOrGetControl("button", "btnsave", 300, 360, 100, 40)
-    btnsave:SetText("設定保存")
+    local btnsave = frame:CreateOrGetControl("button", "btnsave", 300, 360, 130, 40)
+    btnsave:SetText(L_("btnsave"))
     btnsave:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN")
     
-    local btndelete = frame:CreateOrGetControl("button", "btndelete", 470, 360, 100, 40)
-    btndelete:SetText("{#FF6666}設定削除")
+    local btndelete = frame:CreateOrGetControl("button", "btndelete", 440, 360, 130, 40)
+    btndelete:SetText(L_("btndelete"))
     btndelete:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN")
     
-    frame:CreateOrGetControl("richtext", "label1", 20, 80, 80, 20):SetText("{ol}現在の設定:")
+    frame:CreateOrGetControl("richtext", "label1", 20, 80, 80, 20):SetText(L_("labelcurrentsettings"))
     
     local cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 130, 80, 250, 20)
     tolua.cast(cbwardrobe, "ui::CDropList")
@@ -349,7 +411,7 @@ function AWWARDROBE_INITIALIZE_FRAME()
     local ebname = frame:CreateOrGetControl("edit", "ebname", 20, 360, 250, 30)
     ebname:SetFontName("white_18_ol")
     ebname:SetSkinName("test_weight_skin")
-    frame:CreateOrGetControl("richtext", "label2", 20, 340, 80, 20):SetText("{ol}保存する設定名:")
+    frame:CreateOrGetControl("richtext", "label2", 20, 340, 80, 20):SetText(L_("labelsettingsname"))
     
     for k, _ in pairs(g.effectingspot) do
         
@@ -376,8 +438,10 @@ function AWWARDROBE_UPDATE_DROPBOX()
         local count = 0
         local selectindex = nil
         AWWARDROBE_DBGOUT("def" .. tostring(g.settings.defaultname))
+        --1行目に空の設定を入れておく
+        cbwardrobe:AddItem(0,"")
         for k, _ in pairs(g.settings.wardrobe) do
-            cbwardrobe:AddItem(count, k)
+            cbwardrobe:AddItem(count+1, k)
             if (k == g.settings.defaultname) then
                 selectindex = count
             end
@@ -399,12 +463,14 @@ function AWWARDROBE_UPDATE_DROPBOXAW()
                 local acbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
                 
                 acbwardrobe:ClearItems()
+                --1行目に空の設定を入れておく
+                acbwardrobe:AddItem(0,"")
                 local count = 0
                 local selectindex = nil
                 AWWARDROBE_DBGOUT("def" .. tostring(g.personalsettings.defaultname))
                 for k, _ in pairs(g.settings.wardrobe) do
                     
-                    acbwardrobe:AddItem(count, k)
+                    acbwardrobe:AddItem(count+1, k)
                     if (k == g.personalsettings.defaultname) then
                         selectindex = count
                     end
@@ -424,15 +490,19 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
             AWWARDROBE_DBGOUT("out")
             local cbwardrobe = GET_CHILD(frame, "cbwardrobe", "ui::CDropList")
             local key = cbwardrobe:GetSelItemCaption()
-            if (not g.settings.wardrobe[key]) then
-                ui.SysMsg("[AWW]設定 " .. tostring(curname) .. " がないです");
+            if (key~="" and not g.settings.wardrobe[key]) then
+                ui.SysMsg(string.format(L_("alertnosettings"),key));
                 return
             end
             
             g.settings.defaultname = key
             
             local sound = not (shutup == true)
-            AWWARDROBE_LOADEQFROMSTRUCTURE(g.settings.wardrobe[key], sound)
+            if(key=="")then
+                AWWARDROBE_CLEARALLEQUIPS(frame)
+            else
+                AWWARDROBE_LOADEQFROMSTRUCTURE(g.settings.wardrobe[key], sound)
+            end
             local ebname = GET_CHILD(frame, "ebname", "ui::CEditControl")
             ebname:SetText(key)
     end)
@@ -443,8 +513,8 @@ function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
             --現在の設定を消す
             local ebname = GET_CHILD(frame, "ebname", "ui::CEditControl")
             local curname = ebname:GetText()
-            if (EBI_IsNoneOrNil(curname)) then
-                ui.SysMsg("[AWW]有効な名前を入れてください");
+            if (EBI_IsNoneOrNil(curname) or curname=="") then
+                ui.SysMsg(L_("alertinvalidname"));
                 return
             end
             --現在の設定を保存
@@ -452,7 +522,7 @@ function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
             g.settings.wardrobe = g.settings.wardrobe or {}
             g.settings.defaultname = curname
             g.settings.wardrobe[curname] = table
-            ui.SysMsg("[AWW]設定 " .. tostring(curname) .. " 保存しました");
+            ui.SysMsg(string.format(L_("alertsettingssaved"),curname));
             AWWARDROBE_SAVE_SETTINGS()
             AWWARDROBE_UPDATE_DROPBOX()
             AWWARDROBE_UPDATE_DROPBOXAW()
@@ -518,13 +588,14 @@ function AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN(frame)
             local cbwardrobe = GET_CHILD(frame, "cbwardrobe", "ui::CDropList")
             local curname = cbwardrobe:GetText()
             if (curname == nil) then
-                ui.SysMsg("[AWW]削除する設定がありません");
+                --ui.SysMsg("[AWW]削除する設定がありません");
+                --pass
             else
                 if (g.settings.wardrobe[curname]) then
                     g.settings.wardrobe[curname] = nil
-                    ui.SysMsg("[AWW]設定 " .. tostring(curname) .. " を削除しました");
+                    ui.SysMsg(string.format(L_("alertdeletesettings"),curname));
                 else
-                    ui.SysMsg("[AWW]設定 " .. tostring(curname) .. " は存在しません");
+                    ui.SysMsg(string.format(L_("alertnosettings"),curname));
                 end
             end
             AWWARDROBE_UPDATE_DROPBOX()
@@ -558,14 +629,14 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
                 if (argstr ~= "RING1" and argstr ~= "RING2") then
                     --NG
                     AWWARDROBE_DBGOUT(tostring(spotname))
-                    ui.SysMsg("[AWW]この部位には装着できません")
+                    ui.SysMsg(L_("alertcantequip"))
                     return
                 end
             elseif (spotname == "HAT" or spotname == "HAT_L" or spotname == "HAT_T") then
                 --exact
                 if argstr ~= spotname then
                     --NG
-                    ui.SysMsg("[AWW]この部位には装着できません")
+                    ui.SysMsg(L_("alertcantequip"))
                     AWWARDROBE_DBGOUT(tostring(spotname))
                     
                     return
@@ -573,7 +644,7 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
             else
                 if (not string.find(spotname, argstr)) then
                     --NG
-                    ui.SysMsg("[AWW]この部位には装着できません")
+                    ui.SysMsg(L_("alertcantequip"))
                     AWWARDROBE_DBGOUT(tostring(spotname))
                     
                     return
@@ -640,12 +711,12 @@ function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
         local items = {}
         if(AWWARDROBE_INTERLOCK())then
         
-            ui.SysMsg("[AWW]他が動作中です")
+            ui.SysMsg(L_("alertworkingothers"))
             return
         end
         if (awframe:IsVisible() == 0) then
             
-            ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
+            ui.SysMsg(L_("alertopenaw"))
             return
         end
         local count = 0
@@ -655,7 +726,7 @@ function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
         --空きがある？
         local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
         if (remain < count) then
-            ui.SysMsg("[AWW]チーム倉庫の空きが足りません")
+            ui.SysMsg(L_("alertinsufficientslot"))
         else
             for i = 0, equipItemList:Count() - 1 do
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
@@ -668,7 +739,7 @@ function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
             end
             
-            ui.SysMsg("[AWW]設定と一致した装備を入れ替えます")
+            ui.SysMsg(L_("alertchangeequip"))
             AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
             for _, d in ipairs(items) do
@@ -716,7 +787,7 @@ function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
                 end
             end
             if (count < totalcount) then
-                ui.SysMsg("[AWW]足りない装備がありますが、このまま続行します")
+                ui.SysMsg(L_("alertinsufficientequips"))
             end
 
             --真っ先に引き出す
@@ -744,7 +815,7 @@ function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d), delay)
                 delay = delay + 0.6
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
+            ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
         end
     
     
@@ -758,12 +829,12 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
         local items = {}
         if(AWWARDROBE_INTERLOCK())then
         
-            ui.SysMsg("[AWW]他が動作中です")
+            ui.SysMsg(L_("alertworkingothers"))
             return
         end
         if (awframe:IsVisible() == 0) then
             
-            ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
+            ui.SysMsg(L_("alertopenaw"))
             return
         end
         local count = 0
@@ -773,7 +844,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
         --空きがある？
         local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
         if (remain < count) then
-            ui.SysMsg("[AWW]チーム倉庫の空きが足りません")
+            ui.SysMsg(L_("alertinsufficientslot"))
         else
             for i = 0, equipItemList:Count() - 1 do
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
@@ -786,7 +857,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
             end
             
-            ui.SysMsg("[AWW]設定と一致した個所を脱ぎます")
+            ui.SysMsg(L_("alertdeposit"))
             AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
             for _, d in pairs(tbl) do
@@ -800,7 +871,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d.iesid), delay)
                 delay = delay + 0.6
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
+            ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
         end
     
     
@@ -820,12 +891,12 @@ function AWWARDROBE_UNWEARALL(frame)
         local items = {}
         if(AWWARDROBE_INTERLOCK())then
         
-            ui.SysMsg("[AWW]他が動作中です")
+            ui.SysMsg(L_("alertworkingothers"))
             return
         end
         if (awframe:IsVisible() == 0) then
             
-            ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
+            ui.SysMsg(L_("alertopenaw"))
             return
         end
         --カウントする
@@ -843,7 +914,7 @@ function AWWARDROBE_UNWEARALL(frame)
         --空きがある？
         local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
         if (remain < count) then
-            ui.SysMsg("[AWW]チーム倉庫の空きが足りません")
+            ui.SysMsg(L_("alertinsufficientslot"))
         else
             for i = 0, equipItemList:Count() - 1 do
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
@@ -858,7 +929,7 @@ function AWWARDROBE_UNWEARALL(frame)
             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
             end
             
-            ui.SysMsg("[AWW]全部脱ぎます")
+            ui.SysMsg(L_("alertunwear"))
             AWWARDROBE_INTERLOCK(true)
             --ついでに入れる
             for _, d in ipairs(items) do
@@ -873,7 +944,7 @@ function AWWARDROBE_UNWEARALL(frame)
                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")", obj:GetIESID()), delay)
                 delay = delay + 0.6
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました");AWWARDROBE_INTERLOCK(false)', delay)
+            ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
         end
     
     
@@ -887,12 +958,12 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
             local items = {}
             if(AWWARDROBE_INTERLOCK())then
         
-                ui.SysMsg("[AWW]他が動作中です")
+                ui.SysMsg(L_("alertworkingothers"))
                 return
             end
             if (awframe:IsVisible() == 0) then
                 
-                ui.SysMsg("[AWW]チーム倉庫画面を開いてください")
+                ui.SysMsg(L_("alertopenaw"))
                 return
             end
             session.ResetItemList()
@@ -933,9 +1004,9 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                 end
             end
             if (count < totalcount) then
-                ui.SysMsg("[AWW]足りない装備がありますが、このまま続行します")
+                ui.SysMsg(L_("alertinsufficientequips"))
             else
-                ui.SysMsg("[AWW]倉庫・インベントリから装備します")
+                ui.SysMsg(L_("alertwithdraw"))
             end
             AWWARDROBE_INTERLOCK(true)
             --真っ先に引き出す
@@ -951,7 +1022,7 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                 ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
                 delay = delay + 0.5
             end
-            ReserveScript('ui.SysMsg("[AWW]終わりました"); AWWARDROBE_INTERLOCK(false)', delay)
+            ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'"); AWWARDROBE_INTERLOCK(false)', delay)
     end)
 end
 function AWWARDROBE_WEAR(guid, spot)
@@ -1088,7 +1159,7 @@ function AWWARDROBE_PROCESS_COMMAND(command)
     if #command > 0 then
         cmd = table.remove(command, 1);
     else
-        local msg = "usage{nl}/aww"
+        local msg = "usage{nl}/aww no commands"
         return ui.MsgBox(msg, "", "Nope")
     end
     
