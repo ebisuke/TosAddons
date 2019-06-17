@@ -95,9 +95,9 @@ function DI_DRAW_CHAT_MSG(groupboxname, startindex, chatframe,messages)
 	local ypos = 0;
 	DISCORDINTEGRATION_DBGOUT("SIZ "..tostring(size))
 	for i = startindex, size-1  do
-
+		local ii=size-i-1
 		
-		local clusterinfo = messages[i+1];
+		local clusterinfo = messages[ii+1];
 		if clusterinfo == nil then
 			return 0;
 		end
@@ -107,7 +107,7 @@ function DI_DRAW_CHAT_MSG(groupboxname, startindex, chatframe,messages)
 		local chatCtrl = GET_CHILD(groupbox, clustername);
 
 		if i > 0 then
-			local prevClusterInfo = messages[i-1+1];
+			local prevClusterInfo = messages[ii-1+1];
 			if prevClusterInfo ~= nil then
 				local precClusterName = "cluster_" .. prevClusterInfo.id;
 				precCluster = GET_CHILD(groupbox, precClusterName);
