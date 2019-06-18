@@ -16,6 +16,7 @@ g.personalsettingsFileLoc = ""
 g.isquestdialog = 0
 g.debug = false
 g.debugshowall = false
+g.needtoinit = true
 -- ライブラリ読み込み
 local acutil = require('acutil')
 
@@ -121,7 +122,7 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             -- Moveではうまくいかないので、OffSetを使用する…
             frame:Move(0, 0)
             frame:SetOffset(g.settings.position.x, g.settings.position.y)
-            
+            g.needtoinit = true
             if (OLD_QUEST_FRAME_OPEN == nil) then
                 OLD_QUEST_FRAME_OPEN = QUEST_FRAME_OPEN
                 QUEST_FRAME_OPEN = PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER
@@ -230,7 +231,7 @@ function PINNEDQUEST_UPDATE_QUESTINFOSET_2(frame, msg, check, updateQuestID)
             end
             local fadein=frame:GetFadeInManager()
             fadein:Enable(false)
-            fadeout=frame:GetFadeOutManager()
+            local fadeout=frame:GetFadeOutManager()
             fadeout:Enable(false)
             frame:ShowWindow(1);
         end,
@@ -381,6 +382,10 @@ function PINNEDQUEST_SWAPGBOX()
         gbox:ShowWindow(0)
         gboxpq:ShowWindow(1)
         labelpq:ShowWindow(1)
+        if(g.needtoinit)then
+            PINNEDQUEST_UPDATELIST_QUEST()
+            g.needtoinit=false
+        end
     else
         gbox:ShowWindow(1)
         gboxpq:ShowWindow(0)
@@ -595,7 +600,7 @@ function PINNEDQUEST_QUEST_CLICK_INFO(frame,ctrl,argstr,argnum)
 end
 function PINNEDQUEST_REFRESH()
     PINNEDQUEST_ENSUREQUEST()
-    PINNEDQUEST_UPDATEQUESTLIST()
+    --PINNEDQUEST_UPDATEQUESTLIST()
     PINNEDQUEST_UPDATELIST_QUEST()
 end
 function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
