@@ -99,8 +99,8 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             -- ドラッグ
             frame:SetEventScript(ui.LBUTTONUP, "PINNEDQUEST_END_DRAG")
             addon:RegisterMsg('GET_NEW_QUEST', 'PINNEDQUEST_ENSUREQUEST')
-            addon:RegisterMsg('GAME_START_3SEC', 'PINNEDQUEST_ENSUREQUEST')
-            
+            addon:RegisterMsg('GAME_START_3SEC', 'PINNEDQUEST_3SEC')
+            addon:RegisterMsg('FPS_UPDATE', 'PINNEDQUEST_SHOWQUESTLOGFRAME')
             addon:RegisterMsg('QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('AVANDON_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('QUEST_DELETED', 'PINNEDQUEST_ENSUREQUEST')
@@ -126,7 +126,10 @@ function PINNEDQUEST_ON_INIT(addon, frame)
                 OLD_QUEST_FRAME_OPEN = QUEST_FRAME_OPEN
                 QUEST_FRAME_OPEN = PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER
             end
-            
+            if (OLD_UPDATE_QUESTINFOSET_2 == nil)then
+                OLD_UPDATE_QUESTINFOSET_2=UPDATE_QUESTINFOSET_2
+                UPDATE_QUESTINFOSET_2=PINNEDQUEST_UPDATE_QUESTINFOSET_2_JUMPER
+            end
             PINNEDQUEST_DBGOUT("INIT")
         end,
         catch = function(error)PINNEDQUEST_ERROUT(error) end
@@ -187,6 +190,7 @@ function PINNEDQUEST_UPDATESETTING()
         CHAT_SYSTEM("[PQ]設定ファイルバージョンアップ 0->1")
     end
 end
+
 function PINNEDQUEST_UPDATEPERSONALSETTING()
     -- ver nil to 1
     if (not g.personalsettings.version) then
@@ -213,38 +217,66 @@ function PINNEDQUEST_VER0_1_PINN()
     end
     CHAT_SYSTEM("[PQ]現在のクエストをピン止めしました")
 end
+function PINNEDQUEST_UPDATE_QUESTINFOSET_2_JUMPER(frame, msg, check, updateQuestID)
+    PINNEDQUEST_UPDATE_QUESTINFOSET_2(frame,msg,check,updateQuestID)
+end
+function PINNEDQUEST_UPDATE_QUESTINFOSET_2(frame, msg, check, updateQuestID)
+    EBI_try_catch{
+        try=function()
+            OLD_UPDATE_QUESTINFOSET_2(frame,msg,check,updateQuestID)
+            if UI_CHECK_NOT_PVP_MAP() == 0 then
+
+                return;
+            end
+            local fadein=frame:GetFadeInManager()
+            fadein:Enable(false)
+            fadeout=frame:GetFadeOutManager()
+            fadeout:Enable(false)
+            frame:ShowWindow(1);
+        end,
+
+        catch=function (error)
+            PINNEDQUEST_ERROUT(error)
+        end
+    }
+    
+
+end
 function PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER(frame)
-    if (OLD_QUEST_FRAME_OPEN ~= nil) then OLD_QUEST_FRAME_OPEN(frame) end
+    if (OLD_QUEST_FRAME_OPEN ~= nil) then 
+        OLD_QUEST_FRAME_OPEN(frame) 
+    end
+    
     PINNEDQUEST_QUEST_FRAME_OPEN(frame)
 end
 function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     local btnspq = frame:CreateOrGetControl("button", "showpq", 25, 90, 100, 40)
     btnspq:SetText("PQ設定")
     btnspq:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_TOGGLE_FRAME")
-    local btnclean = frame:CreateOrGetControl("button", "pqclean", 410, 90, 100,
-        40)
-    btnclean:SetText("PQ更新")
-    btnclean:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_REFRESH")
+    -- local btnclean = frame:CreateOrGetControl("button", "pqclean", 410, 90, 100,
+    --     40)
+    -- btnclean:SetText("PQ更新")
+    -- btnclean:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_REFRESH")
     
     local frameg = ui.GetFrame("pinnedquest")
-    frameg:Resize(500, 500)
-    local gb = frameg:GetChild("quests")
-    gb:Resize(500, 300)
-    gb:SetOffset(0, 180)
-    frameg:CreateOrGetControl("richtext", "label1", 20, 120, 60, 20):SetText(
-        "{ol}ピン止め")
-    frameg:CreateOrGetControl("richtext", "label2", 100, 120, 60, 20):SetText(
-        "{ol}チェック")
-    frameg:CreateOrGetControl("richtext", "label3", 20, 140, 30, 20):SetText(
-        "{ol}ｸｴ")
-    frameg:CreateOrGetControl("richtext", "label4", 60, 140, 30, 20):SetText(
-        "{ol}PT")
-    frameg:CreateOrGetControl("richtext", "label5", 100, 140, 30, 20):SetText(
-        "{ol}ｸｴ")
-    frameg:CreateOrGetControl("richtext", "label6", 140, 140, 30, 20):SetText(
-        "{ol}PT")
-    frameg:CreateOrGetControl("richtext", "label7", 180, 140, 100, 20):SetText(
-        "{ol}クエスト名")
+    frameg:Resize(500, 180)
+    -- local gb = frameg:GetChild("quests")
+    -- gb:Resize(500, 300)
+    -- gb:SetOffset(0, 180)
+    -- frameg:CreateOrGetControl("richtext", "label1", 20, 120, 60, 20):SetText(
+    --     "{ol}ピン止め")
+    -- frameg:CreateOrGetControl("richtext", "label2", 100, 120, 60, 20):SetText(
+    --     "{ol}チェック")
+    -- frameg:CreateOrGetControl("richtext", "label3", 20, 140, 30, 20):SetText(
+    --     "{ol}ｸｴ")
+    -- frameg:CreateOrGetControl("richtext", "label4", 60, 140, 30, 20):SetText(
+    --     "{ol}PT")
+    -- frameg:CreateOrGetControl("richtext", "label5", 100, 140, 30, 20):SetText(
+    --     "{ol}ｸｴ")
+    -- frameg:CreateOrGetControl("richtext", "label6", 140, 140, 30, 20):SetText(
+    --     "{ol}PT")
+    -- frameg:CreateOrGetControl("richtext", "label7", 180, 140, 100, 20):SetText(
+    --     "{ol}クエスト名")
     frameg:SetLayerLevel(95)
     local btnr = frameg:CreateOrGetControl("button", "btnrefresh", 20, 80, 60, 40)
     local chkenable = frameg:CreateOrGetControl("checkbox", "chkenable", 100, 80, 100, 20)
@@ -270,7 +302,10 @@ function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     btnr:SetText("更新")
     btnr:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_REFRESH")
     -- frameg:CreateOrGetControl("richtext","label8",400,120,100,20):SetText("{ol}前提")
-    PINNEDQUEST_UPDATELIST_QUEST(frameg)
+    --PINNEDQUEST_UPDATELIST_QUEST(frameg)
+end
+function PINNEDQUEST_SHOWQUESTLOGFRAME()
+    ui.GetFrame("questinfoset_2"):ShowWindow(1)
 end
 function PINNEDQUEST_INIT_FRAME(frame)
     -- XMLに記載するとデザイン調整時にクライアント再起動が必要になるため、luaに書き込むことをオススメする
@@ -299,6 +334,63 @@ function PINNEDQUEST_ON_CHECK_CHANGED(frame, ctrl)
     PINNEDQUEST_SAVE_SETTINGS()
 
 
+end
+function PINNEDQUEST_3SEC(frame)
+    --3SEC ACTION
+    PINNEDQUEST_INJECTCONTROLS()
+    PINNEDQUEST_ENSUREQUEST()
+    ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",1)
+   
+end
+function PINNEDQUEST_INJECTCONTROLS()
+    local frame=ui.GetFrame("questinfoset_2")
+    local gbox=frame:GetChild("member")
+    frame:SetAnimation("frameOpenAnim", "");
+	frame:SetAnimation("frameCloseAnim", "");
+    gbox:SetOffset(0,28)
+    local btnchange=frame:CreateOrGetControl("button","btnchange",0,0,24,24)
+    tolua.cast(btnchange,"ui::CButton")
+    btnchange:SetImage("button_view_info")
+    btnchange:SetOverSound("button_over")
+    btnchange:SetClickSound("button_click_big")
+    btnchange:SetGravity(ui.RIGHT,ui.TOP)
+    btnchange:SetTextTooltip("PinnedQuest 設定 / クエストログ切り替え")
+    btnchange:SetEventScript(ui.LBUTTONUP,"PINNEDQUEST_SWAPGBOX")
+    local labelpq=frame:CreateOrGetControl("richtext","labelpq",0,0,100,20)
+    labelpq:SetGravity(ui.CENTER_HORZ,ui.TOP)
+    labelpq:SetText("{ol}PinnedQuest 設定")
+    labelpq:ShowWindow(0)
+    labelpq:SetTextTooltip("ここをクリックすると最新の情報に更新します")
+    labelpq:SetOverSound("button_over")
+    labelpq:SetClickSound("button_click_big")
+    labelpq:SetEventScript(ui.LBUTTONUP,"PINNEDQUEST_REFRESH")
+    local gboxpq=frame:CreateOrGetControl("groupbox","gboxpq",0,28,frame:GetWidth(),frame:GetHeight()-28-100)
+    tolua.cast(gboxpq,"ui::CGroupBox")
+    gboxpq:EnableDrawFrame(0)
+    gboxpq:EnableResizeByParent(0)
+    --デフォルトではOFF
+    gboxpq:ShowWindow(0)
+end
+function PINNEDQUEST_SWAPGBOX()
+    local frame=ui.GetFrame("questinfoset_2")
+    local gbox=frame:GetChild("member")
+    local gboxpq=PINNEDQUEST_GETPQQUESTBOX()
+    local labelpq=frame:GetChild("labelpq")
+    if(gbox:IsVisible()==1)then
+        --PQ表示
+        gbox:ShowWindow(0)
+        gboxpq:ShowWindow(1)
+        labelpq:ShowWindow(1)
+    else
+        gbox:ShowWindow(1)
+        gboxpq:ShowWindow(0)
+        labelpq:ShowWindow(0)
+    end
+
+end
+function PINNEDQUEST_GETPQQUESTBOX()
+    local frame=ui.GetFrame("questinfoset_2")
+    return GET_CHILD(frame,"gboxpq","ui::CGroupBox")
 end
 function PINNEDQUEST_CALCQUESTRANK(aaa)
     
@@ -339,11 +431,11 @@ end
 function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
     EBI_try_catch{
         try = function()
-            if (frame == nil) then
-                frame = ui.GetFrame("pinnedquest")
-            end
+            -- if (frame == nil) then
+            --     frame = ui.GetFrame("pinnedquest")
+            -- end
             -- ｸｴリストを更新
-            local grpbox = frame:GetChild("quests")
+            local grpbox = PINNEDQUEST_GETPQQUESTBOX()
             if (not lightweight) then grpbox:RemoveAllChild() end
             local sobjIES = GET_MAIN_SOBJ()
             
@@ -389,7 +481,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                         "pic" ..
                                         tostring(
                                             listcnt),
-                                        180,
+                                        100,
                                         listcnt * 20,
                                         20, 20)
                                 local descraw =
@@ -397,7 +489,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                         "questname" ..
                                         tostring(
                                             listcnt),
-                                        200,
+                                        120,
                                         listcnt * 20,
                                         200, 20)
                                 local chkpqr =
@@ -407,7 +499,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                             listcnt),
                                         20,
                                         listcnt * 20,
-                                        24, 20)
+                                        24, 24)
                                 local chkppr =
                                     grpbox:CreateOrGetControl("checkbox",
                                         "pp" ..
@@ -415,32 +507,13 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                             listcnt),
                                         60,
                                         listcnt * 20,
-                                        24, 20)
-                                local chkcqr =
-                                    grpbox:CreateOrGetControl("checkbox",
-                                        "cq" ..
-                                        tostring(
-                                            listcnt),
-                                        100,
-                                        listcnt * 20,
-                                        24, 20)
-                                local chkcpr =
-                                    grpbox:CreateOrGetControl("checkbox",
-                                        "cp" ..
-                                        tostring(
-                                            listcnt),
-                                        140,
-                                        listcnt * 20,
-                                        24, 20)
+                                        24, 24)
+
                                 local chkpq =
                                     tolua.cast(chkpqr, "ui::CCheckBox")
                                 local chkpp =
                                     tolua.cast(chkppr, "ui::CCheckBox")
-                                
-                                local chkcq =
-                                    tolua.cast(chkcqr, "ui::CCheckBox")
-                                local chkcp =
-                                    tolua.cast(chkcpr, "ui::CCheckBox")
+
                                 if (not lightweight) then
                                     local questIconImgName =
                                         GET_ICON_BY_STATE_MODE(result,
@@ -461,7 +534,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                             questIES.Level,
                                             questIES.Name))
                                     descraw:SetEventScript(ui.LBUTTONDOWN,
-                                        "QUEST_CLICK_INFO")
+                                        "PINNEDQUEST_QUEST_CLICK_INFO")
                                     descraw:SetEventScriptArgNumber(
                                         ui.LBUTTONDOWN, questIES.ClassID)
                                     -- local req=PINNEDQUEST_GETLINKQUEST(questIES.ClassID)
@@ -477,7 +550,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                     chkpq:SetEventScriptArgString(
                                         ui.LBUTTONDOWN, "pq")
                                     chkpq:SetClickSound('button_click_big')
-                                    
+                                    chkpq:SetTextTooltip("ピン止め クエスト")
                                     chkpp:SetEventScript(ui.LBUTTONDOWN,
                                         "PINNEDQUEST_CHECK")
                                     chkpp:SetEventScriptArgNumber(
@@ -485,22 +558,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                     chkpp:SetEventScriptArgString(
                                         ui.LBUTTONDOWN, "pp")
                                     chkpp:SetClickSound('button_click_big')
-                                    
-                                    chkcq:SetEventScript(ui.LBUTTONDOWN,
-                                        "PINNEDQUEST_CHECK")
-                                    chkcq:SetEventScriptArgNumber(
-                                        ui.LBUTTONDOWN, questIES.ClassID)
-                                    chkcq:SetEventScriptArgString(
-                                        ui.LBUTTONDOWN, "cq")
-                                    chkcq:SetClickSound('button_click_big')
-                                    
-                                    chkcp:SetEventScript(ui.LBUTTONDOWN,
-                                        "PINNEDQUEST_CHECK")
-                                    chkcp:SetEventScriptArgString(
-                                        ui.LBUTTONDOWN, "cp")
-                                    chkcp:SetEventScriptArgNumber(
-                                        ui.LBUTTONDOWN, questIES.ClassID)
-                                    chkcp:SetClickSound('button_click_big')
+                                    chkpp:SetTextTooltip("ピン止め PT共有")
                                 end
                                 
                                 -- チェックボックス操作
@@ -514,26 +572,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                 else
                                     chkpp:SetCheck(0)
                                 end
-                                if (quest.IsCheckQuest(questIES.ClassID) ==
-                                    true) then
-                                    chkcq:SetCheck(1)
-                                else
-                                    chkcq:SetCheck(0)
-                                end
-                                local myInfo =
-                                    session.party
-                                    .GetMyPartyObj(PARTY_NORMAL)
-                                local isSharedQuest = false
-                                if myInfo ~= nil then
-                                    local obj = GetIES(myInfo:GetObject())
-                                    local clsID = questIES.ClassID
-                                    local savedID = obj.Shared_Quest
-                                    if savedID == clsID then
-                                        chkcp:SetCheck(1)
-                                    else
-                                        chkcp:SetCheck(0)
-                                    end
-                                end
+
                                 
                                 listcnt = listcnt + 1
                             end
@@ -548,6 +587,11 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
         catch = function(error)PINNEDQUEST_ERROUT(error) end
     }
 
+end
+function PINNEDQUEST_QUEST_CLICK_INFO(frame,ctrl,argstr,argnum)
+    QUEST_CLICK_INFO(frame,ctrl,argstr,argnum)
+    local frameq = ui.GetFrame('questdetail');
+    frameq:SetOffset(900,200)
 end
 function PINNEDQUEST_REFRESH()
     PINNEDQUEST_ENSUREQUEST()
@@ -605,8 +649,8 @@ function PINNEDQUEST_CHECK(frame, ctrl, argStr, questClassID, notUpdateRightUI)
             
             end
             
-            PINNEDQUEST_UPDATEQUESTLIST()
-            ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()", 0.5)
+            ReserveScript("PINNEDQUEST_UPDATEQUESTLIST()",0.25)
+            ReserveScript("PINNEDQUEST_UPDATELIST_QUEST(nil,true)", 0.5)
         
         end,
         catch = function(error)PINNEDQUEST_ERROUT(error) end
