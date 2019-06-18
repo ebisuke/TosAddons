@@ -1049,6 +1049,7 @@ end
 
 function PINNEDQUEST_ENSUREQUEST()
     --PINNEDQUEST_ENSUREQUEST_DELAYED()
+    g.needtoinit=true
     ReserveScript("PINNEDQUEST_ENSUREQUEST_DELAYED()", 0.01)
 end
 
