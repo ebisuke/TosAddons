@@ -31,7 +31,7 @@ function ADVANCEDNUMBERDIALOG_ON_INIT(addon, frame)
         OLD_INPUT_STRING_BOX = _G["INPUT_STRING_BOX"]
         _G["INPUT_STRING_BOX"] = ADVANCEDNUMBERDIALOG_INPUT_STRING_BOX_JUMPER
     end
-
+    ADVANCEDNUMBERDIALOG_TRACKCONTROLS={}
 end
 function ADVANCEDNUMBERDIALOG_INPUT_NUMBER_BOX_JUMPER(cbframe, titleName, strscp, defNumber, minNumber, maxNumber, numarg, strarg, isNumber)
     return ADVANCEDNUMBERDIALOG_INPUT_NUMBER_BOX(cbframe, titleName, strscp, defNumber, minNumber, maxNumber, numarg, strarg, isNumber)
