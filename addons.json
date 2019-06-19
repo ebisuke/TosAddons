@@ -29,8 +29,8 @@
     "name" : "AdvancedNumberDialog",
     "file" : "advancednumberdialog",
     "extension" : "ipf",
-    "fileVersion" : "v1.0.3",
-    "releaseTag" : "advancednumberdialog-v1.0.3",
+    "fileVersion" : "v1.0.4",
+    "releaseTag" : "advancednumberdialog-v1.0.4",
     "unicode" : "📖",
     "description" : "数値入力ダイアログを改造します。",
     "tags" : [
