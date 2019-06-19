@@ -1,8 +1,7 @@
-﻿$addonname="advancednumberdialog"
+﻿. "./buildvars.ps1"
 $emoji="📖"
 $prefix="__"
-$version="v1.0.3"
-
+rm -Force -Recurse obj/
 if (!(Test-Path bin)) {
     mkdir bin 
 }

@@ -13,7 +13,7 @@ local function addctrl(ctrl)
 end
 local function cleanctrls()
     for _, c in ipairs(ADVANCEDNUMBERDIALOG_TRACKCONTROLS) do
-        local parent = c:GetParent()
+        local parent = ui.GetFrame("inputstring")
         if (parent ~= nil) then
             parent:RemoveChild(c:GetName())
         end
