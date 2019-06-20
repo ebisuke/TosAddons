@@ -51,15 +51,16 @@ end
 function MCMAGNUMOPUS_CHECK_INV_LBTN(frame, slot, invItem, customFunc, scriptArg, count)
     EBI_try_catch{
         try = function()
+            
             if (OLD_CHECK_INV_LBTN ~= nil) then
                 OLD_CHECK_INV_LBTN(frame, slot, invItem, customFunc, scriptArg, count)
             end
-            if (ui.GetFrame("puzzlecraft"):IsVisible() == 1) then
+            if (ui.GetFrame("puzzlecraft"):IsVisible() == 1 and MCMAGNUMOPUS_BUTTONPRESS==0) then
                 ui.CancelLiftIcon()
-                MCMAGNUMOPUS_LIFTICON = slot:GetIcon()
-                if (MCMAGNUMOPUS_LIFTICON ~= nil) then
+                local icon = slot:GetIcon()
+                if (icon ~= nil) then
                     MCMAGNUMOPUS_CLEARMOUSESTATE()
-                    MCMAGNUMOPUS_BEGINMOUSEMOVE(MCMAGNUMOPUS_LIFTICON)
+                    MCMAGNUMOPUS_BEGINMOUSEMOVE(icon)
                 end
             end
         end,
@@ -80,13 +81,15 @@ function MCMAGNUMOPUS_BEGINMOUSEMOVE(icon)
     mccursor:ClearIcon()
     local dup = CreateIcon(mccursor)
     dup:SetImage(GET_ITEM_ICON_IMAGE(invObj));
-    
+    dup:Set(invObj.Icon, 'Item', invItem.type, 1, invItem:GetIESID());
     --framemc:ShowWindow(1)
     framemc:SetLayerLevel(999)
     
     local mctimer = GET_CHILD(framemc, "addontimer", "ui::CAddOnTimer")
     mctimer:SetUpdateScript("MCMAGNUMOPUS_TRACING")
     mctimer:Start(0.01)
+
+    MCMAGNUMOPUS_LIFTICON=dup
 end
 function MCMAGNUMOPUS_CLEARMOUSESTATE()
     MCMAGNUMOPUS_BUTTONPRESS = 0
@@ -101,6 +104,7 @@ function MCMAGNUMOPUS_CLEARMOUSESTATE()
             --CHECK_NEW_PUZZLE(ui.GetFrame("puzzlecraft"),v)
         end
     end
+    MCMAGNUMOPUS_LIFTICON=nil
     MCMAGNUMOPUS_FIREDSLOT = {}
 end
 function MCMAGNUMOPUS_PUZZLECRAFT_DROP()
@@ -140,7 +144,7 @@ function MCMAGNUMOPUS_ON_PICKUP(frame, ctrl, argstr, argnum)
             --選択されているスロットを取得
             local slotset = GET_CHILD_RECURSIVELY(frame, "slotset", "ui::CSlotSet")
             local slotpos = MCMAGNUMOPUS_CALCMOUSEPOSTOSLOTPOS()
-            if (MCMAGNUMOPUS_ISVALIDSLOTPOS(slotpos)) then
+            if (MCMAGNUMOPUS_ISVALIDSLOTPOS(slotpos) and MCMAGNUMOPUS_BUTTONPRESS==0) then
                 local slot = slotset:GetSlotByRowCol(slotpos.y, slotpos.x)
                 --スロットの情報を取得
                 local icon = slot:GetIcon()
@@ -237,7 +241,9 @@ function MCMAGNUMOPUS_ONPRESSED()
     local framemc = ui.GetFrame("mcmagnumopus")
     local mccursor = GET_CHILD(framemc, "item", "ui::CSlot")
     local icon = MCMAGNUMOPUS_LIFTICON
-    
+    if(icon==nil)then
+        return
+    end
     --スロットの範囲内？
     local framepz = ui.GetFrame("puzzlecraft")
     local gbox = GET_CHILD_RECURSIVELY(framepz, "bg", "ui::CGroupBox")
