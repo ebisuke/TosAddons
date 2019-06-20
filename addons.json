@@ -186,8 +186,8 @@
     "name" : "Minecrafter's MagnumOpus",
     "file" : "mcmagnumopus",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "mcmagnumopus-v0.0.1",
+    "fileVersion" : "v0.0.2",
+    "releaseTag" : "mcmagnumopus-v0.0.2",
     "unicode" : "📖",
     "description" : "某箱庭ゲームのような操作性でマグナムオーパスできるようにします。",
     "tags" : [
