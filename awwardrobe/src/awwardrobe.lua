@@ -114,6 +114,12 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
+function EBI_RemoveWhitespace(str)
+    return string.gsub(string.gsub(string.gsub(str,"    ","")," ",""),"　","")
+end
+function EBI_IsNoneOrNilOrWhitespace(val)
+    return val == nil or val == "None" or val == "nil" or EBI_RemoveWhitespace(val) == ""
+end
 function AWWARDROBE_DEFAULTSETTINGS()
     return {
         version = g.version,
@@ -221,11 +227,19 @@ function AWWARDROBE_LOAD_SETTINGS()
             g.personalsettings.version = AWWARDROBE_DEFAULTPERSONALSETTINGS().version
         end
     end
+    AWWARDROBE_VALIDATE_SETTINGS()
     local upc = AWWARDROBE_UPGRADE_SETTINGS()
     local upp = AWWARDROBE_UPGRADE_PERSONALSETTINGS()
     -- ショートサーキット評価を回避するため、いったん変数に入れる
     if upc or upp then
         AWWARDROBE_SAVE_SETTINGS()
+    end
+end
+function AWWARDROBE_VALIDATE_SETTINGS()
+    for k,v in pairs(g.settings.wardrobe) do
+        if(EBI_IsNoneOrNilOrWhitespace(k))then
+            g.settings.wardrobe[k]=nil
+        end
     end
 end
 function AWWARDROBE_UPGRADE_SETTINGS()
@@ -513,7 +527,7 @@ function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
             --現在の設定を消す
             local ebname = GET_CHILD(frame, "ebname", "ui::CEditControl")
             local curname = ebname:GetText()
-            if (EBI_IsNoneOrNil(curname) or curname=="") then
+            if (EBI_IsNoneOrNilOrWhitespace(curname)) then
                 ui.SysMsg(L_("alertinvalidname"));
                 return
             end
