@@ -12,8 +12,8 @@ local g = _G["ADDONS"][author][addonName];
 
 --設定ファイル保存先
 g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower);
-
-
+g.odstate=0
+g.cooldown=0
 --ライブラリ読み込み
 local acutil = require('acutil');
 
@@ -26,15 +26,13 @@ if not g.loaded then
             position = {
                 x = 300,
                 y = 300
-            }
+            },
+            overdrive=0
     };
 end
 
 --lua読み込み時のメッセージ
 CHAT_SYSTEM(string.format("%s.lua is loaded", addonName));
-
-
-
 
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -92,6 +90,8 @@ function ENHANCEDTARGETLOCK_ON_INIT(addon, frame)
             addon:RegisterMsg('TARGET_UPDATE', 'ENHANCEDTARGETLOCK_ON_TARGET_UPDATE');
             addon:RegisterMsg('TARGET_CLEAR', 'ENHANCEDTARGETLOCK_ON_TARGET_CLEAR');
             addon:RegisterMsg('FPS_UPDATE', 'ENHANCEDTARGETLOCK_ON_FPS_UPDATE');
+            --コンテキストメニュー
+            frame:SetEventScript(ui.RBUTTONDOWN, "ENHANCEDTARGETLOCK_CONTEXT_MENU");
             acutil.slashCommand("/etl", ENHANCEDTARGETLOCK_PROCESS_COMMAND);
             --ドラッグ
             frame:SetEventScript(ui.LBUTTONUP, "ENHANCEDTARGETLOCK_END_DRAG");
@@ -143,8 +143,8 @@ function ENHANCEDTARGETLOCK_ENABLE()
                     
                     local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
                     ENHANCEDTARGETLOCK_TARGETTING()
-                --timer:SetUpdateScript("ENHANCEDTARGETLOCK_TARGETTING");
-                --timer:Start(0.5);
+                    timer:SetUpdateScript("ENHANCEDTARGETLOCK_COOLDOWN");
+                    timer:Start(0.01);
                 end
             end
         end,
@@ -174,16 +174,22 @@ function ENHANCEDTARGETLOCK_SETTEXT(text, mode)
     local textbox = frame:GetChild("textbox")
     tolua.cast(textbox, "ui::CRichText")
     local temp = textbox:GetTextByKey("text")
+    local prefix="ETL"
+    if(g.settings.overdrive==1)then
+        prefix="ETL{img emoticon_0019 20 20}"
+    elseif g.settings.overdrive==2 then
+        prefix="ETL{img emoticon_0015 20 20}"
+    end
     if (mode == 0) then
 
         textbox:SetFormat("{ds}{@s14}{ol}{#FFFFFF}");
         textbox:SetTextByKey("text", "");
-        textbox:SetTextByKey("text", "ETL");
+        textbox:SetTextByKey("text", prefix);
     elseif (mode == 1) then
         
         textbox:SetFormat("{ds}{ol}{#22ddFF}");
         if (text ~= nil) then
-            textbox:SetTextByKey("text", "ETL:" .. text);
+            textbox:SetTextByKey("text", prefix..":" .. text);
         else
             textbox:SetTextByKey("text", "");
             textbox:SetTextByKey("text", temp);
@@ -192,7 +198,7 @@ function ENHANCEDTARGETLOCK_SETTEXT(text, mode)
         
         textbox:SetFormat("{ds}{ol}{#FF0000}");
         if (text ~= nil) then
-            textbox:SetTextByKey("text", "ETL:" .. text);
+            textbox:SetTextByKey("text", prefix..":" .. text);
         else
             textbox:SetTextByKey("text", "");
             textbox:SetTextByKey("text", temp);
@@ -201,7 +207,7 @@ function ENHANCEDTARGETLOCK_SETTEXT(text, mode)
         --target lost
         textbox:SetFormat("{ds}{ol}{#666666}");
         if (text ~= nil) then
-            textbox:SetTextByKey("text", "ETL:" .. text);
+            textbox:SetTextByKey("text", prefix..":" .. text);
         else
             textbox:SetTextByKey("text", "");
             textbox:SetTextByKey("text", temp);
@@ -294,6 +300,27 @@ function ENHANCEDTARGETLOCK_TARGETTING_ON()
         end
     }
 end
+function ENHANCEDTARGETLOCK_CONTEXT_MENU(frame, msg, clickedGroupName, argNum)
+    local context = ui.CreateContextMenu("ENHANCEDTARGETLOCK_RBTN", "", 0, 0, 300, 100);
+    ui.AddContextMenuItem(context, "Normal Mode", "ENHANCEDTARGETLOCK_MODE(0)");
+    ui.AddContextMenuItem(context, "Reinforced Mode {img emoticon_0019 20 20}{/}", "ENHANCEDTARGETLOCK_MODE(1)");
+    ui.AddContextMenuItem(context, "Overdrive Mode {img emoticon_0015 20 20}{/}", "ENHANCEDTARGETLOCK_MODE(2)");
+    context:Resize(200, context:GetHeight());
+    ui.OpenContextMenu(context);
+end
+function ENHANCEDTARGETLOCK_MODE(overdrive)
+    g.settings.overdrive=overdrive
+
+    if(overdrive==0)then
+        CHAT_SYSTEM("[ETL]Set to Normal Mode")
+    elseif(overdrive==1)then
+        CHAT_SYSTEM("[ETL]Set to Reinforced Mode")
+    elseif(overdrive==2)then
+        CHAT_SYSTEM("[ETL]Set to Overdrive Mode")
+    end
+    ENHANCEDTARGETLOCK_SETTEXT(nil,ENHANCEDTARGETLOCK_MODE)
+    ENHANCEDTARGETLOCK_SAVE_SETTINGS()
+end
 
 function ENHANCEDTARGETLOCK_FORCEDTARGET()
     EBI_try_catch{
@@ -350,27 +377,58 @@ function ENHANCEDTARGETLOCK_TARGET_END()
         EMBEDDEDBATTLEMODE_SET_BM(0)
         mouse.SetPos(firstpos[1], firstpos[2]);
         ENHANCEDTARGETLOCK_MOUSEMODE = false
-    
+        
     end
-    
+    if(session.GetTargetHandle() == ENHANCEDTARGETLOCK_CT)then
+        g.odstate=0
+    end
     ENHANCEDTARGETLOCK_SETTEXT(nil, 1)
     ENHANCEDTARGETLOCK_LOCKED = 0
 end
 function ENHANCEDTARGETLOCK_ON_TARGET()
-
+    ENHANCEDTARGETLOCK_OVERDRIVE_TRIGGER()
 end
 
 
 function ENHANCEDTARGETLOCK_ON_TARGET_UPDATE()
-
+    ENHANCEDTARGETLOCK_OVERDRIVE_TRIGGER()
 end
 function ENHANCEDTARGETLOCK_ON_TARGET_CLEAR()
-
+    ENHANCEDTARGETLOCK_OVERDRIVE_TRIGGER()
 end
-
+function ENHANCEDTARGETLOCK_OVERDRIVE_TRIGGER()
+    if(ENHANCEDTARGETLOCK_FIXEDLOCK_STATE)then
+        if(session.GetTargetHandle() ~= ENHANCEDTARGETLOCK_CT )then
+            if(g.settings.overdrive==1 and g.odstate==0 and g.cooldown==0)then
+                --ONESHOT
+                g.odstate=1
+                g.cooldown=100
+                ENHANCEDTARGETLOCK_TARGETTING()
+            end
+            if(g.settings.overdrive==2 and g.odstate<10 and g.cooldown==0)then
+                --MULTISHOT
+                g.odstate=g.odstate+1
+                ENHANCEDTARGETLOCK_TARGETTING();
+                ReserveScript("ENHANCEDTARGETLOCK_OVERDRIVE_TRIGGER();",0.3)
+                if(g.odstate==10)then
+                    g.cooldown=100
+                end 
+            end
+        else
+            g.odstate=0
+        end
+    else
+        g.odstate=0
+    end
+end
 function ENHANCEDTARGETLOCK_ON_FPS_UPDATE(frame)
     ENHANCEDTARGETLOCK_UPDATETEXT()
  
+end
+function ENHANCEDTARGETLOCK_COOLDOWN(frame)
+    if(g.cooldown>0)then
+        g.cooldown=g.cooldown-1
+    end
 end
 function ENHANCEDTARGETLOCK_UPDATETEXT()
     if (ENHANCEDTARGETLOCK_LOCKED == 0) then
