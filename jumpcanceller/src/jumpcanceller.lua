@@ -27,7 +27,7 @@ function JUMPCANCELLER_ON_INIT(addon, frame)
 
 end
 function JUMPCANCELLER_SHOWWINDOW()
-    frame=ui.GetFrame("jumpcanceller");
+    local frame=ui.GetFrame("jumpcanceller");
     frame:ShowWindow(1)
 end
 function JUMPCANCELLER_WATCHKEY()
