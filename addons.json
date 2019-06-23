@@ -4,8 +4,8 @@
     "name" : "Developer Console Ex",
     "file" : "developerconsole",
     "extension" : "ipf",
-    "fileVersion" : "v1.0.0",
-    "releaseTag" : "devconsole_v1.0.0",
+    "fileVersion" : "v1.1.0",
+    "releaseTag" : "devconsole_v1.1.0",
     "unicode" : "📖",
     "description" : "DeveloperConsoleの私的改造版です。ITOSのそれとは競合します。",
     "tags" : [
@@ -192,6 +192,18 @@
     "description" : "某箱庭ゲームのような操作性でマグナムオーパスできるようにします。",
     "tags" : [
       "magnumopus"
+    ]
+  },
+  {
+    "name" : "Unbuff2 reloaded",
+    "file" : "unbuff",
+    "extension" : "ipf",
+    "fileVersion" : "v2.0.0",
+    "releaseTag" : "unbuff-v2.0.0",
+    "unicode" : "📖",
+    "description" : "Supported Re:build.",
+    "tags" : [
+      "unbuff"
     ]
   }
 ]
