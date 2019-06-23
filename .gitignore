@@ -179,3 +179,8 @@ awwardrobe/bin/awwardrobe-v0.1.1.ipf
 awwardrobe/bin/__awwardrobe-📖-v0.1.1.ipf
 barrackitemlist/bin/barrackitemlist-v3.3.0.ipf
 barrackitemlist/bin/__barrackitemlist-📖-v3.3.0.ipf
+unbuff/obj/addon_d.ipf/unbuff/yyutil.lua
+unbuff/bin/__unbuff-📖-v2.0.0.ipf
+unbuff/bin/unbuff-v2.0.0.ipf
+unbuff/obj/addon_d.ipf/unbuff/unbuff.lua
+unbuff/obj/addon_d.ipf/unbuff/unbuff.xml
