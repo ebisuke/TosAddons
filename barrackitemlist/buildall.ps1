@@ -1,7 +1,7 @@
 ﻿$addonname="barrackitemlist"
 $emoji="📖"
 $prefix="__"
-$version="v3.2.0"
+$version="v3.3.0"
 
 if (!(Test-Path bin)) {
     mkdir bin 

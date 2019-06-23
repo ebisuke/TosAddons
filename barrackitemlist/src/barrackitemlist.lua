@@ -3,7 +3,7 @@ _G['ADDONS']['BARRACKITEMLIST'] = _G['ADDONS']['BARRACKITEMLIST'] or {};
 local acutil = require('acutil')
 local g = _G['ADDONS']['BARRACKITEMLIST']
 g.settingPath = '../addons/barrackitemlist/'
-
+g.deletecharacid=nil
 --referenced from http://d.hatena.ne.jp/Ko-Ta/20100830/p1
 -- lua
 -- テーブルシリアライズ
@@ -131,6 +131,7 @@ local translationtable={
     Cube            ={jp="キューブ"     ,en="Cube"},
     Premium         ={jp="プレミアム"   ,en="Premium"},
     warehouse       ={jp="倉庫"        ,en="Storage"},
+    
     SaveInventoryTip={jp="現在のキャラのインベントリを保存する"       ,en="Save the current character inventory"},
     SilverIs        ={jp="シルバー： "                              ,en="Silver: "},
     Inventory_2     ={jp="インベントリ"                             ,en="Inventory"},
@@ -140,7 +141,18 @@ local translationtable={
     ItemListTab     ={jp="アイテムリスト"                           ,en="List"},
     SearchListTab   ={jp="アイテム検索"                             ,en="Search"},
     SettingTab      ={jp="設定"                                    ,en="Settings"},
-    
+    btnDetete       ={jp="{@st41b}データ削除"                       ,en="{@st41b}Delete"},
+    warnDelete       ={
+        jp=
+        "指定したキャラを一覧から削除します。{nl}"..
+        "(アイテムデータが入ったファイルは削除されません){nl}"..
+        "よろしいですか？",
+        en=
+        "This character is removed from the list."..
+        "(The item data file is not deleted.){nl} "..
+        " {nl} Proceed?"
+    },
+
 }
 
 local function L_(str)
@@ -210,12 +222,13 @@ function BARRACKITEMLIST_ON_INIT(addon,frame)
 
     -- addon:RegisterMsg('GAME_START_3SEC','BARRACKITEMLIST_CREATE_VAR_ICONS')
     acutil.addSysIcon("barrackitemlist", "sysmenu_inv", "Barrack Item List", "OPEN_BARRACKITEMLIST")    
-    local droplist = tolua.cast(frame:GetChild("droplist"), "ui::CDropList");
-    droplist:ClearItems()
-    --droplist:AddItem(1,'None')
-    for k,v in pairs(g.userlist) do
-        droplist:AddItem(treat(k),"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
-    end
+    BARRACKITEMLIST_PREPAREUSERLIST(frame)
+    -- local droplist = tolua.cast(frame:GetChild("droplist"), "ui::CDropList");
+    -- droplist:ClearItems()
+    -- --droplist:AddItem(1,'None')
+    -- for k,v in pairs(g.userlist) do
+    --     droplist:AddItem(treat(k),"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
+    -- end
     tolua.cast(frame:GetChild('tab'), "ui::CTabControl"):SelectTab(0)
     frame:GetChild('saveBtn'):SetTextTooltip('現在のキャラのインベントリを保存する')
     BARRACKITEMLIST_CREATE_SETTINGMENU()
@@ -229,6 +242,15 @@ function BARRACKITEMLIST_ON_INIT(addon,frame)
     frame:ShowWindow(0)
     BARRACKITEMLIST_SAVE_LIST()
 end
+function BARRACKITEMLIST_PREPAREUSERLIST(frame)
+    local droplist = tolua.cast(frame:GetChild("droplist"), "ui::CDropList");
+    droplist:ClearItems()
+    --droplist:AddItem(1,'None')
+    for k,v in pairs(g.userlist) do
+        droplist:AddItem(treat(k),"{s20}"..v.."{/}",0,'BARRACKITEMLIST_SHOW_LIST()');
+    end
+end
+
 function BARRACKITEMLIST_TRANSLATION(frame)
     if(frame==nil)then
         frame=ui.GetFrame("barrackitemlist")
@@ -362,8 +384,43 @@ function BARRACKITEMLIST_SHOW_LIST(cid)
     if g.setting.OpenNodeAll then
         tree:OpenNodeAll()
     end
+
+  
     tree:ShowWindow(1)
     frame:ShowWindow(1)
+    tree:Invalidate()
+    local btnDetete = gbox:CreateOrGetControl("button","btnDelete",gbox:GetWidth()-160,0,120,40)
+    tolua.cast(btnDetete,"ui::CButton")
+    btnDetete:SetClickSound("button_click_big")
+    btnDetete:SetOverSound("button_over")
+    btnDetete:SetSkinName("test_red_button")
+    btnDetete:SetText("{@st41b}"..L_("btnDetete"))
+    btnDetete:SetEventScript(ui.LBUTTONUP,"BARRACKITEMLIST_DELETE_CHARACTERDATA")
+    btnDetete:SetEventScriptArgString(ui.LBUTTONUP,cid)
+    
+end
+function BARRACKITEMLIST_DELETE_CHARACTERDATA(frame,ctrl,argstr,argnum)
+    g.deletecharacid=argstr
+    WARNINGMSGBOX_FRAME_OPEN(L_("warnDelete"),
+     'BARRACKITEMLIST_DO_DELETE_CHARACTERDATA', 'None');
+end
+function BARRACKITEMLIST_DO_DELETE_CHARACTERDATA()
+    --キャラクタデータの削除を試みる
+    local frame = ui.GetFrame('barrackitemlist')
+    local gbox = GET_CHILD(frame,'treeGbox','ui::CGroupBox');
+
+    for k,v in pairs(g.userlist) do
+        
+        local child = gbox:GetChild("tree"..treat(k)) 
+        if child then
+            child:ShowWindow(0)
+        end
+    end
+    g.userlist[g.deletecharacid]=nil;
+    savetofile(g.settingPath..'userlist_fl.lua',g.userlist)
+    --リスト再構築
+    BARRACKITEMLIST_PREPAREUSERLIST(ui.GetFrame("barrackitemlist"))
+    BARRACKITEMLIST_SHOW_LIST()
 end
 function BARRACKITEMLIST_MAKE_SLOTSET(tree, name)
     local col = g.setting.col
@@ -531,6 +588,7 @@ function BARRACKITEMLIST_CREATE_SETTINGMENU()
     if g.setting.OpenNodeAllthen then
         checkbox:SetCheck(1)
     end
+
 end
 
 function BARRACKITEMLIST_SAVE_SETTINGMENU() 
