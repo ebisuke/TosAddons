@@ -5,6 +5,9 @@ https://github.com/writ312/myTosAddons
 既存のセーブデータに互換性はありません。  
 別のBarrackItemListと同時に導入してはいけません。
 # リリースノート
+## v3.3.0
+キャラクタデータの削除に対応
+
 ## v3.2.0
 検索の際に大文字・小文字を無視するようにした。
 Changed to no case sensitive in search.  

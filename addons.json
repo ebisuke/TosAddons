@@ -157,8 +157,8 @@
     "name" : "Barrack ItemList Fastload",
     "file" : "barrackitemlist",
     "extension" : "ipf",
-    "fileVersion" : "v3.2.0",
-    "releaseTag" : "barrackitemlist-v3.2.0",
+    "fileVersion" : "v3.3.0",
+    "releaseTag" : "barrackitemlist-v3.3.0",
     "unicode" : "📖",
     "description" : "Faster loading of BarrackItemList. BarrackItemListのロード処理を高速化しました。",
     "tags" : [

@@ -92,9 +92,18 @@ function DEVELOPERCONSOLE_OPEN()
 	if escapeBracketButton ~= nil then
 		escapeBracketButton:Resize(100, 40);
 		escapeBracketButton:SetOffset(690, 270);
-		escapeBracketButton:SetText("｛｝escape");
+		escapeBracketButton:SetText("escape {}");
 		escapeBracketButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_ESCAPEBRACKET")
 	end
+	local surroundBracketButton = devconsole:CreateOrGetControl("button","surroundBracketButton",0,0,0,0);
+	if surroundBracketButton ~= nil then
+		surroundBracketButton:Resize(100, 40);
+		surroundBracketButton:SetOffset(690, 225);
+		surroundBracketButton:SetText("<> to {}");
+		surroundBracketButton:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_SURROUNDBRACKET")
+	end
+
+
 	local explorerButton = devconsole:CreateOrGetControl("button","explorerButton",0,0,0,0);
 	if explorerButton ~= nil then
 		explorerButton:Resize(100, 40);
@@ -120,7 +129,7 @@ function DEVELOPERCONSOLE_OPEN()
 	timer:Start(0.01);
 end
 function DEVELOPERCONSOLE_DOFILE_CHOOSE(frame)
-	INPUT_STRING_BOX_CB(frame,"Input a file path","DEVELOPERCONSOLE_DOFILE","",nil,nil,256,false)
+	INPUT_STRING_BOX_CB(frame,"Input the path of lua script","DEVELOPERCONSOLE_DOFILE","",nil,nil,260,false)
 end
 function DEVELOPERCONSOLE_DOFILE(frame,argStr)
 	local s = string.gsub(argStr,"\\","\\\\")
@@ -144,11 +153,28 @@ function DEVELOPERCONSOLE_ESCAPEBRACKET(frame)
 	DEVELOPERCONSOLE_LOG={}
 	for i,k in ipairs(text) do
 		local s=k;
-		s=string.gsub(s,"{","｛")
-		s=string.gsub(s,"}","｝")
+		s=string.gsub(s,"{","<")
+		s=string.gsub(s,"}",">")
 
 		DEVELOPERCONSOLE_ADDTEXT(s)
 	end
+end
+function DEVELOPERCONSOLE_SURROUNDBRACKET(frame)
+	local input = frame:GetChild("input");
+	local curtext=input:GetText()
+	if(curtext==nil)then
+		curtext=""
+	end
+	INPUT_STRING_BOX_CB(frame,"<> will be replaced to {}{nl}(Immediate Execute)","DEVELOPERCONSOLE_SURROUNDBRACKET_EXEC",curtext,nil,nil,65536,false)
+end
+function DEVELOPERCONSOLE_SURROUNDBRACKET_EXEC(frame,argStr)
+
+	
+	local s=argStr;
+	s=string.gsub(s,"<","{")
+	s=string.gsub(s,">","}")
+
+	DEVELOPERCONSOLE_EXEC(nil,s,argStr)
 end
 function DEVELOPERCONSOLE_CLOSE()
 	local frame = ui.GetFrame("developerconsole");
@@ -207,8 +233,8 @@ function DEVELOPERCONSOLE_UPDATE(frame)
 			if(DEVELOPERCONSOLE_CURSOR<(#DEVELOPERCONSOLE_SETTINGS.history-1))then
 				DEVELOPERCONSOLE_CURSOR = DEVELOPERCONSOLE_CURSOR+1
 			end
+	
 			doupdate=DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history-DEVELOPERCONSOLE_CURSOR]
-			
 			
 			DEVELOPERCONSOLE_KEYDOWNFLAG=true
 		elseif  1 == keyboard.IsKeyPressed("DOWN") then
@@ -216,10 +242,11 @@ function DEVELOPERCONSOLE_UPDATE(frame)
 			--new
 			if(DEVELOPERCONSOLE_CURSOR>0)then
 				DEVELOPERCONSOLE_CURSOR = DEVELOPERCONSOLE_CURSOR-1
+			elseif DEVELOPERCONSOLE_CURSOR<0 then
+				DEVELOPERCONSOLE_CURSOR=0
 			end
-
+	
 			doupdate=DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history-DEVELOPERCONSOLE_CURSOR]
-			
 			DEVELOPERCONSOLE_KEYDOWNFLAG=true
 		end
 		if(doupdate~=nil)then
@@ -252,26 +279,47 @@ function DEVELOPERCONSOLE_ENTER_KEY(frame, control, argStr, argNum)
 			tolua.cast(editbox, "ui::CEditControl");
 			local commandText = editbox:GetText();
 
+			DEVELOPERCONSOLE_EXEC(frame,commandText)
+		end
+	end
+end
+function DEVELOPERCONSOLE_EXEC(frame,commandText,originalstr)
+	if(frame==nil)then
+		frame=ui.GetFrame("developerconsole")
+	end
+	local textlog = frame:GetChild("textview_log");
+
+	if textlog ~= nil then
+		tolua.cast(textlog, "ui::CTextView");
+
+		local editbox = frame:GetChild("input");
+
+		if editbox ~= nil then
+			tolua.cast(editbox, "ui::CEditControl");
+			
 			if commandText ~= nil and commandText ~= "" then
 				DEVELOPERCONSOLE_IGNORE_FLAG=false
 				local s = "[Execute] " .. commandText;
 				DEVELOPERCONSOLE_ADDTEXT(s);
 				local f = assert(loadstring(commandText));
 				local status, error = pcall(f);
-
+		
 				if not status then
 					DEVELOPERCONSOLE_ADDTEXT(tostring(error));
 				end
 				if(DEVELOPERCONSOLE_IGNORE_FLAG==false)then
-					if(#DEVELOPERCONSOLE_SETTINGS.history == 0 or DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history]~=commandText)then
-						DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history+1]=commandText
+					if(#DEVELOPERCONSOLE_SETTINGS.history == 0 or DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history]~=(originalstr or commandText))then
+						DEVELOPERCONSOLE_SETTINGS.history[#DEVELOPERCONSOLE_SETTINGS.history+1]=originalstr or commandText
 					end
+					editbox:SetText("");
 				end
-				DEVELOPERCONSOLE_CURSOR=0
+				
+				DEVELOPERCONSOLE_CURSOR=-1
 				DEVELOPERCONSOLE_SAVE_SETTINGS()
 			end
 		end
 	end
+
 end
 function dev_history()
 	for i = 1 , #DEVELOPERCONSOLE_SETTINGS.history do
