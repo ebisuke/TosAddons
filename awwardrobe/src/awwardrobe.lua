@@ -52,7 +52,7 @@ local translationtable={
     btndelete = {jp="{#FF6666}設定削除",  eng="{#FF6666}Delete Settings"},
     labelsettingsname = {jp="{ol}保存する設定名:",  eng="{ol}Settings Name:"},
     labelcurrentsettings = {jp="{ol}現在の設定:",  eng="{ol}Settings:"},
-    
+    defaultvalue = {jp="(デフォルト)",  eng="(default)"},
     alertnosettings={jp="[AWW]設定 %s は存在しません",  eng="[AWW]Settings %s not found."},
     alertinvalidname={jp="[AWW]有効な名前を入れてください",  eng="[AWW]Invalid name."},
     alertsettingssaved={jp="[AWW]設定 %s 保存しました",  eng="[AWW]Settings %s saved."},
@@ -239,17 +239,27 @@ function AWWARDROBE_VALIDATE_SETTINGS()
     for k,v in pairs(g.settings.wardrobe) do
         if(EBI_IsNoneOrNilOrWhitespace(k))then
             g.settings.wardrobe[k]=nil
+            
         end
     end
 end
 function AWWARDROBE_UPGRADE_SETTINGS()
     local upgraded = false
-    
+    if(not g.settings.version or g.settings.version==0)then
+        g.settings.wardrobe[L_("defaultvalue")]={}
+        g.settings.version=1
+        CHAT_SYSTEM("[AWW]Settings Verup 0->1")
+        upgraded=true;
+    end
     return upgraded
 end
 function AWWARDROBE_UPGRADE_PERSONALSETTINGS()
     local upgraded = false
-    
+    if(not g.personalsettings.version or g.personalsettings.version==0)then
+        g.personalsettings.version=1
+        CHAT_SYSTEM("[AWW]PersonalSettings Verup 0->1")
+        upgraded=true
+    end
     return upgraded
 end
 
@@ -452,12 +462,14 @@ function AWWARDROBE_UPDATE_DROPBOX()
         local count = 0
         local selectindex = nil
         AWWARDROBE_DBGOUT("def" .. tostring(g.settings.defaultname))
-        --1行目に空の設定を入れておく
-        cbwardrobe:AddItem(0,"")
+        --1行目にdefaultの設定を入れておく
+        cbwardrobe:AddItem(0,L_("defaultvalue"))
         for k, _ in pairs(g.settings.wardrobe) do
-            cbwardrobe:AddItem(count+1, k)
-            if (k == g.settings.defaultname) then
-                selectindex = count
+            if(k~=L_("defaultvalue"))then
+                cbwardrobe:AddItem(count+1, k)
+                if (k == g.settings.defaultname) then
+                    selectindex = count
+                end
             end
             count = count + 1
         end
@@ -477,16 +489,17 @@ function AWWARDROBE_UPDATE_DROPBOXAW()
                 local acbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
                 
                 acbwardrobe:ClearItems()
-                --1行目に空の設定を入れておく
-                acbwardrobe:AddItem(0,"")
+                --1行目にdefaultの設定を入れておく
+                acbwardrobe:AddItem(0,L_("defaultvalue"))
                 local count = 0
                 local selectindex = nil
                 AWWARDROBE_DBGOUT("def" .. tostring(g.personalsettings.defaultname))
                 for k, _ in pairs(g.settings.wardrobe) do
-                    
-                    acbwardrobe:AddItem(count+1, k)
-                    if (k == g.personalsettings.defaultname) then
-                        selectindex = count
+                    if(k~=L_("defaultvalue"))then
+                        acbwardrobe:AddItem(count+1, k)
+                        if (k == g.personalsettings.defaultname) then
+                            selectindex = count
+                        end
                     end
                     count = count + 1
                 end
