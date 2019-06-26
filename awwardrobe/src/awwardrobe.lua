@@ -54,6 +54,7 @@ local translationtable={
     labelcurrentsettings = {jp="{ol}現在の設定:",  eng="{ol}Settings:"},
     defaultvalue = {jp="(デフォルト)",  eng="(default)"},
     alertnosettings={jp="[AWW]設定 %s は存在しません",  eng="[AWW]Settings %s not found."},
+    alertcantdelete={jp="[AWW]設定 %s は削除できません",  eng="[AWW]Settings %s cannot delete."},
     alertinvalidname={jp="[AWW]有効な名前を入れてください",  eng="[AWW]Invalid name."},
     alertsettingssaved={jp="[AWW]設定 %s 保存しました",  eng="[AWW]Settings %s saved."},
     alertnodeletesettings={jp="[AWW]設定 %s がないです",  eng="[AWW]Settings %s not found."},
@@ -124,7 +125,6 @@ function AWWARDROBE_DEFAULTSETTINGS()
     return {
         version = g.version,
         wardrobe = {
-        
         },
         defaultname = nil
     }
@@ -618,7 +618,9 @@ function AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN(frame)
                 --ui.SysMsg("[AWW]削除する設定がありません");
                 --pass
             else
-                if (g.settings.wardrobe[curname]) then
+                if(curname==L_("defaultvalue")) then
+                    ui.SysMsg(string.format(L_("alertcantdelete"),curname));
+                elseif (g.settings.wardrobe[curname]) then
                     g.settings.wardrobe[curname] = nil
                     ui.SysMsg(string.format(L_("alertdeletesettings"),curname));
                 else
