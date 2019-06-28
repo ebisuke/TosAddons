@@ -74,7 +74,9 @@ function SHOPHELPERTOOL_SHOP_ITEM_LIST_GET(frame)
 					
 					for i = (NOWPAGENUM - 1) * 8, pageEndCount do
 						--SHOP_ITEM_LIST_UPDATE(frame, i, shopItemCount);
-
+						if i  >= shopItemList:Count() then
+							return;
+						end
 						local shopItem	= shopItemList:PtrAt(i);
 						local shopItemcls= GetClassByType(shopItem:GetIDSpace(), shopItem.type).ClassID
 						if(GET_SHOP_ITEM_MAXSTACK(shopItem)~=-1)then
@@ -85,7 +87,9 @@ function SHOPHELPERTOOL_SHOP_ITEM_LIST_GET(frame)
 					end
 				else
 					for i = 0, shopItemCount - 1 do
-
+						if i  >= shopItemList:Count() then
+							return;
+						end
 						local shopItem	= shopItemList:PtrAt(i);
 						local shopItemcls= GetClassByType(shopItem:GetIDSpace(), shopItem.type).ClassID
 						if(GET_SHOP_ITEM_MAXSTACK(shopItem)~=-1)then

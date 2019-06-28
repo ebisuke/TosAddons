@@ -119,8 +119,8 @@
     "name" : "Shop Helper Tool",
     "file" : "shophelpertool",
     "extension" : "ipf",
-    "fileVersion" : "v1.0.0",
-    "releaseTag" : "shophelpertool-v1.0.0",
+    "fileVersion" : "v1.1.0",
+    "releaseTag" : "shophelpertool-v1.1.0",
     "unicode" : "📖",
     "description" : "左クリックで商品をまとめ買いできるアドオンです。",
     "tags" : [
