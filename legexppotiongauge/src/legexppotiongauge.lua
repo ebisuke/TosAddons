@@ -14,7 +14,7 @@ function LEGEXPPOTIONGAUGE_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
             LEGEXPPOTIONGAUGE_HOOK()
-            
+            --addon:RegisterMsg('GAME_START', 'LEGEXPPOTIONGAUGE_UPDATE');
             addon:RegisterMsg('GAME_START_3SEC', 'LEGEXPPOTIONGAUGE_UPDATE');
             addon:RegisterMsg('FPS_UPDATE', 'LEGEXPPOTIONGAUGE_SHOWWINDOW');
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
@@ -51,9 +51,10 @@ function LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
                     updateslot = false;
                 end
             end
-            if true == updateslot and quickSlotInfo.category ~= 'NONE' then
+            if true == updateslot and quickSlotInfo.category ~= 'NONE' and session.GetInvItemByGuid( quickSlotInfo:GetIESID())~=nil then
                 local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot")
-                LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, quickSlotInfo.category, quickSlotInfo.type, quickSlotInfo:GetIESID(), 0, true, true);
+				LEGEXPPOTIONGAUGE_SETINFO(slot, session.GetInvItemByGuid( quickSlotInfo:GetIESID()))
+				--LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, quickSlotInfo.category, quickSlotInfo.type, quickSlotInfo:GetIESID(), 0, true, true);
                 applied = true
             end
         else
@@ -68,11 +69,11 @@ function LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
 end
 function LEGEXPPOTIONGAUGE_HOOK()
 	--acutil.setupHook("LEGEXPPOTIONGAUGE_INV_ICON_SETINFO_HOOK", "INV_ICON_SETINFO")
-	if(OLD_INV_ICON_SETINFO == nil or INV_ICON_SETINFO ~= LEGEXPPOTIONGAUGE_INV_ICON_SETINFO_HOOK)then
+	if(OLD_INV_ICON_SETINFO == nil and INV_ICON_SETINFO ~= LEGEXPPOTIONGAUGE_INV_ICON_SETINFO_HOOK)then
 		OLD_INV_ICON_SETINFO = INV_ICON_SETINFO;
 		INV_ICON_SETINFO=LEGEXPPOTIONGAUGE_INV_ICON_SETINFO_HOOK
 	end
-	if(OLD_SET_QUICK_SLOT == nil or SET_QUICK_SLOT ~= LEGEXPPOTIONGAUGE_SET_QUICK_SLOT_HOOK)then
+	if(OLD_SET_QUICK_SLOT == nil and SET_QUICK_SLOT ~= LEGEXPPOTIONGAUGE_SET_QUICK_SLOT_HOOK)then
 		OLD_SET_QUICK_SLOT = SET_QUICK_SLOT;
 		SET_QUICK_SLOT=LEGEXPPOTIONGAUGE_SET_QUICK_SLOT_HOOK
 	end
@@ -100,7 +101,7 @@ function LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, category, type, iesID, ma
 end
 
 function LEGEXPPOTIONGAUGE_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
-	CHAT_SYSTEM("RRR")
+
 	OLD_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
     LEGEXPPOTIONGAUGE_SETINFO(slot, invItem)
 end
@@ -140,3 +141,4 @@ function LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
     
     end
 end
+LEGEXPPOTIONGAUGE_HOOK()
