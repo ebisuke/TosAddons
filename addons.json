@@ -116,7 +116,7 @@
     ]
   },
   {
-    "name" : "Shop Helper Tool",
+    "name" : "NPCShoppingHelperTool",
     "file" : "shophelpertool",
     "extension" : "ipf",
     "fileVersion" : "v1.1.0",
