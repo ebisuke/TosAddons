@@ -101,7 +101,7 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             frame:SetEventScript(ui.LBUTTONUP, "PINNEDQUEST_END_DRAG")
             addon:RegisterMsg('GET_NEW_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('GAME_START_3SEC', 'PINNEDQUEST_3SEC')
-            addon:RegisterMsg('FPS_UPDATE', 'PINNEDQUEST_SHOWQUESTLOGFRAME')
+            addon:RegisterMsg('FPS_UPDATE', 'PINNEDQUEST_FPSUPDATE')
             addon:RegisterMsg('QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('AVANDON_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('QUEST_DELETED', 'PINNEDQUEST_ENSUREQUEST')
@@ -304,6 +304,14 @@ function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     btnr:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_REFRESH")
     -- frameg:CreateOrGetControl("richtext","label8",400,120,100,20):SetText("{ol}前提")
     --PINNEDQUEST_UPDATELIST_QUEST(frameg)
+end
+function PINNEDQUEST_FPSUPDATE()
+    PINNEDQUEST_SHOWQUESTLOGFRAME();
+    local frame=ui.GetFrame("questinfoset_2")
+    local btnchange=frame:GetChild("btnchange")
+    if(btnchange==nil)then
+        PINNEDQUEST_INJECTCONTROLS();
+    end
 end
 function PINNEDQUEST_SHOWQUESTLOGFRAME()
     ui.GetFrame("questinfoset_2"):ShowWindow(1)
