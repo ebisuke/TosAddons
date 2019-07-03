@@ -20,6 +20,7 @@ _G.ADDONS.YYU.UNBUFF.Version = '1.1.4';
 	g.addUnbuffTable('cassiscrista',11301, 3033, '0');
 	g.addUnbuffTable('thurisaz'		,21303, 1040, '1');
 	g.addUnbuffTable('genbuarmor'		,21611, 2145, '1');
+	g.addUnbuffTable('reflectshield'		,20004, 67, '1');
 	-- g.addUnbuffTable('fanaticism'		,41704, 2014, '0');
 	function g.hook(frame, slot, ...)
 		if GetCraftState() == 1 then
