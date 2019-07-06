@@ -49,7 +49,7 @@ end
 function LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
     local frame = ui.GetFrame('quickslotnexpbar');
     local sklCnt = frame:GetUserIValue('SKL_MAX_CNT');
-    
+    ReserveScript("LEGEXPPOTIONACTIVATOR_CHECKISENABLED()",0.25)
     for i = 0, MAX_QUICKSLOT_CNT - 1 do
         local quickSlotInfo = quickslot.GetInfoByIndex(i);
         
@@ -87,7 +87,7 @@ function LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
             end
         end
     end
-    ReserveScript("LEGEXPPOTIONACTIVATOR_CHECKISENABLED()",0.25)
+   
 end
 
 function LEGEXPPOTIONACTIVATOR_CHECKISENABLED()
