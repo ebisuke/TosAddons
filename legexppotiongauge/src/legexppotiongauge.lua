@@ -15,22 +15,29 @@ function LEGEXPPOTIONGAUGE_ON_INIT(addon, frame)
         try = function()
             LEGEXPPOTIONGAUGE_HOOK()
             --addon:RegisterMsg('GAME_START', 'LEGEXPPOTIONGAUGE_UPDATE');
-            addon:RegisterMsg('GAME_START_3SEC', 'LEGEXPPOTIONGAUGE_UPDATE');
+            addon:RegisterMsg('GAME_START_3SEC', 'LEGEXPPOTIONGAUGE_3SEC');
             addon:RegisterMsg('FPS_UPDATE', 'LEGEXPPOTIONGAUGE_SHOWWINDOW');
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
 			timer:SetUpdateScript("LEGEXPPOTIONGAUGE_UPDATE")
-			timer:Start(0.3);
+            timer:Start(0.3);
+            
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
         end
     }
-
+    
 end
 function LEGEXPPOTIONGAUGE_SHOWWINDOW(frame)
     ui.GetFrame("legexppotiongauge"):ShowWindow(1)
 end
-
+function LEGEXPPOTIONGAUGE_3SEC()
+    if(not LEGEXPPOTIONGAUGE_FIRSTRUN) then
+        LEGEXPPOTIONGAUGE_FIRSTRUN=true
+        INVENTORY_UPDATE_ICONS(ui.GetFrame("inventory"));
+    end
+    LEGEXPPOTIONGAUGE_UPDATE()
+end
 function LEGEXPPOTIONGAUGE_UPDATE()
     LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
 end
@@ -141,4 +148,3 @@ function LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
     
     end
 end
-LEGEXPPOTIONGAUGE_HOOK()

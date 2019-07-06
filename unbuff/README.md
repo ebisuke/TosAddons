@@ -7,7 +7,7 @@ But I did not confirm everything.
 * levitation
 * thurisaz
 * genbuarmor
-
+* reflectshield
 
 ## Original Unbuff Description
 ### 日本語
@@ -53,6 +53,8 @@ Unsummonと競合して動かないかも。未検証。
 
 
 # リリースノート
+## v2.1.0
+* マジックシールドに対応
 ## v2.0.0
 * Initial release
 * クイックスロット操作を受け付けない問題を修正.  
