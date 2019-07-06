@@ -41,6 +41,7 @@ function LEGEXPPOTIONACTIVATOR_UPDATE()
     blacklist[session.GetMapName()]
 
     )then
+        
         return
     end
     LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
@@ -48,6 +49,7 @@ end
 function LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
     local frame = ui.GetFrame('quickslotnexpbar');
     local sklCnt = frame:GetUserIValue('SKL_MAX_CNT');
+    
     for i = 0, MAX_QUICKSLOT_CNT - 1 do
         local quickSlotInfo = quickslot.GetInfoByIndex(i);
         
@@ -73,7 +75,8 @@ function LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
                         local expOrb = frame:GetUserValue("EXP_ORB_EFFECT");
                         if expOrb == "None" then
                             INV_ICON_USE(invItem)
-                            ReserveScript("LEGEXPPOTIONACTIVATOR_CHECKISENABLED()",0.25)
+                            
+                            
                         else
                         end
                        
@@ -84,11 +87,13 @@ function LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
             end
         end
     end
+    ReserveScript("LEGEXPPOTIONACTIVATOR_CHECKISENABLED()",0.25)
 end
 
 function LEGEXPPOTIONACTIVATOR_CHECKISENABLED()
     local frame = ui.GetFrame('quickslotnexpbar');
     local expOrb = frame:GetUserValue("EXP_ORB_EFFECT");
+    
     if expOrb == "None" then
         --retry
         LEGEXPPOTIONACTIVATOR_RETRY_COUNT = LEGEXPPOTIONACTIVATOR_RETRY_COUNT+1
