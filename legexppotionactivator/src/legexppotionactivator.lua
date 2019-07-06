@@ -14,11 +14,13 @@ local blacklist={
     d_raidboss_velcoffer=true,
     guildhouse=true,
 }
+LEGEXPPOTIONACTIVATOR_RETRY_COUNT=0
+LEGEXPPOTIONACTIVATOR_RETRY_COUNT_LIMIT= 10
 -- ライブラリ読み込み
 function LEGEXPPOTIONACTIVATOR_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-
+            LEGEXPPOTIONACTIVATOR_RETRY_COUNT=0
             --addon:RegisterMsg('GAME_START', 'LEGEXPPOTIONACTIVATOR_UPDATE');
             addon:RegisterMsg('GAME_START_3SEC', 'LEGEXPPOTIONACTIVATOR_UPDATE');
 
@@ -68,11 +70,30 @@ function LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()
                     local curexp, maxexp = GET_LEGENDEXPPOTION_EXP(GetIES(invItem:GetObject()))
                     if(curexp<maxexp)then
                         --activate this
-                        INV_ICON_USE(invItem)
+                        local expOrb = frame:GetUserValue("EXP_ORB_EFFECT");
+                        if expOrb == "None" then
+                            INV_ICON_USE(invItem)
+                            ReserveScript("LEGEXPPOTIONACTIVATOR_CHECKISENABLED()",0.25)
+                        else
+                        end
+                       
+
                         break
                     end
                 end
             end
+        end
+    end
+end
+
+function LEGEXPPOTIONACTIVATOR_CHECKISENABLED()
+    local frame = ui.GetFrame('quickslotnexpbar');
+    local expOrb = frame:GetUserValue("EXP_ORB_EFFECT");
+    if expOrb == "None" then
+        --retry
+        LEGEXPPOTIONACTIVATOR_RETRY_COUNT = LEGEXPPOTIONACTIVATOR_RETRY_COUNT+1
+        if(LEGEXPPOTIONACTIVATOR_RETRY_COUNT <= LEGEXPPOTIONACTIVATOR_RETRY_COUNT_LIMIT) then
+            ReserveScript("LEGEXPPOTIONACTIVATOR_UPDATE_FORKEYBOARD()",1);
         end
     end
 end
