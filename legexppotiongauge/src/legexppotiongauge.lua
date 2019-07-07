@@ -13,10 +13,22 @@ local acutil = require('acutil')
 function LEGEXPPOTIONGAUGE_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
+            LEGEXPPOTIONGAUGE_INVITEM_UPDATER={}
             LEGEXPPOTIONGAUGE_HOOK()
             --addon:RegisterMsg('GAME_START', 'LEGEXPPOTIONGAUGE_UPDATE');
+            addon:RegisterMsg("OPEN_DLG_ACCOUNTWAREHOUSE", "ON_OPEN_ACCOUNTWAREHOUSE");
             addon:RegisterMsg('GAME_START_3SEC', 'LEGEXPPOTIONGAUGE_3SEC');
             addon:RegisterMsg('FPS_UPDATE', 'LEGEXPPOTIONGAUGE_SHOWWINDOW');
+            addon:RegisterMsg("WAREHOUSE_ITEM_LIST", "LEGEXPPOTIONGAUGE_WAREHOUSE_INIT");
+            addon:RegisterMsg("WAREHOUSE_ITEM_ADD", "LEGEXPPOTIONGAUGE_WAREHOUSE_INIT");
+            addon:RegisterMsg("WAREHOUSE_ITEM_REMOVE", "LEGEXPPOTIONGAUGE_WAREHOUSE_INIT");
+            addon:RegisterMsg("WAREHOUSE_ITEM_CHANGE_COUNT", "LEGEXPPOTIONGAUGE_WAREHOUSE_INIT");
+            addon:RegisterMsg("WAREHOUSE_ITEM_IN", "LEGEXPPOTIONGAUGE_WAREHOUSE_INIT");
+            addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_LIST", "LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT");
+            addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_ADD", "LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT");
+            addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_REMOVE", "LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT");
+            addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_CHANGE_COUNT", "LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT");
+            addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_IN", "LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT");
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
 			timer:SetUpdateScript("LEGEXPPOTIONGAUGE_UPDATE")
             timer:Start(0.3);
@@ -40,6 +52,23 @@ function LEGEXPPOTIONGAUGE_3SEC()
 end
 function LEGEXPPOTIONGAUGE_UPDATE()
     LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
+    --update inventory
+    local frame =ui.GetFrame("inventory");
+    
+    for k,v in pairs(LEGEXPPOTIONGAUGE_INVITEM_UPDATER) do
+ 
+        local slotset=GET_CHILD_RECURSIVELY(frame, v.parentName, 'ui::CSlotSet');
+        if(slotset==nil) then
+    
+            LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
+        end
+        local slot=GET_CHILD_RECURSIVELY(slotset, v.slotName, 'ui::CSlot');
+        if(slot==nil) then
+
+            LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
+        end
+        LEGEXPPOTIONGAUGE_SETINFO(slot,v.invItem)
+    end
 end
 function LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
     local frame = ui.GetFrame('quickslotnexpbar');
@@ -109,7 +138,8 @@ end
 
 function LEGEXPPOTIONGAUGE_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
 
-	OLD_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
+    OLD_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
+    LEGEXPPOTIONGAUGE_INVITEM_UPDATER[invItem:GetIESID()]={slotName=slot:GetName(),parentName=slot:GetParent():GetName(),invItem=invItem}
     LEGEXPPOTIONGAUGE_SETINFO(slot, invItem)
 end
 
@@ -119,6 +149,7 @@ function LEGEXPPOTIONGAUGE_SETINFO(slot, invItem)
         local itemClass = GetClassByType('Item', invItem.type);
         if (itemClass.GroupName == "ExpOrb") then
             local curexp, maxexp = GET_LEGENDEXPPOTION_EXP(GetIES(invItem:GetObject()))
+   
             local gauge = slot:CreateOrGetControl("gauge", "expnum", 0, 0, slot:GetWidth(), 10)
             tolua.cast(gauge, "ui::CGauge")
             gauge:SetGravity(ui.LEFT, ui.BOTTOM)
@@ -148,3 +179,72 @@ function LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
     
     end
 end
+function LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT()
+    
+    EBI_try_catch{
+        try=function()
+            local frame=ui.GetFrame("accountwarehouse")
+            local slotset =  GET_CHILD_RECURSIVELY(frame, 'slotset',"ui::CSlotSet");
+            for i=0 ,slotset:GetSlotCount()-1 do
+                local slot=slotset:GetSlotByIndex(i)
+                local icon=slot:GetIcon()
+                if(icon~=nil)then
+                    local info=icon:GetInfo()
+                    if(info~=nil)then
+                        local invItem=session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, info:GetIESID());
+                        local itemClass = GetClassByType('Item', invItem.type);
+                        if (itemClass.GroupName == "ExpOrb") then
+                            LEGEXPPOTIONGAUGE_SETINFO(slot,invItem)
+                        else
+                            LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
+                        end
+                    else
+                        LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
+                    end
+                else
+                    LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
+                end
+            end
+
+
+        end,
+
+        catch=function(error)
+            CHAT_SYSTEM(error)
+        end
+    }
+end
+function LEGEXPPOTIONGAUGE_WAREHOUSE_INIT()
+    EBI_try_catch{
+        try=function()
+            local frame=ui.GetFrame("warehouse")
+            local slotset =  GET_CHILD_RECURSIVELY(frame, 'slotset',"ui::CSlotSet");
+            for i=0 ,slotset:GetSlotCount()-1 do
+                local slot=slotset:GetSlotByIndex(i)
+                local icon=slot:GetIcon()
+                if(icon~=nil)then
+                    local info=icon:GetInfo()
+                    if(info~=nil)then
+                        local invItem=session.GetEtcItemByGuid(IT_WAREHOUSE, info:GetIESID());
+                        local itemClass = GetClassByType('Item', invItem.type);
+                        if (itemClass.GroupName == "ExpOrb") then
+                            LEGEXPPOTIONGAUGE_SETINFO(slot,invItem)
+                        else
+                            LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
+                        end
+                    else
+                        LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
+                    end
+                else
+                    LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
+                end
+            end
+        end,
+
+        catch=function(error)
+            CHAT_SYSTEM(error)
+        end
+    }
+    
+end
+LEGEXPPOTIONGAUGE_HOOK()
