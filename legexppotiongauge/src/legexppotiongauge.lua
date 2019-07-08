@@ -1,4 +1,4 @@
---OLD_SHOP_ITEM_LIST_GET
+
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
@@ -61,13 +61,15 @@ function LEGEXPPOTIONGAUGE_UPDATE()
         if(slotset==nil) then
     
             LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
-        end
-        local slot=GET_CHILD_RECURSIVELY(slotset, v.slotName, 'ui::CSlot');
-        if(slot==nil) then
+        else
+            local slot=GET_CHILD_RECURSIVELY(slotset, v.slotName, 'ui::CSlot');
+            if(slot==nil) then
 
-            LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
+                LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
+            else
+                LEGEXPPOTIONGAUGE_SETINFO(slot,v.invItem)
+            end
         end
-        LEGEXPPOTIONGAUGE_SETINFO(slot,v.invItem)
     end
 end
 function LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
