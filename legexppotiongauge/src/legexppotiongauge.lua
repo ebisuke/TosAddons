@@ -51,26 +51,46 @@ function LEGEXPPOTIONGAUGE_3SEC()
     LEGEXPPOTIONGAUGE_UPDATE()
 end
 function LEGEXPPOTIONGAUGE_UPDATE()
+    ReserveScript("LEGEXPPOTIONGAUGE_UPDATE_DELAYED()",0.01)
+end
+function LEGEXPPOTIONGAUGE_UPDATE_DELAYED()
     LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
-    --update inventory
-    local frame =ui.GetFrame("inventory");
-    
-    for k,v in pairs(LEGEXPPOTIONGAUGE_INVITEM_UPDATER) do
- 
-        local slotset=GET_CHILD_RECURSIVELY(frame, v.parentName, 'ui::CSlotSet');
-        if(slotset==nil) then
-    
-            LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
-        else
-            local slot=GET_CHILD_RECURSIVELY(slotset, v.slotName, 'ui::CSlot');
-            if(slot==nil) then
+    -- EBI_try_catch{
+    --     try=function()
+    --         --update inventory
+    --         local frame =ui.GetFrame("inventory");
 
-                LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
-            else
-                LEGEXPPOTIONGAUGE_SETINFO(slot,v.invItem)
-            end
-        end
-    end
+    --         local slotset=GET_CHILD_RECURSIVELY(frame,"sset_Misc_Special");
+    --         if(slotset==nil) then
+                
+    --             -- pass
+    --         else
+    --             -- local slot=slotset:GetChild(v.slotName);
+    --             -- if(slot==nil) then
+    --             --     LEGEXPPOTIONGAUGE_INVITEM_UPDATER[k]=nil
+    --             -- else
+    --             --     tolua.cast(slot,"ui::CSlot")
+    --             --     LEGEXPPOTIONGAUGE_SETINFO(slot,v.iesid)
+    --             -- end
+    --             tolua.cast(slotset,"ui::CSlotSet")
+    --             for i=0,slotset:GetSlotCount()-1 do
+    --                 local slot=slotset:GetSlotByIndex(i)
+    --                 local icon=slot:GetIcon()
+    --                 if icon then
+    --                     local iesid=icon:GetInfo():GetIESID()
+    --                     if(iesid and LEGEXPPOTIONGAUGE_INVITEM_UPDATER[iesid])then
+    --                         LEGEXPPOTIONGAUGE_SETINFO(slot,iesid)
+    --                     end
+    --                 end
+    --             end
+    --         end
+
+            
+    --     end,
+    --     catch=function(error)
+    --         CHAT_SYSTEM(error)
+    --     end
+    -- }
 end
 function LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
     local frame = ui.GetFrame('quickslotnexpbar');
@@ -91,7 +111,7 @@ function LEGEXPPOTIONGAUGE_UPDATE_FORKEYBOARD()
             end
             if true == updateslot and quickSlotInfo.category ~= 'NONE' and session.GetInvItemByGuid( quickSlotInfo:GetIESID())~=nil then
                 local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot")
-				LEGEXPPOTIONGAUGE_SETINFO(slot, session.GetInvItemByGuid( quickSlotInfo:GetIESID()))
+				LEGEXPPOTIONGAUGE_SETINFO(slot, quickSlotInfo:GetIESID())
 				--LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, quickSlotInfo.category, quickSlotInfo.type, quickSlotInfo:GetIESID(), 0, true, true);
                 applied = true
             end
@@ -129,7 +149,7 @@ function LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, category, type, iesID, ma
     EBI_try_catch{
         try = function()
             OLD_SET_QUICK_SLOT(frame, slot, category, type, iesID, makeLog, sendSavePacket, isForeceRegister)
-            LEGEXPPOTIONGAUGE_SETINFO(slot, session.GetInvItemByGuid(iesID))
+            LEGEXPPOTIONGAUGE_SETINFO(slot, iesID)
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
@@ -141,36 +161,51 @@ end
 function LEGEXPPOTIONGAUGE_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
 
     OLD_INV_ICON_SETINFO(frame, slot, invItem, customFunc, scriptArg, count)
-    LEGEXPPOTIONGAUGE_INVITEM_UPDATER[invItem:GetIESID()]={slotName=slot:GetName(),parentName=slot:GetParent():GetName(),invItem=invItem}
-    LEGEXPPOTIONGAUGE_SETINFO(slot, invItem)
+    
+    LEGEXPPOTIONGAUGE_SETINFO(slot, invItem:GetIESID(),invItem)
 end
-
-function LEGEXPPOTIONGAUGE_SETINFO(slot, invItem)
-    if (invItem ~= nil) then
-        
-        local itemClass = GetClassByType('Item', invItem.type);
-        if (itemClass.GroupName == "ExpOrb") then
-            local curexp, maxexp = GET_LEGENDEXPPOTION_EXP(GetIES(invItem:GetObject()))
+function LEGEXPPOTIONGAUGE_GETITEM(iesid)
+    local invitem = GET_PC_ITEM_BY_GUID(iesid);	
+	if invitem == nil then
+		invitem = session.GetEtcItemByGuid(IT_WAREHOUSE, iesid);
+	end
+	if invitem == nil then
+		invitem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iesid);
+    end
+    return invitem;
+end
+function LEGEXPPOTIONGAUGE_SETINFO(slot, iesid,ivi)
+    if (iesid ~= nil) then
+        local invItem = ivi or LEGEXPPOTIONGAUGE_GETITEM(iesid)
+        if(invItem~=nil)then
+            local itemClass = GetClassByType('Item', invItem.type);
+           
+            if (itemClass ~= nil and itemClass.GroupName == "ExpOrb") then
+                tolua.cast(slot,"ui::CSlot")
+                LEGEXPPOTIONGAUGE_INVITEM_UPDATER[invItem:GetIESID()]={slotName=slot:GetName(),parentName=slot:GetParent():GetName(),iesid=invItem:GetIESID()}
+                local curexp, maxexp = GET_LEGENDEXPPOTION_EXP(GetIES(invItem:GetObject()))
+                
    
-            local gauge = slot:CreateOrGetControl("gauge", "expnum", 0, 0, slot:GetWidth(), 10)
-            tolua.cast(gauge, "ui::CGauge")
-            gauge:SetGravity(ui.LEFT, ui.BOTTOM)
-            gauge:EnableHitTest(0)
-            gauge:SetMaxPoint(maxexp)
-			gauge:SetCurPoint(curexp)
-			
-            local txt = slot:CreateOrGetControl("richtext", "exptxt", 0, 0, slot:GetWidth(), 12)
-            txt:SetGravity(ui.CENTER_HORZ, ui.BOTTOM)
-            txt:EnableHitTest(0)
-			if(curexp >= maxexp)then
-				gauge:SetBarColor(0xFF00FF00)
-				
-				txt:SetText("{ol}{s16}MAX")
-			else
-				gauge:SetBarColor(0xFFFFFFFF)
-				txt:SetText(string.format("{ol}{s16}%d%%", math.floor(curexp * 100.0 / maxexp)))
-			end
-			
+                local gauge = slot:CreateOrGetControl("gauge", "expnum", 0, 0, slot:GetWidth(), 10)
+                tolua.cast(gauge, "ui::CGauge")
+                gauge:SetGravity(ui.LEFT, ui.BOTTOM)
+                gauge:EnableHitTest(0)
+                gauge:SetMaxPoint(maxexp)
+                gauge:SetCurPoint(curexp)
+
+                local txt = slot:CreateOrGetControl("richtext", "exptxt", 0, 0, slot:GetWidth(), 12)
+                txt:SetGravity(ui.CENTER_HORZ, ui.BOTTOM)
+                txt:EnableHitTest(0)
+                if(curexp >= maxexp)then
+                    gauge:SetBarColor(0xFF00FF00)
+                    
+                    txt:SetText("{ol}{s16}MAX")
+                else
+                    gauge:SetBarColor(0xFFFFFFFF)
+                    txt:SetText(string.format("{ol}{s16}%d%%", math.floor(curexp * 100.0 / maxexp)))
+                end
+ 
+            end
         end
     end
 end
@@ -196,7 +231,7 @@ function LEGEXPPOTIONGAUGE_ACCOUNTWAREHOUSE_INIT()
                         local invItem=session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, info:GetIESID());
                         local itemClass = GetClassByType('Item', invItem.type);
                         if (itemClass.GroupName == "ExpOrb") then
-                            LEGEXPPOTIONGAUGE_SETINFO(slot,invItem)
+                            LEGEXPPOTIONGAUGE_SETINFO(slot,invItem:GetIESID())
                         else
                             LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
                         end
@@ -230,7 +265,7 @@ function LEGEXPPOTIONGAUGE_WAREHOUSE_INIT()
                         local invItem=session.GetEtcItemByGuid(IT_WAREHOUSE, info:GetIESID());
                         local itemClass = GetClassByType('Item', invItem.type);
                         if (itemClass.GroupName == "ExpOrb") then
-                            LEGEXPPOTIONGAUGE_SETINFO(slot,invItem)
+                            LEGEXPPOTIONGAUGE_SETINFO(slot,invItem:GetIESID())
                         else
                             LEGEXPPOTIONGAUGE_CLEARSLOT(slot)
                         end
