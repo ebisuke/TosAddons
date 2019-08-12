@@ -123,6 +123,10 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             frame:Move(0, 0)
             frame:SetOffset(g.settings.position.x, g.settings.position.y)
             g.needtoinit = true
+            if (OLD_QUEST_FRAME_OPEN == nil) then
+                OLD_QUEST_FRAME_OPEN = QUEST_FRAME_OPEN
+                QUEST_FRAME_OPEN = PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER
+            end
             if (OLD_UPDATE_QUESTINFOSET_2 == nil)then
                 OLD_UPDATE_QUESTINFOSET_2=UPDATE_QUESTINFOSET_2
                 UPDATE_QUESTINFOSET_2=PINNEDQUEST_UPDATE_QUESTINFOSET_2_JUMPER
@@ -132,6 +136,13 @@ function PINNEDQUEST_ON_INIT(addon, frame)
         end,
         catch = function(error)PINNEDQUEST_ERROUT(error) end
     }
+end
+function PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER(frame)
+    if (OLD_QUEST_FRAME_OPEN ~= nil) then 
+        OLD_QUEST_FRAME_OPEN(frame) 
+    end
+    
+    PINNEDQUEST_QUEST_FRAME_OPEN(frame)
 end
 function PINNEDQUEST_SAVE_SETTINGS()
     g.personalsettingsFileLoc = string.format(
@@ -237,9 +248,8 @@ function PINNEDQUEST_UPDATE_QUESTINFOSET_2(frame, msg, check, updateQuestID)
 
 end
 
-function PINNEDQUEST_PQOVERLAY_INITFRAME()
+function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
 
-    local frame=ui.GetFrame("pinnedquest")
 
     local btnspq = frame:CreateOrGetControl("button", "showpq", 25, 90, 100, 40)
     btnspq:SetText("PQ設定")
@@ -325,7 +335,7 @@ function PINNEDQUEST_ON_CHECK_CHANGED(frame, ctrl)
 
 
 end
-function PINNEDQUEST_FPS_UPPATE(frame)
+function PINNEDQUEST_FPS_UPDATE(frame)
     --FPS UPDATE
     EBI_try_catch{
         try=function()
@@ -345,7 +355,7 @@ function PINNEDQUEST_3SEC(frame)
     --3SEC ACTION
     EBI_try_catch{
         try=function()
-            PINNEDQUEST_PQOVERLAY_INITFRAME()
+            
             PINNEDQUEST_INJECTCONTROLS()
 
         end,
