@@ -68,8 +68,8 @@
     "name" : "PinnedQuest",
     "file" : "pinnedquest",
     "extension" : "ipf",
-    "fileVersion" : "v0.1.2",
-    "releaseTag" : "pinnedquest-v0.1.2",
+    "fileVersion" : "v0.2.0",
+    "releaseTag" : "pinnedquest-v0.2.0",
     "unicode" : "📖",
     "description" : "興味のないクエストが一覧に表示されるのを防ぎます。また、クエストのParty共有が勝手に切り替わるのを防ぎます。",
     "tags" : [
@@ -164,22 +164,6 @@
     "tags" : [
       "warehouse",
       "item"
-    ]
-  },
-  {
-    "name" : "Lycanthropy Bugfix For Patch 250501",
-    "file" : "lycanthropypatch1",
-    "extension" : "ipf",
-    "fileVersion" : "v1.0.0",
-    "releaseTag" : "lycanthropypatch1-v1.0.0",
-    "unicode" : "📖",
-    "description" : "不具合修正のため無効化→パッチ250501でドルイドのライカンスロピー・シェイプシフティング・トランスフォーム・ソーサラーのオベイ・降りた時にクイックスロットが消えてしまうバグを暫定的に修正しました。",
-    "tags" : [
-      "bugfix",
-      "lycanthropy",
-      "shapeshifting",
-      "transform",
-      "druid"
     ]
   },
   {
