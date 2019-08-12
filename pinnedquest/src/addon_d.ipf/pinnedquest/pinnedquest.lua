@@ -101,7 +101,7 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             frame:SetEventScript(ui.LBUTTONUP, "PINNEDQUEST_END_DRAG")
             addon:RegisterMsg('GET_NEW_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('GAME_START_3SEC', 'PINNEDQUEST_3SEC')
-            addon:RegisterMsg('FPS_UPDATE', 'PINNEDQUEST_FPSUPDATE')
+            addon:RegisterMsg('FPS_UPDATE', 'PINNEDQUEST_FPS_UPDATE')
             addon:RegisterMsg('QUEST_UPDATE', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('AVANDON_QUEST', 'PINNEDQUEST_ENSUREQUEST')
             addon:RegisterMsg('QUEST_DELETED', 'PINNEDQUEST_ENSUREQUEST')
@@ -111,7 +111,7 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             addon:RegisterMsg('DIALOG_CLOSE', 'PINNEDQUEST_HOOKDIALOG_CLOSE');
             --addon:RegisterMsg('QUEST_UPDATE_', 'PINNEDQUEST_ENSUREQUEST')
             -- フレーム初期化処理
-            PINNEDQUEST_INIT_FRAME(frame)
+            PINNEDQUEST_INIT_FRAME()
             
             -- 再表示処理
             -- if g.settings.enable then
@@ -123,15 +123,12 @@ function PINNEDQUEST_ON_INIT(addon, frame)
             frame:Move(0, 0)
             frame:SetOffset(g.settings.position.x, g.settings.position.y)
             g.needtoinit = true
-            if (OLD_QUEST_FRAME_OPEN == nil) then
-                OLD_QUEST_FRAME_OPEN = QUEST_FRAME_OPEN
-                QUEST_FRAME_OPEN = PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER
-            end
             if (OLD_UPDATE_QUESTINFOSET_2 == nil)then
                 OLD_UPDATE_QUESTINFOSET_2=UPDATE_QUESTINFOSET_2
                 UPDATE_QUESTINFOSET_2=PINNEDQUEST_UPDATE_QUESTINFOSET_2_JUMPER
             end
             PINNEDQUEST_DBGOUT("INIT")
+           
         end,
         catch = function(error)PINNEDQUEST_ERROUT(error) end
     }
@@ -229,11 +226,7 @@ function PINNEDQUEST_UPDATE_QUESTINFOSET_2(frame, msg, check, updateQuestID)
 
                 return;
             end
-            local fadein=frame:GetFadeInManager()
-            fadein:Enable(false)
-            local fadeout=frame:GetFadeOutManager()
-            fadeout:Enable(false)
-            frame:ShowWindow(1);
+
         end,
 
         catch=function (error)
@@ -243,14 +236,11 @@ function PINNEDQUEST_UPDATE_QUESTINFOSET_2(frame, msg, check, updateQuestID)
     
 
 end
-function PINNEDQUEST_QUEST_FRAME_OPEN_JUMPER(frame)
-    if (OLD_QUEST_FRAME_OPEN ~= nil) then 
-        OLD_QUEST_FRAME_OPEN(frame) 
-    end
-    
-    PINNEDQUEST_QUEST_FRAME_OPEN(frame)
-end
-function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
+
+function PINNEDQUEST_PQOVERLAY_INITFRAME()
+
+    local frame=ui.GetFrame("pinnedquest")
+
     local btnspq = frame:CreateOrGetControl("button", "showpq", 25, 90, 100, 40)
     btnspq:SetText("PQ設定")
     btnspq:SetEventScript(ui.LBUTTONDOWN, "PINNEDQUEST_TOGGLE_FRAME")
@@ -305,17 +295,8 @@ function PINNEDQUEST_QUEST_FRAME_OPEN(frame)
     -- frameg:CreateOrGetControl("richtext","label8",400,120,100,20):SetText("{ol}前提")
     --PINNEDQUEST_UPDATELIST_QUEST(frameg)
 end
-function PINNEDQUEST_FPSUPDATE()
-    PINNEDQUEST_SHOWQUESTLOGFRAME();
-    local frame=ui.GetFrame("questinfoset_2")
-    local btnchange=frame:GetChild("btnchange")
-    if(btnchange==nil)then
-        PINNEDQUEST_INJECTCONTROLS();
-    end
-end
-function PINNEDQUEST_SHOWQUESTLOGFRAME()
-    ui.GetFrame("questinfoset_2"):ShowWindow(1)
-end
+
+
 function PINNEDQUEST_INIT_FRAME(frame)
     -- XMLに記載するとデザイン調整時にクライアント再起動が必要になるため、luaに書き込むことをオススメする
     -- フレーム初期化処理
@@ -344,18 +325,61 @@ function PINNEDQUEST_ON_CHECK_CHANGED(frame, ctrl)
 
 
 end
+function PINNEDQUEST_FPS_UPPATE(frame)
+    --FPS UPDATE
+    EBI_try_catch{
+        try=function()
+            local frm=ui.GetFrame("pqoverlay")
+            if(frm~=nil)then
+                frm:ShowWindow(1)
+            end
+        end,
+        catch=function(error)
+            PINNEDQUEST_ERROUT(error)
+        end
+    }
+
+   
+end
 function PINNEDQUEST_3SEC(frame)
     --3SEC ACTION
-    PINNEDQUEST_INJECTCONTROLS()
+    EBI_try_catch{
+        try=function()
+            PINNEDQUEST_PQOVERLAY_INITFRAME()
+            PINNEDQUEST_INJECTCONTROLS()
+
+        end,
+        catch=function(error)
+            PINNEDQUEST_ERROUT(error)
+        end
+    }
+
     --PINNEDQUEST_ENSUREQUEST()
     --ReserveScript("PINNEDQUEST_UPDATELIST_QUEST()",1)
    
 end
 function PINNEDQUEST_INJECTCONTROLS()
-    local frame=ui.GetFrame("questinfoset_2")
-    local gbox=frame:GetChild("member")
-    frame:SetAnimation("frameOpenAnim", "");
-	frame:SetAnimation("frameCloseAnim", "");
+    local frame=ui.GetFrame("pqoverlay")
+    if(frame==nil)then
+        frame=ui.CreateNewFrame("pqoverlay","pqoverlay")
+    end
+
+
+    -- reposition 
+    local questframe=ui.GetFrame("questinfoset_2")
+    if(questframe~=nil)then
+        frame:SetOffset(questframe:GetX(),questframe:GetY()-28)
+        frame:Resize(questframe:GetWidth(),700)
+    else
+        frame:SetOffset(1500,417-28)
+        frame:Resize(400,700)
+    end
+    frame:ShowWindow(1)
+    frame:SetLayerLevel(60)
+    frame:EnableHittestFrame(0)
+
+    local gbox=frame:CreateOrGetControl("groupbox","member",0,28,questframe:GetWidth(),questframe:GetHeight())
+    gbox:ShowWindow(0)
     gbox:SetOffset(0,28)
     local btnchange=frame:CreateOrGetControl("button","btnchange",0,0,24,24)
     tolua.cast(btnchange,"ui::CButton")
@@ -375,34 +399,47 @@ function PINNEDQUEST_INJECTCONTROLS()
     labelpq:SetEventScript(ui.LBUTTONUP,"PINNEDQUEST_REFRESH")
     local gboxpq=frame:CreateOrGetControl("groupbox","gboxpq",0,28,frame:GetWidth(),frame:GetHeight()-28-100)
     tolua.cast(gboxpq,"ui::CGroupBox")
-    gboxpq:EnableDrawFrame(0)
+    gboxpq:EnableDrawFrame(1)
     gboxpq:EnableResizeByParent(0)
     --デフォルトではOFF
     gboxpq:ShowWindow(0)
 end
 function PINNEDQUEST_SWAPGBOX()
-    local frame=ui.GetFrame("questinfoset_2")
-    local gbox=frame:GetChild("member")
-    local gboxpq=PINNEDQUEST_GETPQQUESTBOX()
-    local labelpq=frame:GetChild("labelpq")
-    if(gbox:IsVisible()==1)then
-        --PQ表示
-        gbox:ShowWindow(0)
-        gboxpq:ShowWindow(1)
-        labelpq:ShowWindow(1)
-        if(g.needtoinit)then
-            PINNEDQUEST_UPDATELIST_QUEST()
-            g.needtoinit=false
-        end
-    else
-        gbox:ShowWindow(1)
-        gboxpq:ShowWindow(0)
-        labelpq:ShowWindow(0)
-    end
+    EBI_try_catch{
+        try=function()
+            local frame=ui.GetFrame("pqoverlay")
+            local gbox=frame:GetChild("member")
+            local gboxpq=PINNEDQUEST_GETPQQUESTBOX()
+            local labelpq=frame:GetChild("labelpq")
+            if(gboxpq:IsVisible()==0)then
+                frame:EnableHittestFrame(0)
 
+                --PQ表示
+                --gbox:ShowWindow(0)
+                gboxpq:ShowWindow(1)
+                labelpq:ShowWindow(1)
+               
+                if(g.needtoinit)then
+                    PINNEDQUEST_UPDATELIST_QUEST()
+                    g.needtoinit=false
+                end
+                gboxpq:SetSkinName("chat_window_2")
+            else
+                frame:EnableHittestFrame(0)
+
+                --gbox:ShowWindow(0)
+                gboxpq:SetSkinName("None")
+                gboxpq:ShowWindow(0)
+                labelpq:ShowWindow(0)
+            end
+        end,
+        catch=function(error)
+            PINNEDQUEST_ERROUT(error)
+        end
+    }
 end
 function PINNEDQUEST_GETPQQUESTBOX()
-    local frame=ui.GetFrame("questinfoset_2")
+    local frame=ui.GetFrame("pqoverlay")
     return GET_CHILD(frame,"gboxpq","ui::CGroupBox")
 end
 function PINNEDQUEST_CALCQUESTRANK(aaa)
@@ -485,6 +522,7 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                     pass = false
                                 end
                             end
+
                             if(g.debugshowall)then
                                 pass=true
                             end
@@ -540,12 +578,22 @@ function PINNEDQUEST_UPDATELIST_QUEST(frame, lightweight)
                                         "QUEST_CLICK_INFO")
                                     pict:SetEventScriptArgNumber(
                                         ui.LBUTTONDOWN, questIES.ClassID)
+
                                     
                                     descraw:SetText(
                                         "{ol}" ..
                                         string.format("(Lv%d)%s",
                                             questIES.Level,
                                             questIES.Name))
+                                    local zoneName=""
+                                    local zoneIES = GetClass('Map', questIES.StartMap)
+                                    if zoneIES ~= nil then
+                                        zoneName = zoneIES.Name
+                                    else
+                                        zoneName = ScpArgMsg('IndunRewardItem_Empty')
+                                    end
+
+                                    -- descraw:SetTextTooltip("クエスト開始地域: "..zoneName)
                                     descraw:SetEventScript(ui.LBUTTONDOWN,
                                         "PINNEDQUEST_QUEST_CLICK_INFO")
                                     descraw:SetEventScriptArgNumber(
