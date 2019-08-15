@@ -468,7 +468,7 @@ function AWWARDROBE_UPDATE_DROPBOX()
             if(k~=L_("defaultvalue"))then
                 cbwardrobe:AddItem(count+1, k)
                 if (k == g.settings.defaultname) then
-                    selectindex = count
+                    selectindex = count+1
                 end
             end
             count = count + 1
@@ -498,7 +498,8 @@ function AWWARDROBE_UPDATE_DROPBOXAW()
                     if(k~=L_("defaultvalue"))then
                         acbwardrobe:AddItem(count+1, k)
                         if (k == g.personalsettings.defaultname) then
-                            selectindex = count
+                            AWWARDROBE_DBGOUT("match")
+                            selectindex = count+1
                         end
                     end
                     count = count + 1
