@@ -194,8 +194,8 @@
     "name" : "Legend ExpPotion Gauge",
     "file" : "legexppotiongauge",
     "extension" : "ipf",
-    "fileVersion" : "v0.2.0",
-    "releaseTag" : "legexppotiongauge-v0.2.0",
+    "fileVersion" : "v0.2.1",
+    "releaseTag" : "legexppotiongauge-v0.2.1",
     "unicode" : "📖",
     "description" : "レジェンド経験値ポーション（ファモカの試薬瓶）の経験値量を常時可視化します。",
     "tags" : [
