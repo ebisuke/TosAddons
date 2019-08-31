@@ -1,2 +1,2 @@
 $addonname="legexppotiongauge"
-$version="v0.1.2"
+$version="v0.2.0"
