@@ -186,9 +186,13 @@ function LEGEXPPOTIONGAUGE_SETINFO(slot, iesid, ivi)
                     gauge:SetBarColor(0xFF00FF00)
                     
                     txt:SetText("{ol}{s16}MAX")
+                    gauge:ShowWindow(0)
+                    txt:ShowWindow(0)
                 else
                     gauge:SetBarColor(0xFFFFFFFF)
                     txt:SetText(string.format("{ol}{s16}%d%%", math.floor(curexp * 100.0 / maxexp)))
+                    gauge:ShowWindow(1)
+                    txt:ShowWindow(1)
                 end
             
             end
