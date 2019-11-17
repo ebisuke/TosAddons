@@ -234,7 +234,7 @@ function AUTOITEMMANAGE_UPGRADE_SETTINGS()
 end
 function AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
     local upgraded=false
-    --1->2
+    --0->1
     if(g.personalsettings.version==nil or g.personalsettings.version==1)then
         CHAT_SYSTEM(L_("Csettingsupdt12"))
         g.personalsettings.enabled=true
@@ -243,6 +243,7 @@ function AUTOITEMMANAGE_UPGRADE_PERSONALSETTINGS()
         g.personalsettings.version=2
         upgraded=true
     end  
+    --1->2
     if(g.personalsettings.version==2)then
         CHAT_SYSTEM(L_("Csettingsupdt23"))
         g.personalsettings.enabled=true
@@ -700,7 +701,7 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
 
             slotset:SetColRow(7, 8)
             slotset:SetSlotSize(g.slotsize[1], g.slotsize[2])
-            slotset:EnableDrag(0)
+            slotset:EnableDrag(1)
             slotset:EnableDrop(1)
             slotset:EnablePop(1)
             slotset:SetSpc(0, 0)
@@ -1171,6 +1172,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                         slot:SetUserValue('clsid', tostring(item['clsid']))
                         slot:SetUserValue('count', tostring(item['count']))
                         slot:SetUserValue('iesid', tostring(item['iesid']))
+
                         -- アイコンを生成
                         local invcls = GetClassByType('Item', item['clsid'])
                         local useclsid=false
@@ -1246,7 +1248,9 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                                 slot:SetTextAlign("left","bottom")
                             end
                         end
-                        
+                        --アイコンにオプション情報をつける
+                        local icon=slot:GetIcon()
+                        icon:SetDumpArgNum(i+1)
                     end
                 end
             end,
@@ -1316,34 +1320,21 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
             AUTOITEMMANAGE_DBGOUT('dropped')
             local liftIcon = ui.GetLiftIcon()
             local liftframe = ui.GetLiftFrame():GetTopParentFrame()
+            local optionalarg = liftIcon:GetDumpArgNum()
             AUTOITEMMANAGE_DBGOUT("FRAMENAME:"..liftframe:GetName())
-            if(liftframe:GetName()==g.framename)then
-                -- 入れ替え
 
+            if(optionalarg~= 0)then
+                -- 入れ替え
+                local aimframe=ui.GetFrame("autoitemmanage")
                 local slot = tolua.cast(ctrl, 'ui::CSlot')
-                local iconInfo = liftIcon:GetInfo()
-                AUTOITEMMANAGE_DBGOUT("IESID "..tostring(iconInfo:GetIESID()))
-                local invitem = AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(iconInfo:GetIESID())
-                if iconInfo == nil or slot == nil or invitem == nil then
-                    AUTOITEMMANAGE_DBGOUT("GB")
-                    return
-                end
-                local itemobj = GetIES(invitem:GetObject())
+
                 --元スロットを探す
-                local slotseto=liftframe:GetChild("slt")
+                local slotseto=aimframe:GetChild("slt")
                 local slotset = tolua.cast(slotseto,"ui::CSlotSet")
                 local fromslot=nil
-                for i=0,slotset:GetSlotCount()-1 do
-                    local curslot=slotset:GetSlotByIndex(i)
-                    local cclsid=tonumber(curslot:GetUserValue("clsid"))
-                    local ciesid=curslot:GetUserValue("iesid")
-                    
-                    --まずiesidから
-                    if(ciesid==iconInfo:GetIESID() or cclsid==itemobj.ClassID)then
-                        fromslot=curslot
-                        break
-                    end
-                end
+
+                AUTOITEMMANAGE_DBGOUT("FOUND "..tostring(optionalarg-1))
+                fromslot=slotset:GetSlotByIndex(optionalarg-1-1)
                 if(fromslot~=nil)then
                     --移動してくる
                     local oclsid=slot:GetUserValue("clsid")
@@ -1352,13 +1343,19 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                     slot:SetUserValue("clsid",fromslot:GetUserValue("clsid"))
                     slot:SetUserValue("iesid",fromslot:GetUserValue("iesid"))
                     slot:SetUserValue("count",fromslot:GetUserValue("count"))
-                    slot:SetUserValue("clsid",oclsid)
-                    slot:SetUserValue("iesid",oiesid)
-                    slot:SetUserValue("count",ocount)
-
-                    --保存
+                    fromslot:SetUserValue("clsid",oclsid)
+                    fromslot:SetUserValue("iesid",oiesid)
+                    fromslot:SetUserValue("count",ocount)
+                    AUTOITEMMANAGE_DBGOUT("MOVED "..tostring(slot:GetSlotIndex()))
+                    --保存して反映
+                    
+                    AUTOITEMMANAGE_SAVETOSTRUCTURE()
                     AUTOITEMMANAGE_SAVE_SETTINGS()
+                    AUTOITEMMANAGE_LOADFROMSTRUCTURE()
+                else
+                    AUTOITEMMANAGE_DBGOUT("NO MOVE")
                 end
+
             else
                 --新規登録
 
@@ -1368,7 +1365,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                 AUTOITEMMANAGE_DBGOUT("IESID "..tostring(iconInfo:GetIESID()))
                 local invitem = AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(iconInfo:GetIESID())
 
-
+                
                 if iconInfo == nil or slot == nil or invitem == nil then
                     AUTOITEMMANAGE_DBGOUT("GB")
                     return
