@@ -1090,7 +1090,7 @@ function PINNEDQUEST_ENSUREQUEST_DELAYED()
                             --あった
                             PINNEDQUEST_DBGOUT("FOUND ALTER PARTY" .. tostring(kk))
                             g.personalsettings.pinnedparty[tostring(kk)] = true
-                            CHECK_PARTY_QUEST_ADD(ui.GetFrame("quest"), kk)
+                            SCR_QUEST_SHARE_PARTY_MEMBER(nil,nil,nil,kk)
                             break
                         end
                         --古いのは消す
