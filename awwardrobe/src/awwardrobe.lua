@@ -121,6 +121,9 @@ end
 function EBI_IsNoneOrNilOrWhitespace(val)
     return val == nil or val == "None" or val == "nil" or EBI_RemoveWhitespace(val) == ""
 end
+function AWWARDROBE_COMPARE(a,b)
+    return a.name<b.name
+end
 function AWWARDROBE_DEFAULTSETTINGS()
     return {
         version = g.version,
@@ -196,7 +199,11 @@ function AWWARDROBE_SAVE_SETTINGS()
     AWWARDROBE_DBGOUT("psn" .. g.personalsettingsFileLoc)
     acutil.saveJSON(g.personalsettingsFileLoc, g.personalsettings)
 end
-
+function AWWARDROBE_SORTING()
+    AWWARDROBE_DBGOUT("SORT")
+    table.sort( g.settings.wardrobe,AWWARDROBE_COMPARE)
+      
+end
 function AWWARDROBE_LOAD_SETTINGS()
     AWWARDROBE_DBGOUT("LOAD_SETTINGS " .. tostring(AWWARDROBE_GETCID()))
     g.settings = {}
@@ -230,6 +237,10 @@ function AWWARDROBE_LOAD_SETTINGS()
     AWWARDROBE_VALIDATE_SETTINGS()
     local upc = AWWARDROBE_UPGRADE_SETTINGS()
     local upp = AWWARDROBE_UPGRADE_PERSONALSETTINGS()
+
+
+    --ソート
+    AWWARDROBE_SORTING()
     -- ショートサーキット評価を回避するため、いったん変数に入れる
     if upc or upp then
         AWWARDROBE_SAVE_SETTINGS()
@@ -251,6 +262,19 @@ function AWWARDROBE_UPGRADE_SETTINGS()
         CHAT_SYSTEM("[AWW]Settings Verup 0->1")
         upgraded=true;
     end
+    if(g.settings.version==1)then
+        -- 配列化する
+        local tbl = {}
+        for k,d in pairs(g.settings.wardrobe) do
+            tbl[#tbl+1] = {name=k,data=d}
+        end
+        g.settings.wardrobe=tbl
+        AWWARDROBE_SORTING()
+      
+        g.settings.version=2
+        CHAT_SYSTEM("[AWW]Settings Verup 1->2")
+        upgraded=true;
+    end
     return upgraded
 end
 function AWWARDROBE_UPGRADE_PERSONALSETTINGS()
@@ -258,6 +282,11 @@ function AWWARDROBE_UPGRADE_PERSONALSETTINGS()
     if(not g.personalsettings.version or g.personalsettings.version==0)then
         g.personalsettings.version=1
         CHAT_SYSTEM("[AWW]PersonalSettings Verup 0->1")
+        upgraded=true
+    end
+    if(g.personalsettings.version==1)then
+        g.personalsettings.version=2
+        CHAT_SYSTEM("[AWW]PersonalSettings Verup 1->2")
         upgraded=true
     end
     return upgraded
@@ -346,14 +375,14 @@ function AWWARDROBE_ON_CHANGE()
         local awframe = ui.GetFrame("accountwarehouse")
         --選択しているものを取得
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
-        local selected = cbwardrobe:GetSelItemCaption()
+        local selected = cbwardrobe:GetSelItemIndex()+1
         local tbl = g.settings.wardrobe[selected]
         if(tbl)then
-            g.personalsettings.defaultname = selected
+            g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
             AWWARDROBE_DBGOUT(selected)
             AWWARDROBE_SAVE_SETTINGS()
                     --UNWEAR
-            AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl)
+            AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl.data)
         else
             ui.SysMsg(L_("alertplzselect"))
         end
@@ -364,14 +393,14 @@ function AWWARDROBE_ON_DEPOSIT()
         local awframe = ui.GetFrame("accountwarehouse")
         --選択しているものを取得
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
-        local selected = cbwardrobe:GetSelItemCaption()
+        local selected = cbwardrobe:GetSelItemIndex()+1
         local tbl = g.settings.wardrobe[selected]
         if(tbl)then
-            g.personalsettings.defaultname = selected
+            g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
             AWWARDROBE_DBGOUT(selected)
             AWWARDROBE_SAVE_SETTINGS()
             --UNWEAR
-            AWWARDROBE_UNWEAR_MATCHED(ui.GetFrame(g.framename), tbl)
+            AWWARDROBE_UNWEAR_MATCHED(ui.GetFrame(g.framename), tbl.data)
         else
             ui.SysMsg(L_("alertplzselect"))
         end
@@ -382,13 +411,13 @@ function AWWARDROBE_ON_WITHDRAW()
         local awframe = ui.GetFrame("accountwarehouse")
         --選択しているものを取得
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
-        local selected = cbwardrobe:GetSelItemCaption()
+        local selected = cbwardrobe:GetSelItemIndex()+1
         local tbl = g.settings.wardrobe[selected]
         if(tbl)then
-            g.personalsettings.defaultname = selected
+            g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
             AWWARDROBE_SAVE_SETTINGS()
             --WEAR
-            AWWARDROBE_WEAR_MATCHED(ui.GetFrame(g.framename), tbl)
+            AWWARDROBE_WEAR_MATCHED(ui.GetFrame(g.framename), tbl.data)
         else
             ui.SysMsg(L_("alertplzselect"))
         end
@@ -453,6 +482,7 @@ function AWWARDROBE_INITIALIZE_FRAME()
 end
 function AWWARDROBE_UPDATE_DROPBOX()
     AWWARDROBE_try(function()
+
         local frame = ui.GetFrame(g.framename)
         
         local cbwardrobe = GET_CHILD(frame, "cbwardrobe", "ui::CDropList")
@@ -462,13 +492,12 @@ function AWWARDROBE_UPDATE_DROPBOX()
         local count = 0
         local selectindex = nil
         AWWARDROBE_DBGOUT("def" .. tostring(g.settings.defaultname))
-        --1行目にdefaultの設定を入れておく
-        cbwardrobe:AddItem(0,L_("defaultvalue"))
-        for k, _ in pairs(g.settings.wardrobe) do
+
+        for k, d in pairs(g.settings.wardrobe) do
             if(k~=L_("defaultvalue"))then
-                cbwardrobe:AddItem(count+1, k)
-                if (k == g.settings.defaultname) then
-                    selectindex = count+1
+                cbwardrobe:AddItem(count+1, d.name)
+                if (d.name == g.settings.defaultname) then
+                    selectindex = count
                 end
                 count = count + 1
             end
@@ -480,27 +509,25 @@ function AWWARDROBE_UPDATE_DROPBOX()
         cbwardrobe:Invalidate()
     
     end)
-
 end
+
 function AWWARDROBE_UPDATE_DROPBOXAW()
     AWWARDROBE_try(function()
-            
+
             local awframe = ui.GetFrame("accountwarehouse")
             if (awframe:IsVisible() == 1) then
                 local acbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
                 
                 acbwardrobe:ClearItems()
-                --1行目にdefaultの設定を入れておく
-                acbwardrobe:AddItem(0,L_("defaultvalue"))
                 local count = 0
                 local selectindex = nil
                 AWWARDROBE_DBGOUT("def" .. tostring(g.personalsettings.defaultname))
-                for k, _ in pairs(g.settings.wardrobe) do
+                for k, d in pairs(g.settings.wardrobe) do
                     if(k~=L_("defaultvalue"))then
-                        acbwardrobe:AddItem(count+1, k)
-                        if (k == g.personalsettings.defaultname) then
+                        acbwardrobe:AddItem(count+1, d.name)
+                        if (d.name == g.personalsettings.defaultname) then
                             AWWARDROBE_DBGOUT("match"..tostring(count+1))
-                            selectindex = count+1
+                            selectindex = count
                         end
                         count = count + 1
                     end
@@ -519,24 +546,25 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
             --現在の設定を消す
             AWWARDROBE_DBGOUT("out")
             local cbwardrobe = GET_CHILD(frame, "cbwardrobe", "ui::CDropList")
-            local key = cbwardrobe:GetSelItemCaption()
-            if (key~="" and not g.settings.wardrobe[key]) then
+            local key = cbwardrobe:GetSelItemIndex()
+            if (key~="" and not g.settings.wardrobe[key+1]) then
                 ui.SysMsg(string.format(L_("alertnosettings"),key));
                 return
             end
             
-            g.settings.defaultname = key
+            g.settings.defaultname = g.settings.wardrobe[key+1].name
             
             local sound = not (shutup == true)
             if(key=="")then
                 AWWARDROBE_CLEARALLEQUIPS(frame)
             else
-                AWWARDROBE_LOADEQFROMSTRUCTURE(g.settings.wardrobe[key], sound)
+                AWWARDROBE_LOADEQFROMSTRUCTURE(g.settings.wardrobe[key+1].data, sound)
             end
             local ebname = GET_CHILD(frame, "ebname", "ui::CEditControl")
-            ebname:SetText(key)
+            ebname:SetText(g.settings.wardrobe[key+1].name)
     end)
 end
+
 function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
     AWWARDROBE_try(function()
             
@@ -551,7 +579,22 @@ function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
             local table = AWWARDROBE_SAVEEQTOSTRUCTURE()
             g.settings.wardrobe = g.settings.wardrobe or {}
             g.settings.defaultname = curname
-            g.settings.wardrobe[curname] = table
+
+            --インデックス探索
+            local fault=true
+            for i=1,#g.settings.wardrobe do
+                if(g.settings.wardrobe[i].name==curname) then
+                    g.settings.wardrobe[i] = {name=curname,data=table}
+                    fault=false
+                    break
+                end
+            end
+            if(fault==true)then
+                g.settings.wardrobe[#g.settings.wardrobe+1]= {name=curname,data=table}
+            end
+           
+            --ソート
+            AWWARDROBE_SORTING()
             ui.SysMsg(string.format(L_("alertsettingssaved"),curname));
             AWWARDROBE_SAVE_SETTINGS()
             AWWARDROBE_UPDATE_DROPBOX()
@@ -617,19 +660,30 @@ function AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN(frame)
             --現在の設定を消す
             local cbwardrobe = GET_CHILD(frame, "cbwardrobe", "ui::CDropList")
             local curname = cbwardrobe:GetText()
+            local curindex= cbwardrobe:GetSelItemIndex()+1
             if (curname == nil) then
                 --ui.SysMsg("[AWW]削除する設定がありません");
                 --pass
             else
                 if(curname==L_("defaultvalue")) then
                     ui.SysMsg(string.format(L_("alertcantdelete"),curname));
-                elseif (g.settings.wardrobe[curname]) then
-                    g.settings.wardrobe[curname] = nil
+                elseif (g.settings.wardrobe[curindex]) then
+                    g.settings.wardrobe[curindex].name=nil
+                    --詰める
+                    local tbl={}
+                    for k,d in ipairs(g.settings.wardrobe) do
+                        if(d.name~=nil)then
+                            tbl[#tbl+1]=d
+                            AWWARDROBE_DBGOUT("BBB")
+                        end
+                    end
+                    g.settings.wardrobe=tbl
                     ui.SysMsg(string.format(L_("alertdeletesettings"),curname));
                 else
                     ui.SysMsg(string.format(L_("alertnosettings"),curname));
                 end
             end
+            AWWARDROBE_SAVE_SETTINGS()
             AWWARDROBE_UPDATE_DROPBOX()
             AWWARDROBE_UPDATE_DROPBOXAW()
     end)
