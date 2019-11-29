@@ -1,7 +1,7 @@
 ﻿$addonname="awwardrobe"
 $emoji="📖"
 $prefix="__"
-$version="v0.1.3"
+$version="v0.2.0"
 
 if (!(Test-Path bin)) {
     mkdir bin 
