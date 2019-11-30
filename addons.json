@@ -190,6 +190,23 @@
       "legend",
       "exppotion"
     ]
+
+  },
+  {
+    "name" : "CampChef",
+    "file" : "campchef",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "campchef-v0.0.1",
+    "unicode" : "📖",
+    "description" : "キッチンの調理及び材料調達を簡単にします。",
+    "tags" : [
+      "squire",
+      "camp",
+      "kitchen"
+      
+    ]
+
   }
 
 ]
