@@ -441,9 +441,9 @@ function CAMPCHEF_CALCULATEINGREDIENTS(isreserve)
                     cart[itemCls.ClassID]=0
                 end
                 if(isreserve==false)then
-                    cart[itemCls.ClassID]=itemCount*g.settings.foods[i+1].requires
+                    cart[itemCls.ClassID]=cart[itemCls.ClassID]+itemCount*g.settings.foods[i+1].requires
                 else
-                    cart[itemCls.ClassID]=itemCount*g.settings.foods[i+1].reserve
+                    cart[itemCls.ClassID]=cart[itemCls.ClassID]+itemCount*g.settings.foods[i+1].reserve
                 end
             end
         end
