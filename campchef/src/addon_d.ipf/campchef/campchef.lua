@@ -259,7 +259,7 @@ function CAMPCHEF_INITFOODFRAME(frame)
             label=frame:CreateOrGetControl("richtext","label1",200,90,90,30)
             label:SetText(L_"numberofcraft")
             label:SetFontName("white_20_ol");
-            label=frame:CreateOrGetControl("richtext","label2",320,90,90,30)
+            label=frame:CreateOrGetControl("richtext","label2",360,90,90,30)
             label:SetText(L_"numberofreserve")
             label:SetFontName("white_20_ol");
             local labelfood=frame:CreateOrGetControl("richtext","labelfood"..tostring(i),20,90+i*30,100,30)
