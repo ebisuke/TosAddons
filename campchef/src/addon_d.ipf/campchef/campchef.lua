@@ -16,7 +16,6 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "campchef"
 g.debug = false
-g.colo=nil
 g.handle=nil
 g.interlocked=false
 g.currentIndex=1
@@ -260,7 +259,7 @@ function CAMPCHEF_INITFOODFRAME(frame)
             label=frame:CreateOrGetControl("richtext","label1",200,90,90,30)
             label:SetText(L_"numberofcraft")
             label:SetFontName("white_20_ol");
-            label=frame:CreateOrGetControl("richtext","label2",300,90,90,30)
+            label=frame:CreateOrGetControl("richtext","label2",320,90,90,30)
             label:SetText(L_"numberofreserve")
             label:SetFontName("white_20_ol");
             local labelfood=frame:CreateOrGetControl("richtext","labelfood"..tostring(i),20,90+i*30,100,30)
@@ -352,7 +351,10 @@ function CAMPCHEF_COOKING()
             --作成済みの数を調べる
             local tableInfo = session.camp.GetCurrentTableInfo();
             local foodItem = tableInfo:GetFoodItem(i-1);
-            local remain=foodItem.remainCount
+            local remain=0
+            if(foodItem~=nil)then
+                remain=foodItem.remainCount
+            end
             local cnt=g.settings.foods[i].requires-remain
             if(cnt>0)then
                 --順番に作ってく
@@ -391,7 +393,7 @@ function  CAMPCHEF_ON_FOOD_ADD_SUCCESS(frame)
     if(g.interlocked)then
         CAMPCHEF_NEXT(frame)
     end
-	ui.SysMsg(ClMsg("MakingFoodIsCompleted"));
+	--ui.SysMsg(ClMsg("MakingFoodIsCompleted"));
 end
 
 function CAMPCHEF_DOBUYOUT(frame)
