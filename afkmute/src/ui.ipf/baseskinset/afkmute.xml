@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="afkmute_buttons">
+		<image name="btn_afkmute_off" file="\skin\afkmuteoff.tga" imgrect="0 0 40 20"/>
+		<image name="btn_afkmute_on" file="\skin\afkmuteon.tga" imgrect="0 0 40 20"/>
+	</imagelist>
+</skinset>

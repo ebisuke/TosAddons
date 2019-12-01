@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="afkmute" x="0" y="0" width="40" height="20" create="open">
+	<draw drawtitlebar="false" drawframe="true"/>
+	<!-- <skin frameskin="test_frame_low"/> -->
+    <frame layout_gravity="left top" scale_align="left top"/>
+	<input moveable="true" hittestframe="true" moveintitlebar="false"/>
+	<layer layerlevel="100"/>
+	<option closebutton="false" hideable="false" />
+ 	<skin frameskin="None"/> 
+
+	<controls>
+	</controls>
+</uiframe>
