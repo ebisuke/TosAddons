@@ -92,12 +92,12 @@ end
 
 
 function AFKMUTE_LOAD_SETTINGS()
-    CAMPCHEF_DBGOUT("LOAD_SETTING")
+    AFKMUTE_DBGOUT("LOAD_SETTING")
     g.settings = {foods={}}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
-        CAMPCHEF_DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        AFKMUTE_DBGOUT(string.format('[%s] cannot load setting files', addonName))
         g.settings = {x=300,y=300,volume=100,mute=false}
     else
         --設定ファイル読み込み成功時処理
