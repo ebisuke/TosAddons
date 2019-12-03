@@ -209,24 +209,11 @@
 
   },
   {
-    "name" : "Legend ExpPotion Activator",
-    "file" : "legexppotionactivator",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "legexppotionactivator-v0.0.2",
-    "unicode" : "📖",
-    "description" : "そのうち消します→レジェンド経験値ポーション（ファモカの試薬瓶）をマップ読み込み時に活性化します。",
-    "tags" : [
-      "legend",
-      "exppotion"
-    ]
-  },
-  {
     "name" : "Afkmute",
     "file" : "afkmute",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "afkmute-v0.0.2",
+    "fileVersion" : "v0.0.3",
+    "releaseTag" : "afkmute-v0.0.3",
     "unicode" : "📖",
     "description" : "一時的に音を消したいときに",
     "tags" : [

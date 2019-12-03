@@ -141,7 +141,7 @@ function AFKMUTE_ON_INIT(addon, frame)
             --ドラッグ
             frame:SetEventScript(ui.LBUTTONUP, "AFKMUTE_END_DRAG")
             
-            --AFKMUTE_INITFRAME(frame)
+            AFKMUTE_SHOW(g.frame)
             
             
 
