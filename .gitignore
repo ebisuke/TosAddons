@@ -1,5 +1,8 @@
 */bin/*
 */obj/*
 /.*/*
-pseudoforecast/converter/skill_bytool.xml
+.idea
+pseudoforecast/converter/xml/*
 tmp.ipf
+pseudoforecast_enhanced/converter/xml/*
+

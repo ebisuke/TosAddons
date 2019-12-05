@@ -34,26 +34,26 @@ for filename in filelist:
         if mode=="MainSkl":
             #print(str(pick(frm.attrib,"Name")))
             return {
-                "timestart":int(pick(frm.attrib,"Time")),
-                "timeend":int(pick(frm.attrib,"AniTime")),
-                "angle":float(pick(frm.attrib,"SklAngle")),
-                "width":float(pick(frm.attrib,"Width")),
-                "length":float(pick(frm.attrib,"Length")),
+                "timestart":pick(frm.attrib,"Time"),
+                "timeend":pick(frm.attrib,"AniTime"),
+                "angle":pick(frm.attrib,"SklAngle"),
+                "width":pick(frm.attrib,"Width"),
+                "length":pick(frm.attrib,"Length"),
                 "typ": patfrm[pick(frm.attrib, "Type")],
-                "rotate":float(pick(frm.attrib,"RotAngle")),
-                "dist": float(pick(frm.attrib, "Dist")),
-                "postype": int(pick(frm.attrib, "PosType")),
+                "rotate":pick(frm.attrib,"RotAngle"),
+                "dist": pick(frm.attrib, "Dist"),
+                "postype": pick(frm.attrib, "PosType"),
                 "mode":mode
             }
         elif mode=="Scp":
             return {
                 "timestart":0,
                 "timeend":1,
-                "angle": float(pick(frm.attrib, "SklAngle")),
-                "width": float(pick(frm.attrib, "Width")),
-                "length": float(pick(frm.attrib, "Length")),
+                "angle":pick(frm.attrib,"Angle"),
+                "width":pick(frm.attrib,"Width"),
+                "length":pick(frm.attrib,"Length"),
                 "typ": patetc[pick(frm.attrib, "Type")],
-                "rotate":float(pick(frm["Pos"].attrib,"RotAngle")),
+                "rotate":pick(frm["Pos"].attrib,"RotAngle"),
                 "mode":mode
             }
         return {}
@@ -68,12 +68,11 @@ for filename in filelist:
             if(hitlist):
                 frms = hitlist.findall("Frame")
                 for frm in frms:
-                    name =  skill.attrib["Name"]
-                    name=name.replace("-","_")
-                    if(not name in PSEUDOFORECAST_DATA):
-                        PSEUDOFORECAST_DATA[name]=[]
 
-                    PSEUDOFORECAST_DATA[name].append(skilltable(frm,"MainSkl"))
+                    if(not skill.attrib["Name"] in PSEUDOFORECAST_DATA):
+                        PSEUDOFORECAST_DATA[skill.attrib["Name"]]=[]
+
+                    PSEUDOFORECAST_DATA[skill.attrib["Name"]].append(skilltable(frm,"MainSkl"))
             # etclist = mainskil.find("EtcList")
             # if (etclist):
             #     scps = etclist.findall("Scp")
