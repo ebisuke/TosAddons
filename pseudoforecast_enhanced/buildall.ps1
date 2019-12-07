@@ -1,7 +1,7 @@
 ﻿$addonname="pseudoforecast"
 $emoji="📖"
 $prefix="__"
-$version="v0.2.0"
+$version="v0.2.10001"
 
 if (!(Test-Path bin)) {
     mkdir bin 

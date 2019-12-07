@@ -147,7 +147,9 @@ function PSEUDOFORECAST_SKILL(skillclsid)
 			--iesから読み込む
 			local class = GetClassByType("Skill", skillclsid)
 			--SCR_GET_SKL_CAST(class)
-			local xmlskls=PSEUDOFORECAST_DATA[class.ClassName]
+			local className=string.gsub(class.ClassName,"-","_")
+
+			local xmlskls=PSEUDOFORECAST_DATA[className]
 			local actor = GetMyActor()
 			local pos = actor:GetPos()
 			local angle = fsmactor.GetAngle(actor)
