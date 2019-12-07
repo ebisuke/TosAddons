@@ -91,11 +91,11 @@ function PUT_ACCOUNT_ITEM_TO_WAREHOUSE_BY_INVITEM(frame, invItem, slot, fromFram
                     end
                     
                     item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), tostring(invItem.count), frame:GetUserIValue("HANDLE"));
-                    new_add_item[#new_add_item + 1] = invItem:GetIESID()
+                    --new_add_item[#new_add_item + 1] = invItem:GetIESID()
                     
-                    if geItemTable.IsStack(obj.ClassID) == 1 then
-                        new_stack_add_item[#new_stack_add_item + 1] = obj.ClassID
-                    end
+                    --if geItemTable.IsStack(obj.ClassID) == 1 then
+                    --   new_stack_add_item[#new_stack_add_item + 1] = obj.ClassID
+                    --end
                 end
             else
                 if slot ~= nil then
