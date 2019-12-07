@@ -20,9 +20,23 @@ PSEUDOFORECAST_DATA = {
         }
 
 }
+PSEUDOFORECAST_PADDATA = {
+        
+        example = {
+            {timestart = 0, timeend = 0, angle = 0, width = 0, length = 0, typ = "FAN"},
+            {timestart = 0, timeend = 0, angle = 0, width = 0, length = 0, typ = "CIRCLE"}
+        }
+
+}
+if (PSEUDOFORECASTPADSKILL_rawdata ~= nil and PSEUDOFORECAST_rawdata ~= nil) then
+    PSEUDOFORECAST_LOADSKILLS()
+    
+    PSEUDOFORECAST_ENABLE = true
+end
 PSEUDOFORECAST_ORIGIN = {x = 0, y = 0, z = 0}
 PSEUDOFORECAST_ANGLE = 0
 PSEUDOFORECAST_TRACKING = {}
+PSEUDOFORECAST_TRACK_PAD = {}
 -- ライブラリ読み込み
 function PSEUDOFORECAST_ON_INIT(addon, frame)
     EBI_try_catch{
@@ -47,16 +61,21 @@ function PSEUDOFORECAST_ON_INIT(addon, frame)
     }
 
 end
+
 function PSEUDOFORECAST_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
+            -- if (not PSEUDOFORECAST_ENABLE) then
+            --     return
+            -- end
             local pc = GetMyPCObject();
-            
+            local myActor = GetMyActor();
             if pc ~= nil then
                 local enemyList, enemyCount = SelectObject(pc, 300, 'ENEMY');
                 
                 if enemyCount > 0 then
                     for i = 1, enemyCount do
+                    
                         local enemy = world.GetActor(GetHandle(enemyList[i]));
                         
                         local track = PSEUDOFORECAST_TRACKING[enemy:GetHandleVal()]
@@ -64,19 +83,71 @@ function PSEUDOFORECAST_ON_TIMER(frame)
                             track = {}
                         end
                         local curskill = enemy:GetUseSkill()
-                        if (curskill == nil or curskill==0) then
-
+                        if (curskill == nil or curskill == 0) then
+                            
                             PSEUDOFORECAST_TRACKING[enemy:GetHandleVal()] = nil
                         else
                             if (track.skill == nil) then
+                                CHAT_SYSTEM("ENEMYSKILL"..curskill)
                                 PSEUDOFORECAST_ENEMYSKILL(enemy, curskill)
-	
+                            
                             end
                             track.skill = curskill
                             PSEUDOFORECAST_TRACKING[enemy:GetHandleVal()] = track
                         end
+                        
                     end
                 end
+                for handleval, data in pairs(PSEUDOFORECAST_TRACK_PAD) do
+                    local actor = data.actor
+                   
+                    local padList = SelectPad_C(actor, data.skill, actor:GetPos().x, actor:GetPos().y, actor:GetPos().z, 400, 'ALL');
+                    if (#padList > 0) then
+                        CHAT_SYSTEM("PAD")
+                        for i = 1, #padList do
+                            
+                            local pad = tolua.cast(padList[i], "CClientPadSkill");
+                            local guid = pad:GetGuid();
+                            
+                            if (data.pads[guid] == nil) then
+                                data.pads[guid] = pad
+                                PSEUDOFORECAST_PADSKILL(actor,pad, data.skill)
+                               
+                            end
+                        end
+                    end
+                    data.waittime = data.waittime - 1
+                    if (data.waittime <= 0) then
+                        CHAT_SYSTEM("EOF")
+                        PSEUDOFORECAST_TRACK_PAD[handleval] = nil
+                    else
+                        PSEUDOFORECAST_TRACK_PAD[handleval] = data
+                    end
+                end
+            -- CHAT_SYSTEM("TESAT")
+            -- for skillname,data in pairs(PSEUDOFORECAST_PADDATA) do
+            --     local padList = SelectPad_C(myActor, skillname,myActor:GetPos().x,myActor:GetPos().y,myActor:GetPos().z, 400,'ALL');
+            --     if #padList > 0 then
+            --         print("PAD")
+            --         for i = 1, #padList do
+            --             local pad = tolua.cast(padList[1], "CClientPadSkill");
+            --             local guid=pad:GetGuid();
+            --             local track = PSEUDOFORECAST_TRACKING[pad:GetGuid()]
+            --             if (track == nil) then
+            --                 track = {}
+            --             end
+            --             if (skillname == nil ) then
+            --                 PSEUDOFORECAST_TRACKING[guid] = nil
+            --             else
+            --                 if (track.skill == nil) then
+            --                     PSEUDOFORECAST_PADSKILL(pad, skillname)
+            --                 end
+            --                 track.skill = skillname
+            --                 PSEUDOFORECAST_TRACKING[guid] = track
+            --             end
+            --         end
+            --     end
+            -- end
             end
         end,
         catch = function(error)
@@ -120,7 +191,18 @@ function PSEUDOFORECAST_LOADSKILLS()
             local t = data
             
             PSEUDOFORECAST_DATA = t
-        
+            local succ, _ = pcall(dofile, "../addons/pseudoforecast/padskills.lua")
+            if (not succ) then
+                --succ,_=pcall(dofile,"skills.lua")
+                if (not PSEUDOFORECASTPADSKILL_rawdata) then
+                    CHAT_SYSTEM("FORECASTPADDATA LOADING FAILURE")
+                    return
+                
+                end
+                data = PSEUDOFORECASTPADSKILL_rawdata
+            end
+            t = data
+            PSEUDOFORECAST_PADDATA = t
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
@@ -194,14 +276,14 @@ function PSEUDOFORECAST_SKILL(skillclsid)
             local angle = fsmactor.GetAngle(actor)
             PSEUDOFORECAST_ORIGIN = {x = pos.x, y = pos.y, z = pos.z}
             PSEUDOFORECAST_ANGLE = angle
-            
+            CHAT_SYSTEM(className)
             if (xmlskls) then
                 if (class.Target ~= "Actor") then
                     for i = 1, #xmlskls do
                         local xmlskl = xmlskls[i]
-                        --CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
+                        CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
                         ReserveScript(string.format('PSEUDOFORECAST_DELAYED_SKILLACTION("%s",%d)',
-                            class.ClassName, i), xmlskl.timestart / 1000.0)
+                            class.ClassName, i), math.max(0.01,xmlskl.timestart / 500.0))
                     end
                 end
             end
@@ -213,42 +295,34 @@ function PSEUDOFORECAST_SKILL(skillclsid)
     }
 
 end
-function PSEUDOFORECAST_ENEMYSKILL(actor, skillclsid)
+function PSEUDOFORECAST_PADSKILL(actor,pad, className)
     EBI_try_catch{
         try = function()
             
             --xml(lua)から読み込む
-			local duration = 1
+            local duration = 1
             --iesから読み込む
-			local class = GetClassByType("Skill", skillclsid)
-			if(class==nil)then
-
-				return
-			end
+            CHAT_SYSTEM("PAD CREATE")
             --SCR_GET_SKL_CAST(class)
-            local className = string.gsub(class.ClassName, "-", "_")
             
-            local xmlskls = PSEUDOFORECAST_DATA[className]
-            local pos = actor:GetPos()
+            local xmlskls = PSEUDOFORECAST_PADDATA[className]
+            local pos = pad:GetPos()
             local angle = fsmactor.GetAngle(actor)
             PSEUDOFORECAST_ORIGIN = {x = pos.x, y = pos.y, z = pos.z}
             PSEUDOFORECAST_ANGLE = angle
-
-			if (xmlskls) then
-
-				--if (class.Target ~= "Actor") then
-
-                    for i = 1, #xmlskls do
-                        local xmlskl = xmlskls[i]
-						--CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
-
-                        PSEUDOFORECAST_ENEMYSKILLACTION(actor, class.ClassName, i)
-                    end
+            
+            if (xmlskls) then
                 
-                
-                --end
-	
-			end
+                --if (class.Target ~= "Actor") then
+                for i = 1, #xmlskls do
+                    local xmlskl = xmlskls[i]
+                    CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
+                    PSEUDOFORECAST_PADSKILLACTION(actor,pad, className, i)
+                end
+            
+            
+            --end
+            end
         
         end,
         
@@ -258,13 +332,93 @@ function PSEUDOFORECAST_ENEMYSKILL(actor, skillclsid)
     }
 
 end
-function PSEUDOFORECAST_ENEMYSKILLACTION(actor, classname, index)
+function PSEUDOFORECAST_TRACK_PADSKILL(actor, skillname)
+    EBI_try_catch{
+        try = function()
+            CHAT_SYSTEM("TRACK PAD"..skillname)
+            PSEUDOFORECAST_TRACK_PAD[actor:GetHandleVal()] = {
+                skill = skillname,
+                actor = actor,
+                pads = {},
+                waittime = 1000
+            }
+        end,
+        catch = function(error)
+            CHAT_SYSTEM(error)
+        end
+    }
+end
+function PSEUDOFORECAST_ENEMYSKILL(actor, skillclsid)
+    EBI_try_catch{
+        try = function()
+            
+            --xml(lua)から読み込む
+            local duration = 1
+            --iesから読み込む
+            local class = GetClassByType("Skill", skillclsid)
+            if (class == nil) then
+                
+                return
+            end
+            --SCR_GET_SKL_CAST(class)
+            local className = string.gsub(class.ClassName, "-", "_")
+            
+            local xmlskls = PSEUDOFORECAST_DATA[className]
+            local pos = actor:GetPos()
+            local angle = fsmactor.GetAngle(actor)
+            PSEUDOFORECAST_ORIGIN = {x = pos.x, y = pos.y, z = pos.z}
+            PSEUDOFORECAST_ANGLE = angle
+            
+            if (xmlskls) then
+                
+                --if (class.Target ~= "Actor") then
+                for i = 1, #xmlskls do
+                    local xmlskl = xmlskls[i]
+                    --CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
+                    PSEUDOFORECAST_SKILLACTION(actor, class.ClassName, i)
+                end
+            
+            
+            --end
+            end
+        
+        end,
+        
+        catch = function(error)
+            CHAT_SYSTEM(error)
+        end
+    }
+
+end
+function PSEUDOFORECAST_PADSKILLACTION(actor,pad, classname, index)
+    local xmlskl = PSEUDOFORECAST_PADDATA[classname][index]
+    local duration =0.5
+    --local duration = math.max(0.5, (xmlskl.timeend - xmlskl.timestart) / 1000.0)
+    local push = xmlskl.length
+    CHAT_SYSTEM("SHOW PAD "..classname.."/"..tostring(index))
+    if (tonumber(xmlskl.postype) == 1) then
+        push = 0
+    end
+    
+    if (xmlskl.typ == "Square") then
+        PSEUDOFORECAST_DRAWSQUARE_FROMACTOR(pad, PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.width,
+            xmlskl.length, 0, xmlskl.rotate * 180.0 / math.pi, duration)
+    elseif (xmlskl.typ == "Circle") then
+        PSEUDOFORECAST_DRAWPOS_FROMACTOR(pad, PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.width, push, xmlskl.rotate, duration)
+    elseif (xmlskl.typ == "Fan") then
+        PSEUDOFORECAST_DRAWFAN_FROMACTOR(pad, PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.length,
+            xmlskl.angle * 180.0 / math.pi * 4, 0, (xmlskl.rotate) * 180.0 / math.pi, duration)
+    end
+
+end
+function PSEUDOFORECAST_SKILLACTION(actor, classname, index)
     local xmlskl = PSEUDOFORECAST_DATA[classname][index]
     local duration = math.max(0.5, (xmlskl.timeend - xmlskl.timestart) / 1000.0)
     local push = xmlskl.length
-    if (xmlskl.timestart % 10 == 9) then
-        return
-    end
+    CHAT_SYSTEM("SHOW "..classname.."/"..tostring(index))
+  
+
+    
     if (tonumber(xmlskl.postype) == 1) then
         push = 0
     end
@@ -279,29 +433,14 @@ function PSEUDOFORECAST_ENEMYSKILLACTION(actor, classname, index)
         PSEUDOFORECAST_DRAWFAN_FROMACTOR(actor, PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.length,
             xmlskl.angle * 180.0 / math.pi * 4, 0, (xmlskl.rotate) * 180.0 / math.pi, duration)
     end
-
+    
+    dataaa=xmlskl
+    if (xmlskl.scptype == "MONSKL_CRE_PAD" or xmlskl.scptype == "MSL_PAD_THROW") then
+        PSEUDOFORECAST_TRACK_PADSKILL(actor, xmlskl.pad)
+    end
 end
 function PSEUDOFORECAST_DELAYED_SKILLACTION(classname, index)
-    local xmlskl = PSEUDOFORECAST_DATA[classname][index]
-    local duration = math.max(0.5, (xmlskl.timeend - xmlskl.timestart) / 1000.0)
-    local push = xmlskl.length
-    if (xmlskl.timestart % 10 == 9) then
-        return
-    end
-    if (tonumber(xmlskl.postype) == 1) then
-        push = 0
-    end
-    
-    if (xmlskl.typ == "Square") then
-        
-        PSEUDOFORECAST_DRAWSQUARE_FROMMYACTOR(PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.width,
-            xmlskl.length, 0, xmlskl.rotate * 180.0 / math.pi, duration)
-    elseif (xmlskl.typ == "Circle") then
-        PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.width, push, xmlskl.rotate, duration)
-    elseif (xmlskl.typ == "Fan") then
-        PSEUDOFORECAST_DRAWFAN_FROMMYACTOR(PSEUDOFORECAST_ORIGIN, PSEUDOFORECAST_ANGLE, xmlskl.length,
-            xmlskl.angle * 180.0 / math.pi * 4, 0, (xmlskl.rotate) * 180.0 / math.pi, duration)
-    end
+    PSEUDOFORECAST_SKILLACTION(GetMyActor(), classname, index)
 
 end
 function PSEUDOFORECAST_DRAWFAN_IMPL(x, y, z, ampx, ampy, length, arcangle)
@@ -367,7 +506,7 @@ function PSEUDOFORECAST_DRAWPOS_FROMMYACTOR(origin, oangle, radius, push, rotate
     PSEUDOFORECAST_DRAWPOS(pos.x + push * math.cos(angle / 180 * math.pi), pos.y + PSEUDOFORECAST_YOFFSET,
         pos.z + push * math.sin(angle / 180 * math.pi), radius, duration)
 end
-function PSEUDOFORECAST_DRAWPOS_FROMACTOR(actor,origin, oangle, radius, push, rotate, duration)
+function PSEUDOFORECAST_DRAWPOS_FROMACTOR(actor, origin, oangle, radius, push, rotate, duration)
     
     local pos = origin
     --local angle = fsmactor.GetAngle(actor)
