@@ -15,7 +15,7 @@ local function startswith(String, Start)
 end
 local acutil = require('acutil')
 g = {}
-g.debug = true
+g.debug = false
 g.waitforend = nil
 g.totalcooldown = nil
 g.cooldown=nil
@@ -251,7 +251,7 @@ function ASFSOS_SETINFO(slot, clsid)
         if (skillInfo == nil) then
             if (g.skillinfo ~= nil and g.totalcooldown~=nil) then
                 if(g.currentcooldown>0)then
-                    g.currentcooldown=math.max(0,g.currentcooldown-500)
+                    
                     txtcd:SetText("{ol}{#FFFFFF}{s18}" .. string.format("%d", g.currentcooldown/1000))
                     txtcd:ShowWindow(1)
                 else
@@ -272,11 +272,14 @@ function ASFSOS_CLEARSLOT(slot)
 end
 function ASFSOS_UPDATE()
     ASFSOS_UPDATE_FORKEYBOARD()
+    if(g.currentcooldown>0)then
+        g.currentcooldown=math.max(0,g.currentcooldown-500)
+    end
     if (g.waitforend ~= nil) then
         local actor = GetMyActor()
         local skillId = actor:GetUseSkill()
         if (skillId ~= g.waitforend) then
-            ReserveScript("quickslot.SwapWeapon()",0.2)
+            ReserveScript("quickslot.SwapWeapon()",0.5)
             g.waitforend=nil
         end
     end
@@ -327,7 +330,7 @@ function ASFSOS_ICON_USE(object, reAction)
                         g.waitforend = valid.clsid
                         g.clsid=valid.clsid
                         quickslot.SwapWeapon()
-                        ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.2)
+                        ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.5)
                         
                         return true
                     end
