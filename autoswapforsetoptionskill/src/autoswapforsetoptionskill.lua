@@ -1,4 +1,3 @@
-
 local function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
@@ -18,7 +17,7 @@ g = {}
 g.debug = false
 g.waitforend = nil
 g.totalcooldown = nil
-g.cooldown=nil
+g.cooldown = nil
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -68,7 +67,7 @@ local triggerlist = {
 }
 
 function ASFSOS_HOOK()
-
+    
     acutil.setupHook(ASFSOS_ICON_USE_JUMPER, "ICON_USE")
     acutil.setupHook(ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE, "QUICKSLOTNEXPBAR_SLOT_USE")
 -- if (OLD_QUICKSLOTNEXPBAR_SLOT_USE == nil and QUICKSLOTNEXPBAR_SLOT_USE ~= ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE) then
@@ -88,7 +87,7 @@ function AUTOSWAPFORSETOPTIONSKILL_ON_INIT(addon, frame)
             addon:RegisterMsg('GAME_START_3SEC', 'ASFSOS_3SEC');
             timer:Start(0.5);
             frame:ShowWindow(1)
-          
+        
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
@@ -98,6 +97,7 @@ end
 function ASFSOS_3SEC()
     ASFSOS_HOOK()
 end
+
 function ASFSOS_GETVALID()
     return EBI_try_catch{
         try = function()
@@ -117,23 +117,24 @@ function ASFSOS_GETVALID()
                 end
             end
             if (setprefix == nil) then
-                
                 return nil
             end
-            local setcount = 0
-            for i = 0, cnt - 1 do
-                local equipItem = equipItemList:GetEquipItemByIndex(i);
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot);
-                if spotName ~= nil then
-                    local equipItemObj = GetIES(equipItem:GetObject());
-                    if spotName ~= "LH" and spotName ~= "RH" and equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) then
-                        local prefix = TryGetProp(equipItemObj, "LegendPrefix")
-                        if (setprefix == prefix) then
-                            setcount = setcount + 1
-                        end
-                    end
-                end
-            end
+            local setcount = 5
+            -- local setcount = 0
+            -- for i = 0, cnt - 1 do
+            --     local equipItem = equipItemList:GetEquipItemByIndex(i);
+            --     local spotName = item.GetEquipSpotName(equipItem.equipSpot);
+            --     if spotName ~= nil then
+            --         local equipItemObj = GetIES(equipItem:GetObject());
+            --         if spotName ~= "LH" and spotName ~= "RH" and equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) then
+            --             local prefix = TryGetProp(equipItemObj, "LegendPrefix")
+            --             if (prefix ~= nil and prefix ~= "") then
+            --                 setcount = setcount + 1
+            --                 setprefix = prefix
+            --             end
+            --         end
+            --     end
+            -- end
             --スワップをカウント
             local slot = {quickslot.GetSwapWeaponGuid(0), quickslot.GetSwapWeaponGuid(1), quickslot.GetSwapWeaponGuid(2), quickslot.GetSwapWeaponGuid(3)}
             for i = 1, 4 do
@@ -149,8 +150,9 @@ function ASFSOS_GETVALID()
                         local equipItemObj = GetIES(equipItem:GetObject());
                         
                         local prefix = TryGetProp(equipItemObj, "LegendPrefix")
-                        if (setprefix == prefix) then
+                        if (prefix ~= nil and prefix ~= "") then
                             setcount = setcount + 1
+                        
                         end
                     
                     
@@ -244,16 +246,16 @@ function ASFSOS_SETINFO(slot, clsid)
         txt:EnableHitTest(0)
         txt:SetText("{ol}{#FF8888}{s10}" .. skillClass.Name)
         txt:ShowWindow(1)
-
+        
         local txtcd = slot:CreateOrGetControl("richtext", "asfsoscd", 0, 0, slot:GetWidth(), 12)
         txtcd:EnableHitTest(0)
         txtcd:SetGravity(ui.RIGHT, ui.BOTTOM)
         local skillInfo = session.GetSkill(clsid);
         if (skillInfo == nil) then
-            if (g.totalcooldown~=nil) then
-                if(g.currentcooldown>0)then
+            if (g.totalcooldown ~= nil) then
+                if (g.currentcooldown > 0) then
                     
-                    txtcd:SetText("{ol}{#FFFFFF}{s18}" .. string.format("%d", g.currentcooldown/1000))
+                    txtcd:SetText("{ol}{#FFFFFF}{s18}" .. string.format("%d", g.currentcooldown / 1000))
                     txtcd:ShowWindow(1)
                 else
                     txtcd:ShowWindow(0)
@@ -273,21 +275,21 @@ function ASFSOS_CLEARSLOT(slot)
 end
 function ASFSOS_UPDATE()
     ASFSOS_UPDATE_FORKEYBOARD()
-    if(g.currentcooldown>0)then
-        g.currentcooldown=math.max(0,g.currentcooldown-500)
+    if (g.currentcooldown > 0) then
+        g.currentcooldown = math.max(0, g.currentcooldown - 500)
     end
     if (g.waitforend ~= nil) then
         local actor = GetMyActor()
         local skillId = actor:GetUseSkill()
         if (skillId ~= g.waitforend) then
-            ReserveScript("quickslot.SwapWeapon()",0.5)
-            g.waitforend=nil
+            ReserveScript("quickslot.SwapWeapon()", 0.5)
+            g.waitforend = nil
         end
     end
 end
 
 function ASFSOS_ICON_USE_JUMPER(object, reAction)
-
+    
     if (ASFSOS_ICON_USE(object, reAction) == false) then
         ICON_USE_OLD(object, reAction)
     end
@@ -296,17 +298,18 @@ function ASFSOS_DO_SKILL(clsid)
     EBI_try_catch{
         try = function()
             g.skillinfo = session.GetSkill(clsid);
-            if(g.skillinfo==nil)then
-                ReserveScript("quickslot.SwapWeapon()",0.5)
+            if (g.skillinfo == nil) then
+                ReserveScript("quickslot.SwapWeapon()", 0.5)
+                g.waitforend = nil
             else
-                if(g.skillinfo:GetCurrentCoolDownTime()>0)then
+                if (g.skillinfo:GetCurrentCoolDownTime() > 0) then
                     --failed
-                    ReserveScript("quickslot.SwapWeapon()",0.5)
+                    ReserveScript("quickslot.SwapWeapon()", 0.5)
                     g.waitforend = nil
                 else
-                    g.totalcooldown=g.skillinfo:GetTotalCoolDownTime()
-                    g.currentcooldown=g.skillinfo:GetTotalCoolDownTime()
-
+                    g.totalcooldown = g.skillinfo:GetTotalCoolDownTime()
+                    g.currentcooldown = g.skillinfo:GetTotalCoolDownTime()
+                    
                     control.Skill(clsid)
                 end
             end
@@ -317,78 +320,78 @@ function ASFSOS_DO_SKILL(clsid)
     }
 end
 function ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE(frame, slot, argStr, argNum)
-	if GetCraftState() == 1 then
-		return;
-	end
-
-	if ui.CheckHoldedUI() == true then
-		return;
-	end
-
-	tolua.cast(slot, "ui::CSlot");
-	local icon = slot:GetIcon();
-	if icon == nil then
-		return;
-	end
-
-	local iconInfo = icon:GetInfo();
-	local joystickquickslotRestFrame = ui.GetFrame("joystickrestquickslot");
-	if iconInfo:GetCategory() == 'Skill' and joystickquickslotRestFrame:IsVisible() == 0 then
-		ICON_USE(icon);
-		return;
-	end
-
-	if iconInfo:GetCategory() == 'Ability' and joystickquickslotRestFrame:IsVisible() == 0 then
-		ICON_USE(icon);
-		return;
-	end
-	
-	if icon:GetStringColorTone() == "FFFF0000" then
-		return;
-	end
-
-	local invenItemInfo = session.GetInvItem(iconInfo.ext);
-	if invenItemInfo == nil then
-		invenItemInfo = session.GetInvItemByType(iconInfo.type);
-	elseif invenItemInfo.type ~= iconInfo.type then
-		return;
-	end
-
-	if invenItemInfo == nil then
-		if iconInfo:GetCategory() == 'Item' then
-			icon:SetColorTone("FFFF0000");
-			icon:SetText('0', 'quickiconfont', ui.RIGHT, ui.BOTTOM, -2, 1);
-		end
-		return;
-	end
-
-	local itemobj = GetIES(invenItemInfo:GetObject());
-	if TRY_TO_USE_WARP_ITEM(invenItemInfo, itemobj) == 1 then
-		return;
-	end
-		
-	if invenItemInfo.count == 0 then
-		icon:SetColorTone("FFFF0000");
-		icon:SetText(invenItemInfo.count, 'quickiconfont', ui.RIGHT, ui.BOTTOM, -2, 1);
-		return;
-	end
-		
-	if true == BEING_TRADING_STATE() then
-		return;
-	end
-	
-	local invItemAllowReopen = ''
-	if itemobj ~= nil then
-		invItemAllowReopen = TryGetProp(itemobj, 'AllowReopen')
-	end
-
-	local groupName = itemobj.ItemType;
-	local gachaCubeFrame = ui.GetFrame('gacha_cube')
-	if groupName == 'Consume' and gachaCubeFrame ~= nil and gachaCubeFrame:IsVisible() == 1 and invItemAllowReopen == 'YES' then
-		return
-	end
-	
-	ICON_USE(icon);
+    if GetCraftState() == 1 then
+        return;
+    end
+    
+    if ui.CheckHoldedUI() == true then
+        return;
+    end
+    
+    tolua.cast(slot, "ui::CSlot");
+    local icon = slot:GetIcon();
+    if icon == nil then
+        return;
+    end
+    
+    local iconInfo = icon:GetInfo();
+    local joystickquickslotRestFrame = ui.GetFrame("joystickrestquickslot");
+    if iconInfo:GetCategory() == 'Skill' and joystickquickslotRestFrame:IsVisible() == 0 then
+        ICON_USE(icon);
+        return;
+    end
+    
+    if iconInfo:GetCategory() == 'Ability' and joystickquickslotRestFrame:IsVisible() == 0 then
+        ICON_USE(icon);
+        return;
+    end
+    
+    if icon:GetStringColorTone() == "FFFF0000" then
+        return;
+    end
+    
+    local invenItemInfo = session.GetInvItem(iconInfo.ext);
+    if invenItemInfo == nil then
+        invenItemInfo = session.GetInvItemByType(iconInfo.type);
+    elseif invenItemInfo.type ~= iconInfo.type then
+        return;
+    end
+    
+    if invenItemInfo == nil then
+        if iconInfo:GetCategory() == 'Item' then
+            icon:SetColorTone("FFFF0000");
+            icon:SetText('0', 'quickiconfont', ui.RIGHT, ui.BOTTOM, -2, 1);
+        end
+        return;
+    end
+    
+    local itemobj = GetIES(invenItemInfo:GetObject());
+    if TRY_TO_USE_WARP_ITEM(invenItemInfo, itemobj) == 1 then
+        return;
+    end
+    
+    if invenItemInfo.count == 0 then
+        icon:SetColorTone("FFFF0000");
+        icon:SetText(invenItemInfo.count, 'quickiconfont', ui.RIGHT, ui.BOTTOM, -2, 1);
+        return;
+    end
+    
+    if true == BEING_TRADING_STATE() then
+        return;
+    end
+    
+    local invItemAllowReopen = ''
+    if itemobj ~= nil then
+        invItemAllowReopen = TryGetProp(itemobj, 'AllowReopen')
+    end
+    
+    local groupName = itemobj.ItemType;
+    local gachaCubeFrame = ui.GetFrame('gacha_cube')
+    if groupName == 'Consume' and gachaCubeFrame ~= nil and gachaCubeFrame:IsVisible() == 1 and invItemAllowReopen == 'YES' then
+        return
+    end
+    
+    ICON_USE(icon);
 end
 function ASFSOS_ICON_USE(object, reAction)
     return EBI_try_catch{
@@ -400,18 +403,18 @@ function ASFSOS_ICON_USE(object, reAction)
                 local iconInfo = icon:GetInfo();
                 if iconInfo:GetCategory() == 'Skill' then
                     
-
+                    
                     --control.Skill(iconInfo.type);
                     local valid = ASFSOS_GETVALID()
                     
-
+                    
                     if (valid ~= nil and valid ~= nil and valid.clsid == iconInfo.type) then
                         local skillInfo = session.GetSkill(valid.clsid);
-                        if(skillInfo == nil)then
+                        if (skillInfo == nil) then
                             g.waitforend = valid.clsid
-                            g.clsid=valid.clsid
+                            g.clsid = valid.clsid
                             quickslot.SwapWeapon()
-                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid),0.5)
+                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.5)
                         end
                         return true
                     end
