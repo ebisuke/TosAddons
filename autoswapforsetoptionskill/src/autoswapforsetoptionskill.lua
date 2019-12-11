@@ -296,14 +296,19 @@ function ASFSOS_DO_SKILL(clsid)
     EBI_try_catch{
         try = function()
             g.skillinfo = session.GetSkill(clsid);
-            if(g.skillinfo:GetCurrentCoolDownTime()>0)then
-                --failed
-                quickslot.SwapWeapon()
+            if(g.skillinfo==nil)then
+                ReserveScript("quickslot.SwapWeapon()",0.5)
             else
-                g.totalcooldown=g.skillinfo:GetTotalCoolDownTime()
-                g.currentcooldown=g.skillinfo:GetTotalCoolDownTime()
+                if(g.skillinfo:GetCurrentCoolDownTime()>0)then
+                    --failed
+                    quickslot.SwapWeapon()
+                    g.waitforend = nil
+                else
+                    g.totalcooldown=g.skillinfo:GetTotalCoolDownTime()
+                    g.currentcooldown=g.skillinfo:GetTotalCoolDownTime()
 
-                control.Skill(clsid)
+                    control.Skill(clsid)
+                end
             end
         end,
         catch = function(error)
@@ -405,8 +410,8 @@ function ASFSOS_ICON_USE(object, reAction)
                         if(skillInfo == nil)then
                             g.waitforend = valid.clsid
                             g.clsid=valid.clsid
-                            --quickslot.SwapWeapon()
-                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.5)
+                            quickslot.SwapWeapon()
+                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid),0.5)
                         end
                         return true
                     end
