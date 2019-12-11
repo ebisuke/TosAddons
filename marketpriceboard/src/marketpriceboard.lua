@@ -1138,6 +1138,20 @@ local function treat(key)
         return key
     end
 end
+local function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
 ----------------------
 --アドオン名（大文字）
 local addonName = "marketpriceboard"
@@ -1159,26 +1173,27 @@ local g = _G['ADDONS'][author][addonName]
 g.version = 3
 g.basePath = string.format('../addons/%s/', addonNameLower)
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
-g.prices = {
-    _sample_ = {
-        currentState = {
-            priceHigh = "0",
-            priceLow = "0",
-            priceClose = "0",
-            priceOpen = "0",
-        },
-        dirty = false,
-        indication_bid = {
-            P0 = {
-                count = 0,
-                price = "0"
-            }
-        },
-        history = {
+-- g.prices = {
+--     _sample_ = {
+--         currentState = {
+--             priceHigh = "0",
+--             priceLow = "0",
+--             priceClose = "0",
+--             priceOpen = "0",
+--         },
+--         latestDate=nil,
+--         dirty = false,
+--         indication_bid = {
+--             P0 = {
+--                 count = 0,
+--                 price = "0"
+--             }
+--         },
+--         history = {
         
-        }
-    }
-}
+--         }
+--     }
+-- }
 g.framename = "marketpriceboard"
 g.debug = true
 g.slotsize = {48, 48}
@@ -1189,7 +1204,7 @@ g.ignore = true
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.clsidlist=nil
 g.compfuncstr=nil
-g.requestcount=11
+g.requestcount=7
 g.dateformat="%Y-%m-%dT%H:00:00+09:00"
 g.dateformatdaily="%Y-%m-%dT00:00:00+09:00"
 g.chartdaily=false
@@ -1247,7 +1262,8 @@ if (not g.loaded) then
             x = 0,
             y = 0
         },
-        items = {}
+        items = {},
+        ebi=true,
     }
 
 
@@ -1343,19 +1359,21 @@ function MARKETPRICEBOARD_ON_INIT(addon, frame)
             g.frame = frame
             
             frame:ShowWindow(0)
-            --acutil.slashCommand("/mpb", MARKETPRICEBOARD_PROCESS_COMMAND);
+            acutil.slashCommand("/mpb", MARKETPRICEBOARD_PROCESS_COMMAND);
             addon:RegisterMsg("OPEN_DLG_MARKET", "MARKETPRICEBOARD_ON_OPEN_MARKET");
             addon:RegisterMsg("MARKET_ITEM_LIST", "MARKETPRICEBOARD_ON_MARKET_ITEM_LIST");
             addon:RegisterMsg("MARKET_MINMAX_INFO", "MARKETPRICEBOARD_ON_MARKET_MINMAX_INFO");
             --ccするたびに設定を読み込む
             if not g.loaded then
-                
                 g.loaded = true
             end
             
             MARKETPRICEBOARD_INIT_FRAME(frame)
             MARKETPRICEBOARD_LOADALLPRICE()
             MARKETPRICEBOARD_UPDATEBOARD()
+            if(g.settings.ebi)then
+                ReserveScript("MARKETPRICEBOARD_EBI_TRACKER()",10)
+            end
         end,
         catch = function(error)
             MARKETPRICEBOARD_ERROUT(error)
@@ -1370,14 +1388,206 @@ function MARKETPRICEBOARD_TOGGLE_FRAME()
 --MARKETPRICEBOARD_SAVE_SETTINGS()
 end
 
-function MARKETPRICEBOARD_CLOSE()
-    ui.GetFrame(g.framename):ShowWindow(0)
+function MARKETPRICEBOARD_CLOSE(frame)
+    frame:ShowWindow(0)
 --MARKETPRICEBOARD_SAVE_SETTINGS()
 end
+local function GET_SEARCH_PRICE_ORDER(frame)
+	local priceOrderCheck_0 = GET_CHILD_RECURSIVELY(frame, 'priceOrderCheck_0');
+	local priceOrderCheck_1 = GET_CHILD_RECURSIVELY(frame, 'priceOrderCheck_1');
+	if priceOrderCheck_0 == nil or priceOrderCheck_1 == nil then
+		return -1;
+	end
+
+	if priceOrderCheck_0:IsChecked() == 1 then
+		return 0;
+	end
+	if priceOrderCheck_1:IsChecked() == 1 then
+		return 1;
+	end
+	return 0; -- default
+end
+local function GET_MINMAX_QUERY_VALUE_STRING(minEdit, maxEdit)
+	local queryValue = '';
+	local minValue = -1000000;
+	local maxValue = 1000000;
+	local valid = false;
+	if minEdit:GetText() ~= nil and minEdit:GetText() ~= '' then
+		minValue = tonumber(minEdit:GetText());
+		valid = true;
+	end
+	if maxEdit:GetText() ~= nil and maxEdit:GetText() ~= '' then
+		maxValue = tonumber(maxEdit:GetText());
+		valid = true;
+	end
+	
+	if valid == false then
+		return queryValue;
+	end
+
+	queryValue = minValue..';'..maxValue;	
+	return queryValue;
+end
+
+local function GET_SEARCH_OPTION(frame)
+	local optionName, optionValue = {}, {};
+	local optionSet = {}; -- for checking duplicate option
+	local category = frame:GetUserValue('SELECTED_CATEGORY');
+
+	-- level range
+	local levelRangeSet = GET_CHILD_RECURSIVELY(frame, 'levelRangeSet');
+	if levelRangeSet ~= nil and levelRangeSet:IsVisible() == 1 then
+		local minEdit = GET_CHILD_RECURSIVELY(levelRangeSet, 'minEdit');
+		local maxEdit = GET_CHILD_RECURSIVELY(levelRangeSet, 'maxEdit');
+		local opValue = GET_MINMAX_QUERY_VALUE_STRING(minEdit, maxEdit);
+		if opValue ~= '' then
+			local opName = 'CT_UseLv';
+			if category == 'OPTMisc' then
+				opName = 'Level';
+			end
+			optionName[#optionName + 1] = opName;
+			optionValue[#optionValue + 1] = opValue;
+			optionSet[opName] = true;
+		end
+	end
+
+	-- grade
+	local gradeCheckSet = GET_CHILD_RECURSIVELY(frame, 'gradeCheckSet');
+	if gradeCheckSet ~= nil and gradeCheckSet:IsVisible() == 1 then
+		local checkStr = '';
+		local matchCnt, lastMatch = 0, nil;
+		local childCnt = gradeCheckSet:GetChildCount();
+		for i = 0, childCnt - 1 do
+			local child = gradeCheckSet:GetChildByIndex(i);
+			if string.find(child:GetName(), 'gradeCheck_') ~= nil then
+				AUTO_CAST(child);
+				if child:IsChecked() == 1 then
+					local grade = string.sub(child:GetName(), string.find(child:GetName(), '_') + 1);
+					checkStr = checkStr..grade..';';
+					matchCnt = matchCnt + 1;
+					lastMatch = grade;
+				end
+			end
+		end
+		if checkStr ~= '' then
+			if matchCnt == 1 then
+				checkStr = checkStr..lastMatch;
+			end
+			local opName = 'CT_ItemGrade';
+			optionName[#optionName + 1] = opName;
+			optionValue[#optionValue + 1] = checkStr;
+			optionSet[opName] = true;
+		end
+	end
+
+	-- random option flag
+	local appCheckSet = GET_CHILD_RECURSIVELY(frame, 'appCheckSet');
+	if appCheckSet ~= nil and appCheckSet:IsVisible() == 1 then
+		local ranOpName, ranOpValue;
+		local appCheck_0 = GET_CHILD(appCheckSet, 'appCheck_0');
+		if appCheck_0:IsChecked() == 1 then
+			ranOpName = 'Random_Item';
+			ranOpValue = '2'
+		end
+
+		local appCheck_1 = GET_CHILD(appCheckSet, 'appCheck_1');
+		if appCheck_1:IsChecked() == 1 then
+			ranOpName = 'Random_Item';
+			ranOpValue = '1'
+		end
+
+		if ranOpName ~= nil then
+			optionName[#optionName + 1] = ranOpName;
+			optionValue[#optionValue + 1] = ranOpValue;
+			optionSet[ranOpName] = true;
+		end
+	end
+
+	-- detail setting
+	local detailOptionSet = GET_CHILD_RECURSIVELY(frame, 'detailOptionSet');
+	if detailOptionSet ~= nil and detailOptionSet:IsVisible() == 1 then
+		local curCnt = detailOptionSet:GetUserIValue('ADD_SELECT_COUNT');
+		for i = 0, curCnt do
+			local selectSet = GET_CHILD_RECURSIVELY(detailOptionSet, 'SELECT_'..i);
+			if selectSet ~= nil and selectSet:IsVisible() == 1 then
+				local nameList = GET_CHILD(selectSet, 'groupList');
+				local opName = nameList:GetSelItemKey();
+				if opName ~= '' then
+					local opValue = GET_MINMAX_QUERY_VALUE_STRING(GET_CHILD_RECURSIVELY(selectSet, 'minEdit'), GET_CHILD_RECURSIVELY(selectSet, 'maxEdit'));				
+					if opValue ~= '' and optionSet[opName] == nil then
+						optionName[#optionName + 1] = opName;
+						optionValue[#optionValue + 1] = opValue;
+						optionSet[opName] = true;
+					end
+				end
+			end
+		end
+	end
+
+	-- option group
+	local optionGroupSet = GET_CHILD_RECURSIVELY(frame, 'optionGroupSet');
+	if optionGroupSet ~= nil and optionGroupSet:IsVisible() == 1 then
+		local curCnt = optionGroupSet:GetUserIValue('ADD_SELECT_COUNT');		
+		for i = 0, curCnt do
+			local selectSet = GET_CHILD_RECURSIVELY(optionGroupSet, 'SELECT_'..i);
+			if selectSet ~= nil then
+				local nameList = GET_CHILD(selectSet, 'nameList');
+				local opName = nameList:GetSelItemKey();
+				if opName ~= '' then
+					local opValue = GET_MINMAX_QUERY_VALUE_STRING(GET_CHILD_RECURSIVELY(selectSet, 'minEdit'), GET_CHILD_RECURSIVELY(selectSet, 'maxEdit'));
+					if opValue ~= '' and optionSet[opName] == nil then
+						optionName[#optionName + 1] = opName;
+						optionValue[#optionValue + 1] = opValue;
+						optionSet[opName] = true;
+					end
+				end
+			end
+		end
+	end
+
+	-- gem option
+	local gemOptionSet = GET_CHILD_RECURSIVELY(frame, 'gemOptionSet');
+	if gemOptionSet ~= nil and gemOptionSet:IsVisible() == 1 then
+		local levelMinEdit = GET_CHILD_RECURSIVELY(gemOptionSet, 'levelMinEdit');
+		local levelMaxEdit = GET_CHILD_RECURSIVELY(gemOptionSet, 'levelMaxEdit');
+		local roastingMinEdit = GET_CHILD_RECURSIVELY(gemOptionSet, 'roastingMinEdit');
+		local roastingMaxEdit = GET_CHILD_RECURSIVELY(gemOptionSet, 'roastingMaxEdit');
+		if category == 'Gem' then
+			local opValue = GET_MINMAX_QUERY_VALUE_STRING(levelMinEdit, levelMaxEdit);
+			if opValue ~= '' then
+				optionName[#optionName + 1] = 'GemLevel';
+				optionValue[#optionValue + 1] = opValue;
+				optionSet['GemLevel'] = true;
+			end
+
+			local roastOpValue = GET_MINMAX_QUERY_VALUE_STRING(roastingMinEdit, roastingMaxEdit);			
+			if roastOpValue ~= '' then
+				optionName[#optionName + 1] = 'GemRoastingLv';
+				optionValue[#optionValue + 1] = roastOpValue;
+				optionSet['GemRoastingLv'] = true;
+			end
+		elseif category == 'Card' then
+			local opValue = GET_MINMAX_QUERY_VALUE_STRING(levelMinEdit, levelMaxEdit);
+			if opValue ~= '' then
+				optionName[#optionName + 1] = 'CardLevel';
+				optionValue[#optionValue + 1] = opValue;
+				optionSet['CardLevel'] = true;
+			end
+		end
+	end
+
+	return optionName, optionValue;
+end
+
 function MARKETPRICEBOARD_CAN_INTERCEPT_MARKET()
     local frame=ui.GetFrame("market")
+    local key,value=GET_SEARCH_OPTION(frame)
+    if frame==nil then
+        return  session.market.GetCurPage()==0 
+    else
+        return  session.market.GetCurPage()==0 and #key == 0
 
-    return  session.market.GetCurPage()==0 and GET_SEARCH_PRICE_ORDER(frame)==0
+    end
 end
 function MARKETPRICEBOARD_ON_MARKET_ITEM_LIST(frame)
     EBI_try_catch{
@@ -1389,9 +1599,8 @@ function MARKETPRICEBOARD_ON_MARKET_ITEM_LIST(frame)
             for i = 0, count - 1 do
                 local marketItem = session.market.GetItemByIndex(i);
                 local itemObj = GetIES(marketItem:GetObject());
-                if(known[itemObj.ClassName]==nil and
-                    g.prices[itemObj.ClassName]~=nil and
-                    MARKETPRICEBOARD_CAN_INTERCEPT_MARKET())then
+                if(known[itemObj.ClassName]==nil and MARKETPRICEBOARD_CAN_INTERCEPT_MARKET())then
+                    g.prices[itemObj.ClassName]= g.prices[itemObj.ClassName]or {}
                     g.prices[itemObj.ClassName].dirty=true
                     known[itemObj.ClassName]=true
                 end
@@ -1404,8 +1613,9 @@ function MARKETPRICEBOARD_ON_MARKET_ITEM_LIST(frame)
             --次のページへ
 
             if( g.ignore==false and session.market.GetCurPage()<
-            math.floor(session.market.GetTotalCount() / g.requestcount))then
-                ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",session.market.GetCurPage()+1),0.25)
+                math.floor(session.market.GetTotalCount() / g.requestcount))then
+                MARKETPRICEBOARD_DBGOUT("NEXT PAGE")
+                ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",session.market.GetCurPage()+1),0.5)
 
             else
                 if(g.ignore==false)then
@@ -1413,7 +1623,7 @@ function MARKETPRICEBOARD_ON_MARKET_ITEM_LIST(frame)
                     table.remove(g.clsidlist, 1)
 
                     if(#g.clsidlist>0)then
-                        ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",0),0.25)
+                        ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",0),0.5)
                     else
                         ReserveScript(g.compfuncstr,0.1)
                     end
@@ -1444,9 +1654,9 @@ function MARKETPRICEBOARD_NEWDATA(marketItem, itemObj)
     end
     local sellprice = marketItem:GetSellPrice();
     local sellcount = marketItem.count
-    if (data.dirty == true) then
+    if (data.dirty == true or data.indication_bid==nil) then
         data.indication_bid = {}
-
+MARKETPRICEBOARD_DBGOUT("gene")
     end
     if (data.indication_bid["P" .. sellprice] == nil) then
         data.indication_bid["P" .. sellprice] = {price = sellprice, count = sellcount}
@@ -1454,8 +1664,14 @@ function MARKETPRICEBOARD_NEWDATA(marketItem, itemObj)
         data.indication_bid["P" .. sellprice].count =
             data.indication_bid["P" .. sellprice].count + sellcount
     end
+    local now=os.date(g.dateformat)
     local currentState = data.currentState or {priceHigh="0",priceLow=g.max}
-
+    if(g.prices.latestDate==nil or os.date(useformat,MARKETPRICEBOARD_makeTimeStamp(g.prices.latestDate))
+    ~=os.date(useformat,MARKETPRICEBOARD_makeTimeStamp(g.prices.latestDate)))then
+        currentState={priceHigh="0",priceLow=g.max}
+        g.prices.latestDate=now
+    end
+  
    
     if (data.dirty == true) then
         currentState.priceClose = sellprice
@@ -1490,7 +1706,7 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
         currentState.priceLow = sellprice
     end
 
-    local date=os.date(g.dateformat)
+    local date=g.prices.latestDate
     local added=false
     data.history=data.history or {}
     for k,v in pairs(data.history) do
@@ -1506,6 +1722,7 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
     
 
     if(added==false)then
+        MARKETPRICEBOARD_DBGOUT("created")
         data.history[#data.history+1]={date=date,data=currentState}
         
     end
@@ -1525,6 +1742,66 @@ function MARKETPRICEBOARD_makeTimeStamp(dateString)
     if xoffset == "-" then offset = offset * -1 end
     return convertedTimestamp + offset
 end
+function MARKETPRICEBOARD_MARKET_INIT_CATEGORY(frame)	
+	local marketCategory = GET_CHILD_RECURSIVELY(frame, 'marketCategory');
+	local bgBox = GET_CHILD(marketCategory, 'bgBox');
+
+
+
+	-- 첨 키면 통합 검색 키게 해달라고 하셨다
+    local integrateRetreiveCtrlset = GET_CHILD_RECURSIVELY(frame, 'CATEGORY_IntegrateRetreive');
+    if(integrateRetreiveCtrlset~=nil)then
+    MARKETPRICEBOARD_MARKET_CATEGORY_CLICK_QUIET(integrateRetreiveCtrlset);
+    end
+end
+function MARKETPRICEBOARD_MARKET_CATEGORY_CLICK_QUIET(ctrlset, ctrl, reqList, forceOpen)	
+	local frame = ctrlset:GetTopParentFrame();
+	frame:SetUserValue('SELECTED_SUB_CATEGORY', 'None');
+	MARKET_OPTION_BOX_CLOSE_CLICK(frame);
+
+	local prevSelectCategory = frame:GetUserValue('SELECTED_CATEGORY');
+	local category = ctrlset:GetUserValue('CATEGORY');
+	local foldimg = GET_CHILD(ctrlset, 'foldimg');
+	local cateListBox = GET_CHILD_RECURSIVELY(frame, 'cateListBox');
+	DESTROY_CHILD_BYNAME(cateListBox, 'detailBox');
+
+	if forceOpen ~= true and (prevSelectCategory == 'None' or prevSelectCategory == category) then
+		if foldimg:GetUserValue('IS_PLUS_IMAGE') == 'YES' then
+			foldimg:SetImage('viewunfold');
+			foldimg:SetUserValue('IS_PLUS_IMAGE', 'NO');
+			ALIGN_CATEGORY_BOX(ctrlset:GetParent(), ctrlset);
+			return;
+		end
+	end
+	frame:SetUserValue('isRecipeSearching', 0);
+
+	-- color change
+	local prevSelectCtrlset = GET_CHILD_RECURSIVELY(frame, 'CATEGORY_'..prevSelectCategory);
+	if prevSelectCtrlset ~= nil then
+		local bgBox = GET_CHILD(prevSelectCtrlset, 'bgBox');
+		bgBox:SetSkinName('base_btn');
+
+		local foldimg = GET_CHILD(prevSelectCtrlset, 'foldimg');		
+		foldimg:SetImage('viewunfold');
+		foldimg:SetUserValue('IS_PLUS_IMAGE', 'NO');
+	
+	end
+	local bgBox = GET_CHILD(ctrlset, 'bgBox');
+	bgBox:SetSkinName('baseyellow_btn');
+	frame:SetUserValue('SELECTED_CATEGORY', category);
+
+	-- fold img
+	foldimg:SetImage('spreadclose');
+	foldimg:SetUserValue('IS_PLUS_IMAGE', 'YES');
+	
+	local subCategoryList = GetMarketCategoryList(category);
+
+	local detailBox = DRAW_DETAIL_CATEGORY(frame, ctrlset, subCategoryList, forceOpen);
+	ALIGN_CATEGORY_BOX(ctrlset:GetParent(), ctrlset, detailBox);
+
+
+end
+
 function MARKETPRICEBOARD_REFRESHMARKET()
     EBI_try_catch{
         try = function()
@@ -1544,6 +1821,8 @@ function MARKETPRICEBOARD_REFRESHMARKET()
            
             session.market.ClearItems();
             session.market.ClearRecipeSearchList();
+            MARKET_CLEAR_RECIPE_SEARCHLIST(ui.GetFrame("market"));
+            MARKETPRICEBOARD_MARKET_INIT_CATEGORY(ui.GetFrame("market"))
             local clsidlist={}
             for i = 0, g.slots - 1 do
                 local slot = slotset:GetSlotByIndex(i)
@@ -1575,6 +1854,8 @@ function MARKETPRICEBOARD_REFRESHMARKETSINGLE(clsid)
             end 
             g.ignore = false
             g.clsidlist={clsid}
+            MARKET_CLEAR_RECIPE_SEARCHLIST(ui.GetFrame("market"));
+            MARKETPRICEBOARD_MARKET_INIT_CATEGORY(ui.GetFrame("market"))
             MARKETPRICEBOARD_REFRESHMARKETITEM({clsid},"MARKETPRICEBOARD_REFRESHMARKET_END()")
         end,
         catch = function(error)
@@ -1583,6 +1864,7 @@ function MARKETPRICEBOARD_REFRESHMARKETSINGLE(clsid)
     }
 end
 function MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(page)
+
     MARKETPRICEBOARD_REFRESHMARKETITEM(g.clsidlist,g.compfuncstr,page)
 end
 function MARKETPRICEBOARD_REFRESHMARKETITEM(clsidlist,compfuncstr,page)
@@ -1618,10 +1900,10 @@ function MARKETPRICEBOARD_INIT_FRAME(frame)
             
             frame:SetEventScript(ui.LBUTTONUP, 'MARKETPRICEBOARD_END_DRAG')
             frame:Resize(380, 610)
-            local obj = frame:CreateOrGetControl('button', 'refresh', 20, 40, 70, 40)
+            local obj = frame:CreateOrGetControl('button', 'refresh', 20, 60, 70, 40)
             obj:SetText("refresh")
             obj:SetEventScript(ui.LBUTTONDOWN, "MARKETPRICEBOARD_REFRESHMARKET")
-            local obj = frame:CreateOrGetControl('button', 'clear', 90, 40, 70, 40)
+            local obj = frame:CreateOrGetControl('button', 'clear', 90, 60, 70, 40)
             obj:SetText("clear")
             obj:SetEventScript(ui.LBUTTONDOWN, "MARKETPRICEBOARD_CLEAR")
             
@@ -1665,6 +1947,19 @@ function MARKETPRICEBOARD_CLEAR()
     g.prices={}
     MARKETPRICEBOARD_UPDATEBOARD()
 end
+function MARKETPRICEBOARD_GET_UPDOWN(className)
+    local data=MARKETPRICEBOARD_AGGREGATE_DAILY(className)
+    if(data==nil or #data==0)then
+        return 0
+    end
+    if(IsGreaterThanForBigNumber(data[#data].data.priceClose,data[#data].data.priceOpen)==1 )then
+        return 1
+    end
+    if(IsLesserThanForBigNumber(data[#data].data.priceClose,data[#data].data.priceOpen)==1 )then
+        return -1
+    end
+    return 0
+end
 function MARKETPRICEBOARD_UPDATEBOARD()
     EBI_try_catch{
         try = function()
@@ -1683,14 +1978,21 @@ function MARKETPRICEBOARD_UPDATEBOARD()
                             local bidrate = MARKETPRICEBOARD_GET_BIDRATE(className)
                             slot:RemoveAllChild()
                             local txt = slot:CreateOrGetControl("richtext", "count", 0, 0, slot:GetWidth(), 16)
+                            local col="#FFFFFF"
+                            local updown=MARKETPRICEBOARD_GET_UPDOWN(className)
+                            if(updown==-1)then
+                                col="#00FFAA"
+                            elseif updown == 1 then
+                                col="#FF2222"
+                            end
                             txt:SetGravity(ui.RIGHT, ui.TOP)
                             txt:EnableHitTest(0)
-                            txt:SetText("{ol}{#FFFFFF}{s16}" .. bidrate.count)
+                            txt:SetText("{ol}{"..col.."}{s16}" .. bidrate.count)
                             txt:ShowWindow(1)
                             local txtprice = slot:CreateOrGetControl("richtext", "price", 0, 0, slot:GetWidth(), 16)
                             txtprice:SetGravity(ui.RIGHT, ui.BOTTOM)
                             txtprice:EnableHitTest(0)
-                            txtprice:SetText("{ol}{#FFFFFF}{s20}" .. MARKETPRICEBOARD_SHORTPRICE(bidrate.price))
+                            txtprice:SetText("{ol}{"..col.."}{s20}" .. MARKETPRICEBOARD_SHORTPRICE(bidrate.price))
                             txtprice:ShowWindow(1)
                         end
                     end
@@ -1761,7 +2063,6 @@ function MARKETPRICEBOARD_GET_BIDRATE(className)
             bidindication = v
             CHAT_SYSTEM(v.price)
         end
-    
     end
     return bidindication or {price = "0", count = 0}
 end
@@ -1848,6 +2149,7 @@ function MARKETPRICEBOARD_ON_DROP(frame, ctrl)
                     SET_SLOT_STYLESET(slot, invitems)
                 end
             end
+            MARKETPRICEBOARD_SAVETOSTRUCTURE()
             MARKETPRICEBOARD_SAVE_SETTINGS()
         end,
         catch = function(error)
@@ -1966,11 +2268,30 @@ function MARKETPRICEBOARD_PROCESS_COMMAND(command)
         local msg = L_("Usagemsg")
         return ui.MsgBox(msg, "", "Nope")
     end
-    
+    if cmd == "on" then
+        g.settings.ebi=true
+        MARKETPRICEBOARD_SAVE_SETTINGS()
+        CHAT_SYSTEM("[MPB]EBI ENABLED")
+        return
+	end
+    if cmd == "off" then
+        g.settings.ebi=false
+        MARKETPRICEBOARD_SAVE_SETTINGS()
+        CHAT_SYSTEM("[MPB]EBI DISABLED")
+        return
+    end
     
     CHAT_SYSTEM(string.format("[%s] Invalid Command", addonName));
 end
-
+function MARKETPRICEBOARD_EBI_TRACKER()
+    local mapClsName = session.GetMapName();
+    local mapCls = GetClass('Map', mapClsName);
+    if TryGetProp(mapCls, 'MapType', 'None') ~= 'City' then
+        
+        return;
+    end
+    MARKETPRICEBOARD_REFRESHMARKET()
+end
 
 function MARKETPRICEBOARD_SHOWDETAIL(clsid)
     EBI_try_catch{
@@ -2006,7 +2327,7 @@ function MARKETPRICEBOARD_SHOWDETAIL(clsid)
                 end
 
 
-                MARKETPRICEBOARD_UPDATE_CHART_OPTION(frame)
+                MARKETPRICEBOARD_UPDATE_CHART_OPTION(detailframe)
                 MARKETPRICEBOARD_UPDATEDETAIL()
             end
         end,
@@ -2019,7 +2340,7 @@ end
 function MARKETPRICEBOARD_UPDATEDETAIL()
 
     local detailframe = ui.GetFrame("marketpriceboarddetail")
-    local gbox=detailframe:CreateOrGetControl("groupbox","gbox",20,170,200,300)
+    local gbox=detailframe:CreateOrGetControl("groupbox","gbox",20,170,200,18*12)
     local clsid=detailframe:GetUserIValue("clsid")
     local class = GetClassByType("Item", clsid)
     local data = g.prices[class.ClassName]
@@ -2049,16 +2370,17 @@ function MARKETPRICEBOARD_UPDATEDETAIL()
         end
     end
     -- info
-    local txtupperlimit=detailframe:CreateOrGetControl("richtext","upperlimit",20,240,200,18)
+    local txtupperlimit=detailframe:CreateOrGetControl("richtext","upperlimit",20,400,200,18)
     txtupperlimit:SetText("{ol}{#FFFFFF}{s16}値幅制限上限:")
-    local txtunderlimit=detailframe:CreateOrGetControl("richtext","underlimit",20,260,200,18)
+    local txtunderlimit=detailframe:CreateOrGetControl("richtext","underlimit",20,420,200,18)
     txtunderlimit:SetText("{ol}{#FFFFFF}{s16}値幅制限下限:")
-    local txtavg=detailframe:CreateOrGetControl("richtext","upperlimit",20,280,200,18)
-    txtavg:SetText("{ol}{#FFFFFF}{s16}平均取引値:")
+    local txtavg=detailframe:CreateOrGetControl("richtext","avg",20,440,200,18)
+    txtavg:SetText("{ol}{#FFFFFF}{s16}平均取引値　:")
     local invItem=session.GetInvItemByName(class.ClassName)
     --インベントリ内にアイテムがあるなら値幅制限情報が取得できる
     if invItem ~= nil then
-        market.ReqSellMinMaxInfo(GetIES(invItem:GetObject()):GetIESID());
+        MARKETPRICEBOARD_DBGOUT("request")
+        market.ReqSellMinMaxInfo(invItem:GetIESID());
 
     end
     -- chart
@@ -2072,7 +2394,7 @@ function MARKETPRICEBOARDDETAIL_CLOSE(frame)
     frame:ShowWindow(0)
 end
 function MARKETPRICEBOARD_ON_MARKET_MINMAX_INFO(frame, msg, argStr, argNum)
-    local detailframe=ui:GetFrame("detailframe")
+    local detailframe=ui.GetFrame("marketpriceboarddetail")
     if(detailframe==nil)then
         return
     end
@@ -2082,97 +2404,114 @@ function MARKETPRICEBOARD_ON_MARKET_MINMAX_INFO(frame, msg, argStr, argNum)
     local maxStr = tokenList[3];
     local maxAllow = tokenList[4];
     local avg = tokenList[5];
-    local txtupperlimit=detailframe:GetChild("upperlimit",20,240,200,18)
+    local txtupperlimit=detailframe:GetChild("upperlimit")
     txtupperlimit:SetText("{ol}{#FFFFFF}{s16}値幅制限上限:"..MARKETPRICEBOARD_SHORTPRICE(maxAllow))
-    local txtunderlimit=detailframe:GetChild("underlimit",20,260,200,18)
+    local txtunderlimit=detailframe:GetChild("underlimit")
     txtunderlimit:SetText("{ol}{#FFFFFF}{s16}値幅制限下限:"..MARKETPRICEBOARD_SHORTPRICE(minAllow))
-    local txtavg=detailframe:GetChild("upperlimit",20,280,200,18)
-    txtavg:SetText("{ol}{#FFFFFF}{s16}平均取引値:"..MARKETPRICEBOARD_SHORTPRICE(avg))
+    local txtavg=detailframe:GetChild("avg")
+    txtavg:SetText("{ol}{#FFFFFF}{s16}平均取引値　:"..MARKETPRICEBOARD_SHORTPRICE(avg))
 end
 function MARKETPRICEBOARD_RENDER_CHART()
-    local detailframe = ui.GetFrame("marketpriceboarddetail")
-    local chart = detailframe:GetChild("chart")
-    tolua.cast(chart,"ui::CGroupBox")
-    chart:SetSkinName("test_gray_button")
-    chart:EnableScrollBar(1)
-    local clsid=detailframe:GetUserIValue("clsid")
-    local class = GetClassByType("Item", clsid)
-    local data = g.prices[class.ClassName]
-    if(g.chartdaily==true)then
-        data.history=MARKETPRICEBOARD_AGGREGATE_DAILY(class.ClassName)
-    end
-    if(g.concat==false)then
-        data.history=MARKETPRICEBOARD_HISTORY_MAKESPACE(data.history)
-    end
-    local w=16
-    local offset=50
-    local minimum=g.maxint
-    local maximum=0
-    for i=#data.history,math.max(1,#data.history-30) do
-        local hist=data.history[i]
-        local high,low,open,close
-        MARKETPRICEBOARD_DBGOUT("da")
-        high=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceHigh)
-        low=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceLow)
-        open=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceOpen)
-        close=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceClose)
-        minimum=math.min(minimum,low)
-        maximum=math.max(maximum,high)
-        
-    end
-    if(maximum-minimum<5)then
-        minimum=maximum-5
-    end
-    local minmaxheight=maximum-minimum
-    
-    local h=chart:GetHeight()-16
-    local yoffset=8
-    MARKETPRICEBOARD_DBGOUT(tostring(#data.history))
-    --upper under
-    local upper =chart:CreateOrGetControl("richtext","textupper",0,0,offset,16)
-    local under = chart:CreateOrGetControl("richtext","textunder",0,0,offset,16)
-    upper:SetGravity(ui.LEFT,ui.TOP)
-    under:SetGravity(ui.LEFT,ui.BOTTOM)
-    upper:SetText("{ol}{#FFFFFF}{s18}" ..MARKETPRICEBOARD_SHORTPRICE(tostring(maximum).."00"))
-    under:SetText("{ol}{#FFFFFF}{s18}" ..MARKETPRICEBOARD_SHORTPRICE(tostring(minimum).."00"))
-    
-    for i=#data.history,math.max(1,#data.history-g.chartlimit) do
-        MARKETPRICEBOARD_DBGOUT("de")
-        local hist=data.history[i]
+    EBI_try_catch{
+        try = function()
+            MARKETPRICEBOARD_DBGOUT("RENDER")
+            local detailframe = ui.GetFrame("marketpriceboarddetail")
+            local chart = detailframe:GetChild("chart")
+            
+            tolua.cast(chart,"ui::CGroupBox")
+            chart:RemoveAllChild()
+            chart:SetSkinName("test_gray_button")
+            chart:EnableScrollBar(1)
+            local clsid=detailframe:GetUserIValue("clsid")
+            local class = GetClassByType("Item", clsid)
+            local data = deepcopy(g.prices[class.ClassName])
+            if(g.chartdaily==true)then
+                data.history=MARKETPRICEBOARD_AGGREGATE_DAILY(class.ClassName)
+            end
+            if(g.concat==false)then
+                data.history=MARKETPRICEBOARD_HISTORY_MAKESPACE(data.history)
+            end
+            MARKETPRICEBOARD_DBGOUT(tostring(#data.history))
+            local w=16
+            local offset=50
+            local minimum=g.maxint
+            local maximum=0
+            for i=#data.history,math.max(1,#data.history-g.chartlimit),-1 do
+                local hist=data.history[i]
+                local high,low,open,close
+                MARKETPRICEBOARD_DBGOUT("da"..tostring(hist.data.priceHigh))
+                high=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceHigh)
+                low=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceLow)
+                open=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceOpen)
+                close=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceClose)
+                minimum=math.min(minimum,low)
+                maximum=math.max(maximum,high)
+                
+            end
+            if(maximum-minimum<6)then
+                minimum=maximum-3
+                maximum=minimum+6
+            end
+            local minmaxheight=maximum-minimum
+            
+            local h=chart:GetHeight()-16
+            local yoffset=8
+            MARKETPRICEBOARD_DBGOUT(tostring(#data.history))
+            --upper under
+            local upper =chart:CreateOrGetControl("richtext","textupper",0,0,offset,16)
+            local under = chart:CreateOrGetControl("richtext","textunder",0,0,offset,16)
+            upper:SetGravity(ui.LEFT,ui.TOP)
+            under:SetGravity(ui.LEFT,ui.BOTTOM)
+            upper:SetText("{ol}{#FFFFFF}{s18}" ..MARKETPRICEBOARD_SHORTPRICE(tostring(maximum).."00"))
+            under:SetText("{ol}{#FFFFFF}{s18}" ..MARKETPRICEBOARD_SHORTPRICE(tostring(minimum).."00"))
+            
+            for i=#data.history,math.max(1,#data.history-g.chartlimit),-1 do
+                MARKETPRICEBOARD_DBGOUT("de")
+                local hist=data.history[i]
 
-        --candlestick
-        local color
-        local high,low,open,close
-        high=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceHigh)
-        low=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceLow)
-        open=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceOpen)
-        close=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceClose)
-        
-        if(IsGreaterThanForBigNumber(priceOpen,priceClose)==1)then
-            --up
-            color=1
-        else
-            color=0
+                --candlestick
+                local color
+                local high,low,open,close
+                high=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceHigh)
+                low=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceLow)
+                open=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceOpen)
+                close=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceClose)
+                if open>close then
+                    local swap=close
+                    close=open
+                    open=swap
+                end
+                if(IsGreaterThanForBigNumber(priceOpen,priceClose)==1)then
+                    --up
+                    color=0
+                else
+                    color=1
+                end
+                local height=(close-minimum)/minmaxheight*h-(open-minimum)/minmaxheight*h
+                local fixh=math.max(3,height)
+                MARKETPRICEBOARD_DRAWRECT(
+                    hist,
+                    chart,
+                    color,
+                    offset+i*w,
+                    (h-(close-minimum)/minmaxheight*h)+yoffset,w,
+                    fixh)
+                MARKETPRICEBOARD_DRAWRECT(
+                    hist,
+                    chart,
+                    color,
+                    offset+i*w+w/2-4,
+                h-(high-minimum)/minmaxheight*h+yoffset,8,
+                (high-minimum)/minmaxheight*h-(low-minimum)/minmaxheight*h)
+            
+            end
+
+            chart:SetScrollBar(chart:GetScrollBarMaxPos())
+        end,
+        catch = function(error)
+            MARKETPRICEBOARD_ERROUT(error)
         end
-        local height=(close-minimum)/minmaxheight*h-(open-minimum)/minmaxheight*h
-        local fixh=math.max(3,height)
-        MARKETPRICEBOARD_DRAWRECT(
-            hist,
-            chart,
-            color,
-            offset+i*w,
-            h-(close-minimum)/minmaxheight*h-fixh/2+yoffset,w,
-            math.max(fixh,height))
-        MARKETPRICEBOARD_DRAWRECT(
-            hist,
-            chart,
-            color,
-            offset+i*w+w/2-4,
-        h-(high-minimum)/minmaxheight*h+yoffset,8,
-        (high-minimum)/minmaxheight*h-(low-minimum)/minmaxheight*h)
-    
-    end
-
+    }
 
 end
 function MARKETPRICEBOARD_AGGREGATE_DAILY(classname)
@@ -2180,13 +2519,21 @@ function MARKETPRICEBOARD_AGGREGATE_DAILY(classname)
     local aggregate={}
     local idx=1
     local date=nil
-    for k,v in ipairs(data.hist) do
+    if(data==nil)then
+        return {}
+    end
+    for k,v in ipairs(data.history) do
         local createnew=false
         if date == nil then
             createnew=true
         else
+            local pattern = "(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+)([%+%-])(%d+)%:(%d+)"
+            local xyear, xmonth, xday, xhour, xminute, 
+                xseconds, xoffset, xoffsethour, xoffsetmin = v.date:match(pattern)
+            local xxyear, xxmonth, xxday, xxhour, xxminute, 
+                xxseconds, xxoffset, xxoffsethour, xxoffsetmin = date:match(pattern)
             local datetime=MARKETPRICEBOARD_makeTimeStamp(v.date)
-            if(datetime.year==date.year and datetime.month == date.month and datetime.day==date.day)then
+            if(xyear==xxyear and xmonth == xxmonth and xday==xxday)then
                 createnew=false
             else
                 createnew=true
@@ -2194,10 +2541,12 @@ function MARKETPRICEBOARD_AGGREGATE_DAILY(classname)
         end 
         if(createnew==true)then
             date=v.date
-            aggregate[idx]=data.data
+            aggregate[idx]=v
             idx=idx+1
+            MARKETPRICEBOARD_DBGOUT("agg")
         else
-            local newdata=aggregate[idx]
+            MARKETPRICEBOARD_DBGOUT("ugg")
+            local newdata=aggregate[idx-1]
             newdata.data.priceClose=v.data.priceClose
           --現在値の更新
             if IsGreaterThanForBigNumber(v.data.priceHigh,newdata.data.priceHigh) == 1 then
@@ -2214,14 +2563,16 @@ end
 
 function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
     local newhist={}
-    local idx=2
+    local idx=1
     local date=nil
     local cur=history[1]
-    local curdate=cur.MARKETPRICEBOARD_makeTimeStamp(cur.date)
+    local curdate=MARKETPRICEBOARD_makeTimeStamp(cur.date)
     local last=  history[#history]
-    local lastdate=cur.MARKETPRICEBOARD_makeTimeStamp(last.date)
-   
-    newhist[1]=cur
+    local lastdate=MARKETPRICEBOARD_makeTimeStamp(last.date)
+    if(curdate==lastdate)then
+        return {cur}
+    end
+
     for k,v in ipairs(history) do
         local next=v
         local giveup=0
@@ -2254,9 +2605,9 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
                 }
                 idx=idx+1
                 if(g.daily)then
-                    curdate.day=curdate.day+1
+                    curdate=curdate+86400
                 else
-                    curdate.hour=curdate.hour+1
+                    curdate=curdate+3600
                 end
             end
         end
@@ -2266,6 +2617,9 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
 end
 function MARKETPRICEBOARD_SIMPLIFIEDINT(bignumber)
     if(bignumber==nil)then
+        return 0
+    end
+    if(#bignumber < 3) then
         return 0
     end
     return tonumber(string.sub(bignumber,1,-3))
@@ -2293,7 +2647,10 @@ function MARKETPRICEBOARD_DRAWRECT(data,ctrl,col,x,y,w,h)
     );
 	
 end
-function MARKETPRICEBOARD_CHANGED_CHART_OPTION(detailframe,msg,argstr,argnum)
+function MARKETPRICEBOARD_CHANGED_CHART_OPTION(frame,msg,argstr,argnum)
+    EBI_try_catch{
+        try = function()
+    local detailframe=ui.GetFrame("marketpriceboarddetail")
     MARKETPRICEBOARD_RENDER_CHART()
 
     local btnhourly=GET_CHILD(detailframe,"hourly","ui::CCheckBox")
@@ -2308,29 +2665,36 @@ function MARKETPRICEBOARD_CHANGED_CHART_OPTION(detailframe,msg,argstr,argnum)
     elseif argnum==2 then
         g.concat=btntick:IsChecked()==1
     end
+    MARKETPRICEBOARD_RENDER_CHART()
     MARKETPRICEBOARD_UPDATE_CHART_OPTION(detailframe)
+end,
+catch = function(error)
+    MARKETPRICEBOARD_ERROUT(error)
+end
+}
 end
 
 function MARKETPRICEBOARD_UPDATE_CHART_OPTION(detailframe)
-    local btnhourly = detailframe:CreateOrGetControl("checkbox", "hourly", 170, 170, 60, 20)
-    btnhourly:SetText("時足")
-    local btndaily = detailframe:CreateOrGetControl("checkbox", "daily", 230, 170, 60, 20)
-    btndaily:SetText("日足")
-    local btntick = detailframe:CreateOrGetControl("checkbox", "tick", 300, 170, 60, 20)
-    btntick:SetText("TICK詰め")
+    MARKETPRICEBOARD_DBGOUT("changed")
+    local btnhourly = detailframe:CreateOrGetControl("checkbox", "hourly", 240, 170, 60, 20)
+    btnhourly:SetText("{ol}{#FFFFFF}{s18}時足")
+    local btndaily = detailframe:CreateOrGetControl("checkbox", "daily", 320, 170, 60, 20)
+    btndaily:SetText("{ol}{#FFFFFF}{s18}日足")
+    local btntick = detailframe:CreateOrGetControl("checkbox", "tick", 390, 170, 60, 20)
+    btntick:SetText("{ol}{#FFFFFF}{s18}TICK詰め")
 
     tolua.cast(btnhourly,"ui::CCheckBox")
     tolua.cast(btndaily,"ui::CCheckBox")
     tolua.cast(btntick,"ui::CCheckBox")
     
-    btnhourly:SetEventScript(ui.LBUTTONUP, "MARKETPRICEBOARD_CHANGED_CHART_OPTION")
-    btnhourly:SetEventScriptArgNumber(ui.LBUTTONUP,0)
+    btnhourly:SetEventScript(ui.LBUTTONDOWN, "MARKETPRICEBOARD_CHANGED_CHART_OPTION")
+    btnhourly:SetEventScriptArgNumber(ui.LBUTTONDOWN,0)
 
-    btndaily:SetEventScript(ui.LBUTTONUP, "MARKETPRICEBOARD_CHANGED_CHART_OPTION")
-    btndaily:SetEventScriptArgNumber(ui.LBUTTONUP,1)
+    btndaily:SetEventScript(ui.LBUTTONDOWN, "MARKETPRICEBOARD_CHANGED_CHART_OPTION")
+    btndaily:SetEventScriptArgNumber(ui.LBUTTONDOWN,1)
     
-    btntick:SetEventScript(ui.LBUTTONUP, "MARKETPRICEBOARD_CHANGED_CHART_OPTION")
-    btntick:SetEventScriptArgNumber(ui.LBUTTONUP,2)
+    btntick:SetEventScript(ui.LBUTTONDOWN, "MARKETPRICEBOARD_CHANGED_CHART_OPTION")
+    btntick:SetEventScriptArgNumber(ui.LBUTTONDOWN,2)
     if(g.chartdaily==true)then
         btnhourly:SetCheck(0)
         btndaily:SetCheck(1)
@@ -2341,16 +2705,12 @@ function MARKETPRICEBOARD_UPDATE_CHART_OPTION(detailframe)
         
     end
     if(g.concat==true)then
-        btnhourly:SetCheck(0)
+        btntick:SetCheck(1)
      
     else
         btntick:SetCheck(0)
 
         
     end
-end
-
-if g.debug and MARKETPRICEBOARD_LOADALLPRICE ~= nil then
-    MARKETPRICEBOARD_LOADALLPRICE()
 end
 
