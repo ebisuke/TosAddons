@@ -297,6 +297,7 @@ end
 function ASFSOS_DO_SKILL(clsid)
     EBI_try_catch{
         try = function()
+        
             g.skillinfo = session.GetSkill(clsid);
             if (g.skillinfo == nil) then
                 ReserveScript("quickslot.SwapWeapon()", 0.5)
