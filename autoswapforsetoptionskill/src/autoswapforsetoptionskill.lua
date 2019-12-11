@@ -310,7 +310,7 @@ function ASFSOS_DO_SKILL(clsid)
                 else
                     g.totalcooldown = g.skillinfo:GetTotalCoolDownTime()
                     g.currentcooldown = g.skillinfo:GetTotalCoolDownTime()
-                    
+                    g.waitforend = clsid
                     control.Skill(clsid)
                 end
             end
@@ -412,10 +412,10 @@ function ASFSOS_ICON_USE(object, reAction)
                     if (valid ~= nil and valid ~= nil and valid.clsid == iconInfo.type) then
                         local skillInfo = session.GetSkill(valid.clsid);
                         if (skillInfo == nil) then
-                            g.waitforend = valid.clsid
+                            --g.waitforend = valid.clsid
                             g.clsid = valid.clsid
-                            quickslot.SwapWeapon()
-                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.5)
+                            ReserveScript("quickslot.SwapWeapon()",0.25)
+                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.75)
                         end
                         return true
                     end
