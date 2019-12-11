@@ -398,15 +398,16 @@ function ASFSOS_ICON_USE(object, reAction)
 
                     --control.Skill(iconInfo.type);
                     local valid = ASFSOS_GETVALID()
-                    local skillInfo = session.GetSkill(valid.clsid);
+                    
 
-                    if (valid ~= nil and valid ~= nil and valid.clsid == iconInfo.type and skillInfo == nil) then
-                        
-                        g.waitforend = valid.clsid
-                        g.clsid=valid.clsid
-                        quickslot.SwapWeapon()
-                        ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.5)
-                        
+                    if (valid ~= nil and valid ~= nil and valid.clsid == iconInfo.type) then
+                        local skillInfo = session.GetSkill(valid.clsid);
+                        if(skillInfo == nil)then
+                            g.waitforend = valid.clsid
+                            g.clsid=valid.clsid
+                            quickslot.SwapWeapon()
+                            ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.5)
+                        end
                         return true
                     end
                 end

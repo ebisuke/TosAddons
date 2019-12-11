@@ -241,8 +241,8 @@
     "name" : "AutoSwap For SetOptionSkill",
     "file" : "autoswapforsetoptionskill",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "autoswapforsetoptionskill-v0.0.1",
+    "fileVersion" : "v0.0.2",
+    "releaseTag" : "autoswapforsetoptionskill-v0.0.2",
     "unicode" : "📖",
     "description" : "セット装備スキルを装備スワップで使用可能にします",
     "tags" : [
