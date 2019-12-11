@@ -417,7 +417,7 @@ function ASFSOS_ICON_USE(object, reAction)
                             ReserveScript("quickslot.SwapWeapon()",0.25)
                             ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.75)
                         else
-                            control.Skill(clsid)
+                            control.Skill(valid.clsid)
                         end
                         return true
                     end
