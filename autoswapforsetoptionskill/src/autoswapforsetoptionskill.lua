@@ -301,7 +301,7 @@ function ASFSOS_DO_SKILL(clsid)
             else
                 if(g.skillinfo:GetCurrentCoolDownTime()>0)then
                     --failed
-                    quickslot.SwapWeapon()
+                    ReserveScript("quickslot.SwapWeapon()",0.5)
                     g.waitforend = nil
                 else
                     g.totalcooldown=g.skillinfo:GetTotalCoolDownTime()
