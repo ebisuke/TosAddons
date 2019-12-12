@@ -1669,6 +1669,7 @@ MARKETPRICEBOARD_DBGOUT("gene")
     if(g.prices.latestDate==nil or 
     os.date(g.useformat,MARKETPRICEBOARD_makeTimeStamp(g.prices.latestDate))~=os.date(g.useformat,MARKETPRICEBOARD_makeTimeStamp(now)))then
         currentState={priceHigh="0",priceLow=g.max}
+        currentState.priceClose = sellprice
         g.prices.latestDate=now
     end
   
@@ -1689,12 +1690,20 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
         data= g.prices[name]  or {indication_bid = {}}
     end
 
+    local now=os.date(g.dateformat)
     local currentState = data.currentState or {priceHigh="0",priceLow=g.max}
-  
+
     local sellprice=currentState.priceClose 
     if(currentState.priceOpen==nil)then
         currentState.priceOpen=sellprice
     end
+    if(g.prices.latestDate==nil or 
+    os.date(g.useformat,MARKETPRICEBOARD_makeTimeStamp(g.prices.latestDate))~=os.date(g.useformat,MARKETPRICEBOARD_makeTimeStamp(now)))then
+        currentState={priceHigh="0",priceLow=g.max}
+        currentState.priceClose = sellprice
+        g.prices.latestDate=now
+    end
+  
     if(sellprice=="0")then
         MARKETPRICEBOARD_DBGOUT("Wha!?")
     end
@@ -1712,7 +1721,7 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
     for k,v in pairs(data.history) do
         if(v.date==date)then
             data.history[k].date=date
-            data.history[k].data=currentState
+            data.history[k].data=deepcopy(currentState)
             
             added=true
             MARKETPRICEBOARD_DBGOUT("added")
@@ -1723,7 +1732,7 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
 
     if(added==false)then
         MARKETPRICEBOARD_DBGOUT("created")
-        data.history[#data.history+1]={date=date,data=currentState}
+        data.history[#data.history+1]={date=date,data=deepcopy(currentState)}
         
     end
     data.currentState = currentState
@@ -2448,11 +2457,12 @@ function MARKETPRICEBOARD_RENDER_CHART()
             if(g.chartdaily==true)then
                 data.history=MARKETPRICEBOARD_AGGREGATE_DAILY(class.ClassName)
             end
+
             if(g.concat==false)then
                 data.history=MARKETPRICEBOARD_HISTORY_MAKESPACE(data.history)
             end
             MARKETPRICEBOARD_DBGOUT(tostring(#data.history))
-            local w=16
+            local w=8
             local offset=50
             local minimum=g.maxint
             local maximum=0
@@ -2522,8 +2532,8 @@ function MARKETPRICEBOARD_RENDER_CHART()
                     hist,
                     chart,
                     color,
-                    offset+i*w+w/2-4,
-                h-(high-minimum)*h/minmaxheight+yoffset,8,
+                    offset+i*w+w/2-2,
+                h-(high-minimum)*h/minmaxheight+yoffset,4,
                 ((high-minimum)-(low-minimum))*h/minmaxheight)
             
             end
@@ -2541,8 +2551,8 @@ function MARKETPRICEBOARD_AGGREGATE_DAILY(classname)
     local aggregate={}
     local idx=1
     local date=nil
-    if(data==nil)then
-        return {}
+    if(data==nil or data.history==nil)then
+        return {history={}}
     end
     for k,v in ipairs(data.history) do
         local createnew=false
@@ -2577,7 +2587,7 @@ function MARKETPRICEBOARD_AGGREGATE_DAILY(classname)
             if IsLesserThanForBigNumber(v.data.priceLow, newdata.data.priceLow) == 1 then
                 newdata.data.priceLow = v.data.priceLow
             end
-            aggregate[idx]=newdata
+            aggregate[idx-1]=newdata
         end
     end
     return aggregate
@@ -2585,36 +2595,39 @@ end
 
 function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
     local newhist={}
-    local idx=1
+    local idx=12
     local date=nil
     local cur=history[1]
     local curdate=MARKETPRICEBOARD_makeTimeStamp(cur.date)
     local last=  history[#history]
     local lastdate=MARKETPRICEBOARD_makeTimeStamp(last.date)
-    
+    local useformat
+    if(g.chartdaily==true)then
+        useformat=g.dateformatdaily
+    else
+        useformat=g.dateformat
+    end
+
     if(curdate==lastdate)then
         return {cur}
     end
 
     for k,v in ipairs(history) do
-        local next=v
+        cur=v
+
         local giveup=0
         local copy=false
         while giveup<100 do
             
             --少しずつインクリしていく
             giveup=giveup+1
-            local useformat
-            if(g.daily)then
-                useformat=g.dateformatdaily
-            else
-                useformat=g.dateformat
-            end
+
             if(
                 os.date(useformat,MARKETPRICEBOARD_makeTimeStamp(v.date))==
                 os.date(useformat,curdate)
             )then
                 -- pass
+                MARKETPRICEBOARD_DBGOUT("pass")
                 break
             else
                 -- 作成
@@ -2640,10 +2653,10 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
                     }
                 end
                 
-
+                MARKETPRICEBOARD_DBGOUT("create")
                 copy=true
                 idx=idx+1
-                if(g.daily)then
+                if(g.chartdaily==true)then
                     curdate=curdate+86400
                 else
                     curdate=curdate+3600
@@ -2653,7 +2666,7 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
         
         
     end
-    --newhist[#newhist+1]=last
+    newhist[#newhist+1]=last
     return newhist
 end
 function MARKETPRICEBOARD_SIMPLIFIEDINT(bignumber)
