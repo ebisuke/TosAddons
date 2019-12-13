@@ -5,6 +5,7 @@ function EBI_try_catch(what)
     end
     return result
 end
+local acutil = require('acutil')
 function FINDPORTALSHOP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -14,6 +15,7 @@ function FINDPORTALSHOP_ON_INIT(addon, frame)
                 OLD_MAP_OPEN = MAP_OPEN
                 MAP_OPEN = FINDPORTALSHOP_MAP_OPEN_JUMPER
             end
+            --acutil.addSysIcon('findportalshop', 'sysmenu_sys', 'findportalshop', 'FINDPORTALSHOP_TOGGLE')
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
@@ -32,6 +34,7 @@ end
 function FINDPORTALSHOP_MAP_OPEN(frame)
     EBI_try_catch{
         try = function()
+ 
             local btnopen = frame:CreateOrGetControl("button", "btnfindportal", 0, 0, 120, 40)
             btnopen:SetMargin(0, 18, 80 + 120 + 20, 0)
             btnopen:SetGravity(ui.RIGHT, ui.TOP)
@@ -100,7 +103,6 @@ function FINDPORTALSHOP_LISTING()
                         --registerCheck:SetTextByKey('map', mapCls.Name);
                         portals[#portals] = {name = groupname, title = shop.Title, mapname = mapCls.Name, position = {x = x, y = y, z = z}}
                     end
-                
                 end
             end
         end
