@@ -11,14 +11,16 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 
 g.version = 0
-g.settings={x=300,y=300,volume=100,mute=false}
+g.settings = {x = 300, y = 300, volume = 100, mute = false}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "testboard"
 g.debug = true
-g.handle=nil
-g.interlocked=false
-g.currentIndex=1
+g.handle = nil
+g.interlocked = false
+g.currentIndex = 1
+g.x=nil
+g.y=nil
 --ライブラリ読み込み
 CHAT_SYSTEM("[TESTBOARD]loaded")
 local acutil = require('acutil')
@@ -76,7 +78,7 @@ end
 
 function TESTBOARD_LOAD_SETTINGS()
     TESTBOARD_DBGOUT("LOAD_SETTING")
-    g.settings = {foods={}}
+    g.settings = {foods = {}}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
@@ -87,7 +89,7 @@ function TESTBOARD_LOAD_SETTINGS()
         g.settings = t
         if (not g.settings.version) then
             g.settings.version = 0
-
+        
         end
     end
     
@@ -113,9 +115,8 @@ function TESTBOARD_ON_INIT(addon, frame)
             g.addon = addon
             g.frame = frame
             --g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(CAMPCHEF_GETCID()))
-
-            
-            addon:RegisterMsg('GAME_START_3SEC', 'TESTBOARD_SHOW')
+            acutil.addSysIcon('testboard', 'sysmenu_sys', 'testboard', 'TESTBOARD_TOGGLE_FRAME')
+            --addon:RegisterMsg('GAME_START_3SEC', 'TESTBOARD_SHOW')
             --ccするたびに設定を読み込む
             if not g.loaded then
                 
@@ -128,10 +129,10 @@ function TESTBOARD_ON_INIT(addon, frame)
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
             timer:Start(0.1);
-            TESTBOARD_SHOW(g.frame)
+            --TESTBOARD_SHOW(g.frame)
             
-            
-
+            TESTBOARD_INIT()
+            g.frame:ShowWindow(0)
         end,
         catch = function(error)
             TESTBOARD_ERROUT(error)
@@ -139,217 +140,78 @@ function TESTBOARD_ON_INIT(addon, frame)
     }
 end
 function TESTBOARD_SHOW(frame)
-    frame=ui.GetFrame(g.framename)
+    frame = ui.GetFrame(g.framename)
     frame:ShowWindow(1)
+end
+function TESTBOARD_CLOSE(frame)
+    frame = ui.GetFrame(g.framename)
+    frame:ShowWindow(0)
+end
+function TESTBOARD_TOGGLE_FRAME(frame)
+    ui.ToggleFrame(g.framename)
+
+end
+function TESTBOARD_INIT()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+            local pic = frame:CreateOrGetControl("picture", "pic", 0, 80, 0, 0)
+            tolua.cast(pic, "ui::CPicture")
+            pic:Resize(frame:GetWidth(), frame:GetHeight()-80)
+            pic:CreateInstTexture();
+            pic:SetEnableStretch(0)
+            pic:FillClonePicture("FFFFFFFF");
+            
+            pic:EnableHitTest(1)
+        end,
+        catch = function(error)
+            TESTBOARD_ERROUT(error)
+        end
+    }
 end
 function TESTBOARD_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
-        --TESTBOARD_DBGOUT("test")
-        --REQUEST_MAP_UPDATE(nil)
-        local minimap = ui.GetFrame("minimap")
-        local npcList = minimap:GetChild('npclist')
-        tolua.cast(npcList, 'ui::CGroupBox');
-        TESTBOARD_MAP_UPDATE_GUILD(npcList,nil,nil,nil,nil)
-        TESTBOARD_MAP_UPDATE_PARTY(npcList,nil,nil,nil,nil)
-        TESTBOARD_MAP_UPDATE_GUILD(ui.GetFrame("map"),nil,nil,nil,nil)
-        TESTBOARD_MAP_UPDATE_PARTY(ui.GetFrame("map"),nil,nil,nil,nil)
+            local frame = ui.GetFrame(g.framename)
+            local pic = frame:GetChild("pic")
+            tolua.cast(pic, "ui::CPicture")
+
+            local x, y = GET_LOCAL_MOUSE_POS(pic);
+            if mouse.IsLBtnPressed() ~= 0 then
+                if(g.x==nil or g.y==nil )then
+                    g.x=x
+                    g.y=y
+                end
+                print(string.format("draw %d,%d",x,y))
+                local pics=pic:GetPixelColor(x, y);
+                print("pics "..tostring(pics))
+                
+                pic:DrawBrush(g.x,g.y,x,y, "spray_8", "FFFF0000");
+                pic:Invalidate()
+                g.x=x
+                g.y=y
+            else
+                g.x=nil
+                g.y=nil
+            end
         end,
-    catch = function(error)
-        TESTBOARD_ERROUT(error)
-    end
+        catch = function(error)
+            TESTBOARD_ERROUT(error)
+        end
     }
 end
-function TESTBOARD_MAP_UPDATE_PARTY(frame, msg, arg, type, info)
-
-    DESTROY_CHILD_BYNAME(frame, 'PM_');
-
-    local mapprop = session.GetCurrentMapProp();
-    local list = session.party.GetPartyMemberList();
-    local count = list:Count();
-
-    -- if count == 1 then
-    --     return;
-    -- end
-
-
-    for i = 0, count - 1 do
-        
-        local pcInfo = list:Element(i);
-        if pcInfo:GetHandle() ~= 0 then
-            local show_flag = true
-            local actor = world.GetActor(pcInfo:GetHandle())   
-            if pcInfo:GetHandle() ~= session.GetMyHandle() then
-              
-                if actor ~= nil and session.friendly_fight.IsFriendlyFightState() == true and actor:IsVisiableState() == false then
-                    show_flag = false
-                end
-            end
+function TESTBOARD_WEBB()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+            local web=frame:CreateOrGetControl("browser","web",0,80,frame:GetWidth(),frame:GetHeight()-80)
             
-            if show_flag == true then
-                if(actor~=nil)then
-                    TESTBOARD_CREATE_PM_PICTURE(frame, pcInfo, 0, mapprop,actor)
-                else
-                    CREATE_PM_PICTURE(frame, pcInfo, 0, mapprop)
-                end
-            end
+            web:SetUrlinfo("https://www.google.com");	
+            web:SetForActiveX(true);
+            web:ShowBrowser(true);
+        end,
+        catch = function(error)
+            TESTBOARD_ERROUT(error)
         end
-
-    end
-
+    }
 end
-
-function TESTBOARD_MAP_UPDATE_GUILD(frame, msg, arg, type, info)
-    DESTROY_CHILD_BYNAME(frame, 'GM_');
-    if session.world.IsIntegrateServer() == true then
-        DESTROY_GUILD_MEMBER_ICON()
-        return
-    end
-
-    local mapprop = session.GetCurrentMapProp();
-    local list = session.party.GetPartyMemberList(PARTY_GUILD);
-    local count = list:Count();
-    -- if count == 1 then
-    --     return;
-    -- end
-
-    for i = 0, count - 1 do
-        
-        local pcInfo = list:Element(i)
-        if pcInfo:GetHandle() ~= 0 then
-            local show_flag = true
-            local actor = world.GetActor(pcInfo:GetHandle())   
-            if pcInfo:GetHandle() ~= session.GetMyHandle() then
-                            
-                if actor ~= nil and session.friendly_fight.IsFriendlyFightState() == true and actor:IsVisiableState() == false then
-                    show_flag = false
-                end
-            end
-            
-            if show_flag == true  then
-                if(actor~=nil)then
-                    TESTBOARD_CREATE_PM_PICTURE(frame, pcInfo, PARTY_GUILD, mapprop,actor)
-                else
-                    CREATE_PM_PICTURE(frame, pcInfo, PARTY_GUILD, mapprop)
-                end
-
-            end
-        end
-    end
-end
-function  TESTBOARD_CREATE_PM_PICTURE(frame, pcInfo, type, mapprop,actor)    
-	local myInfo = session.party.GetMyPartyObj(type);    
-	if nil == myInfo then
-		return;
-	end
-    
-	if myInfo == pcInfo then
-	 	return;
-	end
-	
-	if myInfo:GetMapID() ~= pcInfo:GetMapID() or myInfo:GetChannel() ~= pcInfo:GetChannel() then
-		return;
-	end
-
-	local header = "PM_";
-	if type == PARTY_GUILD then
-		header = "GM_";
-	end    
-	local name = header .. pcInfo:GetAID()
-	if pcInfo:GetMapID() == 0 then
-		frame:RemoveChild(name);
-		return
-	end
-    
-    if type == PARTY_GUILD then        
-		if frame:GetChild("GM_" .. pcInfo:GetAID()) ~= nil then
-			return;
-		end
-	else
-		if frame:GetChild("PM_" .. pcInfo:GetAID()) ~= nil then
-			return;
-		end
-	end
-        
-	local instInfo = pcInfo:GetInst();
-	local map_partymember_iconset = frame:CreateOrGetControlSet('map_partymember_iconset', name, 0, 0);    
-	map_partymember_iconset:SetTooltipType("partymap");
-	map_partymember_iconset:SetTooltipArg(pcInfo:GetName(), type);
-
-	local pm_name_rtext = GET_CHILD_RECURSIVELY(map_partymember_iconset,"pm_name","ui::CRichText")
-	pm_name_rtext:SetTextByKey("pm_fname", pcInfo:GetName())    
-	local iconinfo = pcInfo:GetIconInfo();    
-	SET_PM_MINIMAP_ICON(map_partymember_iconset, instInfo.hp, pcInfo:GetAID());
-	TESTBOARD_SET_PM_MAPPOS(frame, map_partymember_iconset, instInfo, mapprop,actor)    
-end
-function  TESTBOARD_SET_PM_MAPPOS(frame, controlset, instInfo, mapprop,actor)    	
-	local worldPos = actor:GetPos();
-	SET_MINIMAP_CTRLSET_POS(frame, controlset, worldPos, mapprop);
-end
--- function TESTBOARD_ON_AOS_OBJ_ENTER(frame, msg, str, handle, info)
-
--- 	local iconSize = 12;
--- 	local type = info.classID;
--- 	local iconName = "fullwhite";
---     local colorTone = "";
---     TESTBOARD_DBGOUT("AOC")
--- 	if type == 11119 then
--- 		iconName = "fullwhite";
--- 		colorTone = "FF888800";
--- 		iconSize = 4;
--- 	elseif type == 40205 then
--- 		iconName = "minimap_goddess";
--- 	elseif type == 40200 then
--- 		iconName = "minimap_portal";
--- 	elseif type == 40202 or type == 40206 then
--- 		iconName = "fullwhite";
--- 		if info.teamID == GET_MY_TEAMID() then
--- 			colorTone = "FF0000FF";
--- 		else
--- 			colorTone = "FFFF0000";
--- 		end
-		
--- 		iconSize = 3;
--- 	elseif type == 40203 then -- golem
--- 		iconName = "fullwhite";
--- 		if info.teamID == GET_MY_TEAMID() then
--- 			colorTone = "FF0000FF";
--- 		else
--- 			colorTone = "FFFF0000";
--- 		end
-		
--- 		iconSize = 7;
--- 	elseif type == 40204 then -- midboss
--- 		iconName = "fullwhite";
--- 		colorTone = "FF880088";
--- 		iconSize = 9;
--- 	elseif type == 0 and session.GetMyHandle() ~= handle then
--- 		iconName = "fullwhite";
--- 		if info.teamID == GET_MY_TEAMID() then
--- 			colorTone = "FF0000FF";
--- 		else
--- 			colorTone = "FFFF0000";
--- 		end
-		
--- 		iconSize = 6;
--- 	end
-	
--- 	if iconName == "" then
--- 		return;
--- 	end
-	
--- 	local ctrlName = "__CTRL__" .. handle;
--- 	local pic = frame:CreateOrGetControl('picture', ctrlName, 500, 500, iconSize, iconSize);
--- 	tolua.cast(pic, "ui::CPicture");
--- 	pic:SetImage(iconName);
--- 	pic:SetEnableStretch(1);
--- 	pic:ShowWindow(1);
--- 	if colorTone ~= "" then
--- 		pic:SetColorTone(colorTone);
--- 	end
-		
--- 	local map = frame:GetChild("map");
-	
--- 	SET_AOS_PIC_POS_WORLD(frame, map, pic, info.x, info.y);
-	
--- end
