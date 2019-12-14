@@ -1370,7 +1370,7 @@ function MARKETPRICEBOARD_ON_INIT(addon, frame)
             if not g.loaded then
                 g.loaded = true
             end
-            g.ignore=false
+            g.ignore=true
             MARKETPRICEBOARD_INIT_FRAME(frame)
             MARKETPRICEBOARD_LOADALLPRICE()
             MARKETPRICEBOARD_UPDATEBOARD()
@@ -1385,7 +1385,7 @@ end
 
 function MARKETPRICEBOARD_3SEC()
     
-    ReserveScript("MARKETPRICEBOARD_EBI_TRACKER()",5)
+    ReserveScript("MARKETPRICEBOARD_EBI_TRACKER()",20)
     
 end
 function MARKETPRICEBOARD_TOGGLE_FRAME()
@@ -1620,16 +1620,17 @@ function MARKETPRICEBOARD_ON_MARKET_ITEM_LIST(frame)
             if( g.ignore==false and session.market.GetCurPage()<
                 math.floor(session.market.GetTotalCount() / g.requestcount))then
                 MARKETPRICEBOARD_DBGOUT("NEXT PAGE")
-                ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",session.market.GetCurPage()+1),0.5)
+                ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",session.market.GetCurPage()+1),1)
 
             else
                 local now=os.date(g.dateformat)
-                if(g.ignore==false or MARKETPRICEBOARD_makeTimeStamp(g.prices.latestDate)~=MARKETPRICEBOARD_makeTimeStamp(now))then
+
+                if(g.ignore==false or (g.clsidlist~= nil and #g.clsidlist > 0 and g.prices[GetClassByType("Item",g.clsidlist[1]).ClassName].latestDate~=now))then
                     MARKETPRICEBOARD_UPDATEHILO(GetClassByType("Item",g.clsidlist[1]).ClassName)
                     table.remove(g.clsidlist, 1)
 
                     if(#g.clsidlist>0)then
-                        ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",0),0.5)
+                        ReserveScript(string.format("MARKETPRICEBOARD_REFRESHMARKET_SIMPLE(%d)",0),1)
                     else
                         ReserveScript(g.compfuncstr,0.1)
                     end
@@ -1642,6 +1643,7 @@ function MARKETPRICEBOARD_ON_MARKET_ITEM_LIST(frame)
                        
                     end
                 end
+           
             end
         
            
@@ -1672,10 +1674,10 @@ MARKETPRICEBOARD_DBGOUT("gene")
     end
     local now=os.date(g.dateformat)
     local currentState = deepcopy(data.currentState) or {priceHigh="0",priceLow=g.max}
-    if(g.prices.latestDate==nil)then
+    if(currentState.priceClose==nil)then
         currentState={priceHigh="0",priceLow=g.max}
         currentState.priceClose = sellprice
-        g.prices.latestDate=now
+        --g.prices.latestDate=now
     end
   
    
@@ -1701,13 +1703,18 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
     local sellprice=currentState.priceClose
     
 
-    if g.prices.latestDate==nil or MARKETPRICEBOARD_makeTimeStamp(g.prices.latestDate)~=MARKETPRICEBOARD_makeTimeStamp(now) then
-        currentState={priceHigh="0",priceLow=g.max}
+    if g.prices[name].latestDate==nil or g.prices[name].latestDate~=now or currentState.priceClose==nil then
+        currentState={priceHigh="0",priceLow=g.max,priceOpen=  currentState.priceOpen,priceClose=  currentState.priceClose}
         currentState.priceClose = sellprice
-        currentState.priceOpen = sellprice
-        g.prices.latestDate=now
-    elseif(currentState.priceOpen==nil)then
+
+        g.prices[name].latestDate=now
+        MARKETPRICEBOARD_DBGOUT("UPPER")
+
+    end
+    if(currentState.priceOpen==nil)then
         currentState.priceOpen=sellprice
+        MARKETPRICEBOARD_DBGOUT("UNDER")
+
     end
     
     --現在値の更新
@@ -1718,13 +1725,13 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
         currentState.priceLow = sellprice
     end
 
-    local date=g.prices.latestDate
+    local date=g.prices[name].latestDate
     local added=false
     local noadd=false
     local forhistory=deepcopy(currentState)
     --値段つかずの処理
-    if(forhistory.priceClose=="0")then
-        if(forhistory.priceOpen~="0")then
+    if(forhistory.priceClose=="0" or forhistory.priceClose== nil)then
+        if(forhistory.priceOpen~="0" and forhistory.priceOpen~=nil)then
             forhistory.priceClose=forhistory.priceOpen
         else
             noadd=true
@@ -1747,6 +1754,7 @@ function MARKETPRICEBOARD_UPDATEHILO(name)
 
     if(added==false)then
         MARKETPRICEBOARD_DBGOUT("created")
+        dar=forhistory
         data.history[#data.history+1]={date=date,data=forhistory}
     end
     data.currentState = deepcopy(currentState)
@@ -1837,7 +1845,7 @@ function MARKETPRICEBOARD_REFRESHMARKET()
                 ui.MsgBox("今はダメ")
                 return
             end
-
+            CHAT_SYSTEM("[MPB]価格情報取り込みを開始します。ESCを押し続けるとキャンセルします。")
             local gauge=frame:GetChild('gauge')
             tolua.cast(gauge,"ui::CGauge")
 
@@ -1865,7 +1873,7 @@ function MARKETPRICEBOARD_REFRESHMARKET()
 
                 end
             end
-            gauge:SetMaxPoint(#clsidlist-2)
+            gauge:SetMaxPoint(#clsidlist)
             MARKETPRICEBOARD_REFRESHMARKETITEM(clsidlist,"MARKETPRICEBOARD_REFRESHMARKET_END()")
         end,
         catch = function(error)
@@ -1933,6 +1941,13 @@ function MARKETPRICEBOARD_REFRESHMARKETITEM(clsidlist,compfuncstr,page)
 end
 function MARKETPRICEBOARD_REFRESHMARKET_END()
     g.ignore = true
+    local frame = ui.GetFrame('marketpriceboard')
+    if (frame == nil) then
+        return
+    end
+    local gauge=frame:GetChild('gauge')
+    tolua.cast(gauge,"ui::CGauge")
+    gauge:SetCurPoint(0)
     MARKETPRICEBOARD_UPDATEBOARD()
     MARKETPRICEBOARD_UPDATEDETAIL()
 end
@@ -2008,6 +2023,13 @@ function MARKETPRICEBOARD_GET_UPDOWN(className)
     end
     return 0
 end
+function MARKETPRICEBOARD_GET_CHANGE(className)
+    local data=MARKETPRICEBOARD_AGGREGATE_DAILY(className)
+    if(data==nil or #data==0 or data[#data].data.priceClose==nil or data[#data].data.priceOpen==nil)then
+        return "0"
+    end
+    return SumForBigNumberInt64(data[#data].data.priceClose,"-"..data[#data].data.priceOpen or "0")
+end
 function MARKETPRICEBOARD_UPDATEBOARD()
     EBI_try_catch{
         try = function()
@@ -2029,14 +2051,30 @@ function MARKETPRICEBOARD_UPDATEBOARD()
                             local col="#FFFFFF"
                             local updown=MARKETPRICEBOARD_GET_UPDOWN(className)
                             if(updown==-1)then
-                                col="#00FFAA"
+                                col="#FF0000"
                             elseif updown == 1 then
-                                col="#FF2222"
+                                col="#00FF77"
                             end
                             txt:SetGravity(ui.RIGHT, ui.TOP)
                             txt:EnableHitTest(0)
                             txt:SetText("{ol}{"..col.."}{s16}" .. bidrate.count)
                             txt:ShowWindow(1)
+
+                            local txtchange = slot:CreateOrGetControl("richtext", "change", 0, 0, slot:GetWidth(), 16)
+                            
+                            local change=MARKETPRICEBOARD_GET_CHANGE(className)
+                            local str="{ol}{"..col.."}{s16}"..MARKETPRICEBOARD_SHORTPRICE(change)
+                            if(IsGreaterThanForBigNumber(change,"0")==1)then
+                                str="{img green_up_arrow 14 14}{ol}{"..col.."}{s16}"..MARKETPRICEBOARD_SHORTPRICE(change):gsub("-","")
+                            elseif IsLesserThanForBigNumber(change,"0") == 1 then
+                            
+                                str="{img red_down_arrow 14 14}{ol}{"..col.."}{s16}"..MARKETPRICEBOARD_SHORTPRICE(change):gsub("-","")
+                            end
+                            txtchange:SetGravity(ui.RIGHT, ui.CENTER_VERT)
+                            txtchange:EnableHitTest(0)
+
+                            txtchange:SetText(str)
+                            txtchange:ShowWindow(1)
                             local txtprice = slot:CreateOrGetControl("richtext", "price", 0, 0, slot:GetWidth(), 16)
                             txtprice:SetGravity(ui.RIGHT, ui.BOTTOM)
                             txtprice:EnableHitTest(0)
@@ -2059,6 +2097,41 @@ function MARKETPRICEBOARD_LOADPRICE(classname)
     g.prices=g.prices or {}
     g.prices[classname]=
     loadfromfile(g.basePath.."/price_"..tostring(GetServerGroupID()).."_"..classname..".lua")
+    
+    --修正処置
+    g.prices[classname]=g.prices[classname]or {indication_bid={}}
+    g.prices[classname].history=g.prices[classname].history or {}
+    local fixed=false
+    local i=1
+    local lim=#g.prices[classname].history
+    while i <= #g.prices[classname].history do
+        local v=g.prices[classname].history[i]
+        if(v.data.priceClose==nil)then
+            
+            table.remove(g.prices[classname].history,i)
+            fixed=true
+        else
+            
+            if(v.data==nil or v.data.priceHigh==nil or v.data.priceLow==nil)then
+                g.prices[classname].history[i].data=g.prices[classname].history[i].data or 
+                {priceOpen=v.data.priceClose or "0",
+                priceClose=v.data.priceClose or "0"}
+                g.prices[classname].history[i].data.priceLow=v.data.priceClose or "0"
+                g.prices[classname].history[i].data.priceHigh=v.data.priceClose or "0"
+                
+                fixed=true
+            end
+            if(v.data.priceOpen==nil)then
+                g.prices[classname].history[i].data.priceOpen=v.data.priceClose
+                fixed=true
+            end
+        end
+        i=i+1
+    end
+    if fixed then
+       
+        MARKETPRICEBOARD_SAVEPRICE(classname)
+    end
 end
 function MARKETPRICEBOARD_LOADALLPRICE()
     EBI_try_catch{
@@ -2432,14 +2505,16 @@ function MARKETPRICEBOARD_UPDATEDETAIL()
     txtavg:SetText("{ol}{#FFFFFF}{s16}平均取引値　 :")
 
     local price=MARKETPRICEBOARD_AGGREGATE_DAILY(class.ClassName)
-    local txthigh=detailframe:CreateOrGetControl("richtext","high",20,460,200,18)
-    txthigh:SetText("{ol}{#FFFFFF}{s16}日中高値　 　 :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceHigh))
-    local txtlow=detailframe:CreateOrGetControl("richtext","low",20,480,200,18)
-    txtlow:SetText("{ol}{#FFFFFF}{s16}日中安値　　  :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceLow))
-    local txtopen=detailframe:CreateOrGetControl("richtext","open",20,500,200,18)
-    txtopen:SetText("{ol}{#FFFFFF}{s16}日中始値　 　 :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceOpen))
-    local txtclose=detailframe:CreateOrGetControl("richtext","close",20,520,200,18)
-    txtclose:SetText("{ol}{#FFFFFF}{s16}日中終値　　  :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceClose))
+    if(price[#price].data~=nil)then
+        local txthigh=detailframe:CreateOrGetControl("richtext","high",20,460,200,18)
+        txthigh:SetText("{ol}{#FFFFFF}{s16}日中高値　 　 :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceHigh or "0"))
+        local txtlow=detailframe:CreateOrGetControl("richtext","low",20,480,200,18)
+        txtlow:SetText("{ol}{#FFFFFF}{s16}日中安値　　  :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceLow or "0"))
+        local txtopen=detailframe:CreateOrGetControl("richtext","open",20,500,200,18)
+        txtopen:SetText("{ol}{#FFFFFF}{s16}日中始値　 　 :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceOpen or "0"))
+        local txtclose=detailframe:CreateOrGetControl("richtext","close",20,520,200,18)
+        txtclose:SetText("{ol}{#FFFFFF}{s16}日中終値　　  :"..MARKETPRICEBOARD_SHORTPRICE(price[#price].data.priceClose or "0"))
+    end
     local itemProp = geItemTable.GetPropByName(class.ClassName);
     local price=0
     if itemProp ~= nil then
@@ -2528,7 +2603,7 @@ function MARKETPRICEBOARD_RENDER_CHART_IMPL(chart,clsid)
             tolua.cast(innerchart,"ui::CPicture")
    
             innerchart:CreateInstTexture()
-            innerchart:FillClonePicture("FFFFFFFF");
+            innerchart:FillClonePicture("FF000000");
             innerchart:EnableHitTest(1)
 
             innerchart:SetUserValue("clsid",clsid)
@@ -2554,6 +2629,8 @@ function MARKETPRICEBOARD_RENDER_CHART_IMPL(chart,clsid)
             if(g.concat==false)then
                 data.history=MARKETPRICEBOARD_HISTORY_MAKESPACE(data.history)
             end
+
+            
             MARKETPRICEBOARD_DBGOUT(tostring(#data.history))
             local w=6
 
@@ -2562,7 +2639,10 @@ function MARKETPRICEBOARD_RENDER_CHART_IMPL(chart,clsid)
             for i=#data.history,math.max(1,#data.history-g.chartlimit),-1 do
                 local hist=data.history[i]
                 local high,low,open,close
-                
+                if(hist==nil) then
+                    MARKETPRICEBOARD_DBGOUT("FAIL"..tostring(i))
+                    return
+                end
                 MARKETPRICEBOARD_DBGOUT("da"..tostring(hist.data.priceHigh))
                 high=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceHigh)
                 low=MARKETPRICEBOARD_SIMPLIFIEDINT(hist.data.priceLow)
@@ -2722,20 +2802,22 @@ function MARKETPRICEBOARD_AGGREGATE_DAILY(classname)
         if(createnew==true)then
             date=v.date
             aggregate[idx]=deepcopy(v)
+            
             idx=idx+1
-            MARKETPRICEBOARD_DBGOUT("agg")
+            
         else
-            MARKETPRICEBOARD_DBGOUT("ugg")
-            local newdata=aggregate[idx-1]
+            
+            local newdata=deepcopy(aggregate[idx])
             newdata.data.priceClose=v.data.priceClose
+            newdata.data.priceOpen=v.data.priceOpen
           --現在値の更新
-            if IsGreaterThanForBigNumber(v.data.priceHigh,newdata.data.priceHigh) == 1 then
+            if newdata.data.priceHigh==nil or IsGreaterThanForBigNumber(v.data.priceHigh,newdata.data.priceHigh) == 1 then
                 newdata.data.priceHigh = v.data.priceHigh
             end
-            if IsLesserThanForBigNumber(v.data.priceLow, newdata.data.priceLow) == 1 then
+            if newdata.data.priceLow ==nil or IsLesserThanForBigNumber(v.data.priceLow, newdata.data.priceLow) == 1 then
                 newdata.data.priceLow = v.data.priceLow
             end
-            aggregate[idx-1]=newdata
+            aggregate[idx]=newdata
         end
     end
     return aggregate
@@ -2746,7 +2828,6 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
     local idx=1
     local date=nil
     local cur=history[1]
-    local prev=history[1]
     local curdate=MARKETPRICEBOARD_makeTimeStamp(cur.date)
     local last=  history[#history]
     local lastdate=MARKETPRICEBOARD_makeTimeStamp(last.date)
@@ -2760,27 +2841,27 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
     if(curdate==lastdate)then
         return {cur}
     end
-
     for k,v in ipairs(history) do
-        
-        cur=prev
-        prev=v
+
+        cur=v
         local giveup=0
         local copy=false
         while giveup<100 do
-            
+            if(g.chartdaily==true)then
+                curdate=curdate+86400
+            else
+                curdate=curdate+3600
+                --curdate=curdate+60
+            end
             --少しずつインクリしていく
             giveup=giveup+1
             MARKETPRICEBOARD_DBGOUT(string.format("%d,%d",MARKETPRICEBOARD_makeTimeStamp(v.date),curdate))
             if(
-                MARKETPRICEBOARD_makeTimeStamp(v.date)<curdate
+                MARKETPRICEBOARD_makeTimeStamp(v.date)<=curdate
             )then
                 -- pass
-                MARKETPRICEBOARD_DBGOUT("pass")
-                break
-            else
-                -- 作成
                 if(copy==false)then
+                    MARKETPRICEBOARD_DBGOUT("copy")
                     newhist[idx]={
                         date= os.date(useformat,curdate),
                         data={
@@ -2791,6 +2872,35 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
                         }
                     }
                 else
+                    MARKETPRICEBOARD_DBGOUT("create")
+                    newhist[idx]={
+                        date= os.date(useformat,curdate),
+                        data={
+                            priceLow=cur.data.priceClose,
+                            priceHigh=cur.data.priceClose,
+                            priceClose=cur.data.priceClose,
+                            priceOpen=cur.data.priceClose,
+                        }
+                    }
+                end
+                MARKETPRICEBOARD_DBGOUT("endo")
+                idx=idx+1
+                break
+            else
+                -- 作成
+                if(copy==false)then
+                    MARKETPRICEBOARD_DBGOUT("copy")
+                    newhist[idx]={
+                        date= os.date(useformat,curdate),
+                        data={
+                            priceLow=cur.data.priceLow,
+                            priceHigh=cur.data.priceHigh,
+                            priceClose=cur.data.priceClose,
+                            priceOpen=cur.data.priceOpen,
+                        }
+                    }
+                else
+                    MARKETPRICEBOARD_DBGOUT("create")
                     newhist[idx]={
                         date= os.date(useformat,curdate),
                         data={
@@ -2802,20 +2912,16 @@ function MARKETPRICEBOARD_HISTORY_MAKESPACE(history)
                     }
                 end
                 
-                MARKETPRICEBOARD_DBGOUT("create")
+               
                 copy=true
                 idx=idx+1
-                if(g.chartdaily==true)then
-                    curdate=curdate+86400
-                else
-                    curdate=curdate+3600
-                end
+                
             end
         end
         
         
     end
-    newhist[#newhist+1]=last
+    --newhist[#newhist+1]=last
     return newhist
 end
 function MARKETPRICEBOARD_SIMPLIFIEDINT(bignumber)
@@ -2837,11 +2943,11 @@ function MARKETPRICEBOARD_DRAWRECT(data,ctrl,col,x,y,w,h)
     --tolua.cast(nx,"ui::CGroupBox")
     --MARKETPRICEBOARD_DBGOUT(string.format("%d,%d,%d,%d",x,y,w,h))
     local color
-    if(col==1)then
+    if(col==0)then
         color="FFFF0000"
         --nx:SetSkinName("invenslot_unique")
     else
-        color="FF0000FF"
+        color="FF00FF77"
         --nx:SetSkinName("invenslot_rare")
     end
     -- ctrl:DrawBrush(x,y,x+w,y,"spray_1",color)
