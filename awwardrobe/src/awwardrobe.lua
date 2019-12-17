@@ -1077,7 +1077,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
                 
-                if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and g.effectingspot[spname] then
+                if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
                     if(spname ~= "LH" and spname ~="RH")then
                         ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", equipItem:GetIESID()), delay)
                         delay = delay + 0.5
@@ -1089,8 +1089,6 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             if needtoswap then
 
                 for k,v in pairs(tbl) do
-                  
-                    
                     if (k=="LH2" or k=="RH2" or k=="LH" or k=="RH") then
                         AWWARDROBE_DBGOUT(k..tostring(v.iesid))
                         ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", v.iesid), delay)
