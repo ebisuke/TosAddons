@@ -1,8 +1,7 @@
-﻿$addonname="awwardrobe"
+﻿. "./buildvars.ps1"
 $emoji="📖"
 $prefix="__"
-$version="v0.3.0"
-
+rm -Force -Recurse obj/
 if (!(Test-Path bin)) {
     mkdir bin 
 }

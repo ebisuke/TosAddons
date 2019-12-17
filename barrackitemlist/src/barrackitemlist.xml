@@ -21,7 +21,8 @@
        
        <!--<richtext name="openNodeTxt" parent="settingGbox" margin="30 0 200 40" layout_gravity="left top" caption="始めからノードを展開する" fontname="white_18_ol" hittest="false"/>-->
        <checkbox name="openNodeChbox" parent="settingGbox" rect="0 0 120 30" margin="30 150 0 0" layout_gravity="left top" caption="{s30}{#000000}始めからノードを展開する"/>
-		 
+		 <button name="resize" rect="0 0 30 30" margin="0 3 0 0" layout_gravity="right top" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" image="button_chat_scale" oversound="button_over" resizeframe="true" texttooltip="{@st59}채팅창 크기 조절{/}"/>
+		
        <groupbox name="hideNodeGbox" parent="settingGbox"  rect="0 200 600 500" margin="2 0 0 0" layout_gravity="left top" draw="true" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="true" skin="None"/>
 
     </controls>
