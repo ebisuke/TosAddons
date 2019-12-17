@@ -1289,7 +1289,10 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                 session.GetItemIDList(),
                 awframe:GetUserIValue('HANDLE')
             )
-           
+            if(needtoswap)then
+                ReserveScript("AWWARDROBE_DO_WEAPON_SWAP(1)",delay)
+                delay = delay + 0.25
+            end
             --ここから先の処理はディレイを入れる
             local delay = 2.5
             local needtoswap=false
