@@ -19,6 +19,7 @@ g.framename = "awwardrobe"
 g.debug = false
 g.interlocked = false
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
+g.reservedscript={}
 g.effectingspot = {
     HAT_T = true, --コス
     HAT = true, --コス
@@ -27,6 +28,8 @@ g.effectingspot = {
     RING2 = true, --ブレスレット
     RH = true, --左手!
     LH = true, --右手!
+    RH2 = true, --左手!
+    LH2 = true, --右手!
     GLOVES = true, --グローブ
     BOOTS = true, --ブーツ
     NECK = true, --ネックレス
@@ -34,6 +37,7 @@ g.effectingspot = {
     PANTS = true, --下半身
     SHIRT = true --上半身
 }
+AWWARDROBE_TBL={}
 local translationtable={
 
 	btnawwwithdraw = {jp="引出",  eng="Withdraw"},
@@ -97,33 +101,29 @@ end
 --ライブラリ読み込み
 CHAT_SYSTEM("[AWW]loaded")
 local acutil = require('acutil')
-function EBI_try_catch(what)
+local function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
         what.catch(result)
     end
     return result
 end
-function AWWARDROBE_try(func)
-    return EBI_try_catch{
-        try = func,
-        catch = function(error)
-            AWWARDROBE_ERROUT(error)
-        end
-    }
-end
-function EBI_IsNoneOrNil(val)
+
+local function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
-function EBI_RemoveWhitespace(str)
+local function EBI_RemoveWhitespace(str)
     return string.gsub(string.gsub(string.gsub(str,"    ","")," ",""),"　","")
 end
-function EBI_IsNoneOrNilOrWhitespace(val)
+local function EBI_IsNoneOrNilOrWhitespace(val)
     return val == nil or val == "None" or val == "nil" or EBI_RemoveWhitespace(val) == ""
 end
-function AWWARDROBE_COMPARE(a,b)
+
+
+local function AWWARDROBE_COMPARE(a,b)
     return a.name<b.name
 end
+
 function AWWARDROBE_DEFAULTSETTINGS()
     return {
         version = g.version,
@@ -159,7 +159,7 @@ if (not g.loaded) then
     g.personalsettings = AWWARDROBE_DEFAULTPERSONALSETTINGS()
 end
 
-function AWWARDROBE_DBGOUT(msg)
+local function AWWARDROBE_DBGOUT(msg)
     
     EBI_try_catch{
         try = function()
@@ -179,7 +179,7 @@ function AWWARDROBE_DBGOUT(msg)
     }
 
 end
-function AWWARDROBE_ERROUT(msg)
+local function AWWARDROBE_ERROUT(msg)
     EBI_try_catch{
         try = function()
             CHAT_SYSTEM(msg)
@@ -190,6 +190,31 @@ function AWWARDROBE_ERROUT(msg)
     }
 
 end
+local function AWWARDROBE_try(func)
+    return EBI_try_catch{
+        try = func,
+        catch = function(error)
+            AWWARDROBE_ERROUT(error)
+        end
+    }
+end
+-- local function ReserveScript(str,delay)
+--     g.reservedscript[#g.reservedscript+1]={script=str,delay=delay}
+   
+-- end
+-- function AWWARDROBE_ProcessScript()
+--     AWWARDROBE_try(function()
+--     g.reservedscript=g.reservedscript or {}
+--     for k,v in pairs(g.reservedscript) do
+--         g.reservedscript[k].delay=v.delay-0.03
+--         if(g.reservedscript[k].delay<=0)then
+--             assert(loadstring(v.script))()
+--             g.reservedscript[k]=nil
+--         end
+--     end
+--     --print("aa")
+--     end)
+-- end
 function AWWARDROBE_SAVE_SETTINGS()
     AWWARDROBE_DBGOUT("SAVE_SETTINGS")
     
@@ -318,6 +343,7 @@ function AWWARDROBE_ON_INIT(addon, frame)
             AWWARDROBE_INITIALIZE_FRAME()
             frame:ShowWindow(0)
             g.interlocked=false
+           
         end,
         catch = function(error)
             AWWARDROBE_ERROUT(error)
@@ -339,30 +365,39 @@ function AWWARDROBE_TOGGLE_FRAME()
 --AWWARDROBE_SAVE_SETTINGS()
 end
 function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
-    local frame = ui.GetFrame("accountwarehouse")
-    --initialize
-    local btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 70, 30)
-    btnawwwithdraw:SetText(L_("btnawwwithdraw"))
-    btnawwwithdraw:SetTextTooltip(L_("tipbtnawwwithdraw"))
-    btnawwwithdraw:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_WITHDRAW")
-    local btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 190, 120, 70, 30)
-    btnawwdeposit:SetText(L_("btnawwdeposit"))
-    btnawwdeposit:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_DEPOSIT")
-    btnawwdeposit:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_UNWEARALL")
-    btnawwdeposit:SetTextTooltip(L_("tipbtnawwdeposit"))
-    local btnawwchange = frame:CreateOrGetControl("button", "btnawwchange", 270, 120, 70, 30)
-    btnawwchange:SetText(L_("btnawwchange"))
-    btnawwchange:SetTextTooltip(L_("tipbtnawwchange"))
-    btnawwchange:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_CHANGE")
-    local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 350, 120, 70, 30)
-    btnawwconfig:SetText(L_("btnawwconfig"))
-    btnawwconfig:SetTextTooltip(L_("tipbtnawwconfig"))
-    btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
-    local cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
-    tolua.cast(cbwardrobe, "ui::CDropList")
-    cbwardrobe:SetSkinName("droplist_normal")
-    cbwardrobe:SetTextTooltip(L_("tipcbwardrobe"))
-    AWWARDROBE_UPDATE_DROPBOXAW()
+    AWWARDROBE_try(function()
+        local frame = ui.GetFrame("accountwarehouse")
+        local timer = frame:CreateOrGetControl("timer", "timer", 0, 0, 0, 0)
+        -- tolua.cast(timer,"ui::CAddOnTimer")
+        -- timer:SetUpdateScript("AWWARDROBE_ProcessScript")
+        -- timer:Start(0.001)
+
+        --initialize
+        local btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 70, 30)
+        btnawwwithdraw:SetText(L_("btnawwwithdraw"))
+        btnawwwithdraw:SetTextTooltip(L_("tipbtnawwwithdraw"))
+        btnawwwithdraw:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_WITHDRAW")
+        local btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 190, 120, 70, 30)
+        btnawwdeposit:SetText(L_("btnawwdeposit"))
+        btnawwdeposit:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_DEPOSIT")
+        --btnawwdeposit:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_UNWEARALL")
+        btnawwdeposit:SetTextTooltip(L_("tipbtnawwdeposit"))
+        -- local btnawwchange = frame:CreateOrGetControl("button", "btnawwchange", 270, 120, 70, 30)
+        -- btnawwchange:SetText(L_("btnawwchange"))
+        -- btnawwchange:SetTextTooltip(L_("tipbtnawwchange"))
+        -- btnawwchange:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_CHANGE")
+        local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 350, 120, 70, 30)
+        btnawwconfig:SetText(L_("btnawwconfig"))
+        btnawwconfig:SetTextTooltip(L_("tipbtnawwconfig"))
+        btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
+        local cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
+        tolua.cast(cbwardrobe, "ui::CDropList")
+        cbwardrobe:SetSkinName("droplist_normal")
+        cbwardrobe:SetTextTooltip(L_("tipcbwardrobe"))
+        AWWARDROBE_UPDATE_DROPBOXAW()
+    
+    end)
+   
 end
 --フレーム場所保存処理
 function AWWARDROBE_END_DRAG()
@@ -431,7 +466,7 @@ function AWWARDROBE_INITIALIZE_FRAME()
     
     local frame = ui.GetFrame(g.framename);
     
-    frame:Resize(600, 450)
+    frame:Resize(600, 550)
     frame:GetChild("gbox_Equipped"):ShowWindow(1)
     frame:GetChild("gbox_Equipped"):SetOffset(10, 110)
     frame:GetChild("gbox_Dressed"):ShowWindow(1)
@@ -461,10 +496,10 @@ function AWWARDROBE_INITIALIZE_FRAME()
     tolua.cast(cbwardrobe, "ui::CDropList")
     cbwardrobe:SetSkinName("droplist_normal")
     cbwardrobe:SetSelectedScp("AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST")
-    local ebname = frame:CreateOrGetControl("edit", "ebname", 20, 360, 250, 30)
+    local ebname = frame:CreateOrGetControl("edit", "ebname", 20, 430, 250, 30)
     ebname:SetFontName("white_18_ol")
     ebname:SetSkinName("test_weight_skin")
-    frame:CreateOrGetControl("richtext", "label2", 20, 340, 80, 20):SetText(L_("labelsettingsname"))
+    frame:CreateOrGetControl("richtext", "label2", 20, 400, 80, 20):SetText(L_("labelsettingsname"))
     
     for k, _ in pairs(g.effectingspot) do
         
@@ -705,11 +740,12 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
             local liftIcon = ui.GetLiftIcon()
             local liftframe = ui.GetLiftFrame():GetTopParentFrame()
             local slot = tolua.cast(ctrl, 'ui::CSlot')
-            
+           
             local iconInfo = liftIcon:GetInfo()
             local invItem = AWWARDROBE_ACQUIRE_ITEM_BY_GUID(iconInfo:GetIESID())
             local invClass = GetClassByType("Item", GetIES(invItem:GetObject()).ClassID)
             local spotname = invClass.DefaultEqpSlot;
+
             --着用可能部位か調べる
             if (spotname == "RING") then
                 if (argstr ~= "RING1" and argstr ~= "RING2") then
@@ -728,7 +764,8 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
                     return
                 end
             else
-                if (not string.find(spotname, argstr)) then
+                if (not string.find(argstr,spotname)) then
+                
                     --NG
                     ui.SysMsg(L_("alertcantequip"))
                     AWWARDROBE_DBGOUT(tostring(spotname))
@@ -789,129 +826,224 @@ function AWWARDROBE_GETEMPTYSLOTCOUNT()
     local remain = tonumber(s2) - tonumber(s)
     return remain
 end
-function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
-    AWWARDROBE_try(function()
-        local delay = 0
-        local awframe = ui.GetFrame("accountwarehouse")
-        local equipItemList = session.GetEquipItemList();
-        local items = {}
-        if(AWWARDROBE_INTERLOCK())then
-        
-            ui.SysMsg(L_("alertworkingothers"))
-            return
-        end
-        if (awframe:IsVisible() == 0) then
-            
-            ui.SysMsg(L_("alertopenaw"))
-            return
-        end
-        local count = 0
-        for _, _ in pairs(tbl) do
-            count = count + 1
-        end
-        --空きがある？
-        local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
-        if (remain < count) then
-            ui.SysMsg(L_("alertinsufficientslot"))
-        else
-            for i = 0, equipItemList:Count() - 1 do
-                local equipItem = equipItemList:GetEquipItemByIndex(i)
-                local spname = item.GetEquipSpotName(equipItem.equipSpot);
-                if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
-                    ReserveScript(string.format("AWWARDROBE_UNWEAR(%d)", equipItem.equipSpot), delay)
-                    delay = delay + 0.4
-                    items[#items + 1] = equipItem:GetIESID()
-                end
-            --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
-            end
-            
-            ui.SysMsg(L_("alertchangeequip"))
-            AWWARDROBE_INTERLOCK(true)
-            --ついでに入れる
-            for _, d in ipairs(items) do
-                if (items.isLockState) then
-                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d.iesid), delay)
-                    delay = delay + 0.4
-                end
-            end
-            --出庫
-            session.ResetItemList()
-            local count = 0
-            local slotset = GET_CHILD_RECURSIVELY(awframe, 'slotset')
-            local withdrawn = {}
-            local totalcount = 0
-            for k, v in pairs(tbl) do
-                AWWARDROBE_DBGOUT("OUT " .. v.iesid)
-                totalcount = totalcount + 1
-                local judge = false
-                for j = 0, slotset:GetSlotCount() - 1 do
-                    local slot = slotset:GetSlotByIndex(j)
-                    if (slot ~= nil) then
-                        local Icon = slot:GetIcon()
-                        
-                        if (Icon ~= nil) then
-                            local iconInfo = Icon:GetInfo()
-                            if (v.iesid == iconInfo:GetIESID()) then
-                                --take
-                                session.AddItemID(iconInfo:GetIESID(), 1)
-                                --count = count + 1
-                                withdrawn[k] = v
-                                judge = true
-                                break
-                            end
-                        end
-                    end
-                end
-                if (judge == false) then
-                    --検索
-                    if (GET_ITEM_BY_GUID(v.iesid)) then
-                        judge = true
-                    end
-                end
-                if (judge) then
-                    count = count + 1
-                end
-            end
-            if (count < totalcount) then
-                ui.SysMsg(L_("alertinsufficientequips"))
-            end
+--index = 1 일때 1번창으로 스왑하는 함수. 2일때 2번창으로 스왑하는 함수
+function AWWARDROBE_DO_WEAPON_SWAP(index)        
+    local frame=ui.GetFrame("inventory")
+    if quickslot.IsDoingWeaponSwap() == true then
+        return
+    end
 
-            --真っ先に引き出す
-            item.TakeItemFromWarehouse_List(
-                IT_ACCOUNT_WAREHOUSE,
-                session.GetItemIDList(),
-                awframe:GetUserIValue('HANDLE')
-            )
+	if index == nil then
+		index = 1
+	end
+    AWWARDROBE_DBGOUT("SWAP "..tostring(index))
+	local pc = GetMyPCObject();
+	if pc == nil then
+		return;
+	end
+   
+    local frame = ui.GetFrame("inventory");
+    local weaponSwap1 = GET_CHILD_RECURSIVELY(frame, "weapon_swap_1")
+	local weaponSwap2 = GET_CHILD_RECURSIVELY(frame, "weapon_swap_2")
+	local WEAPONSWAP_UP_IMAGE = frame:GetUserConfig('WEAPONSWAP_UP_IMAGE')
+	local WEAPONSWAP_DOWN_IMAGE = frame:GetUserConfig('WEAPONSWAP_DOWN_IMAGE')
 
-            --ここから先の処理はディレイを入れる
-            delay = delay+2.5
-            for k, v in pairs(tbl) do
-                --それぞれ装備していく
-                ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
-                delay = delay + 0.5
-            end
-            for _, d in  ipairs(items) do
-                if (GET_ITEM_BY_GUID(d).isLockState) then
-                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d), delay)
-                    delay = delay + 0.4
-                end
-            end
-            for _, d in ipairs(items) do
+	if index == 1 then
+		weaponSwap1:SetImage(WEAPONSWAP_UP_IMAGE);
+		weaponSwap2:SetImage(WEAPONSWAP_DOWN_IMAGE);
+	elseif index == 2 then
+		weaponSwap1:SetImage(WEAPONSWAP_DOWN_IMAGE);
+		weaponSwap2:SetImage(WEAPONSWAP_UP_IMAGE);
+	end
 
-                ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d), delay)
-                delay = delay + 0.6
-            end
-            ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
-        end
+	if frame:GetUserIValue('CURRENT_WEAPON_INDEX') == index then
+		return;
+	end
+
+	frame:SetUserValue('CURRENT_WEAPON_INDEX', index);
+
+    quickslot.SwapWeapon()    
+
+    local abil = GetAbility(pc, "SwapWeapon");
+
+	if abil ~= nil then
+		weaponSwap1:ShowWindow(1);
+		weaponSwap2:ShowWindow(1);
+	else
+		weaponSwap1:ShowWindow(0);
+		weaponSwap2:ShowWindow(0);
+	end
     
-    
-    end)
+	local tempIndex = 0;
+	if index == 1 then
+		tempIndex = 2
+	elseif index == 2 then
+		tempIndex = 0
+	end
+
+	SHOW_WEAPON_SWAP_TEMP_IMAGE(frame:GetUserIValue('CURRENT_WEAPON_RH'), frame:GetUserIValue('CURRENT_WEAPON_LH'), tempIndex)
 end
+-- function AWWARDROBE_CHANGE_MATCHED(frame, tbl)
+--     AWWARDROBE_try(function()
+--         local delay = 0
+--         local awframe = ui.GetFrame("accountwarehouse")
+        
+--         local items = {}
+
+--         if(AWWARDROBE_INTERLOCK())then
+        
+--             ui.SysMsg(L_("alertworkingothers"))
+--             return
+--         end
+--         if (awframe:IsVisible() == 0) then
+            
+--             ui.SysMsg(L_("alertopenaw"))
+--             return
+--         end
+--         local equipItemList = session.GetEquipItemList();
+--         local count = 0
+--         local needtoswap=false
+--         for k, _ in pairs(tbl) do
+--             if (k=="RH2" or k=="LH2")then
+--                 needtoswap=true
+--                 AWWARDROBE_DBGOUT("NEEDTOSWAP")
+--             end
+--             count = count + 1
+--         end
+--         --空きがある？
+--         local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
+--         if (remain < count) then
+--             ui.SysMsg(L_("alertinsufficientslot"))
+--         else
+--             for i = 0, equipItemList:Count() - 1 do
+--                 local equipItem = equipItemList:GetEquipItemByIndex(i)
+--                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
+--                 if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
+--                     ReserveScript(string.format("AWWARDROBE_UNWEAR(%d)", equipItem.equipSpot), delay)
+--                     delay = delay + 0.4
+--                     items[#items + 1] = equipItem:GetIESID()
+--                 end
+--             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+--             end
+--             if needtoswap then
+--                 ReserveScript("AWWARDROBE_DO_WEAPON_SWAP(2)",delay)
+--                 delay = delay + 0.5
+--                 for k, v in pairs(tbl) do
+--                     if (k=="RH2" or k=="LH2")then
+--                         AWWARDROBE_DBGOUT("iesid"..tostring(v.iesid))
+--                         ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")",v.iesid), delay)
+--                         delay = delay + 0.4
+--                         items[#items + 1] =v.iesid
+--                     end
+                    
+--                 end
+--                 ReserveScript("AWWARDROBE_DO_WEAPON_SWAP(2)",delay)
+--                 delay = delay + 0.5
+--             end
+            
+            
+--             ui.SysMsg(L_("alertchangeequip"))
+--             AWWARDROBE_INTERLOCK(true)
+--             --ついでに入れる
+--             for _, d in ipairs(items) do
+--                 if (items.isLockState) then
+--                     ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d.iesid), delay)
+--                     delay = delay + 0.4
+--                 end
+--             end
+--             --出庫
+--             session.ResetItemList()
+--             local count = 0
+--             local slotset = GET_CHILD_RECURSIVELY(awframe, 'slotset')
+--             local withdrawn = {}
+--             local totalcount = 0
+--             for k, v in pairs(tbl) do
+--                 AWWARDROBE_DBGOUT("OUT " .. v.iesid)
+--                 totalcount = totalcount + 1
+--                 local judge = false
+--                 for j = 0, slotset:GetSlotCount() - 1 do
+--                     local slot = slotset:GetSlotByIndex(j)
+--                     if (slot ~= nil) then
+--                         local Icon = slot:GetIcon()
+                        
+--                         if (Icon ~= nil) then
+--                             local iconInfo = Icon:GetInfo()
+--                             if (v.iesid == iconInfo:GetIESID()) then
+--                                 --take
+--                                 session.AddItemID(iconInfo:GetIESID(), 1)
+--                                 --count = count + 1
+--                                 withdrawn[k] = v
+--                                 judge = true
+--                                 break
+--                             end
+--                         end
+--                     end
+--                 end
+--                 if (judge == false) then
+--                     --検索
+--                     if (GET_ITEM_BY_GUID(v.iesid)) then
+--                         judge = true
+--                     end
+--                 end
+--                 if (judge) then
+--                     count = count + 1
+--                 end
+--             end
+--             if (count < totalcount) then
+--                 ui.SysMsg(L_("alertinsufficientequips"))
+--             end
+
+--             --真っ先に引き出す
+--             item.TakeItemFromWarehouse_List(
+--                 IT_ACCOUNT_WAREHOUSE,
+--                 session.GetItemIDList(),
+--                 awframe:GetUserIValue('HANDLE')
+--             )
+
+--             --ここから先の処理はディレイを入れる
+--             delay = delay+2.5
+--             for k, v in pairs(tbl) do
+--                 --それぞれ装備していく
+--                 if (k=="RH2" or k=="LH2")then
+--                 else
+--                 ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
+--                 delay = delay + 0.5
+--                 end
+--             end
+--             if(needtoswap)then
+--                 ReserveScript("")
+--                 for k, v in pairs(tbl) do
+--                     --それぞれ装備していく
+--                     if (k=="RH2" or k=="LH2")then
+                
+--                     ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k:sub(1,-2)), delay)
+--                     delay = delay + 0.5
+--                     end
+--                 end
+ 
+--             end
+--             for _, d in  ipairs(items) do
+--                 if (GET_ITEM_BY_GUID(d).isLockState) then
+--                     ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", d), delay)
+--                     delay = delay + 0.4
+--                 end
+--             end
+--             for _, d in ipairs(items) do
+
+--                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d), delay)
+--                 delay = delay + 0.6
+--             end
+--             ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
+--         end
+    
+    
+--     end)
+-- end
 function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
     AWWARDROBE_try(function()
         local delay = 0
         local awframe = ui.GetFrame("accountwarehouse")
-        local equipItemList = session.GetEquipItemList();
+        
         local items = {}
         if(AWWARDROBE_INTERLOCK())then
         
@@ -923,8 +1055,16 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             ui.SysMsg(L_("alertopenaw"))
             return
         end
+
+
+        local equipItemList = session.GetEquipItemList();
         local count = 0
-        for _, _ in pairs(tbl) do
+        local needtoswap=false
+        for k, _ in pairs(tbl) do
+            if (k=="RH2" or k=="LH2")then
+                AWWARDROBE_DBGOUT("NEEDTOSWAP")
+                needtoswap=true
+            end
             count = count + 1
         end
         --空きがある？
@@ -932,15 +1072,32 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
         if (remain < count) then
             ui.SysMsg(L_("alertinsufficientslot"))
         else
+            
             for i = 0, equipItemList:Count() - 1 do
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
+                
                 if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
-                    ReserveScript(string.format("AWWARDROBE_UNWEAR(%d)", equipItem.equipSpot), delay)
-                    delay = delay + 0.4
-                    items[#items + 1] = equipItem:GetIESID()
+                    if(spname ~= "LH" and spname ~="RH")then
+                        ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", equipItem:GetIESID()), delay)
+                        delay = delay + 0.5
+                        items[#items + 1] = equipItem
+                    end
                 end
             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+            end
+            if needtoswap then
+
+                for k,v in pairs(tbl) do
+                    if (k=="LH2" or k=="RH2" or k=="LH" or k=="RH") then
+                        AWWARDROBE_DBGOUT(k..tostring(v.iesid))
+                        ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", v.iesid), delay)
+                        delay = delay + 0.6
+                        items[#items + 1] = v.iesid
+                    end
+                --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+                end
+
             end
             
             ui.SysMsg(L_("alertdeposit"))
@@ -953,7 +1110,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
                 --end
             end
             for _, d in pairs(tbl) do
-                
+
                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d.iesid), delay)
                 delay = delay + 0.6
             end
@@ -969,79 +1126,108 @@ function AWWARDROBE_INTERLOCK(state)
     end
     return g.interlocked
 end
-function AWWARDROBE_UNWEARALL(frame)
-    AWWARDROBE_try(function()
-        local delay = 0
-        local awframe = ui.GetFrame("accountwarehouse")
-        local equipItemList = session.GetEquipItemList();
-        local items = {}
-        if(AWWARDROBE_INTERLOCK())then
+-- function AWWARDROBE_UNWEARALL(frame)
+--     AWWARDROBE_try(function()
+--         local delay = 0
+--         local awframe = ui.GetFrame("accountwarehouse")
         
-            ui.SysMsg(L_("alertworkingothers"))
-            return
-        end
-        if (awframe:IsVisible() == 0) then
-            
-            ui.SysMsg(L_("alertopenaw"))
-            return
-        end
-        --カウントする
-        local count = 0
-        for i = 0, equipItemList:Count() - 1 do
-            local equipItem = equipItemList:GetEquipItemByIndex(i)
-            --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
-            --CHAT_SYSTEM("GO")
-            local spname = item.GetEquipSpotName(equipItem.equipSpot);
-            if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] then
-                count = count + 1
-            end
+--         local items = {}
+--         if(AWWARDROBE_INTERLOCK())then
         
-        end
-        --空きがある？
-        local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
-        if (remain < count) then
-            ui.SysMsg(L_("alertinsufficientslot"))
-        else
-            for i = 0, equipItemList:Count() - 1 do
-                local equipItem = equipItemList:GetEquipItemByIndex(i)
-                --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
-                --CHAT_SYSTEM("GO")
-                local spname = item.GetEquipSpotName(equipItem.equipSpot);
-                if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] then
-                    ReserveScript(string.format("AWWARDROBE_UNWEAR(%d)", equipItem.equipSpot), delay)
-                    delay = delay + 0.4
-                    items[#items + 1] = equipItem
-                end
-            --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
-            end
+--             ui.SysMsg(L_("alertworkingothers"))
+--             return
+--         end
+        
+--         if (awframe:IsVisible() == 0) then
             
-            ui.SysMsg(L_("alertunwear"))
-            AWWARDROBE_INTERLOCK(true)
-            --ついでに入れる
-            for _, d in ipairs(items) do
-                local obj = d
-                --if (d.isLockState) then
-                    ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", obj:GetIESID()), delay)
-                    delay = delay + 0.4
-                --end
-            end
-            for _, d in ipairs(items) do
-                local obj = d
-                ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")", obj:GetIESID()), delay)
-                delay = delay + 0.6
-            end
-            ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
-        end
+--             ui.SysMsg(L_("alertopenaw"))
+--             return
+--         end
+--         local equipItemList = session.GetEquipItemList();
+--         --カウントする
+--         local count = 0
+--         for i = 0, equipItemList:Count() - 1 do
+--             local equipItem = equipItemList:GetEquipItemByIndex(i)
+--             --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
+--             --CHAT_SYSTEM("GO")
+--             local spname = item.GetEquipSpotName(equipItem.equipSpot);
+--             if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] then
+--                 count = count + 1
+--             end
+        
+--         end
+--         local needtoswap=false
+--         for k,v in pairs(g.effectingspot) do
+--             if (k=="RH2" or k=="LH2")then
+--                 needtoswap=true
+--                 count = count + 1
+--             end
+--         end
+--         --空きがある？
+--         local remain = AWWARDROBE_GETEMPTYSLOTCOUNT()
+--         if (remain < count) then
+--             ui.SysMsg(L_("alertinsufficientslot"))
+--         else
+--             if needtoswap then
+--                 quickslot.ClearSwapWeapon()
+--             end
+--             for i = 0, equipItemList:Count() - 1 do
+--                 local equipItem = equipItemList:GetEquipItemByIndex(i)
+--                 --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
+--                 --CHAT_SYSTEM("GO")
+--                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
+--                 if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] and g.effectingspot[spname] then
+--                     ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(%d)", equipItem:GetIESID()), delay)
+--                     delay = delay + 0.4
+--                     items[#items + 1] = equipItem
+--                 end
+--             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+--             end
+--             if needtoswap then
+     
+--                 local lh = session.GetEquipItemBySpot(item.GetEquipSpotNum("LH"));
+--                 local rh = session.GetEquipItemBySpot(item.GetEquipSpotNum("RH"));
+--                 if(lh~=nil)then
+--                     ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")",lh:GetIESID()), delay)
+--                     delay = delay + 0.6
+--                     items[#items + 1] = lh
+--                 end
+--                 if(rh~=nil)then
+--                     ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")",rh:GetIESID()), delay)
+--                     delay = delay + 0.6
+--                     items[#items + 1] = rh
+--                 end
+
+--             end
+
+--             ui.SysMsg(L_("alertunwear"))
+--             AWWARDROBE_INTERLOCK(true)
+--             --ついでに入れる
+--             for _, d in ipairs(items) do
+--                 local obj = d
+--                 --if (d.isLockState) then
+--                     ReserveScript(string.format("AWWARDROBE_LOCKITEM(\"%s\",0)", obj:GetIESID()), delay)
+--                     delay = delay + 0.4
+--                 --end
+--             end
+--             for _, d in ipairs(items) do
+--                 local obj = d
+--                 ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")", obj:GetIESID()), delay)
+--                 delay = delay + 0.6
+--             end
+--             ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
+--         end
     
     
-    end)
-end
+--     end)
+-- end
 function AWWARDROBE_WEAR_MATCHED(frame, tbl)
     AWWARDROBE_try(function()
             
             local awframe = ui.GetFrame("accountwarehouse")
-            local equipItemList = session.GetEquipItemList();
+            
             local items = {}
+            
             if(AWWARDROBE_INTERLOCK())then
         
                 ui.SysMsg(L_("alertworkingothers"))
@@ -1052,6 +1238,8 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                 ui.SysMsg(L_("alertopenaw"))
                 return
             end
+
+            local equipItemList = session.GetEquipItemList();
             session.ResetItemList()
             local count = 0
             local slotset = GET_CHILD_RECURSIVELY(awframe, 'slotset')
@@ -1101,13 +1289,34 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
                 session.GetItemIDList(),
                 awframe:GetUserIValue('HANDLE')
             )
+           
             --ここから先の処理はディレイを入れる
             local delay = 2.5
+            local needtoswap=false
             for k, v in pairs(tbl) do
                 --それぞれ装備していく
-                ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
+                if(k~="RH2" and k~="LH2")then
+                    ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k), delay)
+                else
+                    needtoswap=true
+                end
                 delay = delay + 0.5
             end
+            if(needtoswap)then
+                AWWARDROBE_DBGOUT("NEEDTOSWAP")
+                ReserveScript("AWWARDROBE_DO_WEAPON_SWAP(2)",delay)
+                delay = delay + 0.25
+                for k, v in pairs(tbl) do
+                    --それぞれ装備していく
+                    if(k=="RH2" or k=="LH2")then
+                        ReserveScript(string.format('AWWARDROBE_WEAR("%s","%s")', v.iesid, k:sub(1,-2)), delay)
+                    end
+                    delay = delay + 0.5
+                end
+                ReserveScript("AWWARDROBE_DO_WEAPON_SWAP(1)",delay)
+                delay = delay + 0.25
+            end
+
             ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'"); AWWARDROBE_INTERLOCK(false)', delay)
     end)
 end
@@ -1120,23 +1329,116 @@ function AWWARDROBE_WEAR(guid, spot)
             AWWARDROBE_DBGOUT("FAIL")
             return
         end
+
+
         
         ITEM_EQUIP_MSG(invitem, spot)
+        
     --item.Equip(guid,spot)
     --SET_EQUIP_SLOT_BY_SPOT(ui.GetFrame("inventory"), GetIES(invitem:GetObject()), session.GetEquipItemList(), function() end)
     end)
 end
+
+function AWWARDROBE_WEARSWAP(guid, spot)
+    --GUID TO item
+    AWWARDROBE_try(function()
+        AWWARDROBE_DBGOUT("GUID" .. tostring(guid) .. "SPOT " .. spot)
+        local invitem = session.GetInvItemByGuid(guid)
+        if (invitem == nil) then
+            AWWARDROBE_DBGOUT("FAILS")
+            return
+        end
+        local table={
+            LH="LH",
+            RH="RH",
+            LH2="LH",
+            RH2="RH",
+            
+        }
+        AWWARDROBE_WEAPONSWAP_ITEM_DROP(table[spot], guid);
+    --item.Equip(guid,spot)
+    --SET_EQUIP_SLOT_BY_SPOT(ui.GetFrame("inventory"), GetIES(invitem:GetObject()), session.GetEquipItemList(), function() end)
+    end)
+end
+function AWWARDROBE_WEAPONSWAP_ITEM_DROP(spot,guid)
+	local frame = ui.GetFrame("inventory");
+
+
+	local invItem = GET_PC_ITEM_BY_GUID(guid);
+
+	if invItem == nil then
+		return;
+	end
+    
+    
+
+    local slot;
+    if(spot=="LH" or spot=="LH2" )then
+        slot=GET_CHILD_RECURSIVELY(frame,"LH")
+    elseif(spot=="RH" or spot=="RH2" )then
+        slot=GET_CHILD_RECURSIVELY(frame,"RH")
+    end
+	if nil == slot then
+		return;
+	end
+
+	local obj = GetIES(invItem:GetObject());
+	if	obj.DefaultEqpSlot == "RH" or  obj.DefaultEqpSlot == "LH" or obj.DefaultEqpSlot == "RH LH" then
+		-- 슬롯은 좌우 두개므로
+		local offset = 2;
+		-- 일단 슬롯 위치가, 왼쪽오른쪽인지를 확인
+		if slot:GetSlotIndex() % offset == 0 then
+			
+			if obj.DefaultEqpSlot ~= "RH" and obj.DefaultEqpSlot ~= "RH LH" then
+				return;
+			end
+		end
+
+		if slot:GetSlotIndex() % offset == 1 and obj.DefaultEqpSlot ~= "LH" then
+			local pc = GetMyPCObject();
+			if pc == nil then
+				return;
+			end
+
+			local clsType = TryGetProp(obj, "ClassType2");
+			if clsType ~= "Sword" then
+				return;
+			end
+
+			local abil = GetAbility(pc, "SubSword");
+			if abil == nil then
+				return;
+			end
+		end
+	
+		local bodyGbox = frame:GetChild("bodyGbox");
+		if nil == bodyGbox then
+			return;
+		end
+	
+		-- 양손무기를 체크하자
+		TH_WEAPON_CHECK(obj, bodyGbox, slot:GetSlotIndex());
+		quickslot.SetSwapWeaponInfo(slot:GetSlotIndex(), invItem:GetIESID());
+		SET_SLOT_ITEM_IMAGE(slot, invItem);
+	end
+end
 function AWWARDROBE_LOCKITEM(itemguid, state)
-    if (state == 0) then
-        --unlock
-        local itemobj = session.GetInvItemByGuid(itemguid)
+
+    --unlock
+    local itemobj = session.GetInvItemByGuid(itemguid)
+    if(itemobj==nil)then
+        itemobj=session.GetEquipItemByGuid(itemguid)
+    end
+    if(itemobj~=nil)then
         if (itemobj.isLockState == true) then
-            session.inventory.SendLockItem(itemguid, 0)
+            session.inventory.SendLockItem(itemguid,state)
         end
     end
+
 end
 function AWWARDROBE_DEPOSITITEM(itemguid)
     AWWARDROBE_try(function()
+ 
         local awframe = ui.GetFrame("accountwarehouse")
         local gbox = awframe:GetChild("gbox");
         local slotset = GET_CHILD_RECURSIVELY(gbox, "slotset");
@@ -1164,8 +1466,43 @@ function AWWARDROBE_DEPOSITITEM(itemguid)
         end
     end)
 end
+function AWWARDROBE_UNWEARBYGUID(guid)
+    
+    AWWARDROBE_DBGOUT("UNWEARa"..guid)
+    local equipItem =GET_PC_ITEM_BY_GUID(guid)
+    if(equipItem~=nil)then
+        local obj = GetIES(equipItem:GetObject());
+        --CHAT_SYSTEM("GO")
+        local spname
+        if(equipItem.equipSpot~=nil)then
+            spname=item.GetEquipSpotName(equipItem.equipSpot);
+            AWWARDROBE_UNWEAR(equipItem.equipSpot)
+        else
+            local s=nil
+            if(guid==quickslot.GetSwapWeaponGuid(0))then
+                s=0
+            elseif(guid==quickslot.GetSwapWeaponGuid(1))then
+                s=1
+            elseif(guid==quickslot.GetSwapWeaponGuid(2))then
+                s=2
+            elseif(guid==quickslot.GetSwapWeaponGuid(3))then
+                s=3
+            end   
+            AWWARDROBE_DBGOUT("UNWEAR"..tostring(s))
+            if s~=nil then
+                AWWARDROBE_DBGOUT("UNWEAR DO"..tostring(s))
+                imcSound.PlaySoundEvent('inven_unequip');
 
+                quickslot.SetSwapWeaponInfo(s,"");
+            end
+        end
+        
+    else
+        AWWARDROBE_DBGOUT(tostring(guid).."notfound")
+    end
+end
 function AWWARDROBE_UNWEAR(equipSpot)
+
     imcSound.PlaySoundEvent('inven_unequip');
     local spot = equipSpot;
     item.UnEquip(spot);
@@ -1182,13 +1519,54 @@ function AWWARDROBE_REGISTER_CURRENTEQUIP(frame)
                 --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
                 --CHAT_SYSTEM("GO")
                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
-                if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] then
+                if spname~="RH" and spname ~= "LH" and equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] then
                     --登録
                     local slot = GET_CHILD_RECURSIVELY(frame, spname, "ui::CSlot")
                     AWWARDROBE_SETSLOT(slot, equipItem)
                     AWWARDROBE_PLAYSLOTANIMATION(frame, spname)
                 end
-            --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+                --左手右手用設定
+                local rh1 = quickslot.GetSwapWeaponGuid(2);
+                local lh1 = quickslot.GetSwapWeaponGuid(3);
+                local rh2 = quickslot.GetSwapWeaponGuid(0);
+                local lh2 = quickslot.GetSwapWeaponGuid(1);
+
+                if rh1~=nil then
+                    local item=GET_ITEM_BY_GUID(rh1);
+                    if item ~= nil then
+                        local quickspname="RH"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+                if lh1~=nil then
+                    local item=GET_ITEM_BY_GUID(lh1);
+                    if item ~= nil then
+                        local quickspname="LH"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+                if rh2~=nil then
+                    local item=GET_ITEM_BY_GUID(rh2);
+                    if item ~= nil then
+                        local quickspname="RH2"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+                if lh2~=nil then
+                    local item=GET_ITEM_BY_GUID(lh2);
+                    if item ~= nil then
+                        local quickspname="LH2"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
             end
             imcSound.PlaySoundEvent('inven_equip');
     end)

@@ -388,7 +388,10 @@ function BARRACKITEMLIST_SHOW_LIST(cid)
   
     tree:ShowWindow(1)
     frame:ShowWindow(1)
+    
+    frame:EnableResize(1)
     tree:Invalidate()
+
     local btnDetete = gbox:CreateOrGetControl("button","btnDelete",gbox:GetWidth()-160,0,120,40)
     tolua.cast(btnDetete,"ui::CButton")
     btnDetete:SetClickSound("button_click_big")
