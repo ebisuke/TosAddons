@@ -30,7 +30,7 @@ g.effectingspot = {
     LH = true, --右手!
     RH2 = true, --左手!
     LH2 = true, --右手!
-    GLOVES = true, --グローブ
+    GLOVES = true, --グローブ   
     BOOTS = true, --ブーツ
     NECK = true, --ネックレス
     SEAL = true, --エンブレム
@@ -764,14 +764,21 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
                     return
                 end
             else
-                if (not string.find(argstr,spotname)) then
+                --fix
+                local pos=argstr
+                if(argstr:sub(-1)=="2")then
+                    pos=argstr:sub(1,2)
+                end
+                if (string.find(spotname,pos)~=1) then
                 
                     --NG
                     ui.SysMsg(L_("alertcantequip"))
-                    AWWARDROBE_DBGOUT(tostring(spotname))
+                    AWWARDROBE_DBGOUT(tostring(pos).."/"..tostring(spotname))
                     
                     return
                 end
+                AWWARDROBE_DBGOUT(tostring(pos).."/"..tostring(spotname))
+                    
             end
             
             AWWARDROBE_SETSLOT(slot, invItem)
