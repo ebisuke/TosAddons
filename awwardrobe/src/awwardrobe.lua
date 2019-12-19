@@ -16,7 +16,7 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 
 g.framename = "awwardrobe"
-g.debug = true
+g.debug = false
 g.interlocked = false
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.reservedscript={}
