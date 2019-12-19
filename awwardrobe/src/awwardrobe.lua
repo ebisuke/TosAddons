@@ -16,7 +16,7 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 
 g.framename = "awwardrobe"
-g.debug = false
+g.debug = true
 g.interlocked = false
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.reservedscript={}
@@ -1084,28 +1084,30 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
                 
+                AWWARDROBE_DBGOUT("AAA "..tostring(spname))
                 if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
-                    if(spname ~= "LH" and spname ~="RH")then
+                    AWWARDROBE_DBGOUT("AA "..tostring(equipItem:GetIESID()))
+                    -- if(not needtoswap or spname ~= "LH" and spname ~="RH" )then
                         ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", equipItem:GetIESID()), delay)
                         delay = delay + 0.5
                         items[#items + 1] = equipItem
-                    end
+                    --end
                 end
             --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
             end
-            if needtoswap then
+            -- if needtoswap then
 
-                for k,v in pairs(tbl) do
-                    if (k=="LH2" or k=="RH2" or k=="LH" or k=="RH") then
-                        AWWARDROBE_DBGOUT(k..tostring(v.iesid))
-                        ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", v.iesid), delay)
-                        delay = delay + 0.6
-                        items[#items + 1] = v.iesid
-                    end
-                --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
-                end
+            --     for k,v in pairs(tbl) do
+            --         if (k=="LH2" or k=="RH2" or k=="LH" or k=="RH") then
+            --             AWWARDROBE_DBGOUT(k..tostring(v.iesid))
+            --             ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", v.iesid), delay)
+            --             delay = delay + 0.6
+            --             items[#items + 1] = v.iesid
+            --         end
+            --     --SET_EQUIP_SLOT_BY_SPOT(frame,equipItem, equipItemList, function()end);
+            --     end
 
-            end
+            -- end
             
             ui.SysMsg(L_("alertdeposit"))
             AWWARDROBE_INTERLOCK(true)
@@ -1486,6 +1488,7 @@ function AWWARDROBE_UNWEARBYGUID(guid)
         --CHAT_SYSTEM("GO")
         local spname
         if(equipItem.equipSpot~=nil)then
+            AWWARDROBE_DBGOUT("UNWEAR A"..equipItem.equipSpot)
             spname=item.GetEquipSpotName(equipItem.equipSpot);
             AWWARDROBE_UNWEAR(equipItem.equipSpot)
         else

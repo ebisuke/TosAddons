@@ -9,7 +9,7 @@ _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
-
+local acutil = require('acutil')
 g.version = 0
 g.settings = {x = 300, y = 300, volume = 100, mute = false}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
@@ -182,9 +182,9 @@ function TESTBOARD_ON_TIMER(frame)
                     g.x=x
                     g.y=y
                 end
-                print(string.format("draw %d,%d",x,y))
+                --print(string.format("draw %d,%d",x,y))
                 local pics=pic:GetPixelColor(x, y);
-                print("pics "..tostring(pics))
+                --print("pics "..tostring(pics))
                 
                 pic:DrawBrush(g.x,g.y,x,y, "spray_8", "FFFF0000");
                 pic:Invalidate()
@@ -193,6 +193,26 @@ function TESTBOARD_ON_TIMER(frame)
             else
                 g.x=nil
                 g.y=nil
+            end
+
+            local fndList, fndCount = SelectObject(GetMyActor(), 400, 'ALL');
+            local flag = 0
+            
+            for index = 1, fndCount do
+                
+                local enemyHandle = GetHandle(fndList[index]);
+                if(enemyHandle~=nil)then
+                    local enemy = world.GetActor(enemyHandle);
+
+                    if enemy ~= nil then
+                        local apc=enemy:GetPCApc()
+                        local aid=enemy:GetPCApc():GetAID();
+                        local opc=session.otherPC.GetByStrAID(aid)
+                        if(opc~=nil)then
+                           --print(tostring(opc:GetPartyInfo()))
+                        end
+                    end
+                end 
             end
         end,
         catch = function(error)
