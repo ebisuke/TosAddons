@@ -15,21 +15,13 @@ g.settings = {x = 300, y = 300, volume = 100, mute = false}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "wikihelp"
-g.debug = true
+g.debug = false
 g.handle = nil
+g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 g.interlocked = false
 g.currentIndex = 1
 g.x = nil
 g.y = nil
-g.baseClass={
-    Cleric="クレリック",
-    Archer="アーチャー",
-    Warrior="ソードマン",
-    Wizard="ウィザード",
-    Scout="スカウト"
-}
-g.referurlprefix = "http://10.8.0.40:8080/?url=wikiwiki.jp/tosjp/Class/"
-g.referurlsuffix = "&full=true"
 
 --ライブラリ読み込み
 CHAT_SYSTEM("[wikihelp]loaded")
@@ -188,7 +180,9 @@ function WIKIHELP_CLOSE(frame)
     frame = ui.GetFrame(g.framename)
     local gbox = frame:GetChild("gbox")
     tolua.cast(gbox, "ui::CGroupBox")
-    gbox:RemoveAllChild()
+   
+    local pic = gbox:GetChild("pict")
+    tolua.cast(pic, "ui::CGroupBox")
     frame:ShowWindow(0)
 end
 function WIKIHELP_TOGGLE_FRAME(frame)
@@ -199,7 +193,9 @@ function WIKIHELP_CHANGEJOB_CLOSE(frame)
     CHANGEJOB_CLOSE_OLD(frame)
     local gbox = frame:GetChild("gbox")
     tolua.cast(gbox, "ui::CGroupBox")
-    gbox:RemoveAllChild()
+   
+    local pic = gbox:GetChild("pict")
+    tolua.cast(pic, "ui::CGroupBox")
 end
 function WIKIHELP_INIT()
     EBI_try_catch{
@@ -210,11 +206,18 @@ function WIKIHELP_INIT()
             frame:RemoveChild("nameText")
             
             local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth()-16, frame:GetHeight() - 120)
-            gbox:EnableHitTest(1)
-            frame:RemoveChild("titlepicture")
             tolua.cast(gbox, "ui::CGroupBox")
-            local pic = gbox:CreateOrGetControl("webpicture", "pic", 0, 0, 2048, 8192)
-            tolua.cast(pic, "ui::CWebPicture")
+            gbox:EnableHitTest(1)
+            gbox:EnableScrollBar(0)
+            gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
+            gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
+            gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
+            frame:RemoveChild("titlepicture")
+
+            local pic = gbox:CreateOrGetControl("groupbox", "pict", 0, 0, 2048, 8192)
+            tolua.cast(pic, "ui::CGroupBox")
+            
+            pic:EnableHitTest(0)
             local title = GET_CHILD_RECURSIVELY(frame, "changeName")
             title:SetText("{s24}{ol}WikiHelp")
         end,
@@ -223,32 +226,23 @@ function WIKIHELP_INIT()
         end
     }
 end
-function WIKIHELP_DOURL(url)
-    EBI_try_catch{
-        try = function()
-            local frame = ui.GetFrame(g.framename)
-            local gbox = frame:GetChild("gbox")
-            tolua.cast(gbox, "ui::CGroupBox")
-            gbox:EnableScrollBar(1)
-            tolua.cast(gbox, "ui::CGroupBox")
-            local pic = gbox:GetChild("pic")
-            tolua.cast(pic, "ui::CWebPicture")
-            WIKIHELP_DBGOUT(url)
-            pic:SetOffset(0,0)
-            pic:EnableHitTest(0)
-            pic:SetUrlInfo(url)
-            gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
-            gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
-            gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
-        end,
-        catch = function(error)
-            WIKIHELP_ERROUT(error)
-        end
-    }
+
+function WIKIHELP_RENDER()
+    local frame = ui.GetFrame(g.framename)
+    local pic =GET_CHILD_RECURSIVELY(frame,"pict")
+    tolua.cast(pic, "ui::CGroupBox")
+    pic:RemoveChild()
+    pic:SetOffset(0,0)
+    local parser=WIKIHELP_PUKIWIKI_PARSER
+    local renderer=WIKIHELP_RENDERER
+    
 end
 function WIKIHELP_LBTNDOWN(parent, ctrl)		
 	local frame = parent:GetTopParentFrame();
-	local pic = GET_CHILD_RECURSIVELY(frame, "pic");
+    local pic = GET_CHILD_RECURSIVELY(frame, "pict");
+    if(pic==nil)then
+        return
+    end
 	local x, y = GET_MOUSE_POS();
 	
 	g.x = x	-- 드래그할 때, 클릭한 좌표를 기억한다.
@@ -272,7 +266,10 @@ function WIKIHELP_PROCESS_MOUSE(ctrl)
 		ui.EnableToolTip(1);
 		return 0;
 	end
-	local pic = GET_CHILD_RECURSIVELY(ctrl, "pic");
+    local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
+    if(pic==nil)then
+        return
+    end
 	local mx, my = GET_MOUSE_POS();
 	local x = g.x;
 	local y = g.y;
@@ -289,7 +286,7 @@ function WIKIHELP_PROCESS_MOUSE(ctrl)
     g.y=my
     cx=math.max(-pic:GetWidth(),math.min(cx,pic:GetWidth()))
     cy=math.max(-pic:GetHeight(),math.min(cy,pic:GetHeight()))
-    print(tostring(cx).."/"..tostring(cy))
+
     pic:SetOffset(cx,cy)
 	
     return 1;
@@ -300,9 +297,12 @@ end
 }
 end
 
-function WORLDMAP_MOUSEWHEEL(parent, ctrl, s, n)
+function WIKIHELP_MOUSEWHEEL(parent, ctrl, s, n)
 	
-    local pic = GET_CHILD_RECURSIVELY(ctrl, "pic");
+    local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
+    if(pic==nil)then
+        return
+    end
     local dx = 0;
     local dy = n;
     local cx = pic:GetX();
@@ -387,19 +387,7 @@ function WIKIHELP_OPENWIKI(frame, ctrl, argstr, argnum)
         try = function()
             
             WIKIHELP_SHOW()
-            local pic=GET_CHILD_RECURSIVELY(frame,"pic")
-            tolua.cast("ui::CWebPicture")
-            local pc = GetMyPCObject();
-            local pcjobinfo = GetClass('Job', pc.JobName)
-            WIKIHELP_DBGOUT(pcjobinfo.CtrlType)
-            
-            print(dictionary.ReplaceDicIDInCompStr(argstr))
-            if(g.baseClass[pcjobinfo.CtrlType]==dictionary.ReplaceDicIDInCompStr(argstr))then
-                WIKIHELP_DOURL(g.referurlprefix.."Re"..urlencode(dictionary.ReplaceDicIDInCompStr(argstr))..g.referurlsuffix)
-            else
 
-                WIKIHELP_DOURL(g.referurlprefix.."Re"..urlencode(g.baseClass[pcjobinfo.CtrlType]).."/Re"..urlencode(dictionary.ReplaceDicIDInCompStr(argstr))..g.referurlsuffix)
-            end
         end,
         catch = function(error)
             WIKIHELP_ERROUT(error)

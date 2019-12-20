@@ -156,13 +156,12 @@ function TESTBOARD_INIT()
         try = function()
             local frame = ui.GetFrame(g.framename)
             local pic = frame:CreateOrGetControl("picture", "pic", 0, 80, 0, 0)
-            tolua.cast(pic, "ui::CPicture")
+            tolua.cast(pic, "ui::CWebPicture")
             pic:Resize(frame:GetWidth(), frame:GetHeight()-80)
-            pic:CreateInstTexture();
-            pic:SetEnableStretch(0)
-            pic:FillClonePicture("FFFFFFFF");
-            
+            pic:ShowWindow(0)
+            pic:SetUrlInfo("https://tos.mochisuke.jp/blog/wp-content/uploads/2019/12/Marnoks_TestBoard.jpg")
             pic:EnableHitTest(1)
+            
         end,
         catch = function(error)
             TESTBOARD_ERROUT(error)
@@ -172,48 +171,48 @@ end
 function TESTBOARD_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
-            local frame = ui.GetFrame(g.framename)
-            local pic = frame:GetChild("pic")
-            tolua.cast(pic, "ui::CPicture")
+            -- local frame = ui.GetFrame(g.framename)
+            -- local pic = frame:GetChild("pic")
+            -- tolua.cast(pic, "ui::CPicture")
 
-            local x, y = GET_LOCAL_MOUSE_POS(pic);
-            if mouse.IsLBtnPressed() ~= 0 then
-                if(g.x==nil or g.y==nil )then
-                    g.x=x
-                    g.y=y
-                end
-                --print(string.format("draw %d,%d",x,y))
-                local pics=pic:GetPixelColor(x, y);
-                --print("pics "..tostring(pics))
+            -- local x, y = GET_LOCAL_MOUSE_POS(pic);
+            -- if mouse.IsLBtnPressed() ~= 0 then
+            --     if(g.x==nil or g.y==nil )then
+            --         g.x=x
+            --         g.y=y
+            --     end
+            --     --print(string.format("draw %d,%d",x,y))
+            --     local pics=pic:GetPixelColor(x, y);
+            --     --print("pics "..tostring(pics))
                 
-                pic:DrawBrush(g.x,g.y,x,y, "spray_8", "FFFF0000");
-                pic:Invalidate()
-                g.x=x
-                g.y=y
-            else
-                g.x=nil
-                g.y=nil
-            end
+            --     pic:DrawBrush(g.x,g.y,x,y, "spray_8", "FFFF0000");
+            --     pic:Invalidate()
+            --     g.x=x
+            --     g.y=y
+            -- else
+            --     g.x=nil
+            --     g.y=nil
+            -- end
 
-            local fndList, fndCount = SelectObject(GetMyActor(), 400, 'ALL');
-            local flag = 0
+            -- local fndList, fndCount = SelectObject(GetMyActor(), 400, 'ALL');
+            -- local flag = 0
             
-            for index = 1, fndCount do
+            -- for index = 1, fndCount do
                 
-                local enemyHandle = GetHandle(fndList[index]);
-                if(enemyHandle~=nil)then
-                    local enemy = world.GetActor(enemyHandle);
+            --     local enemyHandle = GetHandle(fndList[index]);
+            --     if(enemyHandle~=nil)then
+            --         local enemy = world.GetActor(enemyHandle);
 
-                    if enemy ~= nil then
-                        local apc=enemy:GetPCApc()
-                        local aid=enemy:GetPCApc():GetAID();
-                        local opc=session.otherPC.GetByStrAID(aid)
-                        if(opc~=nil)then
-                           --print(tostring(opc:GetPartyInfo()))
-                        end
-                    end
-                end 
-            end
+            --         if enemy ~= nil then
+            --             local apc=enemy:GetPCApc()
+            --             local aid=enemy:GetPCApc():GetAID();
+            --             local opc=session.otherPC.GetByStrAID(aid)
+            --             if(opc~=nil)then
+            --                --print(tostring(opc:GetPartyInfo()))
+            --             end
+            --         end
+            --     end 
+            -- end
         end,
         catch = function(error)
             TESTBOARD_ERROUT(error)
