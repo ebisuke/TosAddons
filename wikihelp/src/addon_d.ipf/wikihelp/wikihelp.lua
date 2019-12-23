@@ -202,23 +202,24 @@ function WIKIHELP_INIT()
         try = function()
             local frame = ui.GetFrame(g.framename)
             --frame:GetChild("equip"):Resize(800, 990)
-            frame:SetLayerLevel(200)
+            frame:SetLayerLevel(100)
             frame:RemoveChild("nameText")
             
-            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth()-16, frame:GetHeight() - 150)
+            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth()-16, frame:GetHeight() - 180)
             tolua.cast(gbox, "ui::CGroupBox")
             gbox:EnableHitTest(1)
-            gbox:EnableScrollBar(1)
-            gbox:AutoSize(0)
-            --gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
-            --gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
-            --gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
-            frame:RemoveChild("titlepicture")
+            gbox:EnableAutoResize(false,false)
+            gbox:EnableScrollBar(0)
 
-            local pic = gbox:CreateOrGetControl("groupbox", "pict", 0, 0, 0, 0)
+            gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
+            gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
+            gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
+
+            local pic = gbox:CreateOrGetControl("groupbox", "pict", 0, 0,  frame:GetWidth()-16, frame:GetHeight() - 180)
             tolua.cast(pic, "ui::CGroupBox")
-            
+            pic:EnableScrollBar(0)
             pic:EnableHitTest(0)
+            pic:EnableAutoResize(true,true)
             local title = GET_CHILD_RECURSIVELY(frame, "changeName")
             title:SetText("{s24}{ol}WikiHelp")
         end,
@@ -236,7 +237,11 @@ function WIKIHELP_RENDER()
     pic:SetOffset(0,0)
     local parser=WIKIHELP_PUKIWIKI_PARSER
     local renderer=WIKIHELP_RENDERER
-    renderer.render(frame,pic,tester)
+
+    
+    renderer.render(frame,pic,parser.parse({},WIKIHELP_PAGES["MenuBar"]))
+
+    pic:AutoSize(1)
 end
 function WIKIHELP_LBTNDOWN(parent, ctrl)		
 	local frame = parent:GetTopParentFrame();
@@ -285,8 +290,8 @@ function WIKIHELP_PROCESS_MOUSE(ctrl)
 	cy = cy + dy;
     g.x=mx
     g.y=my
-    cx=math.max(-pic:GetWidth(),math.min(cx,pic:GetWidth()))
-    cy=math.max(-pic:GetHeight(),math.min(cy,pic:GetHeight()))
+    cx=math.max(-pic:GetWidth()+ctrl:GetWidth(),math.min(cx,0))
+    cy=math.max(-pic:GetHeight()+ctrl:GetHeight(),math.min(cy,0))
 
     pic:SetOffset(cx,cy)
 	
@@ -310,8 +315,8 @@ function WIKIHELP_MOUSEWHEEL(parent, ctrl, s, n)
     local cy = pic:GetY();
     cx = cx + dx;
     cy = cy + dy;
-    cx=math.max(-pic:GetWidth(),math.min(cx,pic:GetWidth()))
-    cy=math.max(-pic:GetHeight(),math.min(cy,pic:GetHeight()))
+    cx=math.max(-pic:GetWidth()+ctrl:GetWidth(),math.min(cx,0))
+    cy=math.max(-pic:GetHeight()+ctrl:GetHeight(),math.min(cy,0))
 
     pic:SetOffset(cx,cy)
 	

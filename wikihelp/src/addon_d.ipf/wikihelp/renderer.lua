@@ -46,7 +46,7 @@ function actions.text.fn(rootframe,frame,node,context)
     txt:EnableAutoResize(true,true)
     txt:SetText(genfont(context)..node.content)
     txt:EnableHitTest(0)
-    print(genfont(context))
+
     context.x=context.x+txt:GetWidth()
     context.carryheight=math.max(context.carryheight,txt:GetHeight())
     return frame
@@ -104,6 +104,9 @@ function actions.comment.fn(rootframe,frame,node,context)
     return nil
 end
 function actions.table.fn(rootframe,frame,node,context)
+    context.x=16
+    context.y=context.y+ context.carryheight+4
+    context.carryheight=0
     local gbox=frame:CreateOrGetControl("groupbox","gbox"..tostring(inc(context)),context.x,context.y,50,50)
     tolua.cast(gbox,"ui::CGroupBox")
     gbox:EnableScrollBar(0)
@@ -113,6 +116,7 @@ function actions.table.fn(rootframe,frame,node,context)
     node.frame=gbox
     context.x=16
     context.y=16
+    context.table={}
     return gbox,true
 end
 function actions.table.after_fn(rootframe,previousframe,frame,node,context)
@@ -120,6 +124,48 @@ function actions.table.after_fn(rootframe,previousframe,frame,node,context)
     frame:AutoSize(1)
     context.y=context.y+frame:GetHeight()
 
+    local widths={}
+    for row=1,#context.table do
+
+        for column=1,#context.table[row].t do
+      
+            local cell=context.table[row].t[column].f
+            for i=0,cell:GetChildCount()-1 do
+                local child=cell:GetChildByIndex(i)
+                local w=child:GetWidth()+child:GetX()
+                widths[column]= math.max((widths[column] or 0), w)
+            end
+            
+        end
+    end
+    local maxx=0
+
+    for column=1,#widths do
+        maxx=maxx+widths[column]
+
+    end
+
+    for row=1,#context.table do
+        local x=0
+        local parent=context.table[row].f
+        for column=1,#context.table[row].t do
+            local cell=context.table[row].t[column].f
+ 
+            cell:SetOffset(x,cell:GetY())
+            cell:Resize(widths[column],cell:GetHeight())
+         
+            x=x+widths[column]
+
+           
+        end
+        
+         
+        
+        parent:Resize(x,parent:GetHeight())
+        
+    end
+    frame:Resize(maxx,frame:GetHeight())
+    context.table=nil
     return frame
 end
 function actions.tr.fn(rootframe,frame,node,context)
@@ -129,9 +175,11 @@ function actions.tr.fn(rootframe,frame,node,context)
     gbox:EnableScrollBar(0)
     --gbox:AutoSize(1)
     gbox:EnableHittestGroupBox(false)
-    gbox:EnableAutoResize(true,true)
+   
+    --gbox:SetSkinName("chat_window")
     context.x=0
     context.y=0
+    context.table[#context.table+1]={f=gbox,t={}}
     return gbox,true
 end
 function actions.tr.after_fn(rootframe,previousframe,frame,node,context)
@@ -150,8 +198,10 @@ function actions.td.fn(rootframe,frame,node,context)
     --gbox:AutoSize(1)
     gbox:EnableHittestGroupBox(false)
     gbox:EnableAutoResize(true,true)
+    gbox:SetClickSound('button_click_big');
     context.x=0
     context.y=0
+    context.table[#context.table].t[#context.table[#context.table].t+1]={f=gbox}
     return gbox,true
 end
 function actions.td.after_fn(rootframe,previousframe,frame,node,context)
@@ -188,11 +238,28 @@ function actions.a.fn(rootframe,frame,node,context)
     tolua.cast(gbox,"ui::CGroupBox")
     node.frame=gbox
     gbox:EnableScrollBar(0)
-    gbox:AutoSize(1)
     gbox:EnableHitTest(1)
     gbox:EnableHittestGroupBox(true)
-    return gbox
+    gbox:SetSkinName("test_skin_01_btn")
+    print("a")
+    gbox:SetOverSound("button_cursor_over_2")
+    gbox:SetClickSound("button_cursor_over_2")
+    gbox:SetEventScript(ui.LBUTTONUP,"WH_RENDERER_CLICK_A")
+    gbox:SetEventScriptArgString(ui.LBUTTONUP,node.attrib.link or "")
+    context.x=4
+    context.y=4
+    return gbox,true
 end
+function actions.a.after_fn(rootframe,previousframe,frame,node,context)
+    frame:AutoSize(1)
+    print("a")
+    frame:Resize(frame:GetWidth()+4,frame:GetHeight()+4)
+
+    context.x=frame:GetWidth()
+    context.carryheight=math.max(context.carryheight,frame:GetHeight())
+    return frame
+end
+
 function actions.title.fn(rootframe,frame,node,context)
     context.title=node.content
     return frame
@@ -229,7 +296,7 @@ function R.render(rootframe,frame,node,context)
             for _,v in ipairs(node.child) do
                 
                 context=R.render(rootframe,frame,v,context)
-                print(context.fontcolor)
+                
             end
         end
     else
@@ -250,7 +317,9 @@ function R.render(rootframe,frame,node,context)
     
     return context
 end
+function WH_RENDERER_CLICK_A(frame,ctrl,argstr,argnum)
 
+end
 --EOF
 WIKIHELP_RENDERER=R
 
