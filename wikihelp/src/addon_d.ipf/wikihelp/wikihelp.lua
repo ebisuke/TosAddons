@@ -11,7 +11,7 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 
 g.version = 0
-g.settings = {x = 300, y = 300, volume = 100, mute = false}
+g.settings = {x = 300, y = 300}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "wikihelp"
@@ -205,16 +205,17 @@ function WIKIHELP_INIT()
             frame:SetLayerLevel(200)
             frame:RemoveChild("nameText")
             
-            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth()-16, frame:GetHeight() - 120)
+            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth()-16, frame:GetHeight() - 150)
             tolua.cast(gbox, "ui::CGroupBox")
             gbox:EnableHitTest(1)
-            gbox:EnableScrollBar(0)
-            gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
-            gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
-            gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
+            gbox:EnableScrollBar(1)
+            gbox:AutoSize(0)
+            --gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
+            --gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
+            --gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
             frame:RemoveChild("titlepicture")
 
-            local pic = gbox:CreateOrGetControl("groupbox", "pict", 0, 0, 2048, 8192)
+            local pic = gbox:CreateOrGetControl("groupbox", "pict", 0, 0, 0, 0)
             tolua.cast(pic, "ui::CGroupBox")
             
             pic:EnableHitTest(0)
@@ -231,11 +232,11 @@ function WIKIHELP_RENDER()
     local frame = ui.GetFrame(g.framename)
     local pic =GET_CHILD_RECURSIVELY(frame,"pict")
     tolua.cast(pic, "ui::CGroupBox")
-    pic:RemoveChild()
+    pic:RemoveAllChild()
     pic:SetOffset(0,0)
     local parser=WIKIHELP_PUKIWIKI_PARSER
     local renderer=WIKIHELP_RENDERER
-    
+    renderer.render(frame,pic,tester)
 end
 function WIKIHELP_LBTNDOWN(parent, ctrl)		
 	local frame = parent:GetTopParentFrame();
