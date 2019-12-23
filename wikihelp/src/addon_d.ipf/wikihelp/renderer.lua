@@ -57,15 +57,16 @@ function actions.font.fn(rootframe,frame,node,context)
        
     end
     if(node.attrib.size)then
-        local size=tonumber(node.attrib.size)*4+8
+        local size=node.attrib.size
 
         context.fontsize="{s"..tostring(size).."}"
 
     end
     return frame
 end
+
 function actions.br.fn(rootframe,frame,node,context)
-    context.x=16
+    context.x=0
     context.y=context.y+ context.carryheight+4
     context.carryheight=0
     return frame
@@ -77,7 +78,7 @@ function actions.header.fn(rootframe,frame,node,context)
     return frame
 end
 function actions.header.after_fn(rootframe,previousframe,frame,node,context)
-    context.x=16
+    context.x=0
     context.y=context.y+ context.carryheight+4
     context.carryheight=0
     return frame
@@ -90,9 +91,14 @@ end
 function actions.image.fn(rootframe,frame,node,context)
     local img=frame:CreateOrGetControl("picture","image"..tostring(inc(context)),context.x,context.y,24,24)
     tolua.cast(img,"ui::CPicture")
-    img:SetImage("sign_enchant")
-    img:Resize(img:GetImageWidth(),img:GetImageHeight())
+    if(ui.GetImageWidth(node.attrib.link))then
+        img:SetImage(node.attrib.link)
+    else
+        img:SetImage(ebi_utf8.utf8gsub(context.pagename,"/","_").."_".. node.attrib.link)
+    end
+    img:Resize(img:GetImageWidth()*node.attrib.zoom/100,img:GetImageHeight()*node.attrib.zoom/100)
     img:EnableAutoResize(true,true)
+    img:SetEnableStretch(1)
 
     img:EnableHitTest(0)
    
@@ -104,7 +110,7 @@ function actions.comment.fn(rootframe,frame,node,context)
     return nil
 end
 function actions.table.fn(rootframe,frame,node,context)
-    context.x=16
+    context.x=0
     context.y=context.y+ context.carryheight+4
     context.carryheight=0
     local gbox=frame:CreateOrGetControl("groupbox","gbox"..tostring(inc(context)),context.x,context.y,50,50)
@@ -114,8 +120,8 @@ function actions.table.fn(rootframe,frame,node,context)
     gbox:EnableHittestGroupBox(false)
     gbox:SetSkinName("chat_window")
     node.frame=gbox
-    context.x=16
-    context.y=16
+    context.x=0
+    context.y=0
     context.table={}
     return gbox,true
 end
@@ -128,21 +134,23 @@ function actions.table.after_fn(rootframe,previousframe,frame,node,context)
     for row=1,#context.table do
 
         for column=1,#context.table[row].t do
-      
+            local rowframe=context.table[row].f
             local cell=context.table[row].t[column].f
-            for i=0,cell:GetChildCount()-1 do
-                local child=cell:GetChildByIndex(i)
-                local w=child:GetWidth()+child:GetX()
-                widths[column]= math.max((widths[column] or 0), w)
+            if(cell)then
+                for i=0,cell:GetChildCount()-1 do
+                    local child=cell:GetChildByIndex(i)
+                    local w=child:GetWidth()+child:GetX()
+                    widths[column]= math.max((widths[column] or 0), w)
+                end
             end
-            
         end
     end
     local maxx=0
 
     for column=1,#widths do
+        if(widths[column])then
         maxx=maxx+widths[column]
-
+        end
     end
 
     for row=1,#context.table do
@@ -150,17 +158,13 @@ function actions.table.after_fn(rootframe,previousframe,frame,node,context)
         local parent=context.table[row].f
         for column=1,#context.table[row].t do
             local cell=context.table[row].t[column].f
- 
-            cell:SetOffset(x,cell:GetY())
-            cell:Resize(widths[column],cell:GetHeight())
-         
-            x=x+widths[column]
-
-           
+            if(cell and widths[column])then
+                cell:SetOffset(x,cell:GetY())
+                cell:Resize(widths[column],cell:GetHeight())
+                x=x+widths[column]
+                
+            end
         end
-        
-         
-        
         parent:Resize(x,parent:GetHeight())
         
     end
@@ -207,7 +211,7 @@ end
 function actions.td.after_fn(rootframe,previousframe,frame,node,context)
     frame:AutoSize(1)
     context.x=context.x+frame:GetWidth()
-    
+
     return frame
 end
 
@@ -241,10 +245,9 @@ function actions.a.fn(rootframe,frame,node,context)
     gbox:EnableHitTest(1)
     gbox:EnableHittestGroupBox(true)
     gbox:SetSkinName("test_skin_01_btn")
-    print("a")
     gbox:SetOverSound("button_cursor_over_2")
-    gbox:SetClickSound("button_cursor_over_2")
-    gbox:SetEventScript(ui.LBUTTONUP,"WH_RENDERER_CLICK_A")
+    gbox:SetClickSound("button_click_big")
+    gbox:SetEventScript(ui.LBUTTONUP,"WIKIHELP_RENDERER_CLICK_A")
     gbox:SetEventScriptArgString(ui.LBUTTONUP,node.attrib.link or "")
     context.x=4
     context.y=4
@@ -252,10 +255,9 @@ function actions.a.fn(rootframe,frame,node,context)
 end
 function actions.a.after_fn(rootframe,previousframe,frame,node,context)
     frame:AutoSize(1)
-    print("a")
     frame:Resize(frame:GetWidth()+4,frame:GetHeight()+4)
 
-    context.x=frame:GetWidth()
+    context.x=context.x+frame:GetWidth()+8
     context.carryheight=math.max(context.carryheight,frame:GetHeight())
     return frame
 end
@@ -268,8 +270,23 @@ function actions.quote.fn(rootframe,frame,node,context)
     context.x=context.x+16
     return frame
 end
+function R.render(rootframe,node)
+    local context
+    context=context or {
+        x=16,
+        y=8,
+        carryheight=0,
+        controlindex=1,
+        fontsize="{s16}",
+        fontbase="{ol}",
+        fontcolor="",
+        pagename=node.attrib.pagename,
+    }
+   
+    return R.renderimpl(rootframe,rootframe,node,context)
+end
 
-function R.render(rootframe,frame,node,context)
+function R.renderimpl(rootframe,frame,node,context)
     
     frame=frame or rootframe
     context=context or {
@@ -295,7 +312,7 @@ function R.render(rootframe,frame,node,context)
         if(node.child)then
             for _,v in ipairs(node.child) do
                 
-                context=R.render(rootframe,frame,v,context)
+                context=R.renderimpl(rootframe,frame,v,context)
                 
             end
         end
@@ -317,9 +334,7 @@ function R.render(rootframe,frame,node,context)
     
     return context
 end
-function WH_RENDERER_CLICK_A(frame,ctrl,argstr,argnum)
 
-end
 --EOF
 WIKIHELP_RENDERER=R
 

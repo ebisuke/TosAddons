@@ -1038,6 +1038,7 @@ local function utf8gsub(str, regex, repl, limit)
 	end
 	return ret .. utf8sub(str, prevEnd), n 
 end
+
 local function utf8split(str, ts)
     -- 引数がないときは空tableを返す
     if ts == nil then return {} end
@@ -1070,5 +1071,5 @@ local U={
     utf8starts=utf8starts,
 }
 ebi_utf8=U
-
+return U
 ---------

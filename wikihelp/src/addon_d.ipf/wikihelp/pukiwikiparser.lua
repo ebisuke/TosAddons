@@ -1,7 +1,11 @@
 
 
 local P={}
-
+ebi_utf8=ebi_utf8 or {}
+if(not session )then
+    print("LOADFILE")
+    ebi_utf8=loadfile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\utf8.lua")()
+end
 local function getcolorbyname(name)
 
     local tbl= {
@@ -186,7 +190,7 @@ local function till_brace(def,str)
         pos=pos+1
     end
    
-    return str:sub(1,pos),0
+    return str:sub(1,pos-2),2
 end
 local function till_same(def,str)
     return str:sub(1,str:find(def.begin[1])-1),def.begin[1]:len()
@@ -279,13 +283,13 @@ local tags={
                
                 if(sstr:starts("&sizex"))then
                     local attribtext=sstr:sub(sstr:find("(",1,true)+1,sstr:find(")",1,true)-1)
-                    attrib.size=attribtext
+                    attrib.size=tonumber(attribtext)*4+8
                     sstr=sstr:sub(sstr:find(")",1,true)+1)
                     notfound=false
                 end
                 if(sstr:starts("&size"))then
                     local attribtext=sstr:sub(sstr:find("(",1,true)+1,sstr:find(")",1,true)-1)
-                    attrib.size=attribtext
+                    attrib.size=math.max(8,attribtext+2)
                     sstr=sstr:sub(sstr:find(")",1,true)+1)
                     notfound=false
                 end
@@ -301,7 +305,7 @@ local tags={
     },
     {
         name="header",
-        begin={"*"},
+        begin={"***","**","*"},
         isdiv=true,
         till_fn=till_br,
         head=true,
@@ -317,7 +321,38 @@ local tags={
         name="image",
         begin={"&attachref"},
         till_fn=till_parentasis,
-        attrib_fn=function(def,begin,str)
+        attrib_fn=function(def,begin,str,context)
+            local substr=str:sub(2)
+            
+            local split=ebi_utf8.utf8split(substr,",")
+            local zoom=100
+            local linkstr=substr:sub(1,-2)
+            for i,sstr in ipairs(split) do
+                if(i==1)then
+                    linkstr=sstr
+                else
+                    local percent=ebi_utf8.utf8find(sstr,"%%")
+                    if(percent)then
+                        local temp=sstr
+                        zoom=ebi_utf8.utf8sub(sstr,1,percent-1)
+                    end
+                end
+            end
+
+            local attr= {link=
+ 
+            ebi_utf8.utf8gsub(
+                        ebi_utf8.utf8gsub(
+                        ebi_utf8.utf8gsub(
+                            ebi_utf8.utf8gsub(linkstr,
+                         "%./",""),
+                         ":","_"),
+                         "/","_"),
+                         "%.gif","%.png"),
+                        zoom=tonumber(zoom),
+                        }
+
+            return attr
         end,
     },
 
@@ -344,14 +379,20 @@ local tags={
             if(st:find(":"))then
                 local opt=st:sub(1,st:find(":"))
                 local arg=st:sub(st:find(":")+1)
-                if(opt=="CENTER:" or opt=="LEFT:" or opt=="RIGHT:")then
+                if(opt:starts("CENTER") or opt:starts("LEFT") or opt:starts("RIGHT"))then
                     attr.align=opt:lower()
                     attr.width=arg
-                elseif(opt=="BGCOLOR:")then
-                    attr.bgcolor=arg:sub(2,-2)
+                    len=opt:len()+arg:len()+1
+                elseif(opt:starts("BGCOLOR"))then
+                    for v in ebi_utf8.utf8gmatch(opt,"%((.*)%)") do
+                        attr.bgcolor=v:sub(2)
+                        break
+                    end 
+                    len=opt:len()
+                    
                 end
-               
-                len=st:len()
+                
+                
             elseif(st==">")then
                 attr.colspan=true
                 len=st:len()
@@ -463,7 +504,7 @@ function P.poptext(current,str)
     if(#str==0)then
         return ""
     end
-    print(str)
+
     local tag=tags[1]
     
     current.child=current.child or {}
@@ -706,10 +747,11 @@ function P.generatetable(current)
     end
     return current
 end
-function P.parse(current,str)
+function P.parse(current,str,pagename)
 
-    current=current or {
+    current={
         name="root",
+        attrib={pagename=pagename},
     }
     current=P.parseimpl(current,str)
     current=P.generatenl(current)
@@ -721,25 +763,12 @@ end
 WIKIHELP_PUKIWIKI_PARSER=P
 
 local tester=P.parse({},[==[
-&color(Red){全クラスRe:Build適用済み};
-#region([[ソードマン>Class/Reソードマン]]系列)
-基本クラス
-[[スカウト>Class/Reスカウト]]
-一次転職クラス
-[[アウトロー>Class/Reスカウト/Reアウトロー]]
-[[アサシン>Class/Reスカウト/Reアサシン]]
-[[コルセア>Class/Reスカウト/Reコルセア]]
-[[スクワイア>Class/Reスカウト/Reスクワイア]]
-[[ローグ>Class/Reスカウト/Reローグ]]
-[[シュヴァルツライター>Class/Reスカウト/Reシュヴァルツライター]]
-[[バレットマーカー>Class/Reスカウト/Reバレットマーカー]]
-[[リンカー>Class/Reスカウト/Reリンカー]]
-[[ソーマタージュ>Class/Reスカウト/Reソーマタージュ]]
-[[エンチャンター>Class/Reスカウト/Reエンチャンター]]
-[[アルディーティ>Class/Reスカウト/Reアルディーティ]]
-[[シェリフ>Class/Reスカウト/Reシェリフ]]
-隠しクラス
-[[シノビ>Class/Reスカウト/Reシノビ]]
-    
+--5/23 プロボ効果上昇
+*スキル一覧 [#g994d8a0]
+&size(4){アイコンにカーソルを合わせるとスキル名が表示されます。&br;クリックすればそのスキル欄まで飛びます。&br;黄枠はOHスキルです。};
+|~クラスLv|>|>|>|>|>|~スキル|
+|CENTER:|CENTER:50|CENTER:50|CENTER:50|CENTER:50|CENTER:50|CENTER:50|c
+|~1-15|BGCOLOR(#ffff00):[[&attachref(Class/ソードマン/icon_warri_thrust.png,50%,スラスト);>#w8f88c04]]|BGCOLOR(#ffff00):[[&attachref(Class/ソードマン/icon_warri_bash.png,50%,バッシュ);>#d30c1985]]|[[&attachref(Class/ソードマン/icon_warri_gungho.png,50%,デアデビル);>#ye187d50]]|[[&attachref(./icon_warri_bear.png,50%,ベアー);>#qc461afc]]|[[&attachref(Class/ソードマン/icon_warri_painbarrier.png,50%,ペインバリア);>#y7a97c7a]]|[[&attachref(./icon_warri_liberate.png,50%,リベレート);>#mff1829d]]|
+
 ]==])
 tester=tester

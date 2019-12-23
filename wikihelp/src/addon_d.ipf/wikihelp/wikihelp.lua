@@ -17,12 +17,12 @@ g.personalsettingsFileLoc = ""
 g.framename = "wikihelp"
 g.debug = false
 g.handle = nil
-g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
+g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.interlocked = false
 g.currentIndex = 1
 g.x = nil
 g.y = nil
-
+g.history={}
 --ライブラリ読み込み
 CHAT_SYSTEM("[wikihelp]loaded")
 local acutil = require('acutil')
@@ -41,31 +41,31 @@ end
 
 local char_to_hex = function(c)
     return string.format("%%%02X", string.byte(c))
-  end
-  
-  local function urlencode(url)
+end
+
+local function urlencode(url)
     if url == nil then
-      return
+        return
     end
     url = url:gsub("\n", "\r\n")
     url = url:gsub("([^%w ])", char_to_hex)
     url = url:gsub(" ", "+")
     return url
-  end
-  
-  local hex_to_char = function(x)
+end
+
+local hex_to_char = function(x)
     return string.char(tonumber(x, 16))
-  end
-  
-  local urldecode = function(url)
+end
+
+local urldecode = function(url)
     if url == nil then
-      return
+        return
     end
     url = url:gsub("+", " ")
     url = url:gsub("%%(%x%x)", hex_to_char)
     return url
-  end
-  
+end
+
 
 
 function WIKIHELP_DBGOUT(msg)
@@ -180,7 +180,7 @@ function WIKIHELP_CLOSE(frame)
     frame = ui.GetFrame(g.framename)
     local gbox = frame:GetChild("gbox")
     tolua.cast(gbox, "ui::CGroupBox")
-   
+    
     local pic = gbox:GetChild("pict")
     tolua.cast(pic, "ui::CGroupBox")
     frame:ShowWindow(0)
@@ -193,7 +193,7 @@ function WIKIHELP_CHANGEJOB_CLOSE(frame)
     CHANGEJOB_CLOSE_OLD(frame)
     local gbox = frame:GetChild("gbox")
     tolua.cast(gbox, "ui::CGroupBox")
-   
+    
     local pic = gbox:GetChild("pict")
     tolua.cast(pic, "ui::CGroupBox")
 end
@@ -202,26 +202,38 @@ function WIKIHELP_INIT()
         try = function()
             local frame = ui.GetFrame(g.framename)
             --frame:GetChild("equip"):Resize(800, 990)
-            frame:SetLayerLevel(100)
+            frame:SetLayerLevel(120)
             frame:RemoveChild("nameText")
             
-            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth()-16, frame:GetHeight() - 180)
+            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth() - 16, frame:GetHeight() - 180)
             tolua.cast(gbox, "ui::CGroupBox")
             gbox:EnableHitTest(1)
-            gbox:EnableAutoResize(false,false)
+            gbox:EnableAutoResize(false, false)
             gbox:EnableScrollBar(0)
-
-            gbox:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
-            gbox:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
-            gbox:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
-
-            local pic = gbox:CreateOrGetControl("groupbox", "pict", 0, 0,  frame:GetWidth()-16, frame:GetHeight() - 180)
+            gbox:EnableHittestGroupBox(true)
+            gbox:SetSkinName("test_frame_low")
+            gbox:RemoveAllChild()
+            local gboxinner = gbox:CreateOrGetControl("groupbox", "gboxi", 8, 8, gbox:GetWidth() - 16, gbox:GetHeight() - 16)
+            tolua.cast(gboxinner, "ui::CGroupBox")
+            gboxinner:EnableHitTest(1)
+            gboxinner:EnableHittestGroupBox(true)
+            gboxinner:EnableAutoResize(false, false)
+            gboxinner:EnableScrollBar(0)
+            local pic = gboxinner:CreateOrGetControl("groupbox", "pict", 0, 0, gboxinner:GetWidth() - 16, gboxinner:GetHeight() - 180)
             tolua.cast(pic, "ui::CGroupBox")
             pic:EnableScrollBar(0)
-            pic:EnableHitTest(0)
-            pic:EnableAutoResize(true,true)
+            pic:EnableHitTest(1)
+            pic:EnableHittestGroupBox(true)
+            pic:EnableAutoResize(true, true)
+            pic:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
+            pic:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
+            pic:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
+            
             local title = GET_CHILD_RECURSIVELY(frame, "changeName")
             title:SetText("{s24}{ol}WikiHelp")
+            title:SetEventScript(ui.LBUTTONUP, "WIKIHELP_RENDERER_CLICK_A");
+            title:SetEventScriptArgString(ui.LBUTTONUP, "MenuBar");
+        
         end,
         catch = function(error)
             WIKIHELP_ERROUT(error)
@@ -229,84 +241,101 @@ function WIKIHELP_INIT()
     }
 end
 
-function WIKIHELP_RENDER()
-    local frame = ui.GetFrame(g.framename)
-    local pic =GET_CHILD_RECURSIVELY(frame,"pict")
-    tolua.cast(pic, "ui::CGroupBox")
-    pic:RemoveAllChild()
-    pic:SetOffset(0,0)
-    local parser=WIKIHELP_PUKIWIKI_PARSER
-    local renderer=WIKIHELP_RENDERER
-
-    
-    renderer.render(frame,pic,parser.parse({},WIKIHELP_PAGES["MenuBar"]))
-
-    pic:AutoSize(1)
+function WIKIHELP_RENDER(name)
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+            local pic = GET_CHILD_RECURSIVELY(frame, "pict")
+            tolua.cast(pic, "ui::CGroupBox")
+            pic:RemoveAllChild()
+            pic:SetOffset(0, 0)
+            local parser = WIKIHELP_PUKIWIKI_PARSER
+            local renderer = WIKIHELP_RENDERER
+            
+            name = name or "MenuBar"
+            local pagename = GET_CHILD_RECURSIVELY(frame, "LevJobText")
+            pagename:SetText("{s20}{ol}"..name)
+            renderer.render(pic, parser.parse({}, WIKIHELP_PAGES[name], name))
+            
+            pic:AutoSize(1)
+        end,
+        catch = function(error)
+            WIKIHELP_ERROUT(error)
+        end
+    }
 end
-function WIKIHELP_LBTNDOWN(parent, ctrl)		
-	local frame = parent:GetTopParentFrame();
-    local pic = GET_CHILD_RECURSIVELY(frame, "pict");
-    if(pic==nil)then
+function WIKIHELP_LBTNDOWN(parent, ctrl)
+    local frame = parent:GetTopParentFrame();
+    --local pic = GET_CHILD_RECURSIVELY(frame, "pict");
+    pic = ctrl
+    if (pic == nil) then
         return
     end
-	local x, y = GET_MOUSE_POS();
-	
-	g.x = x	-- 드래그할 때, 클릭한 좌표를 기억한다.
-	g.y = y
-	
-	ui.EnableToolTip(0);
-	mouse.ChangeCursorImg("MOVE_MAP", 1);
-	ctrl:RunUpdateScript("WIKIHELP_PROCESS_MOUSE");	
+    local x, y = GET_MOUSE_POS();
+    
+    g.x = x -- 드래그할 때, 클릭한 좌표를 기억한다.
+    g.y = y
+    
+    ui.EnableToolTip(0);
+    mouse.ChangeCursorImg("MOVE_MAP", 1);
+    ctrl:RunUpdateScript("WIKIHELP_PROCESS_MOUSE");
 end
+function WIKIHELP_BACK()
 
+    if(#g.history>1)then
+        WIKIHELP_RENDER(g.history[#g.history-1])
+        table.remove(g.history,#g.history)
+    end
+end
 function WIKIHELP_LBTNUP(parent, ctrl)
-	-- 워프 위치에서 마우스를 떼지 않았다면 클릭한 좌표를 리셋한다.
-	g.x = nil		
-	g.y = nil
+    -- 워프 위치에서 마우스를 떼지 않았다면 클릭한 좌표를 리셋한다.
+    g.x = nil
+    g.y = nil
 end
 function WIKIHELP_PROCESS_MOUSE(ctrl)
     return EBI_try_catch{
         try = function()
-	if mouse.IsLBtnPressed() == 0 then
-		mouse.ChangeCursorImg("BASIC", 0);
-		ui.EnableToolTip(1);
-		return 0;
-	end
-    local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
-    if(pic==nil)then
-        return
-    end
-	local mx, my = GET_MOUSE_POS();
-	local x = g.x;
-	local y = g.y;
-	local dx = mx - x;
-	local dy = my - y;
-	dx = dx ;
-	dy = dy ;
-
-    local cx = pic:GetX();
-    local cy = pic:GetY();
-	cx = cx + dx;
-	cy = cy + dy;
-    g.x=mx
-    g.y=my
-    cx=math.max(-pic:GetWidth()+ctrl:GetWidth(),math.min(cx,0))
-    cy=math.max(-pic:GetHeight()+ctrl:GetHeight(),math.min(cy,0))
-
-    pic:SetOffset(cx,cy)
-	
-    return 1;
-end,
-catch = function(error)
-    WIKIHELP_ERROUT(error)
-end
-}
+            if mouse.IsLBtnPressed() == 0 then
+                mouse.ChangeCursorImg("BASIC", 0);
+                ui.EnableToolTip(1);
+                return 0;
+            end
+            --local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
+            local pic = ctrl
+            if (pic == nil) then
+                return
+            end
+            local mx, my = GET_MOUSE_POS();
+            local x = g.x;
+            local y = g.y;
+            local dx = mx - x;
+            local dy = my - y;
+            dx = dx;
+            dy = dy;
+            
+            local cx = pic:GetX();
+            local cy = pic:GetY();
+            cx = cx + dx;
+            cy = cy + dy;
+            g.x = mx
+            g.y = my
+            --cx=math.max(-pic:GetWidth()+pic:GetParent():GetWidth(),math.min(cx,0))
+            --cy=math.max(-pic:GetHeight()+pic:GetParent():GetHeight(),math.min(cy,0))
+            pic:SetOffset(cx, cy)
+            
+            return 1;
+        end,
+        catch = function(error)
+            WIKIHELP_ERROUT(error)
+        end
+    }
 end
 
 function WIKIHELP_MOUSEWHEEL(parent, ctrl, s, n)
-	
-    local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
-    if(pic==nil)then
+    
+    --local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
+    local pic = ctrl
+    if (pic == nil) then
         return
     end
     local dx = 0;
@@ -315,38 +344,37 @@ function WIKIHELP_MOUSEWHEEL(parent, ctrl, s, n)
     local cy = pic:GetY();
     cx = cx + dx;
     cy = cy + dy;
-    cx=math.max(-pic:GetWidth()+ctrl:GetWidth(),math.min(cx,0))
-    cy=math.max(-pic:GetHeight()+ctrl:GetHeight(),math.min(cy,0))
+    --cx=math.max(-pic:GetWidth()+ctrl:GetParent():GetWidth(),math.min(cx,0))
+    --cy=math.max(-pic:GetHeight()+ctrl:GetParent():GetHeight(),math.min(cy,0))
+    pic:SetOffset(cx, cy)
 
-    pic:SetOffset(cx,cy)
-	
 end
 
 local function IS_NEW_JOB(jobCls)
-	if jobCls.ClassName == 'Char3_18' or jobCls.ClassName == 'Char3_19' or jobCls.ClassName == 'Char5_13' or jobCls.ClassName == 'Char5_14' then
-		return true;
-	end
-	return false;
+    if jobCls.ClassName == 'Char3_18' or jobCls.ClassName == 'Char3_19' or jobCls.ClassName == 'Char5_13' or jobCls.ClassName == 'Char5_14' then
+        return true;
+    end
+    return false;
 end
 
 function WIKIHELP_UPDATE_CHANGEJOB(frame)
     EBI_try_catch{
         try = function()
-            local function _IS_SATISFIED_HIDDEN_JOB_TRIGGER(jobCls)	
+            local function _IS_SATISFIED_HIDDEN_JOB_TRIGGER(jobCls)
                 local preFuncName = TryGetProp(jobCls, 'PreFunction', 'None');
                 if jobCls.HiddenJob == 'NO' then
                     return true;
                 end
-        
+                
                 if preFuncName == 'None' then
                     return true;
                 end
-            --	if jobCls.HiddenJob == "YES" then
-            --    	local pcEtc = GetMyEtcObject();
-            --    	if pcEtc["HiddenJob_"..jobCls.ClassName] ~= 300 and IS_KOR_TEST_SERVER() == false then
-            --    	    return false;
-            --    	end
-            --	end
+                --	if jobCls.HiddenJob == "YES" then
+                --    	local pcEtc = GetMyEtcObject();
+                --    	if pcEtc["HiddenJob_"..jobCls.ClassName] ~= 300 and IS_KOR_TEST_SERVER() == false then
+                --    	    return false;
+                --    	end
+                --	end
                 return false;
             end
             UPDATE_CHANGEJOB_OLD(frame)
@@ -373,7 +401,7 @@ function WIKIHELP_UPDATE_CHANGEJOB(frame)
                 WIKIHELP_DBGOUT("INSERT")
                 local info = jobInfos[i];
                 local jobCls = GetClassByType('Job', info.JobClassID);
-
+                
                 local cjobGbox = GET_CHILD_RECURSIVELY(frame, 'changeJobGbox');
                 tolua.cast(cjobGbox, "ui::CGroupBox")
                 local subClassCtrl = cjobGbox:GetChild('JOB_INFO_' .. jobCls.ClassName);
@@ -393,7 +421,19 @@ function WIKIHELP_OPENWIKI(frame, ctrl, argstr, argnum)
         try = function()
             
             WIKIHELP_SHOW()
+            local pic=GET_CHILD_RECURSIVELY(frame,"pict")
+            tolua.cast("ui::CGroupBox")
+            local pc = GetMyPCObject();
+            local pcjobinfo = GetClass('Job', pc.JobName)
+            WIKIHELP_DBGOUT(pcjobinfo.CtrlType)
+            
+            local jobname=dictionary.ReplaceDicIDInCompStr(argstr)
+            if(g.baseClass[pcjobinfo.CtrlType]==dictionary.ReplaceDicIDInCompStr(argstr))then
+                
+            else
 
+               
+            end
         end,
         catch = function(error)
             WIKIHELP_ERROUT(error)
@@ -409,4 +449,16 @@ function WIKIHELP_ON_TIMER(frame)
             WIKIHELP_ERROUT(error)
         end
     }
+end
+
+function WIKIHELP_RENDERER_CLICK_A(frame, ctrl, argstr, argnum)
+    WIKIHELP_NAVIGATE(argstr)
+end
+function WIKIHELP_NAVIGATE(name)
+    if (WIKIHELP_PAGES[name] == nil) then
+        ui.MsgBox("このページないです", '', 'None');
+    else
+        g.history[#g.history+1]=name
+        WIKIHELP_RENDER(name)
+    end
 end
