@@ -71,7 +71,7 @@ namespace toswikicrawler
             }
 
             path = path.Replace("./", "").Replace(":", "_").Replace("/", "_");
-            path = path.Replace("\\.","");
+            path = path.Replace("\\.","").Replace("(", "_").Replace(")", "_");
             Directory.CreateDirectory("ui.ipf\\skin");
             try
             {
@@ -96,7 +96,7 @@ namespace toswikicrawler
                     
                     _acquiredImages.Add((path, filename));
                 }
-            }catch(WebException exp)
+            }catch(Exception exp)
 
             {
                 Console.Write(" FAIL:"+exp.Message);
@@ -201,11 +201,11 @@ namespace toswikicrawler
                     }
                 }
 
-                Regex imagematcher = new Regex(@"&attachref\((.*?)[,|\)]");
+                Regex imagematcher = new Regex(@"(#ref|&attachref)\((.*?)(,|\);)");
                 var imgs = imagematcher.Matches(idt);
                 foreach (Match img in imgs)
                 {
-                    var imgname = img.Groups[1].Value;
+                    var imgname = img.Groups[2].Value;
                     var tup = (name, imgname);
                     if (!_remainImages.Any(x=>x.Item1==tup.name && x.Item2==tup.imgname))
                     {

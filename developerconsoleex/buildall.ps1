@@ -1,7 +1,7 @@
 ﻿$addonname="developerconsole"
 $emoji="📖"
 $prefix="__"
-$version="v1.1.0"
+$version="v1.2.0"
 
 if (!(Test-Path bin)) {
     mkdir bin 

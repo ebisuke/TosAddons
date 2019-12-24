@@ -18,6 +18,7 @@ local context
 local actions={
     text={},
     font={},
+    bold={},
     br={},
     header={},
     hl={},
@@ -38,7 +39,8 @@ local function inc(context)
     return idx
 end
 local function genfont(context)
-    return context.fontbase..context.fontcolor..context.fontsize
+    print(context.fontcolor)
+    return context.fontbase..context.fontbold..context.fonteffect..context.fontcolor..context.fontsize
 end
 function actions.text.fn(rootframe,frame,node,context)
     local txt=frame:CreateOrGetControl("richtext","text"..tostring(inc(context)),context.x,context.y,0,0)
@@ -54,7 +56,7 @@ end
 function actions.font.fn(rootframe,frame,node,context)
     if(node.attrib.color)then
         context.fontcolor="{#"..node.attrib.color.."}"
-       
+        
     end
     if(node.attrib.size)then
         local size=node.attrib.size
@@ -64,7 +66,10 @@ function actions.font.fn(rootframe,frame,node,context)
     end
     return frame
 end
-
+function actions.bold.fn(rootframe,frame,node,context)
+    context.fontbold="{b}"
+    return frame
+end
 function actions.br.fn(rootframe,frame,node,context)
     context.x=0
     context.y=context.y+ context.carryheight+4
@@ -72,8 +77,9 @@ function actions.br.fn(rootframe,frame,node,context)
     return frame
 end
 function actions.header.fn(rootframe,frame,node,context)
-    context.size="{s24}"
-
+    
+    context.fontsize="{s"..tostring(32-node.attrib.level*4).. "}"
+    context.fonteffect=""
     context.x=8
     return frame
 end
@@ -128,8 +134,7 @@ end
 function actions.table.after_fn(rootframe,previousframe,frame,node,context)
     --ここにリサイズ処理を入れる
     frame:AutoSize(1)
-    context.y=context.y+frame:GetHeight()
-
+   
     local widths={}
     for row=1,#context.table do
 
@@ -169,6 +174,8 @@ function actions.table.after_fn(rootframe,previousframe,frame,node,context)
         
     end
     frame:Resize(maxx,frame:GetHeight())
+    context.y=context.y+frame:GetHeight()+24
+
     context.table=nil
     return frame
 end
@@ -280,6 +287,8 @@ function R.render(rootframe,node)
         fontsize="{s16}",
         fontbase="{ol}",
         fontcolor="",
+        fontbold="",
+        fonteffect="",
         pagename=node.attrib.pagename,
     }
    
@@ -297,6 +306,8 @@ function R.renderimpl(rootframe,frame,node,context)
         fontsize="{s16}",
         fontbase="{ol}",
         fontcolor="",
+        fontbold="",
+        fonteffect="",
     }
     local action=actions[node.name]
     local previousframe=frame
@@ -313,7 +324,7 @@ function R.renderimpl(rootframe,frame,node,context)
             for _,v in ipairs(node.child) do
                 
                 context=R.renderimpl(rootframe,frame,v,context)
-                
+                print(context.fontcolor)
             end
         end
     else
@@ -327,6 +338,8 @@ function R.renderimpl(rootframe,frame,node,context)
     context.fontsize=contextbk.fontsize
     context.fontbase=contextbk.fontbase
     context.fontcolor=contextbk.fontcolor
+    context.fontbold=contextbk.fontbold
+    context.fonteffect=contextbk.fonteffect
     if(action and action.after_fn)then
         frame=action.after_fn(rootframe,previousframe,frame,node,context)
     end

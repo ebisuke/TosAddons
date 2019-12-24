@@ -1,14 +1,13 @@
 
-
-local P={}
-ebi_utf8=ebi_utf8 or {}
-if(not session )then
+local P = {}
+ebi_utf8 = ebi_utf8 or {}
+if (not session) then
     print("LOADFILE")
-    ebi_utf8=loadfile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\utf8.lua")()
+    ebi_utf8 = loadfile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\utf8.lua")()
 end
 local function getcolorbyname(name)
-
-    local tbl= {
+    
+    local tbl = {
         aliceblue = {0.94117647058824, 0.97254901960784, 1},
         antiquewhite = {0.98039215686275, 0.92156862745098, 0.84313725490196},
         aqua = {0, 1, 1},
@@ -157,50 +156,63 @@ local function getcolorbyname(name)
         yellow = {1, 1, 0},
         yellowgreen = {0.60392156862745, 0.80392156862745, 0.19607843137255}
     }
-    local col=tbl[name:lower()]
-    return string.format("%02X%02X%02X",math.floor(col[1]*255),math.floor(col[2]*255),math.floor(col[3]*255))
+    local col = tbl[name:lower()]
+    return string.format("%02X%02X%02X", math.floor(col[1] * 255), math.floor(col[2] * 255), math.floor(col[3] * 255))
 end
-local function till_br(def,str)
-    local en="\n"
-    local result=str:find(en)
-
-    if(result)then
-        return str:sub(1,str:find(en)-1),0
+local function till_br(def, str)
+    local en = "\n"
+    local result = str:find(en)
+    
+    if (result) then
+        return str:sub(1, str:find(en) - 1), 0
     else
-        return str,0
+        return str, 0
     end
 end
-local function till_parentasis(def,str)
-    local en=");"
-    return str:sub(1,str:find(");")-1),en:len()
-end
-local function till_brace(def,str)
-    local remain=0
-    local findfirst=true
-    local en="};"
-    local pos=1
-    while(remain > 0 or findfirst)do
-        local substr=str:sub(pos)
-        if(substr:starts("{"))then
-            remain=remain+1
-            findfirst=false
+local function till_parentasis(def, str)
+    local remain = 0
+    local findfirst = true
+    local en = ")"
+    local pos = 1
+    while (remain > 0 or findfirst) do
+        local substr = str:sub(pos)
+        if (substr:starts("(")) then
+            remain = remain + 1
+            findfirst = false
         elseif substr:starts(en) then
-            remain=remain-1
+            remain = remain - 1
         end
-        pos=pos+1
+        pos = pos + 1
     end
-   
-    return str:sub(1,pos-2),2
+    return str:sub(1, pos - 2), 2
 end
-local function till_same(def,str)
-    return str:sub(1,str:find(def.begin[1])-1),def.begin[1]:len()
+local function till_brace(def, str)
+    local remain = 0
+    local findfirst = true
+    local en = "};"
+    local pos = 1
+    while (remain > 0 or findfirst) do
+        local substr = str:sub(pos)
+        if (substr:starts("{")) then
+            remain = remain + 1
+            findfirst = false
+        elseif substr:starts(en) then
+            remain = remain - 1
+        end
+        pos = pos + 1
+    end
+    
+    return str:sub(1, pos - 2), 2
 end
-local function till_close(def,str)
-    return str:sub(1,str:find(def.close)-1),def.close:len()
+local function till_same(def, str)
+    return str:sub(1, str:find(def.begin[1]) - 1), def.begin[1]:len()
 end
- function table.elemn(tbl)
+local function till_close(def, str)
+    return str:sub(1, str:find(def.close) - 1), def.close:len()
+end
+function table.elemn(tbl)
     local n = 0
-    for _ in pairs (tbl) do
+    for _ in pairs(tbl) do
         n = n + 1
     end
     return n
@@ -210,565 +222,1079 @@ end
 function string.split(str, ts)
     -- 引数がないときは空tableを返す
     if ts == nil then return {} end
-  
-    local t = {} ; 
-    i=1
-    for s in string.gmatch(str, "([^"..ts.."]+)") do
-      t[i] = s
-      i = i + 1
+    
+    local t = {};
+    i = 1
+    for s in string.gmatch(str, "([^" .. ts .. "]+)") do
+        t[i] = s
+        i = i + 1
     end
-  
+    
     return t
-  end
-function string.starts(String,Start)
-    return string.sub(String,1,string.len(Start))==Start
 end
-function P.findancestor(node,name)
+function string.starts(String, Start)
+    return string.sub(String, 1, string.len(Start)) == Start
+end
+function P.findancestor(node, name)
     while node.parent do
         
-        if(node.name==name)then
+        if (node.name == name) then
             return node
         end
-        node=node.parent
+        node = node.parent
     end
     return nil
 end
 
-local tags={
+local tags = {
     {
-        name="text",
+        name = "text",
+        isdiv = true,
+    },
+    
+    
+    {
+        name = "comment",
+        begin = {"''"},
+    },
+    {
+        name = "link",
+        begin = {"[#"},
+        close = "]",
+        till_fn = till_close,
+        attrib_fn = function(def, begin, str, context)
+            return {link = str}, 0
+        end,
+        head = false,
+    },
+    {
+        name = "bold",
+        begin = {"''"},
         isdiv=true,
+        till_fn = till_same,
+        head = false,
     },
     
     {
-        name="comment",
-        begin={"#","//"},
-        till_fn=till_br,
-        head=true,
-        nl=true,
-    },
-    {
-        name="comment",
-        begin={"''"},
-    },
-    {
-        name="link",
-        begin={"[#"},
-        close="]",
-        till_fn=till_close,
-        attrib_fn=function(def,begin,str,context)
-            return {link=str},0
-        end,
-        head=false,
-    },
-    {
-        name="font",
-        begin={"&color","&sizex","&size"},
-        till_fn=till_brace,
-        attrib_fn=function(def,begin,str,context)
-            local attrib={}
+        name = "font",
+        begin = {"&color", "&sizex", "&size"},
+        till_fn = till_brace,
+        attrib_fn = function(def, begin, str, context)
+            local attrib = {}
             
-            local offset=str:find("{")
+            local offset = str:find("{")
             local notfound
-            local sstr=begin..str
+            local sstr = begin .. str
             repeat
-                notfound=true
-                if(sstr:starts("&color"))then
-                    local attribtext=sstr:sub(sstr:find("(",1,true)+1,sstr:find(")",1,true)-1)
-                    attrib.color=getcolorbyname(attribtext)
-                    
-                    sstr=sstr:sub(sstr:find(")",1,true)+1)
-                    notfound=false
+                notfound = true
+                if (sstr:starts("&color")) then
+                    local attribtext = sstr:sub(sstr:find("(", 1, true) + 1, sstr:find(")", 1, true) - 1)
+                    attrib.color = getcolorbyname(attribtext)
+
+                    sstr = sstr:sub(sstr:find(")", 1, true) + 1)
+                    notfound = false
                 end
-               
-                if(sstr:starts("&sizex"))then
-                    local attribtext=sstr:sub(sstr:find("(",1,true)+1,sstr:find(")",1,true)-1)
-                    attrib.size=tonumber(attribtext)*4+8
-                    sstr=sstr:sub(sstr:find(")",1,true)+1)
-                    notfound=false
+                
+                if (sstr:starts("&sizex")) then
+                    local attribtext = sstr:sub(sstr:find("(", 1, true) + 1, sstr:find(")", 1, true) - 1)
+                    attrib.size = tonumber(attribtext) * 4 + 8
+                    sstr = sstr:sub(sstr:find(")", 1, true) + 1)
+                    notfound = false
                 end
-                if(sstr:starts("&size"))then
-                    local attribtext=sstr:sub(sstr:find("(",1,true)+1,sstr:find(")",1,true)-1)
-                    attrib.size=math.max(8,attribtext+2)
-                    sstr=sstr:sub(sstr:find(")",1,true)+1)
-                    notfound=false
+                if (sstr:starts("&size")) then
+                    local attribtext = sstr:sub(sstr:find("(", 1, true) + 1, sstr:find(")", 1, true) - 1)
+                    attrib.size = math.max(8, attribtext + 2)
+                    sstr = sstr:sub(sstr:find(")", 1, true) + 1)
+                    notfound = false
                 end
-            until(notfound==true)
-            return attrib,offset
+            until (notfound == true)
+            return attrib, offset
         end,
-        isdiv=true,
+        isdiv = true,
     },
     {
-        name="br",
-        begin={"&BR;","&br;"},
-        till_fn=nil,
+        name = "br",
+        begin = {"&BR;", "&br;","&br();"},
+        till_fn = nil,
     },
     {
-        name="header",
-        begin={"***","**","*"},
-        isdiv=true,
-        till_fn=till_br,
-        head=true,
-        nl=true,
+        name = "header",
+        begin = {"***", "**", "*"},
+        isdiv = true,
+        till_fn = till_br,
+        head = true,
+        nl = true,
+        attrib_fn = function(def, begin, str, context)
+            return {level=begin:len()}
+        end
     },
     {
-        name="hl",
-        begin={"----","#BR"},
-        till_fn=till_br,
-        head=true,
+        name = "hl",
+        begin = {"----", "#BR"},
+        till_fn = till_br,
+        head = true,
     },
     {
-        name="image",
-        begin={"&attachref"},
-        till_fn=till_parentasis,
-        attrib_fn=function(def,begin,str,context)
-            local substr=str:sub(2)
+        name = "image",
+        begin = {"#ref", "&attachref"},
+        till_fn = till_parentasis,
+        attrib_fn = function(def, begin, str, context)
+            local substr = str:sub(2)
             
-            local split=ebi_utf8.utf8split(substr,",")
-            local zoom=100
-            local linkstr=substr:sub(1,-2)
-            for i,sstr in ipairs(split) do
-                if(i==1)then
-                    linkstr=sstr
+            local split = ebi_utf8.utf8split(substr, ",")
+            local zoom = 100
+            local linkstr = substr:sub(1, -2)
+            for i, sstr in ipairs(split) do
+                if (i == 1) then
+                    linkstr = sstr
                 else
-                    local percent=ebi_utf8.utf8find(sstr,"%%")
-                    if(percent)then
-                        local temp=sstr
-                        zoom=ebi_utf8.utf8sub(sstr,1,percent-1)
+                    local percent = ebi_utf8.utf8find(sstr, "%%")
+                    if (percent) then
+                        local temp = sstr
+                        zoom = ebi_utf8.utf8sub(sstr, 1, percent - 1)
                     end
                 end
             end
-
-            local attr= {link=
- 
-            ebi_utf8.utf8gsub(
+            
+            local attr = {link =
+                ebi_utf8.utf8gsub(
+                    ebi_utf8.utf8gsub(
                         ebi_utf8.utf8gsub(
-                        ebi_utf8.utf8gsub(
-                            ebi_utf8.utf8gsub(linkstr,
-                         "%./",""),
-                         ":","_"),
-                         "/","_"),
-                         "%.gif","%.png"),
-                        zoom=tonumber(zoom),
-                        }
-
+                            ebi_utf8.utf8gsub(
+                                ebi_utf8.utf8gsub(
+                                    ebi_utf8.utf8gsub(linkstr,
+                                        "%./", ""),
+                                    ":", "_"),
+                                "/", "_"),
+                            "%(", "_"),
+                        "%)", "_"),
+                    "%.gif", "%.png"),
+                zoom = tonumber(zoom),
+            }
+            
             return attr
         end,
     },
-
     {
-        name="td",
-        begin={"|"},
-        isdiv=true,
-        till_fn=function(def,str,context)
-            local findbar=str:find(def.begin[1])
-            local findbr=str:find("\n")
+        name = "comment",
+        begin = {"#", "//"},
+        till_fn = till_br,
+        head = true,
+        nl = true,
+    },
+    {
+        name = "td",
+        begin = {"|"},
+        isdiv = true,
+        till_fn = function(def, str, context)
+            local findbar = str:find(def.begin[1])
+            local findbr = str:find("\n")
             
-            if(not findbar or findbr<findbar)then
+            if (not findbar or findbr < findbar) then
                 
-                context.useforattr=true
-                return str:sub(1,findbr),0
+                context.useforattr = true
+                return str:sub(1, findbr), 0
             end
-            context.useforattr=nil
-            return str:sub(1,str:find(def.begin[1])-1),0
+            context.useforattr = nil
+            return str:sub(1, str:find(def.begin[1]) - 1), 0
         end,
-        attrib_fn=function(def,begin,str,context)
-            local attr={nl=context.useforattr}
-            local st=str
-            local len=0
-            if(st:find(":"))then
-                local opt=st:sub(1,st:find(":"))
-                local arg=st:sub(st:find(":")+1)
-                if(opt:starts("CENTER") or opt:starts("LEFT") or opt:starts("RIGHT"))then
-                    attr.align=opt:lower()
-                    attr.width=arg
-                    len=opt:len()+arg:len()+1
-                elseif(opt:starts("BGCOLOR"))then
-                    for v in ebi_utf8.utf8gmatch(opt,"%((.*)%)") do
-                        attr.bgcolor=v:sub(2)
+        attrib_fn = function(def, begin, str, context)
+            local attr = {nl = context.useforattr}
+            local st = str
+            local len = 0
+            if (st:find(":")) then
+                local opt = st:sub(1, st:find(":"))
+                local arg = st:sub(st:find(":") + 1)
+                if (opt:starts("CENTER") or opt:starts("LEFT") or opt:starts("RIGHT")) then
+                    attr.align = opt:lower()
+                    attr.width = arg
+                    len = opt:len() + arg:len() + 1
+                elseif (opt:starts("BGCOLOR")) then
+                    for v in ebi_utf8.utf8gmatch(opt, "%((.*)%)") do
+                        attr.bgcolor = v:sub(2)
                         break
-                    end 
-                    len=opt:len()
-                    
+                    end
+                    len = opt:len()
+                
                 end
-                
-                
-            elseif(st==">")then
-                attr.colspan=true
-                len=st:len()
-            elseif(st=="~")then
-                attr.rowspan=true
-                len=st:len()
-            elseif(st:starts("~"))then
-                len=1
-            elseif(st=="c" or st=="C")then
-                len=1
-            end
-            context.useforattr=nil
-            return attr,len
-        end,
-
-    },
-    {
-        name="table",
-        isdiv=true,
-        
-    },
-    {
-        name="tr",
-        isdiv=true,
-    },
-    {
-        name="li",
-        begin={"---","--","-"},
-        isdiv=true,
-        till_fn=till_br,
-        attrib_fn=function(def,begin,str)
             
-            if begin=="---"then
-                return {level=3}
-            elseif begin=="--"then
-                return {level=2}
-            else    
-                return {level=1}
+            
+            elseif (st == ">") then
+                attr.colspan = true
+                len = st:len()
+            elseif (st == "~") then
+                attr.rowspan = true
+                len = st:len()
+            elseif (st:starts("~")) then
+                len = 1
+            elseif (st == "c" or st == "C") then
+                len = 1
             end
+            context.useforattr = nil
+            return attr, len
         end,
-        head=true,
-        nl=true,
+    
     },
     {
-        name="ln",
-        begin={"+"},
-        isdiv=true,
-        till_fn=till_br,
-        attrib_fn=function(def,begin,str)
-
-        end,
-        head=true,
-        nl=true,
+        name = "table",
+        isdiv = true,
+    
     },
     {
-        name="a",
-        begin={"[["},
-        till_fn=function(def,str,context)
-            local en="]]"
-            local findlink=str:find(">")
-            local endo=str:find("]]")
-            if(findlink and findlink<endo)then
-                context.link=str:sub(findlink+1,endo-1)
-
-                return str:sub(1,findlink-1),en:len()+endo-findlink
-
+        name = "tr",
+        isdiv = true,
+    },
+    {
+        name = "li",
+        begin = {"---", "--", "-"},
+        isdiv = true,
+        till_fn = till_br,
+        attrib_fn = function(def, begin, str)
+            
+            if begin == "---" then
+                return {level = 3}
+            elseif begin == "--" then
+                return {level = 2}
             else
-                context.link= str:sub(1,endo-1)
-                return str:sub(1,endo-1),en:len()
-
+                return {level = 1}
             end
-
+        end,
+        head = true,
+        nl = true,
+    },
+    {
+        name = "ln",
+        begin = {"+"},
+        isdiv = true,
+        till_fn = till_br,
+        attrib_fn = function(def, begin, str)
+        
+        end,
+        head = true,
+        nl = true,
+    },
+    {
+        name = "a",
+        begin = {"http://","https://"},
+        till_fn = till_br,
+        attrib_fn = function(def, begin, str, context)
+            return {link = begin..str}, 0
         end,
         isdiv=true,
-        attrib_fn=function(def,begin,str,context)
-            local attrib={
-                link=context.link
+        head = false,
+    },
+    {
+        name = "a",
+        begin = {"[["},
+        till_fn = function(def, str, context)
+            local en = "]]"
+            local findlink = str:find(">")
+            local brf = str:find("\n")
+            local endo = str:find("]]")
+            if (endo == nil) then
+                --floralwhite
+                return nil, nil
+            elseif (findlink and endo and findlink < endo) then
+                context.link = str:sub(findlink + 1, endo - 1)
+                
+                return str:sub(1, findlink - 1), en:len() + endo - findlink
+            
+            else
+                context.link = str:sub(1, endo - 1)
+                return str:sub(1, endo - 1), en:len()
+            
+            end
+        
+        end,
+        isdiv = true,
+        attrib_fn = function(def, begin, str, context)
+            local attrib = {
+                link = context.link
             }
-            context.link=nil
+            context.link = nil
             return attrib
         end,
     },
     {
-        name="quote",
-        begin={">"},
-        till_fn=till_br,
-        isdiv=true,
-        head=true,
-        nl=true,
+        name = "quote",
+        begin = {">"},
+        till_fn = till_br,
+        isdiv = true,
+        head = true,
+        nl = true,
     },
     {
-        name="title",
-        begin={"TITLE:"},
-        till_fn=till_br,
-        head=true,
-        
+        name = "title",
+        begin = {"TITLE:"},
+        till_fn = till_br,
+        head = true,
+    
     },
 
 }
 function P.findtag(name)
-    for _,v in ipairs(tags) do
-        if(v.name==name)then
+    for _, v in ipairs(tags) do
+        if (v.name == name) then
             return v
         end
     end
     return nil
 end
-function P.poptext(current,str)
-    if(#str==0)then
+function P.poptext(current, str)
+    if (#str == 0) then
         return ""
     end
-
-    local tag=tags[1]
     
-    current.child=current.child or {}
-    current.child[#current.child+1]={
-        tag=tag,
-        name=tag.name,
-        content=str,
-        parent=current
+    local tag = tags[1]
+    
+    current.child = current.child or {}
+    current.child[#current.child + 1] = {
+        tag = tag,
+        name = tag.name,
+        content = str,
+        parent = current
     }
-
+    
     return ""
 end
-function P.parseimpl(current,str,context,head)
-    context=context or {}
-    current=current or {}
-    local pos=1
-    local textbuf=""
-
+function P.parseimpl(current, str, context, head)
+    context = context or {}
+    current = current or {}
+    local pos = 1
+    local textbuf = ""
+    
     while pos <= str:len() do
-        local substr=str:sub(pos)
-        if(head==nil)then
-            head= true
+        local substr = str:sub(pos)
+        if (head == nil) then
+            head = true
         end
         
-        local hit=false
-        for _,tag in ipairs(tags) do
-            if(tag.begin)then
-                for _,b in ipairs(tag.begin) do
+        local hit = false
+        for _, tag in ipairs(tags) do
+            if (tag.begin) then
+                for _, b in ipairs(tag.begin) do
                     local result
-                    if(tag.head)then
-                        result=head and substr:starts(b)
+                    if (tag.head) then
+                        result = head and substr:starts(b)
                     else
-                        result=substr:starts(b)
+                        result = substr:starts(b)
                     end
-                    if(result) then
-                        local child={
-                            name=tag.name,
-                            tag=tag,
-                            parent=current
+                    if (result) then
+                        local child = {
+                            name = tag.name,
+                            tag = tag,
+                            parent = current
                         }
-                        local tagstr,tilllen
+                        local tagstr, tilllen
                         if tag.till_fn then
                             
-                            tagstr,tilllen=tag:till_fn(substr:sub(b:len()+1),context)
+                            tagstr, tilllen = tag:till_fn(substr:sub(b:len() + 1), context)
                         else
-                            tagstr=""
-                            tilllen=0
+                            tagstr = ""
+                            tilllen = 0
                         end
-                        if(tilllen==nil)then
+                        if (tilllen == nil) then
                             --ignore this
-                            hit=true
-                            pos=pos+1
+                            hit = true
+                            pos = pos + 1
                         else
                             --generate text
-                            local attrlen=0
-                            if(textbuf:len()>0)then
-                                current.child=current.child or {}
-                                current.child[#current.child+1]={
-                                    name=tags[1].name,
-                                    tag=tags[1],
-                                    content=textbuf,
-                                    parent=current,
+                            local attrlen = 0
+                            if (textbuf:len() > 0) then
+                                current.child = current.child or {}
+                                current.child[#current.child + 1] = {
+                                    name = tags[1].name,
+                                    tag = tags[1],
+                                    content = textbuf,
+                                    parent = current,
                                 }
-                                textbuf=""
+                                textbuf = ""
                             end
-                            if(context.useforattr)then
-                               
-                                if(tag.attrib_fn)then
-                                    local attrib=tag:attrib_fn(b,tagstr,context)
-                                    current.child[#current.child].attrib=attrib or current.child[#current.child]
+                            if (context.useforattr) then
+                                
+                                if (tag.attrib_fn) then
+                                    local attrib = tag:attrib_fn(b, tagstr, context)
+                                    current.child[#current.child].attrib = attrib or current.child[#current.child]
                                 end
-                                context.useforattr=nil
+                                context.useforattr = nil
                             else
-                                child.content=tagstr
-                                current.child=current.child or {}
-                                current.child[#current.child+1]=child
-                                if(tag.attrib_fn)then
+                                child.content = tagstr
+                                current.child = current.child or {}
+                                current.child[#current.child + 1] = child
+                                if (tag.attrib_fn) then
                                     local attrib
-                                    attrib,attrlen=tag:attrib_fn(b,tagstr,context)
-                                    child.attrib=attrib
-                                    context.useforattr=nil
+                                    attrib, attrlen = tag:attrib_fn(b, tagstr, context)
+                                    child.attrib = attrib
+                                    context.useforattr = nil
                                 end
-                                if(tag.isdiv)then
+                                if (tag.isdiv) then
                                     local offset
-                                    if(attrlen==nil)then
-                                        offset=0
-
+                                    if (attrlen == nil) then
+                                        offset = 0
+                                    
                                     else
-                                        offset=attrlen+1
-
+                                        offset = attrlen + 1
+                                    
                                     end
-
-                                    P.parseimpl(child,tagstr:sub(offset),context,head)
-                
+                                    
+                                    P.parseimpl(child, tagstr:sub(offset), context, head)
+                                
                                 end
-    
+                            
                             end
-                        
-                            pos=pos+b:len()+tagstr:len()+tilllen
-                            hit=true
+                            
+                            pos = pos + b:len() + tagstr:len() + tilllen
+                            hit = true
                             break
                         end
                     end
                 end
-                if(hit)then
+                if (hit) then
                     break
                 end
             end
-            
+        
         end
-        if(substr:starts("\n"))then
-            head=true
+        if (substr:starts("\n")) then
+            head = true
         else
-            head=false
+            head = false
         end
-        if(not hit)then
+        if (not hit) then
             
-            if(textbuf:len()>0 and substr:starts("\n"))then
-                current.child=current.child or {}
-                current.child[#current.child+1]={
-                    name=tags[1].name,
-                    tag=tags[1],
-                    content=textbuf,
-                    parent=current,
+            if (textbuf:len() > 0 and substr:starts("\n")) then
+                current.child = current.child or {}
+                current.child[#current.child + 1] = {
+                    name = tags[1].name,
+                    tag = tags[1],
+                    content = textbuf,
+                    parent = current,
                 }
                 
-                textbuf=""
- 
+                textbuf = ""
+            
             else
-                textbuf=textbuf..str:sub(pos,pos):gsub("\n","")
+                textbuf = textbuf .. str:sub(pos, pos):gsub("\n", "")
             end
-            if(substr:starts("\n"))then
-                current.child[#current.child+1]={
-                    name="br",
-                    tag=P.findtag("br"),
-                    content="",
-                    parent=current,
+            if (substr:starts("\n")) then
+                current.child[#current.child + 1] = {
+                    name = "br",
+                    tag = P.findtag("br"),
+                    content = "",
+                    parent = current,
                 }
-
+            
             end
-            pos=pos+1
+            pos = pos + 1
         end
     end
     --generate text
-    if(textbuf:len()>0)then
-        current.child=current.child or {}
-        current.child[#current.child+1]={
-            name=tags[1].name,
-            tag=tags[1],
-            content=textbuf,
-            parent=current,
+    if (textbuf:len() > 0) then
+        current.child = current.child or {}
+        current.child[#current.child + 1] = {
+            name = tags[1].name,
+            tag = tags[1],
+            content = textbuf,
+            parent = current,
         }
-        textbuf=""
+        textbuf = ""
     end
     
     return current
 end
 function P.generatenl(current)
-
     
-
-    if(current.child)then
-        local idx=1
-        while idx<=#current.child do
-            local child=current.child[idx]
-            if(child.tag.nl)then
-                table.insert(current.child,idx+1,{
-                    name="br",
-                    tag=P.findtag("br"),
-                    parent=current,
-                    content=""
+    
+    
+    if (current.child) then
+        local idx = 1
+        while idx <= #current.child do
+            local child = current.child[idx]
+            if (child.tag.nl) then
+                table.insert(current.child, idx + 1, {
+                    name = "br",
+                    tag = P.findtag("br"),
+                    parent = current,
+                    content = ""
                 });
-                idx=idx+1
+                idx = idx + 1
             end
             P.generatenl(child)
-            idx=idx+1
+            idx = idx + 1
         end
     end
     return current
 end
 function P.generatetable(current)
-    local idx=1
+    local idx = 1
     while idx <= #current.child do
-        local v=current.child[idx]
-        if(v.name=="td")then
+        local v = current.child[idx]
+        if (v.name == "td") then
             --tableにまとめる
-            local tbl={
-                name="table",
-                tag=P.findtag("table"),
-                child={}
+            local tbl = {
+                name = "table",
+                tag = P.findtag("table"),
+                child = {}
             }
             local tr
-            local tidx=idx
+            local tidx = idx
             local next
             local trprev
             while tidx <= #current.child do
-                local vc=current.child[tidx]
+                local vc = current.child[tidx]
                 
-                if(
-                current.child[tidx].attrib and 
-                current.child[tidx].name=="td" and 
-                current.child[tidx].attrib.nl )then
-                    tr=nil
-                    next=true
-                elseif vc.name~="td"then
+                if (
+                    current.child[tidx].attrib and
+                    current.child[tidx].name == "td" and
+                    current.child[tidx].attrib.nl) then
+                    tr = nil
+                    next = true
+                elseif vc.name ~= "td" then
                     break
                 end
-                if(tr==nil)then
+                if (tr == nil) then
                     
-                    tr={
-                        name="tr",
-                        tag=P.findtag("tr"),
-                        child={}
+                    tr = {
+                        name = "tr",
+                        tag = P.findtag("tr"),
+                        child = {}
                     }
                     
-                        
-                    if(not next)then
-                        tbl.child[#tbl.child+1] = tr
+                    
+                    if (not next) then
+                        tbl.child[#tbl.child + 1] = tr
                     end
-                   
+                
                 else
-                    trprev=tr
+                    trprev = tr
                 end
                 if next then
-                    trprev=trprev or tr
-                    trprev.child[#trprev.child+1]=vc
-                    tbl.child[#tbl.child+1] = tr
-                    next=nil
+                    trprev = trprev or tr
+                    trprev.child[#trprev.child + 1] = vc
+                    tbl.child[#tbl.child + 1] = tr
+                    next = nil
                 else
-                    tr.child[#tr.child+1]=vc
+                    tr.child[#tr.child + 1] = vc
                 end
                 
-
-               
-                table.remove(current.child,tidx)
+                
+                
+                table.remove(current.child, tidx)
             end
-            current.child[idx]=tbl
+            current.child[idx] = tbl
         end
-        idx=idx+1
+        idx = idx + 1
     end
     return current
 end
-function P.parse(current,str,pagename)
-
-    current={
-        name="root",
-        attrib={pagename=pagename},
+function P.parse(current, str, pagename)
+    
+    current = {
+        name = "root",
+        attrib = {pagename = pagename},
     }
-    current=P.parseimpl(current,str)
-    current=P.generatenl(current)
-    current=P.generatetable(current)
+    current = P.parseimpl(current, str)
+    current = P.generatenl(current)
+    current = P.generatetable(current)
     
     return current
 end
 --EOF
-WIKIHELP_PUKIWIKI_PARSER=P
+WIKIHELP_PUKIWIKI_PARSER = P
 
-local tester=P.parse({},[==[
---5/23 プロボ効果上昇
-*スキル一覧 [#g994d8a0]
-&size(4){アイコンにカーソルを合わせるとスキル名が表示されます。&br;クリックすればそのスキル欄まで飛びます。&br;黄枠はOHスキルです。};
-|~クラスLv|>|>|>|>|>|~スキル|
-|CENTER:|CENTER:50|CENTER:50|CENTER:50|CENTER:50|CENTER:50|CENTER:50|c
-|~1-15|BGCOLOR(#ffff00):[[&attachref(Class/ソードマン/icon_warri_thrust.png,50%,スラスト);>#w8f88c04]]|BGCOLOR(#ffff00):[[&attachref(Class/ソードマン/icon_warri_bash.png,50%,バッシュ);>#d30c1985]]|[[&attachref(Class/ソードマン/icon_warri_gungho.png,50%,デアデビル);>#ye187d50]]|[[&attachref(./icon_warri_bear.png,50%,ベアー);>#qc461afc]]|[[&attachref(Class/ソードマン/icon_warri_painbarrier.png,50%,ペインバリア);>#y7a97c7a]]|[[&attachref(./icon_warri_liberate.png,50%,リベレート);>#mff1829d]]|
+local tester = P.parse({}, [==[
+*クラペダ [#ye121d48]
+//　大きな画像、NPCの位置に①②③のような振り分けがあると見やすい
+#contents
 
-]==])
-tester=tester
+**地図 [#jb9dd2fd]
+#ref(Map/街/クラペダ/クラペダ.jpg,nolink,75%);
+CENTER:|CENTER:|CENTER:|c
+|~番号|~NPC名|~番号|~NPC名|~番号|~NPC名|
+|CENTER:|CENTER:150|CENTER:|CENTER:150|CENTER:|CENTER:150|c
+|①|[[コンパニオン商人>Map/街/クラペダ#c2acf175]]|⑪|[[倉庫番>Map/街/クラペダ#c2acf175]]|&#12881;|[[クリヴィスマスター>Map/街/クラペダ#c2acf175]]|
+|②|[[アクセサリ商人>Map/街/クラペダ#c2acf175]]|⑫|女神像|&#12882;|[[クォレルシューターマスター>Map/街/クラペダ#c2acf175]]|
+|③|[[装備商人>Map/街/クラペダ#c2acf175]]|⑬|[[レンジャーマスター>Map/街/クラペダ#c2acf175]]|&#12883;|[[ソードマンマスター>Map/街/クラペダ#c2acf175]]|
+|④|[[雑貨商人>Map/街/クラペダ#c2acf175]]|⑭|[[テンプラーマスター>Map/街/クラペダ#c2acf175]]|-|-|
+|⑤|[[鍛冶屋>Map/街/クラペダ#c2acf175]]|⑮|[[クレリックマスター>Map/街/クラペダ#c2acf175]]|-|-|
+|⑥|[[クリオンマンサーマスター>Map/街/クラペダ#c2acf175]]|⑯|[[魔法協会クラペダ支部>Map/街/クラペダ#c2acf175]]|-|-|
+|⑦|[[ペルタストマスター>Map/街/クラペダ#c2acf175]]|⑰|[[プリーストマスター>Map/街/クラペダ#c2acf175]]|-|-|
+|⑧|[[ウィザードマスター>Map/街/クラペダ#c2acf175]]|⑱|[[バイボラの翼>Map/街/クラペダ#c2acf175]]|-|-|
+|⑨|[[TP商人>Map/街/クラペダ#c2acf175]]|⑲|[[オラクルマスター>Map/街/クラペダ#c2acf175]]|-|-|
+|⑩|[[マーケット管理人>Map/街/クラペダ#c2acf175]]|⑳|[[アーチャーマスター>Map/街/クラペダ#c2acf175]]|-|-|
+
+**隣接マップ [#jf176d83]
+-[[シャウレイ西の森>Map/戦闘区域/シャウレイ西の森]] Lv1
+-[[シャウレイ東の森>Map/戦闘区域/シャウレイ東の森]] Lv6
+-[[ギティスの開拓地>Map/戦闘区域/ギティスの開拓地]] Lv69
+
+**ショップ [#z03b1322]
+***装備商人 [#f53da977]
+#region(武器)
+''片手剣''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|1|[[ダンケルファルシオン>Item/武器/片手剣]]|533 シルバ―|
+|15|[[ダンケルカスカラ>Item/武器/片手剣]]|3,600 シルバ―|
+|15|[[ダンケルチンクエディア>Item/武器/片手剣]]|4,320 シルバ―|
+|40|[[ダンケルサーベル>Item/武器/片手剣]]|5,040 シルバ―|
+|40|[[ダンケルシャムシール>Item/武器/片手剣]]|14,840 シルバ―|
+|75|[[ダンケルスニッカーズニ>Item/武器/片手剣]]|20,666 シルバ―|
+''両手剣''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|15|[[ダンケルバスターソード>Item/武器/両手剣]]|5,760 シルバ―|
+|15|[[ダンケルフランベルジュ>Item/武器/両手剣]]|6,912 シルバ―|
+|40|[[ダンケル野太刀>Item/武器/両手剣]]|8,064 シルバ―|
+|40|[[ダンケルクレイモア>Item/武器/両手剣]]|23,744 シルバ―|
+|75|[[ダンケルカダラ>Item/武器/両手剣]]|33,066 シルバ―|
+''片手杖''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|1|[[ダンケルロッド>Item/武器/片手杖]]|533 シルバ―|
+|15|[[ダンケルケインローバー>Item/武器/片手杖]]|3,600 シルバ―|
+|15|[[ダンケルケイン>Item/武器/片手杖]]|4,320 シルバ―|
+|40|[[ダンケルクルーク>Item/武器/片手杖]]|5,040 シルバ―|
+|40|[[ダンケルピューターロッド>Item/武器/片手杖]]|14,840 シルバ―|
+|75|[[ダンケルクリスタルロッド>Item/武器/片手杖]]|20,666 シルバ―|
+''両手杖''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|1|[[ダンケルウッドスタッフ>Item/武器/両手杖]]|852 シルバ―|
+|15|[[ダンケルオークスタッフ>Item/武器/両手杖]]|5,760 シルバ―|
+|15|[[ダンケルスタッフ>Item/武器/両手杖]]|6,912 シルバ―|
+|40|[[ダンケルジュウスタッフ>Item/武器/両手杖]]|8,064 シルバ―|
+|40|[[ダンケルウポコスタッフ>Item/武器/両手杖]]|23,744 シルバ―|
+|75|[[ダンケルデーモンスタッフ>Item/武器/両手杖]]|33,066 シルバ―|
+''弓''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|1|[[ダンケルショートボウ>Item/武器/弓]]|533 シルバ―|
+|15|[[ダンケルロングボウ>Item/武器/弓]]|5,760 シルバ―|
+|15|[[ダンケルコンポジットボウ>Item/武器/弓]]|6,912 シルバ―|
+|40|[[ダンケルセルフボウ>Item/武器/弓]]|8,064 シルバ―|
+|40|[[ダンケルローカスボウ>Item/武器/弓]]|23744 シルバ―|
+|75|[[ダンケルカーマン>Item/武器/弓]]|33,066 シルバ―|
+''クロスボウ''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|15|[[ダンケルクロスボウ>Item/武器/クロスボウ]]|3600 シルバ―|
+|15|[[ダンケルドキュ>Item/武器/クロスボウ]]|4,320 シルバ―|
+|40|[[ダンケルクォレルボウ>Item/武器/クロスボウ]]|5,040 シルバ―|
+|40|[[ダンケルオーククロスボウ>Item/武器/クロスボウ]]|14,840 シルバ―|
+|75|[[ダンケルクレインクイン>Item/武器/クロスボウ]]|20,666 シルバ―|
+''鈍器''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|1|[[ダンケルアイアンクラブ>Item/武器/鈍器]]|533 シルバ―|
+|15|[[ダンケルメイス>Item/武器/鈍器]]|3,600 シルバ―|
+|15|[[ダンケルモーニングスター>Item/武器/鈍器]]|4,320 シルバ―|
+|40|[[ダンケルマウル>Item/武器/鈍器]]|5040 シルバ―|
+|40|[[ダンケルゴーデンダック>Item/武器/鈍器]]|14,840 シルバ―|
+|75|[[ダンケルバトルハンマー>Item/武器/鈍器]]|20,666 シルバ―|
+''片手槍''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|40|[[ダンケルショートスピア>Item/武器/片手槍]]|5,040 シルバ―|
+|40|[[ダンケルエスボントゥーン>Item/武器/片手槍]]|5,760 シルバ―|
+|75|[[ダンケルアスター>Item/武器/片手槍]]|17,010 シルバ―|
+|75|[[ダンケルパイク>Item/武器/片手槍]]|33,066 シルバ―|
+#endregion
+#region(防具)
+''プレート''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:150|CENTER:200|c
+|15|[[ダンケルリングメイル>Item/防具/上半身]]|2,952 シルバー|
+|15|[[ダンケルリングパンツ>Item/防具/下半身]]|2,952 シルバー|
+|15|[[ダンケルリングブーツ>Item/防具/靴]]|1,296 シルバー|
+|15|[[ダンケルリンググローブ>Item/防具/手袋]]|1,296 シルバー|
+''レザー''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:180|CENTER:200|c
+|1|[[ダンケルキルトアーマー>Item/防具/上半身]]|360 シルバー|
+|1|[[ダンケルキルトパンツ>Item/防具/下半身]]|360 シルバー|
+|1|[[ダンケルキルトブーツ>Item/防具/靴]]|180 シルバー|
+|1|[[ダンケルキルトグローブ>Item/防具/手袋]]|180 シルバー|
+|15|[[ダンケルハードレザーアーマー>Item/防具/上半身]]|2,592 シルバー|
+|15|[[ダンケルハードレザーパンツ>Item/防具/下半身]]|2,592 シルバー|
+|15|[[ダンケルハードレザーブーツ>Item/防具/靴]]|1,296 シルバー|
+|15|[[ダンケルハードレザーグローブ>Item/防具/手袋]]|1,296 シルバー|
+''クロース''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:180|CENTER:200|c
+|15|[[ダンケルコットンローブ>Item/防具/上半身]]|2,592 シルバー|
+|15|[[ダンケルコットンパンツ>Item/防具/下半身]]|2,592 シルバー|
+|15|[[ダンケルコットンブーツ>Item/防具/靴]]|1,296 シルバー|
+|15|[[ダンケルコットングローブ>Item/防具/手袋]]|1,296 シルバー|
+''盾''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:180|CENTER:200|c
+|1|[[ダンケルウッドシールド>Item/サブウェポン/盾]]|240 シルバー|
+|15|[[ダンケルウッドバックラー>Item/サブウェポン/盾]]|1,728 シルバー|
+#endregion
+
+***アクセサリ商人 [#nedd1c8a]
+#region(アクセサリ)
+''ブレスレット''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:180|CENTER:200|c
+|1|[[ライトロネッサバングル>Item/防具/ブレスレット]]|369 シルバー|
+|15|[[スーベリアロネッサバングル>Item/防具/ブレスレット]]|1,728 シルバー|
+|15|[[ロネッサリングブレスレット>Item/防具/ブレスレット]]|1,728 シルバー|
+|40|[[ロネッサノーブルブレスレット>Item/防具/ブレスレット]]|1,728 シルバー|
+|75|[[ロネッサクラペダブレスレット>Item/防具/ブレスレット]]|4,536 シルバー|
+''ネックレス''
+|~LV|~名称|~価格|
+|CENTER:|CENTER:180|CENTER:200|c
+|1|[[ロネッサウッドネックレス>Item/防具/ネックレス]]|516 シルバー|
+|15|[[ロネッサアイアンネックレス>Item/防具/ネックレス]]|1,728 シルバー|
+|15|[[ロネッサスチールネックレス>Item/防具/ネックレス]]|1,728 シルバー|
+|40|[[ロネッサタリスマン>Item/防具/ネックレス]]|1,728 シルバー|
+|75|[[ロネッサクラペダチェーン>Item/防具/ネックレス]]|4,536 シルバー|
+#endregion
+
+***雑貨商人 [#ia9fba56]
+#region(雑貨商人)
+''アイテム''
+|~名称|~価格|~効果|~備考|
+|CENTER:250|CENTER:200|CENTER:250|CENTER:250|c
+|HPポーション(小)|80 シルバー|即時190HP回復&br;毎秒2秒持続回復&br;合計266回復&br;CT20|ステータスで回復量変化|
+|HPポーション|160 シルバー|即時320HP回復&br;毎秒2秒持続回復&br;合計488回復&br;CT25|ステータスで回復量変化|
+|SPポーション(小)|120 シルバー|即時70HP回復&br;毎秒2秒持続回復&br;合計98回復&br;CT30|ステータスで回復量変化|
+|SPポーション|480 シルバー|即時120HP回復&br;毎秒2秒持続回復&br;合計168回復&br;CT45|ステータスで回復量変化|
+|小さなスタミナ錠|80 シルバー|スタミナ30回復&br;CT30|-|
+|解毒剤|100 シルバー|毒状態を治療する|-|
+|クラペダワープの呪文書|500 シルバー|クラペダに移動する&br;右クリックで使用|-|
+|オルシャワープの呪文書|500 シルバー|オルシャに移動する&br;右クリックで使用|-|
+|金床|300 シルバー|装備強化に使用&br;右クリックで使用|-|
+|薪|30 シルバー|座った状態で使用し、&br;たき火を起こせる　|-|
+|[[製造書女神の祝福石:武器>Item/クラフト/製造素材/マ行]]|10,000 シルバー|座った状態の製造で使用|-|
+|[[製造書女神の祝福石:防具>Item/クラフト/製造素材/マ行]]|10,000 シルバー|座った状態の製造で使用|-|
+|[[製造書女神の祝福石:アクセサリ>Item/クラフト/製造素材/マ行]]|10,000 シルバー|座った状態の製造で使用|-|
+#endregion
+
+***コンパニオン商人 [#oc4f5116]
+#region(コンパニオン商人)
+''コンパニオン''
+|~名称|~価格|
+|CENTER:200|CENTER:300|c
+|ヴェルハイダー|110,000 シルバー|
+|ホグラン|453,600 シルバー|
+|鷹|453,600 シルバー|
+''コンパニオンアイテム''
+|~名称|~価格|~効果|
+|CENTER:200|CENTER:300|CENTER:300|c
+|コンパニオンのエサ|489 シルバー|コンパニオンのHP全回復 スタミナ+60|
+|シラス|5,127 シルバー|ペンギンのHP全回復 スタミナ+15|
+|トマト|300 シルバー|レッサーパンダのHP全回復 スタミナ+60|
+#endregion
+
+***鍛冶屋 [#ddf73afb]
+#region(鍛冶屋)
+''鍛冶屋''
+|~名称|~価格|
+|CENTER:200|CENTER:300|c
+|[[製造書ザリアレザーグローブ>Item/クラフト/防具/製造手袋]]|1,134 シルバー|
+|[[製造書ザリアレザーブーツ>Item/クラフト/防具/製造靴]]|1,701 シルバー|
+|[[製造書ザリアレザーパンツ>Item/クラフト/防具/製造下半身]]|3,402 シルバー|
+|[[製造書ザリアレザーアーマー>Item/クラフト/防具/製造上半身]]|3,402 シルバー|
+|[[製造書プロタスブーツ>Item/クラフト/防具/製造靴]]|1,701 シルバー|
+|[[製造書プロタストラウザー>Item/クラフト/防具/製造下半身]]|3,402 シルバー|
+|[[製造書サベージシールド>Item/クラフト/サブウェポン/製造盾]]|1,092 シルバー|
+|[[製造書ルーダスシールド>Item/クラフト/サブウェポン/製造盾]]|4,053 シルバー|
+#endregion
+
+**NPC [#c2acf175]
+|CENTER:|150|||c
+|~画像|~名前|~クエスト|~備考|h
+|#ref(コンパニオン商人.jpg)|[コンパニオン商人]&br;クリスティーナ|-|-|
+|#ref(アクセサリ商人.jpg)|[アクセサリ商人]&br;ロネッサ|・[[東の森の脅威>Quest/クラペダ#i302eefc]]|-|
+|#ref(装備商人.jpg)|[装備商人]&br;ダンケル|-|-|
+|#ref(雑貨商人.jpg)|[雑貨商人]&br;ミリア|-|-|
+|#ref(鍛冶屋.jpg)|[鍛冶屋]&br;ザラス|・[[司教が見た女神の夢(2)>Quest/クラペダ#k7304afa]]|-|
+|#ref(クリオンマンサーマスターjpg.jpg)|[クリオマンサーマスター]&br;アリスター・クロウリー|・[[転職クエ>Class/ウィザード/クリオマンサー]]|-|
+|#ref(ペルタストマスター.jpg)|[ペルタストマスター]&br;マリア・リード|・[[転職クエ>Class/ソードマン/ペルタスト]]|-|
+|#ref(ウィザードマスター.jpg)|[ウィザードマスター]&br;ルチア|・[[転職クエ>Class/ウィザード]]|-|
+|#ref(TP商人.jpg)|[TP商人]&br;レティーシャ|-|-|
+|#ref(マーケット管理人jpg.jpg)|[マーケット管理人]&br;ロージー|-|-|
+|#ref(倉庫番.jpg)|[倉庫番]&br;リタ|-|-|
+|#ref(レンジャーマスター.jpg)|[レンジャーマスター]&br;モーケン|・[[転職クエ>Class/アーチャー/レンジャー]]|-|
+|#ref(テンプラーマスター.jpg)|[テンプラーマスター]&br;騎士団長ウスカ|・[[転職クエ>Class/ソードマン/テンプラー]]&br;・[[司教が見た女神の夢(1)>Quest/クラペダ#b172d89a]]&br;・[[一歩一歩の積み重ね>Quest/クラペダ#g61d6cbe]]　&br;・[[正体不明の石板(2)>Quest/水晶鉱山３階]]|-|
+|#ref(クレリックマスター.jpg)|[クレリックマスター]&br;ロザリア|・[[転職クエ>Class/クレリック]]|-|
+|#ref(プリーストマスター.jpg)|[プリーストマスター]&br;ポラブル|・[[転職クエ>Class/クレリック/プリースト]]|-|
+|#ref(バイボラの翼.jpg)|[バイボラの翼]&br;レナ|-|-|
+|#ref(オラクルマスター.jpg)|[オラクルマスター]&br;アポロニア・バルボラ|・[[転職クエ>Class/クレリック/オラクル]]|-|
+|#ref(アーチャーマスター.jpg)|[アーチャーマスター]&br;アドミュンタス・テイラー|・[[転職クエ>Class/アーチャー]]|-|
+|#ref(クリヴィスマスター.jpg)|[クリヴィスマスター]&br;ヘルクス|・[[転職クエ>Class/クレリック/クリヴィス]]|-|
+|#ref(クォレルシューターマスター.jpg)|[クォレルシューターマスター]&br;リアム・トイラー|・[[転職クエ>Class/アーチャー/クォレルシューター]]|-|
+|#ref(ソードマンマスター.jpg)|[ソードマンマスター]&br;ラシュア|・[[転職クエ>Class/ソードマン/ペルタスト]]|-|
+
+**クエスト [#c65f154b]
+-[[クラペダ>Quest/クラペダ]]
+
+**隠し要素 [#x3d2ce03]
+-ハイランダーマスターの部屋にいる「練習用の木人形」を壊すと隠しクエストが発生する。
+ハイランダーマスターに話しかけて受注。
+クエストの推奨Lvは40くらい。
+報酬は所持重量100増加。
+--木人形は叩き続ければ壊せる。木人形の受けるダメージは全て1でHPは50程度、普段は高速で自動回復(秒間10かそれ以上?)している。
+しかし、ときどき自動回復が止まり、その間に十分HPを削り切れる。なお、まれに移動する(逃げる)。
+
+**コメント [#uf56c633]
+#pcomment(./コメント,reply,10)
+    
+]==]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+)
+tester = tester

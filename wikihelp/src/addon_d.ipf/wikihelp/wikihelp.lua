@@ -22,7 +22,40 @@ g.interlocked = false
 g.currentIndex = 1
 g.x = nil
 g.y = nil
-g.history={}
+g.history = {}
+g.baseClass = {
+    Cleric = "クレリック",
+    Archer = "アーチャー",
+    Warrior = "ソードマン",
+    Wizard = "ウィザード",
+    Scout = "スカウト"
+}
+g.Quest = {
+    ["防衛戦ミッション"] = "Quest/防衛戦",
+    ["七彩谷ミッション"] = "Quest/依頼所",
+    ["シャウレイミッション"] = "Quest/依頼所",
+    ["水晶鉱山ミッション"] = "Quest/依頼所",
+    ["カタコムミッション"] = "Quest/依頼所",
+    ["聖堂地下ダンジョン"] = "Map/インスタンスダンジョン/聖堂地下ダンジョン",
+    ["廃墟の遺跡"] = "Map/インスタンスダンジョン/廃墟の遺跡ダンジョン",
+    ["念願の碑石路ダンジョン"] = "Map/インスタンスダンジョン/念願の碑石路ダンジョン",
+    ["キャッスル地下ダンジョン"] = "Map/インスタンスダンジョン/キャッスルダンジョン",
+    ["ランコ湖ダンジョン"] = "Map/インスタンスダンジョン/ランコ湖ダンジョン",
+    ["依頼所ミッション"] = "Quest/依頼所",
+    ["ベルカッパーの巣"] = "Map/インスタンスダンジョン/ベルコッパーの巣",
+    ["大地の塔"] = "Map/インスタンスダンジョン/大地の塔",
+    ["白カラスの永眠地:レジェンド"] = "白カラスの永眠地：レジェンド",
+    
+    ["白カラスの永眠地:ユニーク"] = "白カラスの永眠地：ユニーク",
+    ["一番目の避難所"] = "Map/インスタンスダンジョン/ユニークレイド",
+    ["峡谷地帯ミッション"] = "Quest/サルラス修道女院",
+    ["王陵ミッション"] = "Quest/サルラス修道女院",
+    ["キャッスルミッション"] = "Quest/サルラス修道女院",
+    ["防衛戦ミッション"] = "Quest/防衛戦",
+    
+
+
+}
 --ライブラリ読み込み
 CHAT_SYSTEM("[wikihelp]loaded")
 local acutil = require('acutil')
@@ -66,7 +99,9 @@ local urldecode = function(url)
     return url
 end
 
-
+function string.starts(String, Start)
+    return string.sub(String, 1, string.len(Start)) == Start
+end
 
 function WIKIHELP_DBGOUT(msg)
     
@@ -140,6 +175,7 @@ end
 function WIKIHELP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
+   
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
@@ -147,6 +183,9 @@ function WIKIHELP_ON_INIT(addon, frame)
             acutil.addSysIcon('WIKIHELP', 'sysmenu_sys', 'WIKIHELP', 'WIKIHELP_TOGGLE_FRAME')
             acutil.setupHook(WIKIHELP_UPDATE_CHANGEJOB, "UPDATE_CHANGEJOB")
             acutil.setupHook(WIKIHELP_CHANGEJOB_CLOSE, "CHANGEJOB_CLOSE")
+            acutil.setupHook(WIKIHELP_INDUNINFO_MAKE_DETAIL_INFO_BOX, "INDUNINFO_MAKE_DETAIL_INFO_BOX")
+            acutil.setupHook(WIKIHELP_SHOW_INDUNENTER_DIALOG, "SHOW_INDUNENTER_DIALOG")
+            
             --addon:RegisterMsg('GAME_START_3SEC', 'WIKIHELP_SHOW')
             --ccするたびに設定を読み込む
             if not g.loaded then
@@ -163,6 +202,54 @@ function WIKIHELP_ON_INIT(addon, frame)
             --WIKIHELP_SHOW(g.frame)
             WIKIHELP_INIT()
         --g.frame:ShowWindow(0)
+        end,
+        catch = function(error)
+            WIKIHELP_ERROUT(error)
+        end
+    }
+end
+function WIKIHELP_INDUNINFO_MAKE_DETAIL_INFO_BOX(frame, indunClassID)
+    return EBI_try_catch{
+        try = function()
+            local result=INDUNINFO_MAKE_DETAIL_INFO_BOX_OLD(frame, indunClassID)
+
+            local indunClassID = indunClassID;
+
+            local btn = frame:CreateOrGetControl("button", "wikiinfo", 900, 250, 80, 50)
+            btn:SetOffset( 900, 230)
+            local indunCls = GetClassByType('Indun', indunClassID);
+            local name = dictionary.ReplaceDicIDInCompStr(indunCls.Name)
+            local conv = name
+            if (g.Quest[conv]) then
+                conv = g.Quest[conv]
+            end
+            btn:SetText("{s16}{ol}WikiHelp")
+            btn:SetEventScript(ui.LBUTTONUP, "WIKIHELP_RENDERER_CLICK_A")
+            btn:SetEventScriptArgString(ui.LBUTTONUP, conv)
+            btn:SetSkinName("test_skin_01_btn")
+            return result
+        end,
+        catch = function(error)
+            WIKIHELP_ERROUT(error)
+        end
+    }
+end
+function WIKIHELP_SHOW_INDUNENTER_DIALOG(indunType, isAlreadyPlaying, enableAutoMatch, enableEnterRight, enablePartyMatch)
+    local result = SHOW_INDUNENTER_DIALOG_OLD(indunType, isAlreadyPlaying, enableAutoMatch, enableEnterRight, enablePartyMatch)
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame('indunenter');
+            local btn = frame:CreateOrGetControl("button", "wikiinfo", 470, 110, 60, 40)
+            local indunCls = GetClassByType('Indun', indunType);
+            local conv = dictionary.ReplaceDicIDInCompStr(indunCls.Name)
+            if (g.Quest[conv]) then
+                conv = g.Quest[conv]
+            end
+            btn:SetText("{s16}{ol}WikiHelp")
+            btn:SetEventScript(ui.LBUTTONUP, "WIKIHELP_RENDERER_CLICK_A")
+            btn:SetEventScriptArgString(ui.LBUTTONUP, conv)
+            btn:SetSkinName("test_skin_01_btn")
+            return result
         end,
         catch = function(error)
             WIKIHELP_ERROUT(error)
@@ -204,14 +291,14 @@ function WIKIHELP_INIT()
             --frame:GetChild("equip"):Resize(800, 990)
             frame:SetLayerLevel(120)
             frame:RemoveChild("nameText")
-            
+            frame:EnableResize(1)
             local gbox = frame:CreateOrGetControl("groupbox", "gbox", 8, 100, frame:GetWidth() - 16, frame:GetHeight() - 180)
             tolua.cast(gbox, "ui::CGroupBox")
             gbox:EnableHitTest(1)
             gbox:EnableAutoResize(false, false)
             gbox:EnableScrollBar(0)
             gbox:EnableHittestGroupBox(true)
-            gbox:SetSkinName("test_frame_low")
+            gbox:SetSkinName("test_frame_midle")
             gbox:RemoveAllChild()
             local gboxinner = gbox:CreateOrGetControl("groupbox", "gboxi", 8, 8, gbox:GetWidth() - 16, gbox:GetHeight() - 16)
             tolua.cast(gboxinner, "ui::CGroupBox")
@@ -254,7 +341,7 @@ function WIKIHELP_RENDER(name)
             
             name = name or "MenuBar"
             local pagename = GET_CHILD_RECURSIVELY(frame, "LevJobText")
-            pagename:SetText("{s20}{ol}"..name)
+            pagename:SetText("{s20}{ol}" .. name)
             renderer.render(pic, parser.parse({}, WIKIHELP_PAGES[name], name))
             
             pic:AutoSize(1)
@@ -281,10 +368,12 @@ function WIKIHELP_LBTNDOWN(parent, ctrl)
     ctrl:RunUpdateScript("WIKIHELP_PROCESS_MOUSE");
 end
 function WIKIHELP_BACK()
-
-    if(#g.history>1)then
-        WIKIHELP_RENDER(g.history[#g.history-1])
-        table.remove(g.history,#g.history)
+    
+    if (#g.history > 1) then
+        local pict=GET_CHILD_RECURSIVELY(ui.GetFrame("wikihelp"),"pict")
+        WIKIHELP_RENDER(g.history[#g.history - 1].name)
+        pict:SetOffset(g.history[#g.history].x,g.history[#g.history].y)
+        table.remove(g.history, #g.history)
     end
 end
 function WIKIHELP_LBTNUP(parent, ctrl)
@@ -344,8 +433,8 @@ function WIKIHELP_MOUSEWHEEL(parent, ctrl, s, n)
     local cy = pic:GetY();
     cx = cx + dx;
     cy = cy + dy;
-    --cx=math.max(-pic:GetWidth()+ctrl:GetParent():GetWidth(),math.min(cx,0))
-    --cy=math.max(-pic:GetHeight()+ctrl:GetParent():GetHeight(),math.min(cy,0))
+    --cx=math.max(-pic:GetWidth()+pic:GetParent():GetWidth(),math.min(cx,0))
+    --cy=math.max(-pic:GetHeight()+pic:GetParent():GetHeight(),math.min(cy,0))
     pic:SetOffset(cx, cy)
 
 end
@@ -421,19 +510,26 @@ function WIKIHELP_OPENWIKI(frame, ctrl, argstr, argnum)
         try = function()
             
             WIKIHELP_SHOW()
-            local pic=GET_CHILD_RECURSIVELY(frame,"pict")
+            local pic = GET_CHILD_RECURSIVELY(frame, "pict")
             tolua.cast("ui::CGroupBox")
             local pc = GetMyPCObject();
             local pcjobinfo = GetClass('Job', pc.JobName)
             WIKIHELP_DBGOUT(pcjobinfo.CtrlType)
-            
-            local jobname=dictionary.ReplaceDicIDInCompStr(argstr)
-            if(g.baseClass[pcjobinfo.CtrlType]==dictionary.ReplaceDicIDInCompStr(argstr))then
-                
+            imcSound.PlaySoundEvent("button_click_big")
+            local jobname = dictionary.ReplaceDicIDInCompStr(argstr)
+            local name
+            if (g.baseClass[pcjobinfo.CtrlType] == dictionary.ReplaceDicIDInCompStr(argstr)) then
+                name = "Class/Re" .. dictionary.ReplaceDicIDInCompStr(argstr);
             else
-
-               
+                local dic = dictionary.ReplaceDicIDInCompStr(argstr):gsub("{s18}", "")
+                if (dic == "巫女") then
+                    name = "Class/Re" .. g.baseClass[pcjobinfo.CtrlType] .. "/Re巫女神主";
+                else
+                    name = "Class/Re" .. g.baseClass[pcjobinfo.CtrlType] .. "/Re" .. dic;
+                end
             end
+
+            WIKIHELP_NAVIGATE(name)
         end,
         catch = function(error)
             WIKIHELP_ERROUT(error)
@@ -452,13 +548,29 @@ function WIKIHELP_ON_TIMER(frame)
 end
 
 function WIKIHELP_RENDERER_CLICK_A(frame, ctrl, argstr, argnum)
-    WIKIHELP_NAVIGATE(argstr)
+    
+    if (argstr:starts("http")) then
+        login.OpenURL(argstr)
+    else
+        WIKIHELP_NAVIGATE(argstr)
+    end
 end
 function WIKIHELP_NAVIGATE(name)
+    
+    WIKIHELP_DBGOUT(name)
     if (WIKIHELP_PAGES[name] == nil) then
         ui.MsgBox("このページないです", '', 'None');
     else
-        g.history[#g.history+1]=name
+        if (ui.GetFrame("wikihelp"):IsVisible() == 0) then
+            WIKIHELP_SHOW()
+        end
+        local pict=GET_CHILD_RECURSIVELY(ui.GetFrame("wikihelp"),"pict")
+        g.history[#g.history + 1] = {
+            name=name,
+            x=pict:GetX(),
+            y=pict:GetY(),
+            
+        }
         WIKIHELP_RENDER(name)
     end
 end
