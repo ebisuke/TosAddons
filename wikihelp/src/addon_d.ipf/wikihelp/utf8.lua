@@ -1052,6 +1052,7 @@ local function utf8split(str, ts)
   
     return t
   end
+
 local function utf8starts(String,Start)
     return utf8sub(String,1,utf8len(Start))==Start
 end
