@@ -1,6 +1,10 @@
+--parser
 local P = {}
-if (not ebi_utf8) then
+if (not session and not ebi_utf8) then
     ebi_utf8 = loadfile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\utf8.lua")()
+    dofile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\mediawikipreprocessor.lua")
+    dofile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\mediawikitemplates_sample.lua")
+    dofile("E:\\ToSProject\\TosAddons\\wikihelp\\src\\addon_d.ipf\\wikihelp\\mediawikipages_sample.lua")
 end
 function string.split(str, ts)
     -- 引数がないときは空tableを返す
@@ -15,8 +19,76 @@ function string.split(str, ts)
     
     return t
 end
+function string.trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"))
+ end
+function string.splitsafe(str, ts,ignore)
+    -- 引数がないときは空tableを返す
+    if ts == nil then return {} end
+    
+    local t = {};
+    local ignoremode=false
+    local textbuf=""
+    local i=1
+    while i<=str:len() do
+        local sstr=str:sub(i)
+        if(sstr:find(ignore)==1)then
+            ignoremode=not ignoremode
+            i=i+1
+        elseif(not ignoremode and sstr:starts(ts))then
+            t[#t+1]=textbuf
+            textbuf=""
+            i=i+ts:len()
+        else
+            textbuf=textbuf..sstr:sub(1,1)
+            i=i+1
+        end
+        
+    end
+    if(textbuf:len()>0)then
+        t[#t+1]=textbuf
+    end
+    
+    return t
+end
 function string.starts(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
+end
+function P.htmlstyleparser(str)
+    local style={}
+    --分解
+    local spr=str:split(";")
+    for _,v in ipairs(spr) do
+        --さらに:で分解
+        local eq=v:split(":")
+        if(#eq==2)then
+            style[eq[1]:trim()]=eq[2]:trim()
+        end
+    end
+    return style
+    
+end
+function P.htmlattribparser(str,attrib)
+    str=str.."\n"   --便宜的に
+    local minimatch=str:gsub("{.*}",""):match("^(.-)[\n|%|]")
+    if(minimatch)then
+        --分解
+        local spr=minimatch:splitsafe(" ","[\"{}]")
+        for _,v in ipairs(spr) do
+            --さらに=で分解
+            local eq=v:split("=")
+            if(#eq==2)then
+                attrib[eq[1]:trim()]=eq[2]:trim()
+            end
+        end
+        if(attrib.style)then
+            attrib.styleraw=attrib.style
+            attrib.style=P.htmlstyleparser(attrib.style)
+        end
+        return attrib,str:sub(str:match("^(.-)[\n|%|]"):len()+1)
+    else
+        return attrib,nil
+    end
 end
 local tags = {
     {
@@ -96,25 +168,11 @@ local tags = {
     {
         name = "table",
         begin = "{|",
-        regex = "{%|(.-)%|}",
+        regex = "{%|(.-)[\n]",
         attrib_fn = function(def, str, hit)
-            local style = "style=\"(.-);\""
-            local attr = {}
-            for v in hit:gmatch(style) do
-                
-                for key, vv in v:gmatch("(.-:.-)") do
-                    if (key == "width") then
-                        attr.width = vv
-                    elseif (key == "margin") then
-                        attr.margin = vv
-                    elseif (key == "padding-top") then
-                        attr.padding_top = vv:substr(1, -3)
-                    elseif (key == "text-align") then
-                        attr.text_align = vv
-                    end
-                end
-            end
-            return attr
+            local attr,remain=P.htmlattribparser(hit,{})
+ 
+            return attr,remain
         end,
         isdiv = true,
         head = true,
@@ -122,31 +180,43 @@ local tags = {
     {
         name = "tr",
         begin = "|-",
-        regex = "%|%-(.-)\n",
+        regex = "%|%-(.-)[\n]",
+        attrib_fn = function(def, str, hit)
+            local attr,remain=P.htmlattribparser(hit,{})
+
+            return attr,remain
+        end,
         isdiv = true,
         head = true,
     },
     {
         name = "tr",
         begin = "|+",
-        regex = "%|%-(.-)\n",
+        regex = "%|%-(.-)[\n]",
         isdiv = true,
         head = true,
         attrib_fn = function(def, str, hit, line)
-            return {header=true}
+            local attr,remain=P.htmlattribparser(hit,{})
+            attr.header=true      
+
+            return attr,remain
+      
         end,
     },
     {
         name = "td",
         begin = "|",
-        regex = "%|(.-)\n",
+        regex = "%|(.-)[\n]",
         content_fn = function(def, str, hit, line)
             for vv in line:gmatch(def.regex) do
                 return vv
             end
         end,
-        attrib_fn = function(def, str, hit, line)
-            return {}
+        attrib_fn = function(def, str, hit)
+            local attr,remain=P.htmlattribparser(hit,{})
+            
+ 
+            return attr,remain
         end,
         isdiv = true,
         head = true,
@@ -154,14 +224,19 @@ local tags = {
     {
         name = "td",
         begin = "!",
-        regex = "%!(.-)\n",
+        regex = "%!(.-)[\n]",
         content_fn = function(def, str, hit, line)
             for vv in line:gmatch(def.regex) do
                 return vv
             end
         end,
         attrib_fn = function(def, str, hit, line)
-            return {header=true}
+            local attr,remain=P.htmlattribparser(hit,{})
+            attr.header=true
+  
+         
+            return attr,remain
+      
         end,
         isdiv = true,
         head = true,
@@ -171,7 +246,7 @@ local tags = {
         name = "hr",
         regex = "%-.*\n",
         attrib_fn = function(def, str, hit)
-            
+            return {},nil
         end,
         head=true
     },
@@ -241,16 +316,6 @@ local tags = {
         head=true
     },
     {
-        begin = "'''''",
-        name = "font",
-        regex = "''(.-)''",
-        attrib_fn = function(def, str, hit)
-            return {bold=true}
-        end,
-        isdiv = true,
-    
-    },
-    {
         begin = "'''",
         name = "font",
         regex = "'''(.-)'''",
@@ -260,6 +325,17 @@ local tags = {
         isdiv = true,
     
     },
+    {
+        begin = "''",
+        name = "font",
+        regex = "''(.-)''",
+        attrib_fn = function(def, str, hit)
+            return {bold=true}
+        end,
+        isdiv = true,
+    
+    },
+
     {
         begin = "''",
         name = "font",
@@ -296,14 +372,32 @@ local tags = {
         end,
         head=true,
     },
+    {
+        name = "template",
+        begin = "{{",
+        ends="}}",
+        attrib_fn = function(def, str, hit)
+            local spr=hit:split("|")
+
+            return {name=spr[1],split=spr}
+        end,
+        matroshka=true,
+        head=true,
+    },
 }
 
-function P.parse(node, str)
+function P.parse(node, str,pagename)
     local pos = 1
     local textbuf = ""
     node = node or {}
+    node.attrib = node.attrib or {}
+    node.attrib.pagename=pagename
     local line = ""
     local linepos = 1
+    if(str==nil)then
+        print("ERROR! str is nil")
+        return
+    end
     --便宜的に改行を入れる
     str=str.."\n"
     while pos <= str:len() do
@@ -318,7 +412,7 @@ function P.parse(node, str)
                 else
                     result = substr:starts(tag.begin)
                 end
-                if (tag.regex and result) then
+                if (result) then
                     local content
                     node.child = node.child or {}
                     
@@ -338,12 +432,20 @@ function P.parse(node, str)
                             end
                             ppos=ppos+1
                         end
-                        local content=str:sub(pos+substr:match(tag.regex:gsub("%(",""):gsub("%)","")):len(),ppos+tag.ends:len())
+                        local content
+                        local total=substr:sub(1,ppos-pos)
+                        if(tag.regex)then
+                            content=str:sub(pos+substr:match(tag.regex:gsub("%(",""):gsub("%)","")):len(),ppos)
+                        else
+                            content=substr:sub(tag.begin:len()+1,ppos-pos)
+                        end
+                       
                         if (textbuf:len() > 0) then
       
                             node.child[#node.child + 1] = {
                                 name = "text",
-                                content = textbuf
+                                content = textbuf,
+                                parent=node,
                             }
             
  
@@ -352,16 +454,36 @@ function P.parse(node, str)
                         node.child[#node.child + 1] = {
                             name = tag.name,
                             tag = tag,
+                            parent=node,
                         }
                         local child = node.child[#node.child]
+                       
                         child.content = content;
                         local attrib={}
+                        local attrib_remain
                         if (tag.attrib_fn) then
-                            attrib = tag.attrib_fn(tag, substr, content, line)
+                            attrib,attrib_remain = tag.attrib_fn(tag, substr, content, line)
                         end
-                        if (tag.isdiv and content) then
-                            P.parse(child, content)
+                        child.attrib=attrib
+                        if(attrib_remain)then
+                            content=attrib_remain
                         end
+                        if(tag.name=="template" and WIKIHELP_MEDIAWIKITEMPLATES[attrib.name])then
+                            local PRE=WIKIHELP_MEDIAWIKIPREPROCESSOR
+                            local template=PRE.removestuff(WIKIHELP_MEDIAWIKITEMPLATES[attrib.name])
+                            local params=PRE.generatetable(content)
+                            local node=PRE.generatenode(template,{},params,{pagename=pagename})
+                            local str=PRE.stringnizenode(node,WIKIHELP_MEDIAWIKITEMPLATES,params,{pagename=pagename})
+                            child.content=str
+                            P.parse(child, str)
+                        else
+                            if (tag.isdiv and content) then
+                                P.parse(child, content)
+                            end
+                        end
+                        pos = pos + total:len()+tag.ends:len()
+                        hit = true
+                        break
                     else
                         for v in string.gmatch(substr, tag.regex) do
                             --hit
@@ -374,8 +496,12 @@ function P.parse(node, str)
                         end
                         if(content~=nil) then
                             local attrib={}
+                            local attrib_remain
                             if (tag.attrib_fn) then
-                                attrib = tag.attrib_fn(tag, substr, content, line)
+                                attrib,attrib_remain = tag.attrib_fn(tag, substr, content, line)
+                            end
+                            if(attrib_remain)then
+                                content=attrib_remain
                             end
                             if(attrib==nil)then
                             else
@@ -384,7 +510,8 @@ function P.parse(node, str)
 
                                     node.child[#node.child + 1] = {
                                         name = "text",
-                                        content = textbuf
+                                        content = textbuf,
+                                        parent=node,
                                     }
         
                                     textbuf = ""
@@ -392,6 +519,8 @@ function P.parse(node, str)
                                 node.child[#node.child + 1] = {
                                     name = tag.name,
                                     tag = tag,
+                                    attrib=attrib,
+                                    parent=node,
                                 }
                                 local child = node.child[#node.child]
                                 child.content = content
@@ -421,14 +550,15 @@ function P.parse(node, str)
             end
         end
         local find=str:find("\n",linepos)
-        if ( find and (find)<pos) then
+        if (find and (find)<=pos) then
             linepos = pos
             if (textbuf:len() > 0) then
                 node.child = node.child or {}
 
                 node.child[#node.child + 1] = {
                     name = "text",
-                    content = textbuf
+                    content = textbuf,
+                    parent=node,
                 }
 
                 textbuf = ""
@@ -446,128 +576,21 @@ function P.parse(node, str)
     end
     return node
 end
+function P.dump(node)
+    if(node.name=="text")then
+        print(node.content)
+    end
+    if(node.child)then
+        for _,v in ipairs(node.child) do
+            P.dump(v)
+        end
+    end
+end
 WIKIHELP_MEDIAWIKIPARSER = P
 
-local test = P.parse({}, [==[
-{{Infobox Class|2|클레릭|Rozalija|15/12/2015|29/03/2016|3
-| con=25
-| int=30
-| spr=45
-| altstat = Physical
-}}
-'''{{PAGENAME}}''' have various skills that can either heal or buff allies in battle. They are largely a support class but they can be developed into a profession that plays a larger role in the front-lines as well as behind the scenes as support.
 
-==Lore==
-'''Clerics''' are former apprentice clergymen who have completed their training. For thousands of years, the '''Clerics''' are a group that has devoted their lives to studying and worshipping the Goddesses.
-
-==Background==
-''No data yet.''
-
-==Icon and Outfit==
-''No data yet.''
-
-==Stat Multipliers==
-'''{{PAGENAME}}''' have the following stat multipliers
-{{PercentageBar|HP|EE8811|80|width=450|fieldWidth=120}}
-{{PercentageBar|HP Recovery|DD6600|120|width=450|fieldWidth=120}}
-{{PercentageBar|SP|1188EE|80|width=450|fieldWidth=120}}
-{{PercentageBar|SP Recovery|004499|120|width=450|fieldWidth=120}}
-{{PercentageBar|Physical Defense|EE1111|150|width=450|fieldWidth=120}}
-{{PercentageBar|Magical Defense|00AAFF|150|width=450|fieldWidth=120}}
-{{PercentageBar|Critical Resistance|11BB11|150|width=450|fieldWidth=120}}
-
-==Weapons==
-'''{{PAGENAME}}''' can use the following weapons by default:
-* [[1h Mace]]
-* [[1h Sword]]
-* [[Rod]]
-* [[Dagger]]
-* [[Shield]]
-The only weapon group exclusive to '''{{PAGENAME}}''' is '''[[2h Mace]]s'''.
-
-==Skills and Attributes==
-<tabber>
-Tree View=
-{| class="wikitable"
-|-
-{{TreeViewCell|Cure|Enhance}}
-{{TreeViewCell|Fade}}<br/><br/>
-{{TreeViewCell|Guardian Saint|Enhance}}
-{{TreeViewCell|Heal|Linger|Enhance|Enhanced Upgrade}}
-{{TreeViewCell|Smite|Enhance|Enhanced Upgrade}}
-|-
-{{TreeViewRow|One-handed Blunt Mastery - Healing|Two-handed Blunt Mastery - Strike|Physical Stat - Cleric|Cloth Mastery - Healing}}
-|}
-|-|
-List View=
-{| class="wikitable"
-{{ListViewSkill}}
-{{ListViewSkill|Cure|Active|Removes all removable debuffs affecting the target.}}
-{{ListViewSkill|Fade|[[Buff]]|Erases the threat of monsters making them stop any attacks on you.}}
-{{ListViewSkill|Guardian Saint|[[Buff]]|Increases the caster's Healing ability.}}
-{{ListViewSkill|Heal|Active|Restores the HP of a designated target. The amount of HP restored depends on the caster's healing values. Repeated casting increases SP consumption that is dependent on the player's SPR stat.<br/>{{TextLink|Kabbalist|2}} - Heal factor increased by 10%.<br/>{{TextLink|Pardoner|2}} - '''[[SP|SP consumption]]''' reduced by 50.<br/>{{TextLink|Plague Doctor|2}} - '''Heal - Overload''' duration reduced by 0.7 second.<br/>{{TextLink|Priest|2}} - Heal factor increased by 5%. '''[[SP|SP consumption]]''' reduced by 25. '''Heal - Overload''' duration reduced by 0.3 second.}}
-{{ListViewSkill|Smite|[[Strike Property|Strike]]|Strike down enemies with a powerful attack. Deals additional damage to Mutant- and Demon-type enemies.}}
-|}
-
-{| border="1" cellpadding="1" cellspacing="1" class="wikitable" style="width: 800px;"
-{{ListViewAttribute}}
-{{ListViewAttribute|One-handed Blunt Mastery - Healing|||5|Increases Healing by 2% per attribute level when equipping a one-handed blunt weapon.}}
-{{ListViewAttribute|Two-handed Blunt Mastery - Strike|||1|•Strike damage +10% when equipping a [Two-handed Blunt] weapon.}}
-{{ListViewAttribute|Physical Stat - Cleric|||1|Cleric's stat growth ratio is changed. INT ↔ STR, SPR ↔ DEX​}}
-{{ListViewAttribute|Heal|Linger||10|Applies a buff that continuously restores the HP of allies healed with Heal or Mass Heal. The buff lasts 10 sec and restores HP in a value equal to [attribute level x 5]% of your Healing stat.|30}}
-|-
-{{ListViewArts}}
-{{ListViewArts|Cloth Mastery - Healing|While equipped with 4 pieces of [Cloth] armor, your Attack is reduced by 5% in exchange for increasing Healing by the amount of Attack lost.<br/>'''Does not apply simultaneously with the''' {{TextLink|Cloth Mastery - Communion|2}} '''art.'''}}
-|}
-</tabber>
-{{RemovedClassElement|1|Deprotected Zone|Divine Might|Safety Zone}}
-
-== Advancements ==
-{{ClassTable|Chaplain|Crusader|Dievdirbys|Druid|Exorcist|Inquisitor|Kabbalist|Krivis|Miko|Monk|Oracle|Paladin|Pardoner|Plague Doctor|Priest|Sadhu|Zealot}}
-
-==Tips and Strategies==
-''No data yet.''
-
-==Gallery==
-<gallery spacing="small" captionalign="center">
-ToS_Cleric(M).gif|A male Cleric.
-ToS_Cleric(F).gif|A female Cleric.
-ToS ClericConcept.jpg|Old Cleric concept art.
-</gallery>
-
-==Trivia==
-''No data yet.''
-
-==References==
-{{Reflist}}
-
-==External links==
-*[https://treeofsavior.com/page/class/view.php?c=Cleric Official Class Page]
-*[https://tos.guru/itos/database/classes/4001 ToS Guru]
-*[https://tos.neet.tv/skills?cls=Char4_1&f=1 ToS Neet]
-
-{{ClassFooter|2}}
-==History Log==
-'''[[https://treeofsavior.com/page/news/view.php?n=1837 29/10/2019]]'''
-* '''Stat growth redistributed'''
-** '''[[STR]]''' - 12.5 → 0
-** '''[[CON]]''' - 22.5 → 25
-** '''[[INT]]''' - 12.5 → 30
-** '''[[SPR]]''' - 40 → 45
-** '''[[DEX]]''' - 12.5 → 0
-* '''Added attributes'''
-** {{TextLink|Physical Stat - Cleric|2}}
-* '''Added arts'''
-** {{TextLink|Cloth Mastery - Healing|2}}
-** {{TextLink|Heal - Enhanced Upgrade|2}}
-** {{TextLink|Smite - Enhanced Upgrade|2}}
-
-{{PageProgress|2}}
-    
-]==])
-
-test=test
-
+local test = P.parse({},WIKIHELP_MEDIAWIKIPAGES_SAMPLE["Oracle"],"Oracle")
+P.dump(test)
 
 
 

@@ -15,7 +15,7 @@ g.settings = {x = 300, y = 300}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "wikihelp"
-g.debug = false
+g.debug = true
 g.handle = nil
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.interlocked = false
@@ -23,39 +23,39 @@ g.currentIndex = 1
 g.x = nil
 g.y = nil
 g.history = {}
-g.baseClass = {
-    Cleric = "クレリック",
-    Archer = "アーチャー",
-    Warrior = "ソードマン",
-    Wizard = "ウィザード",
-    Scout = "スカウト"
-}
-g.Quest = {
-    ["防衛戦ミッション"] = "Quest/防衛戦",
-    ["七彩谷ミッション"] = "Quest/依頼所",
-    ["シャウレイミッション"] = "Quest/依頼所",
-    ["水晶鉱山ミッション"] = "Quest/依頼所",
-    ["カタコムミッション"] = "Quest/依頼所",
-    ["聖堂地下ダンジョン"] = "Map/インスタンスダンジョン/聖堂地下ダンジョン",
-    ["廃墟の遺跡"] = "Map/インスタンスダンジョン/廃墟の遺跡ダンジョン",
-    ["念願の碑石路ダンジョン"] = "Map/インスタンスダンジョン/念願の碑石路ダンジョン",
-    ["キャッスル地下ダンジョン"] = "Map/インスタンスダンジョン/キャッスルダンジョン",
-    ["ランコ湖ダンジョン"] = "Map/インスタンスダンジョン/ランコ湖ダンジョン",
-    ["依頼所ミッション"] = "Quest/依頼所",
-    ["ベルカッパーの巣"] = "Map/インスタンスダンジョン/ベルコッパーの巣",
-    ["大地の塔"] = "Map/インスタンスダンジョン/大地の塔",
-    ["白カラスの永眠地:レジェンド"] = "白カラスの永眠地：レジェンド",
+-- g.baseClass = {
+--     Cleric = "クレリック",
+--     Archer = "アーチャー",
+--     Warrior = "ソードマン",
+--     Wizard = "ウィザード",
+--     Scout = "スカウト"
+-- }
+-- g.Quest = {
+--     ["防衛戦ミッション"] = "Quest/防衛戦",
+--     ["七彩谷ミッション"] = "Quest/依頼所",
+--     ["シャウレイミッション"] = "Quest/依頼所",
+--     ["水晶鉱山ミッション"] = "Quest/依頼所",
+--     ["カタコムミッション"] = "Quest/依頼所",
+--     ["聖堂地下ダンジョン"] = "Map/インスタンスダンジョン/聖堂地下ダンジョン",
+--     ["廃墟の遺跡"] = "Map/インスタンスダンジョン/廃墟の遺跡ダンジョン",
+--     ["念願の碑石路ダンジョン"] = "Map/インスタンスダンジョン/念願の碑石路ダンジョン",
+--     ["キャッスル地下ダンジョン"] = "Map/インスタンスダンジョン/キャッスルダンジョン",
+--     ["ランコ湖ダンジョン"] = "Map/インスタンスダンジョン/ランコ湖ダンジョン",
+--     ["依頼所ミッション"] = "Quest/依頼所",
+--     ["ベルカッパーの巣"] = "Map/インスタンスダンジョン/ベルコッパーの巣",
+--     ["大地の塔"] = "Map/インスタンスダンジョン/大地の塔",
+--     ["白カラスの永眠地:レジェンド"] = "白カラスの永眠地：レジェンド",
     
-    ["白カラスの永眠地:ユニーク"] = "白カラスの永眠地：ユニーク",
-    ["一番目の避難所"] = "Map/インスタンスダンジョン/ユニークレイド",
-    ["峡谷地帯ミッション"] = "Quest/サルラス修道女院",
-    ["王陵ミッション"] = "Quest/サルラス修道女院",
-    ["キャッスルミッション"] = "Quest/サルラス修道女院",
-    ["防衛戦ミッション"] = "Quest/防衛戦",
+--     ["白カラスの永眠地:ユニーク"] = "白カラスの永眠地：ユニーク",
+--     ["一番目の避難所"] = "Map/インスタンスダンジョン/ユニークレイド",
+--     ["峡谷地帯ミッション"] = "Quest/サルラス修道女院",
+--     ["王陵ミッション"] = "Quest/サルラス修道女院",
+--     ["キャッスルミッション"] = "Quest/サルラス修道女院",
+--     ["防衛戦ミッション"] = "Quest/防衛戦",
     
 
 
-}
+-- }
 --ライブラリ読み込み
 CHAT_SYSTEM("[wikihelp]loaded")
 local acutil = require('acutil')
@@ -336,15 +336,16 @@ function WIKIHELP_RENDER(name)
             tolua.cast(pic, "ui::CGroupBox")
             pic:RemoveAllChild()
             pic:SetOffset(0, 0)
-            local parser = WIKIHELP_PUKIWIKI_PARSER
-            local renderer = WIKIHELP_RENDERER
+            local parser = WIKIHELP_MEDIAWIKIPARSER
+            local renderer = WIKIHELP_MEDIAWIKIRENDERER
             
             name = name or "MenuBar"
             local pagename = GET_CHILD_RECURSIVELY(frame, "LevJobText")
             pagename:SetText("{s20}{ol}" .. name)
-            renderer.render(pic, parser.parse({}, WIKIHELP_PAGES[name], name))
-            
+            local node=parser.parse({},WIKIHELP_MEDIAWIKIPAGES_SAMPLE["Oracle"],"Oracle")
+            renderer.render(pic,node)
             pic:AutoSize(1)
+            WIKIHELP_DBGOUT("render")
         end,
         catch = function(error)
             WIKIHELP_ERROUT(error)
@@ -558,19 +559,17 @@ end
 function WIKIHELP_NAVIGATE(name)
     
     WIKIHELP_DBGOUT(name)
-    if (WIKIHELP_PAGES[name] == nil) then
-        ui.MsgBox("このページないです", '', 'None');
-    else
-        if (ui.GetFrame("wikihelp"):IsVisible() == 0) then
-            WIKIHELP_SHOW()
-        end
-        local pict=GET_CHILD_RECURSIVELY(ui.GetFrame("wikihelp"),"pict")
-        g.history[#g.history + 1] = {
-            name=name,
-            x=pict:GetX(),
-            y=pict:GetY(),
-            
-        }
-        WIKIHELP_RENDER(name)
+    
+    if (ui.GetFrame("wikihelp"):IsVisible() == 0) then
+        WIKIHELP_SHOW()
     end
+    local pict=GET_CHILD_RECURSIVELY(ui.GetFrame("wikihelp"),"pict")
+    g.history[#g.history + 1] = {
+        name=name,
+        x=pict:GetX(),
+        y=pict:GetY(),
+        
+    }
+    WIKIHELP_RENDER(name)
+
 end
