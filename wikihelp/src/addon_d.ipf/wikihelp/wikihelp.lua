@@ -309,12 +309,12 @@ function WIKIHELP_INIT()
             local pic = gboxinner:CreateOrGetControl("groupbox", "pict", 0, 0, gboxinner:GetWidth() - 16, gboxinner:GetHeight() - 180)
             tolua.cast(pic, "ui::CGroupBox")
             pic:EnableScrollBar(0)
-            pic:EnableHitTest(1)
+            pic:EnableHitTest(0)
             pic:EnableHittestGroupBox(true)
             pic:EnableAutoResize(true, true)
-            pic:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
-            pic:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
-            pic:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
+            gboxinner:SetEventScript(ui.MOUSEWHEEL, "WIKIHELP_MOUSEWHEEL");
+            gboxinner:SetEventScript(ui.LBUTTONDOWN, "WIKIHELP_LBTNDOWN");
+            gboxinner:SetEventScript(ui.LBUTTONUP, "WIKIHELP_LBTNUP");
             
             local title = GET_CHILD_RECURSIVELY(frame, "changeName")
             title:SetText("{s24}{ol}WikiHelp")
@@ -354,8 +354,8 @@ function WIKIHELP_RENDER(name)
 end
 function WIKIHELP_LBTNDOWN(parent, ctrl)
     local frame = parent:GetTopParentFrame();
-    --local pic = GET_CHILD_RECURSIVELY(frame, "pict");
-    pic = ctrl
+    local pic = GET_CHILD_RECURSIVELY(frame, "pict");
+    --pic = ctrl
     if (pic == nil) then
         return
     end
@@ -390,8 +390,8 @@ function WIKIHELP_PROCESS_MOUSE(ctrl)
                 ui.EnableToolTip(1);
                 return 0;
             end
-            --local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
-            local pic = ctrl
+            local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
+            --local pic = ctrl
             if (pic == nil) then
                 return
             end
@@ -423,8 +423,8 @@ end
 
 function WIKIHELP_MOUSEWHEEL(parent, ctrl, s, n)
     
-    --local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
-    local pic = ctrl
+    local pic = GET_CHILD_RECURSIVELY(ctrl, "pict");
+    --local pic = ctrl
     if (pic == nil) then
         return
     end

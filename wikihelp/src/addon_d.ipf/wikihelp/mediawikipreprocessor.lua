@@ -23,6 +23,40 @@ function string.split(str, ts)
     
     return t
 end
+function string.splitignorebracebracket(str, ts)
+    -- 引数がないときは空tableを返す
+    if ts == nil then return {} end
+    
+    local t = {};
+    local lvl=0
+    local textbuf=""
+    local i=1
+    while i<=str:len() do
+        local sstr=str:sub(i)
+        if(sstr:starts("{") or sstr:starts("["))then
+            lvl=lvl+1
+            i=i+1
+            textbuf=textbuf..sstr:sub(1,1)
+        elseif(sstr:starts("}") or sstr:starts("]"))then
+            lvl=lvl-1
+            i=i+1
+            textbuf=textbuf..sstr:sub(1,1)
+        elseif(lvl==0 and sstr:starts(ts))then
+            t[#t+1]=textbuf
+            textbuf=""
+            i=i+ts:len()
+        else
+            textbuf=textbuf..sstr:sub(1,1)
+            i=i+1
+        end
+        
+    end
+    if(textbuf:len()>0)then
+        t[#t+1]=textbuf
+    end
+    
+    return t
+end
 function string.findclosebrace(str,len,lvl)
     lvl=lvl or 0
     for i = 1, str:len() do
@@ -124,7 +158,13 @@ function P.generatenode(tmplstr,parent,params,context)
                     --local _,arg=content:match("(#.-):(.-)$")
                     child.type=match2 or match
                     if(arg)then
-                        P.generatenode(arg,child,params,context)
+                        local spr=arg:splitignorebracebracket("|")
+                        child.child=child.child or {}
+                        for _,v in ipairs(spr) do
+                            child.child[#child.child+1]={}
+                            local cc=child.child[#child.child]
+                            P.generatenode(v:trim(),cc,params,context)
+                        end
                     end
                     child.arg=arg
                 end
@@ -136,7 +176,7 @@ function P.generatenode(tmplstr,parent,params,context)
                     
                     child.type=match2 or match
                     if(arg)then
-                        P.generatenode(arg,child,params,context)
+                        P.generatenode(arg:trim(),child,params,context)
                     end
                     child.arg=arg
                 end
@@ -165,6 +205,7 @@ function P.generatenode(tmplstr,parent,params,context)
                 end
             else
                 textbuf=textbuf..char
+
             end
             
             pos=pos+1
@@ -224,6 +265,7 @@ function P.generateparamsfromargument(node)
     local str=node.type or node.content
     if(node.child)then
         for k, v in ipairs(node.child) do
+            
             if(str==nil)then
                 str=v.content
             else
@@ -276,7 +318,7 @@ function P.stringnizenode(parent,templates,params,context)
             if(template)then
                 local coparams=P.generateparamsfromargument(parent)
                 local node=P.generatenode(template,{},coparams)
-                str=str..P.stringnizenode(node,templates,coparams,context)
+                str=str..P.stringnizenode(node,templates,coparams,context):trim()
 
             else
                  --無ければ無変換で突っ込む
@@ -292,6 +334,34 @@ function P.stringnizenode(parent,templates,params,context)
         str=str..(parent.content or "")
     elseif(parent.name=="special")then
         --TODO
+        if(parent.type=="#if")then
+            --child1の評価結果が~=""なら2を、さもなくば3を
+            
+            if(parent.child[1].content~="")then
+                str=str..P.stringnizenode(parent.child[2],templates,params,context):trim()
+            elseif(parent.child[3])then
+                str=str..P.stringnizenode(parent.child[3],templates,params,context):trim()
+            end
+        elseif(parent.type=="#switch")then
+            local default=""
+            local val=P.stringnizenode(parent.child[1],templates,params,context)
+            local result=nil
+            for i=2,#parent.child do
+                local stringnized=P.stringnizenode(parent.child[i],templates,params,context)
+                local spr=stringnized:split("=")
+                --一致？
+                if(spr[1]:trim()==val)then
+                    result=spr[2]:trim()
+                    break
+                elseif(spr[1]:trim()=="#default")then
+                    default=spr[2]:trim()
+                end
+            end
+            result=result or default
+            str=str..result
+        elseif(parent.type=="#tag")then
+            print('tag')
+        end
     elseif(parent.name=="text")then
         str=str..(parent.content or "")
     end

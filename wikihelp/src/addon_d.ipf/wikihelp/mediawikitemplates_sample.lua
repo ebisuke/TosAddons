@@ -1,6 +1,6 @@
 WIKIHELP_MEDIAWIKITEMPLATES={
     ["Infobox Class"]=[==[
-{| class="infobox" style="font-size:89%; width:300px;"
+{| class="infobox" style="font-size:89%; width:300px;background-color: #FF0000;"
 |-
 ! colspan="6" style="background-color:#{{ClassColors|{{{1|{{{tree}}}}}}}}; color:#ffffff; font-size:120%; padding:1em;" | {{{name|{{PAGENAME}}}}}
 |- style="text-align:center;"
@@ -124,4 +124,16 @@ WIKIHELP_MEDIAWIKITEMPLATES={
 
         
         
-]==]}
+]==],
+    ["ClassColors"]=[==[
+{{#switch: {{{1|{{{i}}}}}}
+| 1 = 228822
+| 2 = 1188EE
+| 3 = EE8811
+| 4 = DD1100    
+| 5 = 9944DD
+| 6 = 000000
+| #default = 004444
+}}
+]==],
+}
