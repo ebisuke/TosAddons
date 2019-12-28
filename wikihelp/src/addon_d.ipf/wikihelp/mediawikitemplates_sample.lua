@@ -1,6 +1,6 @@
 WIKIHELP_MEDIAWIKITEMPLATES={
     ["Infobox Class"]=[==[
-{| class="infobox" style="font-size:89%; width:300px;background-color: #FF0000;"
+{| class="infobox" style="font-size:89%; width:300px;"
 |-
 ! colspan="6" style="background-color:#{{ClassColors|{{{1|{{{tree}}}}}}}}; color:#ffffff; font-size:120%; padding:1em;" | {{{name|{{PAGENAME}}}}}
 |- style="text-align:center;"

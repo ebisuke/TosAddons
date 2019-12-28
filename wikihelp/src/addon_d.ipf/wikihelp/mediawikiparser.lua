@@ -66,8 +66,10 @@ function string.splitbar(str)
         else
             if(sstr:find("[%[({]")==1)then
                 lvl=lvl+1
+                textbuf=textbuf..sstr:sub(1,1)
             elseif(sstr:find("[%])}]")==1)then
                 lvl=lvl-1
+                textbuf=textbuf..sstr:sub(1,1)
             elseif (lvl==0 and not head and sstr:starts("|")) then
                 t[#t+1]=textbuf
                 textbuf=""
@@ -375,7 +377,7 @@ local tags = {
         name = "li",
         regex = "%*(.-)\n",
         attrib_fn = function(def, str, hit)
-            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.*)$")
+            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.-)\n")
         end,
         isdiv = true,
         head=true
@@ -385,7 +387,7 @@ local tags = {
         name = "li",
         regex = "%:(.-)\n",
         attrib_fn = function(def, str, hit)
-            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.*)$")
+            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.-)\n")
         end,
         isdiv = true,
         head=true
@@ -395,7 +397,7 @@ local tags = {
         name = "li",
         regex = "%;(.-)\n",
         attrib_fn = function(def, str, hit)
-            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.*)$")
+            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.-)\n")
         end,
         isdiv = true,
         head=true
@@ -405,7 +407,7 @@ local tags = {
         name = "li",
         regex = "%-(.-)\n",
         attrib_fn = function(def, str, hit)
-            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.*)$")
+            return {level=str:match("([*-:;]*)"):len()},str:match("[*-:;]*(.-)\n")
         end,
         isdiv = true,
         head=true
@@ -415,7 +417,7 @@ local tags = {
         name = "ln",
         regex = "#(.-)\n",
         attrib_fn = function(def, str, hit)
-            return {level=str:match("(#*)"):len()},str:match("#*(.*)$")
+            return {level=str:match("(#*)"):len()},str:match("#*(.-)\n")
         end,
         isdiv = true,
         head=true
@@ -519,6 +521,9 @@ function P.parse(node, str,pagename,head)
     --便宜的に改行を入れる
     str=str.."\n"
     while pos <= str:len() do
+        if head then
+            linepos = pos
+        end
         local hit = false
         local substr = str:sub(pos)
         line = str:sub(linepos, str:find("\n", linepos + 1) or -1)
@@ -756,7 +761,7 @@ function P.parse(node, str,pagename,head)
         end
 
         if (substr:starts("\n")) then
-            linepos = pos
+            
             if (textbuf:len() > 0) then
                 node.child = node.child or {}
 
