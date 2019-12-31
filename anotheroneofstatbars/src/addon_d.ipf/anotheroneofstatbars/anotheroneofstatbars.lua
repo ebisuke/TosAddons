@@ -11,7 +11,7 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.version = 0
-g.settings = {x = 300, y = 300, volume = 100, mute = false}
+g.settings = {x = 300, y = 300}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofstatbars"
@@ -24,6 +24,9 @@ g.endo = false
 g.remhpw = 0
 g.remspw = 0
 g.curhpw = 0
+g.remshpw = 0
+g.curshpw = 0
+
 g.curspw = 0
 g.curstaw = 0
 g.curdurw = 0
@@ -272,6 +275,8 @@ function AOS_INIT()
             g.remspw = 0
             g.curhpw = 0
             g.curspw = 0
+            g.curshpw = 0
+            g.remshpw = 0
             g.curstaw = 0
             g.curdurw = 0
             g.durmin = 0
@@ -358,17 +363,20 @@ function AOS_ON_TIMER(frame)
             local stat = info.GetStat(session.GetMyHandle());
             
             local maxhpw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
+            local maxshpw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
             local maxspw = math.max(100, math.min(400, stat.maxSP * 400 / 10000))
             local maxstaw = math.max(100, math.min(400, stat.MaxStamina * 400 / 100000))
             local maxdurw = math.max(100, math.min(400, g.durmax * 400 / 4000))
             local curhpw = stat.HP * maxhpw / stat.maxHP
+            local curshpw = math.min(400, stat.shield * maxshpw / stat.maxHP)
             local curspw = stat.SP * maxspw / stat.maxSP
+            
             local curstaw = stat.Stamina * maxstaw / stat.MaxStamina
             local curdurw = g.durmin * maxdurw / g.durmax
             
             local speed = 0.3
             local speedslow = 0.05
-            
+            --HP
 
             if (g.curhpw > curhpw) then
                 --減少
@@ -403,6 +411,42 @@ function AOS_ON_TIMER(frame)
                     render = true
                 end
             end
+            --シールド
+            if (g.curshpw > curshpw) then
+                --減少
+                if (g.remshpw < curshpw) then
+                    --remを増やす
+                    g.remshpw = curshpw
+                    render = true
+                end
+                --curshpを近づける
+                g.curshpw = math.max(curshpw, g.curshpw - math.max((g.curshpw - curshpw) * speed, 1))
+                render = true
+            elseif (g.curshpw < curshpw) then
+                if (g.remshpw < curshpw) then
+                    --remを近づける
+                    g.remshpw = g.remshpw + math.max((curshpw - g.remshpw) * speed, 1)
+                    render = true
+                elseif (g.remshpw > curshpw) then
+                    --remを減らす
+                    g.remshpw = curshpw
+                    
+                    render = true
+                else
+                    --curshpを近づける
+                    g.curshpw = math.min(curshpw, g.curshpw + math.max((curshpw - g.curshpw) * speed, 1))
+                    render = true
+                end
+            else
+                if (g.remshpw > curshpw) then
+                    --remを近づける
+                    g.remshpw = math.max(curshpw, g.remshpw - math.max((g.remshpw - curshpw) * speed, 1))
+                    
+                    render = true
+                end
+            end
+
+            --SP
             if (g.curspw > curspw) then
                 --減少
                 if (g.remspw < curspw) then
@@ -501,7 +545,8 @@ end
 function AOS_DRAW_HPBAR(frame,pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
-    local colw = math.max(100, math.min(400, stat.HP * 400 / 100000))
+    local colw = math.max(0, math.min(400, stat.HP * 400 / 100000))
+    local colsw = math.min(400, stat.shield * 400 / 100000)
    
     local curw = g.curhpw
     local fixhpw=curw
@@ -522,6 +567,19 @@ function AOS_DRAW_HPBAR(frame,pic)
     
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FF22FF77")
     pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FF11CC55")
+    if(g.remshpw>0)then
+        if (g.remshpw ~= g.curshpw) then
+            if (colsw > g.curshpw) then
+                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_bs", "FFFFFFFF")
+            else
+                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_bs", "FF6666FF")
+            end
+        end
+    end
+    if(g.curshpw > 0)then
+        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.curshpw , oy + 5, "spray_large_bs", "FF22FFCC")
+        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + g.curshpw , oy + 7, "spray_small_bs", "FF22AA99")
+    end
     DrawPolyLine(pic, {
         {ox, oy},
         {ox + 10, oy + 10},
