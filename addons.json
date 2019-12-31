@@ -170,8 +170,8 @@
     "name" : "Unbuff2 reloaded",
     "file" : "unbuff",
     "extension" : "ipf",
-    "fileVersion" : "v2.1.0",
-    "releaseTag" : "unbuff-v2.1.0",
+    "fileVersion" : "v2.1.1",
+    "releaseTag" : "unbuff-v2.1.1",
     "unicode" : "📖",
     "description" : "Supported Re:build.",
     "tags" : [
