@@ -93,11 +93,12 @@ if (not g.loaded) then
 
 
 end
-
-
+g.midifile= string.format('../addons/%s/play.mid', addonNameLower)
+g.debug=true
+g.framename="midiplayer"
 function MIDIPLAYER_SAVE_SETTINGS()
     DBGOUT("SAVE_SETTINGS")
-    MIDIPLAYER_SAVETOSTRUCTURE()
+
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 
 end
@@ -152,7 +153,6 @@ function MIDIPLAYER_ON_INIT(addon, frame)
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-            MIDI = MIDIPLAYER_midiraw
             frame:ShowWindow(0)
             acutil.addSysIcon("midiplayer", "sysmenu_inv", "MidiPlayer", "MIDIPLAYER_TOGGLE_FRAME")
             addon:RegisterMsg('GAME_START_3SEC', 'MIDIPLAYER_3SEC')
@@ -207,16 +207,19 @@ function MIDIPLAYER_ON_TIMER()
             if frame:IsVisible() == 1 then
                 local curtrack = g.beat + g.score[1] / 100;
                 local prevtrack = g.beat;
-                
+               
                 for track = 2, #g.score do
                     if ((track - 2) * g.score[1] > curtrack) then
                         break
                     end
                     for k, event in ipairs(g.score[track]) do
+                        --print(tostring(curtrack))
                         if event[1] == 'note' then
-                            print(tostring(curtrack).."note")
+                            
+                           --print(tostring(curtrack) .. "note")
                             if (event[2] >= prevtrack and event[2] <= curtrack and event[3] == g.ch) then
                                 --ならす
+                                print("play")
                                 local note = g.nodebind[event[4]]
                                 if (g.prevnote ~= nil) then
                                     Piedpiper.ReqStopFluting(g.prevnote)
@@ -238,26 +241,29 @@ function MIDIPLAYER_ON_TIMER()
         end
     }
 end
+
+
 function MIDIPLAYER_LOAD(path)
     EBI_try_catch{
         try = function()
-            local f = io.open(path, "rb")
-
-            local rawmidi={}}
-            local size=f:seek("end",0)
-            f:seek("set",0)
-            for i=1, size do
-                local chat = f:read(1)
-                rawmidi[i]=chat
-            end
             
-
+            os.setlocale("C","ctype")
+            local f = io.open(path, "rb")
+            local size=f:seek("end",0)
+            local total=""
+            local mid={}
+            for i=0,size-1 do
+                f:seek("set",i)
+                local part=f:read(1)
+                mid[#mid+1] = string.byte(part)
+            end
             f:close()
-            DBGOUT("OK " .. tostring(#rawmidi))
-            g.score = MIDI.midi2opus(rawmidi)
+            --print(tostring(string.byte(total:sub(8,8))))
+
+            g.score=MIDI.midi2score(mid)
+            --table.sort(g.score, function (e1,e2) return e1[2]<e2[2] end)
             g.play = false
-            dataa = g.score
-          
+            g.note=note
         end,
         catch = function(error)
             ERROUT(error)

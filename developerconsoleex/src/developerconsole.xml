@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uiframe name="developerconsole" x="0" y="0" width="800" height="500">
     <frame layout_gravity="center center"/>
-	<input hittest="true" movable="true" moveintitlebar="false" hittestframe="true"/>
+	<input hittest="true" movable="true" moveintitlebar="false" hittestframe="true"  resize="true"/>
     <option hideable="true"/>
     <draw blend="95"/>
 	<script OpenScp="DEVELOPERCONSOLE_OPEN" CloseScp="DEVELOPERCONSOLE_CLOSE"/>
@@ -11,6 +11,8 @@
 		<button name="clearConsole" rect="690 360 100 40" caption="Clear" LBtnUpScp="CLEAR_CONSOLE"/>
 		<button name="debugUI" rect="690 405 100 40" caption="Debug UI" LBtnUpScp="TOGGLE_UI_DEBUG"/>
 		<button name="execute" rect="690 450 100 40" caption="Execute"/>
+        <button name="resize" rect="0 0 30 30" margin="0 3 0 0" layout_gravity="right top" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" image="button_chat_scale" oversound="button_over" resizeframe="true" texttooltip="{@st59}채팅창 크기 조절{/}"/>
+		
         <timer name="addontimer" rect="0 0 10 10"/>
     </controls>
 </uiframe>

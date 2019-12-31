@@ -56,6 +56,7 @@ function DEVELOPERCONSOLE_OPEN()
 	if input ~= nil then
 		input:Move(0, 0);
 		input:SetOffset(10, 450);
+		
 		--input:ShowWindow(1);
 		--input:Resize(675, 40);
 		--input:SetGravity(ui.LEFT, ui.CENTER);
