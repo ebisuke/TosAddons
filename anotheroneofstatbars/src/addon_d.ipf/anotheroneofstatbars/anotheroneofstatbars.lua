@@ -30,6 +30,9 @@ g.curdurw = 0
 g.durmin = 0
 g.durmax = 0
 g.tick = 0
+g.fixsp=nil
+g.fixhp=nil
+
 g.spskill=nil
 local triggerlist = {
     S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
@@ -159,7 +162,9 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             addon:RegisterMsg('GAME_START', 'AOS_HEADSUPDISPLAY_ON_MSG');
             addon:RegisterMsg('LEVEL_UPDATE', 'AOS_HEADSUPDISPLAY_ON_MSG');
             addon:RegisterMsg('FPS_UPDATE', 'AOS_ON_FPS_UPDATE');
-            
+            addon:RegisterMsg('BUFF_ADD', 'AOS_BUFF_UPDATE');
+            addon:RegisterMsg('BUFF_REMOVE', 'AOS_BUFF_UPDATE');
+            addon:RegisterMsg('BUFF_UPDATE', 'AOS_BUFF_UPDATE');
             if not g.loaded then
                 
                 g.loaded = true
@@ -185,6 +190,46 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
 end
 function AOS_ON_FPS_UPDATE()
     g.frame:ShowWindow(1)
+end
+function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
+
+    local fhp=false
+
+    local fsp=false
+    --アーケインエナジーを探す
+    local stat = info.GetStat(session.GetMyHandle());
+    local clsid_arcane=1018
+    local clsid_healing=2001
+    local handle = session.GetMyHandle();
+    local buffcount = info.GetBuffCount(handle);
+    for i = 0, buffcount - 1 do
+        local buff = info.GetBuffIndexed(handle, i);
+        local buffCls = GetClassByType("Buff", buff.buffID);
+        
+        if(buff.buffID==clsid_arcane)then
+            if(g.fixsp==nil)then
+                --SP固定
+                g.fixsp=stat.SP
+            end
+            
+            fsp=true
+        end
+        if(buff.buffID==clsid_healing)then
+            if g.fixhp==nil then
+                g.fixhp=stat.HP
+            end
+            fhp=true
+        end
+        
+    end
+    if(not fhp)then
+        g.fixhp=nil
+    end
+    if(not fsp)then
+        g.fixsp=nil
+    end
+
+    AOS_RENDER()
 end
 function AOS_INIT()
     
@@ -302,8 +347,14 @@ function AOS_ON_TIMER(frame)
                         break
                     end
                 end
+                
+
                 g.tick = 100
             end
+            local render = false
+            
+            
+            
             local stat = info.GetStat(session.GetMyHandle());
             
             local maxhpw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
@@ -318,8 +369,7 @@ function AOS_ON_TIMER(frame)
             local speed = 0.3
             local speedslow = 0.05
             
-            local render = false
-            
+
             if (g.curhpw > curhpw) then
                 --減少
                 if (g.remhpw < curhpw) then
@@ -452,9 +502,15 @@ function AOS_DRAW_HPBAR(frame,pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
     local colw = math.max(100, math.min(400, stat.HP * 400 / 100000))
+   
     local curw = g.curhpw
+    local fixhpw=curw
     local ox = 400 + 20 - 2
     local oy = 30 - 2
+    if(g.fixhp)then
+        fixhpw= math.max(0, math.min(400, g.fixhp * 400 / 100000))
+    end
+
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "spray_large_bs", "AA444444")
     if (g.remhpw ~= g.curhpw) then
         if (colw > g.curhpw) then
@@ -465,7 +521,7 @@ function AOS_DRAW_HPBAR(frame,pic)
     end
     
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FF22FF77")
-    pic:DrawBrush(ox + 7, oy + 7, ox + 7 + curw, oy + 7, "spray_small_bs", "FF11CC55")
+    pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FF11CC55")
     DrawPolyLine(pic, {
         {ox, oy},
         {ox + 10, oy + 10},
@@ -479,9 +535,15 @@ function AOS_DRAW_SPBAR(frame,pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(400, stat.maxSP * 400 / 10000))
     local curw = g.curspw
+
     local colw = math.max(100, math.min(400, stat.SP * 400 / 10000))
+    local fixspw=curw
     local ox = 400 - 20 + 2
     local oy = 30 - 2
+    if(g.fixsp)then
+        fixspw= math.max(0, math.min(400, g.fixsp * 400 / 10000))
+    end
+
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_s", "AA444444")
     if (g.remspw ~= g.curspw) then
         if (colw > g.curspw) then
@@ -492,7 +554,7 @@ function AOS_DRAW_SPBAR(frame,pic)
         end
     end
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_s", "FF44CCFF")
-    pic:DrawBrush(ox - 7, oy + 7, ox - 7 - curw, oy + 7, "spray_small_s", "FF33AACC")
+    pic:DrawBrush(ox - 7, oy + 7, ox - 7 - fixspw, oy + 7, "spray_small_s", "FF33AACC")
     DrawPolyLine(pic, {
         {ox, oy},
         {ox - 10, oy + 10},
