@@ -24,25 +24,30 @@ _G.ADDONS.YYU.UNBUFF.Version = '1.1.4';
 	-- g.addUnbuffTable('fanaticism'		,41704, 2014, '0');
 	function g.hook(frame, slot, ...)
 		if GetCraftState() == 1 then
+			g.oldHook(frame, slot, ...)
 			return;
 		end
 
 		tolua.cast(slot, 'ui::CSlot');
 		local icon = slot:GetIcon();
 		if icon == nil then
+			g.oldHook(frame, slot, ...)
 			return;
 		end
 
 		local iconInfo = icon:GetInfo();
 		if iconInfo:GetCategory() == 'Skill' then
 			local skillInfo = session.GetSkill(iconInfo.type);
-			local skl = GetIES(skillInfo:GetObject());
-			local mode = g.getMode(skl.ClassID);
-			if mode == '1' or (mode == '2' and skillInfo:GetCurrentCoolDownTime() ~= 0) then
-				local buffID = g.getBuffID(skl);
-				if buffID ~= nil then
-					packet.ReqRemoveBuff(buffID);
-					return;
+			if skillInfo then
+				local skl = GetIES(skillInfo:GetObject());
+				local mode = g.getMode(skl.ClassID);
+				
+				if mode == '1' or (mode == '2' and skillInfo:GetCurrentCoolDownTime() ~= 0) then
+					local buffID = g.getBuffID(skl);
+					if buffID ~= nil then
+						packet.ReqRemoveBuff(buffID);
+						return;
+					end
 				end
 			end
 		end
