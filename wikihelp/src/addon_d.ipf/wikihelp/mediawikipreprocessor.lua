@@ -342,6 +342,15 @@ function P.stringnizenode(parent,templates,params,context)
             elseif(parent.child[3])then
                 str=str..P.stringnizenode(parent.child[3],templates,params,context):trim()
             end
+        elseif(parent.type=="#ifeq")then
+                --child1==child2の評価結果が~=""なら3を、さもなくば4を
+                
+            if(parent.child[1].content:trim()==parent.child[2].content:trim())then
+                str=str..P.stringnizenode(parent.child[3],templates,params,context):trim()
+            elseif parent.child[4] then
+                str=str..P.stringnizenode(parent.child[4],templates,params,context):trim()
+            end
+            
         elseif(parent.type=="#switch")then
             local default=""
             local val=P.stringnizenode(parent.child[1],templates,params,context)

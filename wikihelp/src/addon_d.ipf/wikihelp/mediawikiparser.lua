@@ -157,7 +157,7 @@ function P.htmlstyleparser(str)
     
 end
 
-function P.htmlattribparser(str,attrib)
+function P.htmlattribparser(str,attrib,td)
     str=str.."\n"   --便宜的に
     local match=string.findstringnorebracebracket(str:match("(.-)\n"),"|")
     local recover
@@ -169,12 +169,13 @@ function P.htmlattribparser(str,attrib)
         for i=3,#spr do
             recover="|"..spr[i]
         end
-
-        
-    else
+    elseif (not td) then
         match=str:match("(.-)\n")
         recover=str:sub(match:len()+1)
         spr=str:trim():splitignorebracebracket("|")
+    else
+        --no hit
+        return attrib,str
     end
     
     if(match)then
@@ -312,32 +313,34 @@ local tags = {
         name = "td",
         begin = "|",
         regex="%|(.-)\n",
+        endregex="[\n]",
         content_fn = function(def, str, hit, line)
             for vv in line:gmatch(def.regex) do
                 return vv
             end
         end,
         attrib_fn = function(def, str, hit)
-            local attr,remain=P.htmlattribparser(hit:trim(),{})
+            local attr,remain=P.htmlattribparser(hit:trim(),{},true)
             
  
             return attr,remain
         end,
         isdiv = true,
         head = true,
-        noaddfinal=true,
+        --noaddfinal=true,
     },
     {
         name = "td",
         begin = "!",
         regex="!(.-)\n",
+        endregex="[\n]",
         content_fn = function(def, str, hit, line)
             for vv in line:gmatch(def.regex) do
                 return vv
             end
         end,
         attrib_fn = function(def, str, hit, line)
-            local attr,remain=P.htmlattribparser(hit:trim(),{})
+            local attr,remain=P.htmlattribparser(hit:trim(),{},true)
             attr.header=true
   
          
@@ -346,7 +349,7 @@ local tags = {
         end,
         isdiv = true,
         head = true,
-        noaddfinal=true,
+        --noaddfinal=true,
     },
     {
         begin = "-",
@@ -485,7 +488,8 @@ local tags = {
         begin = "<",
         regex = "<.->(.-)</.->",
         attrib_fn = function(def, str, hit,total)
-           return {},hit
+            local tagname=str:match("<(.-)>")
+           return {tagname=tagname},hit
         end,
         divide=true,
     },
@@ -585,7 +589,7 @@ function P.parse(node, str,pagename,head)
                                 local eq=v:match("(.-)=")
                                 local val=v:match(".-=(.*)$")
                                 if eq then
-                                    cc.key=eq
+                                    cc.key=eq:trim()
                                     P.parse(cc, val,pagename)
                                 else
                                     P.parse(cc, v,pagename)
@@ -729,7 +733,7 @@ function P.parse(node, str,pagename,head)
                                     P.parse(child, content,pagename,head)
                                 end
                                 if(content)then
-                                    local _,pp=substr:find(tag.regex)
+                                    local _,pp=substr:find(tag.endregex or tag.regex)
                                     pos = pos + pp
                                 else
                                     pos = pos + 0
@@ -799,5 +803,5 @@ end
 WIKIHELP_MEDIAWIKIPARSER = P
 
 
-local test = P.parse({},WIKIHELP_MEDIAWIKIPAGES_SAMPLE["Oracle"],"Oracle")
+local test = P.parse({},WIKIHELP_MEDIAWIKIPAGES_SAMPLE["Oracle_T"],"Oracle")
 P.dump(test)

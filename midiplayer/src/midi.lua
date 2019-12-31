@@ -127,7 +127,7 @@ end
 
 local function read_14_bit(byte_a)
 	-- decode a 14 bit quantity from two bytes,
-	return byte_a[1]] + 128 * byte_a[2]
+	return byte_a[1] + 128 * byte_a[2]
 end
 
 local function write_14_bit(integer)
@@ -262,10 +262,10 @@ The options:
 			if command == 246 then  --  0-byte argument
 				--pass
 			elseif command == 192 or command == 208 then  --  1-byte arg
-				parameter = string.byte(trackdata, i); i = i+1
+				parameter = sbyte(trackdata, i); i = i+1
 			else -- 2-byte argument could be BB or 14-bit
-				param1 = string.byte(trackdata, i); i = i+1
-				param2 = string.byte(trackdata, i); i = i+1
+				param1 = sbyte(trackdata, i); i = i+1
+				param2 = sbyte(trackdata, i); i = i+1
 			end
 
 			----------------- MIDI events -----------------------
@@ -405,9 +405,9 @@ The options:
 				if length ~= 2 then   -- DTime, SF(signed), MI
 					print('key_signature event, but length='..length)
 				end
-				local b1 = string.byte(trackdata,i)
+				local b1 = sbyte(trackdata,i)
 				if b1 > 127 then b1 = b1 - 256 end   -- signed byte :-(
-				local b2 = string.byte(trackdata,i+1)
+				local b2 = sbyte(trackdata,i+1)
 				-- list(struct.unpack(">bB",trackdata[0:2]))}
 				E = {'key_signature', time, b1, b2 }
 			elseif (command == 127) then
@@ -1083,11 +1083,23 @@ function M.midi2ms_score(midi)
 	return M.opus2score(M.to_millisecs(M.midi2opus(midi)))
 end
 function sub(str,s,e)
-	local table
+	local table={}
 	for i=s,e do
-		table[#table]=str[i]
+		table[#table+1]=str[i]
 	end
 	return table
+end
+function ssub(str,s,e)
+	
+	local sstr=""
+	for i=s,e do
+		sstr=sstr..string.char(str[i])
+	end
+	return sstr
+end
+function sbyte(str,s)
+	
+	return str[s]
 end
 function M.midi2opus(s)
 
@@ -1095,7 +1107,7 @@ function M.midi2opus(s)
 	--my_midi=bytearray(midi)
 	if #s < 4 then return {1000,{},} end
 	local i = 1
-	local id = string.sub(s, i, i+3); i = i+4
+	local id = ssub(s, i, i+3); i = i+4
 	if id ~= 'MThd' then
 		print("midi2opus: midi starts with "..id.." instead of 'MThd'")
 		clean_up_printings()
@@ -1107,7 +1119,7 @@ function M.midi2opus(s)
 	-- [length, format, tracks_expected, ticks] = struct.unpack(
 	--  '>IHHH', bytes(my_midi[4:14]))  is this 10 bytes or 14 ?
 	-- NOT 2+4+4+4 grrr...   'MHhd'+4+2+2+2 !
-	--local length          = fourbytes2int(string.sub(s,i,i+3)); i = i+4
+	local length          = fourbytes2int(sub(s,i,i+3)); i = i+4
 	local format          = twobytes2int(sub(s,i,i+1)); i = i+2
 	local tracks_expected = twobytes2int(sub(s,i,i+1)); i = i+2
 	local ticks           = twobytes2int(sub(s,i,i+1)); i = i+2
@@ -1117,11 +1129,12 @@ function M.midi2opus(s)
 	-- 	clean_up_printings()
 	-- 	return {1000,{},}
 	-- end
+
 	local my_opus = {ticks,}
 	local track_num = 1   -- 5.1
 	while i < #s-8 do
 	
-		local track_type   = sub(s, i, i+3); i = i+4
+		local track_type   = ssub(s, i, i+3); i = i+4
 		if track_type ~= 'MTrk' then
 			print('midi2opus: printing: track #'..track_num..' type is '..track_type.." instead of 'MTrk'")
 		end

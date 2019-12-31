@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="anotheroneofstatbars_imgs">
+		<image name="spray_large_s" file="\skin\large_s.tga" imgrect="0 0 20 20"/>
+		<image name="spray_small_s" file="\skin\small_s.tga" imgrect="0 0 10 10"/>
+		<image name="spray_large_bs" file="\skin\large_bs.tga" imgrect="0 0 20 20"/>
+		<image name="spray_small_bs" file="\skin\small_bs.tga" imgrect="0 0 10 10"/>
+		<image name="spray_small_bar" file="\skin\small_bar.tga" imgrect="0 0 10 10"/>
+		<image name="spray_dia" file="\skin\brush_dia.tga" imgrect="0 0 40 40"/>
+		
+	</imagelist>
+</skinset>

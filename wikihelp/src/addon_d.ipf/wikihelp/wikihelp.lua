@@ -338,8 +338,22 @@ function WIKIHELP_RENDER(name)
             tolua.cast(pic, "ui::CGroupBox")
             pic:RemoveAllChild()
             pic:SetOffset(0, 0)
-            pic:EnableAutoResize(false,false)
-            pic:Resize(pic:GetParent():GetWidth(),pic:GetParent():GetHeight())
+           
+            pic:Resize(pic:GetParent():GetParent():GetWidth(),pic:GetParent():GetParent():GetHeight())
+            
+            ReserveScript(string.format("WIKIHELP_RENDER_PASS2(\"%s\")",name),0.01)
+        end,
+        catch = function(error)
+            WIKIHELP_ERROUT(error)
+        end
+    }
+end
+function WIKIHELP_RENDER_PASS2(name)
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+            local pic = GET_CHILD_RECURSIVELY(frame, "pict")
+            tolua.cast(pic, "ui::CGroupBox")
             local parser = WIKIHELP_MEDIAWIKIPARSER
             local renderer = WIKIHELP_MEDIAWIKIRENDERER
             
@@ -348,7 +362,7 @@ function WIKIHELP_RENDER(name)
             pagename:SetText("{s20}{ol}" .. name)
             local node=parser.parse({},WIKIHELP_MEDIAWIKIPAGES_SAMPLE["Oracle"],"Oracle")
             renderer.render(pic,node)
-            pic:AutoSize(1)
+            --pic:AutoSize(1)
             WIKIHELP_DBGOUT("render")
         end,
         catch = function(error)
@@ -417,7 +431,7 @@ function WIKIHELP_PROCESS_MOUSE(ctrl)
             
             local cx = pic:GetX();
             local cy = pic:GetY();
-            cx = cx + dx;
+            --cx = cx + dx;
             cy = cy + dy;
             g.x = mx
             g.y = my
@@ -446,7 +460,7 @@ function WIKIHELP_MOUSEWHEEL(frame, ctrl, s, n)
     local dy = n;
     local cx = pic:GetX();
     local cy = pic:GetY();
-    cx = cx + dx;
+    --cx = cx + dx;
     cy = cy + dy;
     --cx=math.max(-pic:GetWidth()+pic:GetParent():GetWidth(),math.min(cx,0))
     --cy=math.max(-pic:GetHeight()+pic:GetParent():GetHeight(),math.min(cy,0))

@@ -130,54 +130,6 @@ Similar Classes=
 ]==]
 ,
 ["Oracle_T"]=[==[
-<tabber>
-Tree View=
-{| class="wikitable"
-|+
-!Unlock
-{{TreeViewRow|$|Full|2}}
-{{TreeViewRow|$|Single|2}}
-|-
-! Lvl 1
-{{TreeViewCell|Arcane Energy|Duration|Reduce Damage}}
-{{TreeViewCell|Counter Spell|Duration|Enhance}}
-{{TreeViewCell|Clairvoyance}}<br/><br/>
-{{TreeViewCell|Prophecy|Increase Damage}}
-|-
-! Lvl 16
-{{TreeViewCell|Death Sentence|Reset|Slow|Enhance}}
-{{TreeViewCell|Divine Might|Increase Count|Ill Omen}}
-{{TreeViewCell|Gender Switch}}<br/><br/>
-{{TreeViewCell|Resetting}}<br/><br/>
-|-
-! Lvl 31
-{{TreeViewCell|Foretell|Threat|Enhance}}
-{{TreeViewCell|Twist of Fate|Enhance}}
-{{TreeViewCell|$|2}}
-|}
-|-|
-List View=
-{| class="wikitable"
-{{ListViewSkill}}
-|-
 {{ListViewSkill|Arcane Energy|[[Buff]]|Applies the Arcane Energy buff to you and your party members. The buff records your current SP and STA, and if the amount of SP and STA consumed during the buff is higher than the one recorded, at the end of the buff all the SP and STA you consumed are restored.}}
-{{ListViewSkill|Counter Spell|Active|Removes enemy magic circles nearby, and summons another magic circle that reduces the damage taken from enemy magic attacks.}}
-|-
-{{ListViewSkill|Clairvoyance|Active|Predict and show which item the monster will drop in advance.|1}}
-{{ListViewSkill|Prophecy|[[Buff]]|Makes nearby party members immune to all removable debuffs temporarily.|1}}
-|-
-{{ListViewSkill|2}}
-{{ListViewSkill|Death Sentence|[[Debuff]]|Announce your enemy's death, largely increasing the damage received by them. If the target is a boss monster, duration and damage-increasing effects are cut in half.}}
-{{ListViewSkill|Divine Might|[[Buff]]|Temporarily increases the skill levels of you and your party members by 1.}}
-|-
-{{ListViewSkill|Gender Switch|[[Shop]]|Set up a shop that can change a character's gender. 'Mirror of Truth' x1 is required to perform each gender change.|1}}
-{{ListViewSkill|Resetting|Active|Change the item dropped from an enemy to a different item. You will be notified when an item is changed.|1}}
-|-
-{{ListViewSkill|3}}
-{{ListViewSkill|Foretell|Active|Summons a magic circle that interferes with the enemy attacks. Reduces damage received from enemies while inside the magic circle.}}
-{{ListViewSkill|Twist of Fate|Active|Deal a fixed amount of damage to the selected target based on its maximum HP. The target gradually recovers HP, with the total amount recovered matching double the amount lost by the attack. Only half of the damage is applied to boss monsters, and the skill does not apply to field boss monsters. Cannot be used inside the Guild Hangout. Twist of Fate can exceed the max. damage cap.}}
-|}
-</tabber>
-  
 ]==]
 }

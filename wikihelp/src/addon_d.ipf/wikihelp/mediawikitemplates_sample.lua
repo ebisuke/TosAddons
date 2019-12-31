@@ -136,4 +136,19 @@ WIKIHELP_MEDIAWIKITEMPLATES={
 | #default = 004444
 }}
 ]==],
+    ["ListViewSkill"]=[==[
+|-
+{{#if:{{{2|}}}|{{!}}{{IconLink|{{{1}}}|60}}
+{{!}}style="text-align: center;"{{!}}{{{2}}}
+{{!}}{{{3}}}{{#if:{{{4|}}}|<br/>''' Maxed at level {{{4|1}}}.'''}}|!Lvl {{#switch: {{{1}}}|2=16|3=31|#default=1}}
+!Type 
+!Description}}
+]==],
+["ListViewCell"]=[==[
+|-
+{| style="border-width: 0px"
+| style="width:30px; border-width: 0px;" | {{IconLink|{{{1}}}|40|$}}
+| style="width:220px; border-width: 0px;" | [[{{{1}}}]]
+|}
+]==],
 }
