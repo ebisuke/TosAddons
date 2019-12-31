@@ -241,7 +241,9 @@ end
 
 function AOS_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     local stat = info.GetStat(session.GetMyHandle());
-
+    if(msg=="STAT_UPDATE")then
+        AOS_RENDER()
+    end
 end
 function AOS_TIMER_BEGIN()
     local frame = ui.GetFrame(g.framename)
