@@ -620,7 +620,7 @@ function AOS_DRAW_SPBAR(frame,pic)
     pic:DrawBrush(ox - 10 - 1, oy + 10, ox - maxw - 10, oy + 10, "spray_1", "FF222222")
 
     local txt=frame:CreateOrGetControl("richtext","spnum",ox-20-50,oy-10,50,16)
-    
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.SP))
 
 end
 function AOS_DRAW_DURBAR(frame,pic)
@@ -635,7 +635,6 @@ function AOS_DRAW_DURBAR(frame,pic)
  
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs", "AA444444")
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_bs", "FFFF55FF")
-    pic:DrawBrush(ox - 5+2, oy + 7, ox - 5+2 - curw, oy + 7, "spray_small_bs", "FFCC33CC")
     DrawPolyLine(pic, {
         {ox - 10, oy},
         {ox + 0, oy + 10},
