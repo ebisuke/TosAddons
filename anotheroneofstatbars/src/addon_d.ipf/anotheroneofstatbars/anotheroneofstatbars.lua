@@ -582,7 +582,7 @@ function AOS_DRAW_HPBAR(frame,pic)
     DrawPolyLine(pic, {
         {ox, oy},
         {ox + 10, oy + 10},
-        {ox + maxw + 10 + 1, oy + 10 + 1},
+        {ox + maxw + 10, oy + 10},
     }, "spray_1", "FF000000")
     
     local txt=frame:CreateOrGetControl("richtext","hpnum",ox+20,oy-10,50,16)
@@ -615,9 +615,8 @@ function AOS_DRAW_SPBAR(frame,pic)
     DrawPolyLine(pic, {
         {ox, oy},
         {ox - 10, oy + 10},
-        {ox - maxw - 10 - 1, oy + 10 + 1},
+        {ox - maxw - 10 , oy + 10},
     }, "spray_1", "FF000000")
-    pic:DrawBrush(ox - 10 - 1, oy + 10, ox - maxw - 10, oy + 10, "spray_1", "FF222222")
 
     local txt=frame:CreateOrGetControl("richtext","spnum",ox-20-50,oy-10,50,16)
     txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.SP))
@@ -634,7 +633,8 @@ function AOS_DRAW_DURBAR(frame,pic)
     local oy = 40 + 4
  
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs", "AA444444")
-    pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_bs", "FFFF55FF")
+    pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_bs", "FFFF88FF")
+    pic:DrawBrush(ox - 5 + 2 , oy + 7, ox - 5 + 2 - curw + 1 - 1, oy + 7, "spray_small_bs", "FFAA55AA")
     DrawPolyLine(pic, {
         {ox - 10, oy},
         {ox + 0, oy + 10},
@@ -652,7 +652,7 @@ function AOS_DRAW_STAMINABAR(frame,pic)
     local oy = 40 + 4
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw + 1, oy + 5, "spray_large_s", "FFFFFF00")
-    pic:DrawBrush(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFAAAA00")
+    pic:DrawBrush(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCCCC00")
     DrawPolyLine(pic, {
         {ox + 10 - 2, oy},
         {ox - 10 + 10 - 2, oy + 10},
