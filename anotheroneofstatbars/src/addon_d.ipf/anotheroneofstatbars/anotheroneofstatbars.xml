@@ -3,7 +3,6 @@
 <uiframe name="anotheroneofstatbars" x="0" y="0" width="1400" height="80" create="open">
 	<frame layout_gravity="left top" scale_align="left top"/>
     <option closebutton="false" hideable="false" useimageitem="true"/>
-    <skin frameskin="None"/> 
     <layer layerlevel="90"/>
     <draw drawtitlebar="false" drawframe="true"/>
     <input hittest="true" hittestframe="false" movable="true"/>
