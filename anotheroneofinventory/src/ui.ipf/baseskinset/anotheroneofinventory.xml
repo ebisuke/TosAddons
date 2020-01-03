@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="anotheroneofinventory_images">
+		<image name="aoi_all" file="\skin\aoi_all.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_card" file="\skin\aoi_card.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_consume" file="\skin\aoi_consume.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_equip" file="\skin\aoi_equip.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_etc" file="\skin\aoi_etc.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_favorites" file="\skin\aoi_favorites.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_find" file="\skin\aoi_find.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_gem" file="\skin\aoi_gem.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_premium" file="\skin\aoi_premium.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_recipe" file="\skin\aoi_recipe.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_timelimited" file="\skin\aoi_timelimited.tga" imgrect="0 0 20 20"/>
+		
+	</imagelist>
+</skinset>

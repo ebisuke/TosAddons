@@ -3,7 +3,7 @@
 <uiframe name="anotheroneofinventory" x="0" y="0" width="500" height="500" create="open">
 	<frame title="None" layout_gravity="left bottom" margin="2 0 0 13" scale_align="center bottom"/>
 	<draw drawframe="true" drawtitlebar="false"/>
-	<input moveable="true" minwidth="100" minheight="30" hittestframe="false" moveintitlebar="false" resize="true" resizerange="100 30 1200 1000"/>
+	<input moveable="true" minwidth="100" minheight="30" hittestframe="false" moveintitlebar="false" resize="true" resizerange="60 30 1800 1000"/>
 	<option visible="true" hideable="true" useimageitem="true" closebutton="false"/>
 	<layer layerlevel="79"/>
 	<option closebutton="false"/>
