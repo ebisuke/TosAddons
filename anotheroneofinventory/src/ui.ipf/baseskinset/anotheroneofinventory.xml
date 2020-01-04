@@ -12,6 +12,10 @@
 		<image name="aoi_premium" file="\skin\aoi_premium.tga" imgrect="0 0 20 20"/>
 		<image name="aoi_recipe" file="\skin\aoi_recipe.tga" imgrect="0 0 20 20"/>
 		<image name="aoi_timelimited" file="\skin\aoi_timelimited.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_quest" file="\skin\aoi_quest.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_ingredients" file="\skin\aoi_ingredients.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_listview" file="\skin\aoi_listview.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_gridview" file="\skin\aoi_gridview.tga" imgrect="0 0 20 20"/>
 		
 	</imagelist>
 </skinset>
