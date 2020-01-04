@@ -85,6 +85,7 @@ function AUTOSWAPFORSETOPTIONSKILL_ON_INIT(addon, frame)
             local timer = GET_CHILD(ui.GetFrame("autoswapforsetoptionskill"), "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("ASFSOS_UPDATE")
             addon:RegisterMsg('GAME_START_3SEC', 'ASFSOS_3SEC');
+            addon:RegisterMsg('FPS_UPDATE', 'ASFSOS_SHOW');
             timer:Start(0.5);
             frame:ShowWindow(1)
         
@@ -96,6 +97,9 @@ function AUTOSWAPFORSETOPTIONSKILL_ON_INIT(addon, frame)
 end
 function ASFSOS_3SEC()
     ASFSOS_HOOK()
+end
+function ASFSOS_SHOW()
+    ui.GetFrame("autoswapforsetoptionskill"):ShowWindow(1)
 end
 function ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE(frame, slot, argStr, argNum)
     if GetCraftState() == 1 then

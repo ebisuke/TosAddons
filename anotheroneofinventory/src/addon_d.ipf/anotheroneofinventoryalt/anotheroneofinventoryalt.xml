@@ -6,7 +6,7 @@
 	<input moveable="true" hittestframe="true" moveintitlebar="false"/>
 	<layer layerlevel="100"/>
 	<option closebutton="false"/>
-	<sound opensound="window_open" closesound="window_close"/>
+	<sound opensound="sys_alerm_skl_status" closesound=""/>
 	<controls>
 	    
 		<timer name="aoi_addontimer" rect="0 0 10 10"/>

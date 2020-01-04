@@ -16,6 +16,15 @@
 		<image name="aoi_ingredients" file="\skin\aoi_ingredients.tga" imgrect="0 0 20 20"/>
 		<image name="aoi_listview" file="\skin\aoi_listview.tga" imgrect="0 0 20 20"/>
 		<image name="aoi_gridview" file="\skin\aoi_gridview.tga" imgrect="0 0 20 20"/>
+		<image name="aoi_transparent" file="\skin\aoi_transparent.tga" imgrect="0 0 20 20"/>
 		
 	</imagelist>
+	<skinlist category="slots">
+	<skin name="aoi_invenslot_none" texture="\skin\aoi_transparent.tga">
+		<img name="slot" imgrect="0 0 20 20"/>
+		<img name="mouseon" imgrect="0 0 20 20"/>
+		<img name="cooltime" imgrect="0 0 20 20"/>
+		<img name="selected" imgrect="0 0 20 20"/>
+	</skin>
+</skinlist>
 </skinset>
