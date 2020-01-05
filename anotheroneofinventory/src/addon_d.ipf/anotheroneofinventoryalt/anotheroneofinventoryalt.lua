@@ -1,13 +1,36 @@
+-- Anotheroneofinventory
+local addonName = "anotheroneofinventory"
+local addonNameLower = string.lower(addonName)
+--作者名
+local author = 'ebisuke'
+
+--アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
+_G['ADDONS'] = _G['ADDONS'] or {}
+_G['ADDONS'][author] = _G['ADDONS'][author] or {}
+_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
+local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 
-local g = {}
 g.frame = nil
 g.tick = 0
 g.first = nil
 g.second = nil
-g.logpath = string.format('../addons/%s/log.txt', "anotheroneofinventory")
+g.logpath = string.format('../addons/%s/log_alt.txt', addonName)
+g.settingsFileLoc = string.format('../addons/%s/settings_alt.json',addonName)
 g.debug = false
 g.seltarget=0
+g.settings=g.settings or {}
+g.personalsettings = g.personalsettings or {}
+
+g.personalsettingsFileLoc = ""
+local function AUTO_CAST(ctrl)
+    if(ctrl==nil)then
+        trace=debug.traceback()
+        return
+    end
+    ctrl = tolua.cast(ctrl, ctrl:GetClassString());
+	return ctrl;
+end
 
 
 function EBI_try_catch(what)
@@ -61,6 +84,55 @@ local function ERROUT(msg)
 
 end
 
+function AOI_ALT_SAVE_SETTINGS()
+    --CAMPCHEF_SAVETOSTRUCTURE()
+    acutil.saveJSON(g.settingsFileLoc, g.settings)
+    g.personalsettingsFileLoc = string.format('../addons/%s/settings_alt_%s.json', addonNameLower,tostring( session.GetMySession():GetCID()))
+    DBGOUT("psn"..g.personalsettingsFileLoc)
+    acutil.saveJSON(g.personalsettingsFileLoc, g.personalsettings)
+end
+
+
+function AOI_ALT_LOAD_SETTINGS()
+    DBGOUT("LOAD_SETTING")
+    g.settings = {}
+    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        ERROUT(string.format('[%s] cannot load setting files', addonName))
+        g.settings = {invokekey=nil}
+    else
+        --設定ファイル読み込み成功時処理
+        g.settings = t
+        if (not g.settings.version) then
+            g.settings.version = 0
+        
+        end
+    end
+    g.personalsettings={}
+    g.personalsettingsFileLoc = string.format('../addons/%s/settings_alt_%s.json', addonNameLower,tostring( session.GetMySession():GetCID()))
+    local t, err = acutil.loadJSON(g.personalsettingsFileLoc, g.personalsettings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        ERROUT(string.format('[%s] cannot load personal setting files', addonName))
+        g.personalsettings = {}
+    else
+        --設定ファイル読み込み成功時処理
+        g.personalsettings = t
+        if (not g.personalsettings.version) then
+            g.personalsettings.version = 0
+        end
+    end
+    AOI_ALT_UPGRADE_SETTINGS()
+    AOI_ALT_SAVE_SETTINGS()
+
+end
+
+
+function AOI_ALT_UPGRADE_SETTINGS()
+    local upgraded = false
+    return upgraded
+end
 
 
 
@@ -71,6 +143,8 @@ function ANOTHERONEOFINVENTORYALT_ON_INIT(addon, frame)
             g.frame = frame
             addon:RegisterMsg('OPEN_SELECT_TARGET', 'AOI_ALT_OPEN_SELECT_TARGET_FROM_PARTY');
             --frame:ShowWindow(0)
+            g.personalsettings ={}
+            AOI_ALT_LOAD_SETTINGS()
             AOI_ALT_INIT()
         end,
         catch = function(error)
@@ -85,7 +159,7 @@ function AOI_ALT_ON_TIMER(frame)
             g.tick = (g.tick + 1) % 100
             -- print("timer")
             if (frame:IsVisible() == 0) then
-                if keyboard.IsKeyDown("V") == 1 and (ui.GetFocusObject() == nil or ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") then
+                if g.settings.invokekey~=nil and keyboard.IsKeyDown(g.settings.invokekey) == 1 and (ui.GetFocusObject() == nil or ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") then
                     if (ui.IsFrameVisible("anotheroneofinventoryalt") == 0) then
                         DBGOUT("SHOW")
                         AOI_ALT_SHOW()
@@ -102,7 +176,7 @@ function AOI_ALT_ON_TIMER(frame)
                 
                 g.liftslot = nil
             end
-            if (keyboard.IsKeyPressed("V") == 0 and frame:IsVisible() == 1) then
+            if (  g.settings.invokekey~=nil and keyboard.IsKeyPressed(g.settings.invokekey) == 0 and frame:IsVisible() == 1) then
                 AOI_ALT_DO()
                 return
             end
@@ -327,8 +401,7 @@ function AOI_ALT_INIT()
             --frame:EnableDrawFrame(1)
             frame:SetOffset(1920 / 2 - 450, 1080 / 2 - 350)
             frame:Resize(900, 700)
-            AOI_VALUES.settings.stik = AOI_VALUES.settings.stik or {}
-            g.settings = g.settings or {}
+            
             
             
             local edit = frame:CreateOrGetControl("edit", "dummyedit", 0, 0, 0, 0)
@@ -347,7 +420,7 @@ function AOI_ALT_GENERATESLOTS()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame("anotheroneofinventoryalt")
-            g.settings = g.settings or AOI_VALUES.settings.stik
+
             
             for first = 1, 4 do
                 
@@ -402,6 +475,13 @@ function AOI_ALT_GENERATESLOTS()
                         QUICKSLOT_MAKE_GAUGE(slot)
                         AOI_SET_QUICK_SLOT(slot, icon, type, iesID)
                     
+                    else
+                        slot:RemoveAllChild()
+                        slot:ClearIcon()
+                        
+                        slot:ReleaseBlink();
+                        slot:SetText("")
+                        slot:SetSkinName("invenslot2")
                     end
                     slot:EnableDrag(1)
                     slot:EnableDrop(1)
@@ -650,6 +730,9 @@ function AOI_SET_QUICK_SLOT(slot, lifticon, type, iesID)
         SET_QUICKSLOT_OVERHEAT(slot);
         SET_QUICKSLOT_TOOLSKILL(slot);
     end
+
+    slot:SetEventScript(ui.DROP, "AOI_ALT_ONDROP")
+    slot:SetEventScript(ui.LBUTTONDOWN, "AOI_ALT_ONLIFT")
 end
 
 function AOI_ALT_GENERATESLOT(slot, liftIcon)
@@ -660,6 +743,7 @@ function AOI_ALT_GENERATESLOT(slot, liftIcon)
             local imageName = iconInfo.imageName
             local clsid = iconInfo.type
             local iesid = iconInfo:GetIESID()
+            QUICKSLOT_MAKE_GAUGE(slot)
             AOI_SET_QUICK_SLOT(slot, liftIcon, clsid, iesid)
         
         end,
@@ -674,7 +758,7 @@ function AOI_ALT_ONDROP(frame, slot, argstr, argnum)
             local frame = ui.GetFrame("anotheroneofinventoryalt")
             AUTO_CAST(slot)
             
-            QUICKSLOT_MAKE_GAUGE(slot)
+    
             AOI_ALT_GENERATESLOT(slot, ui.GetLiftIcon())
             --save
             local first, second
@@ -693,7 +777,7 @@ function AOI_ALT_ONDROP(frame, slot, argstr, argnum)
                     })
             end
             g.liftslot = nil
-            ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -704,16 +788,17 @@ function AOI_ALT_ONLIFT(frame, ctrl)
     g.liftslot = ctrl
 end
 function AOI_STIK_SAVE(first, second, tbl)
-    g.settings = g.settings or AOI_VALUES.settings.stik
+    g.personalsettings = g.personalsettings 
     
-    g.settings["L" .. tostring(first)] = g.settings["L" .. tostring(first)] or {}
-    g.settings["L" .. tostring(first)]["L" .. tostring(second)] = tbl
+    g.personalsettings["L" .. tostring(first)] = g.personalsettings["L" .. tostring(first)] or {}
+    g.personalsettings["L" .. tostring(first)]["L" .. tostring(second)] = tbl
+    AOI_ALT_SAVE_SETTINGS()
 end
 function AOI_STIK_LOAD(first, second)
-    g.settings = g.settings or AOI_VALUES.settings.stik
-    if not g.settings["L" .. tostring(first)] then
+    g.personalsettings = g.personalsettings 
+    if not g.personalsettings["L" .. tostring(first)] then
         return nil
     end
-    return g.settings["L" .. tostring(first)]["L" .. tostring(second)]
+    return g.personalsettings["L" .. tostring(first)]["L" .. tostring(second)]
 end
-g.settings = AOI_VALUES.settings.stik or {}
+
