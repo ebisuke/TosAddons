@@ -14,7 +14,7 @@ local function startswith(String, Start)
 end
 local acutil = require('acutil')
 g = {}
-g.debug = false
+g.debug = true
 g.waitforend = nil
 g.totalcooldown = nil
 g.cooldown = nil
@@ -70,10 +70,7 @@ function ASFSOS_HOOK()
     
     acutil.setupHook(ASFSOS_ICON_USE_JUMPER, "ICON_USE")
 
--- if (OLD_QUICKSLOTNEXPBAR_SLOT_USE == nil and QUICKSLOTNEXPBAR_SLOT_USE ~= ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE) then
---     OLD_QUICKSLOTNEXPBAR_SLOT_USE = QUICKSLOTNEXPBAR_SLOT_USE
---     QUICKSLOTNEXPBAR_SLOT_USE = ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE
--- end
+
 end
 
 
@@ -84,11 +81,11 @@ function AUTOSWAPFORSETOPTIONSKILL_ON_INIT(addon, frame)
             
             local timer = GET_CHILD(ui.GetFrame("autoswapforsetoptionskill"), "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("ASFSOS_UPDATE")
-            addon:RegisterMsg('GAME_START_3SEC', 'ASFSOS_3SEC');
+            --addon:RegisterMsg('GAME_START_3SEC', 'ASFSOS_3SEC');
             addon:RegisterMsg('FPS_UPDATE', 'ASFSOS_SHOW');
             timer:Start(0.5);
             frame:ShowWindow(1)
-        
+            ASFSOS_HOOK()
         end,
         catch = function(error)
             CHAT_SYSTEM(error)
@@ -101,80 +98,7 @@ end
 function ASFSOS_SHOW()
     ui.GetFrame("autoswapforsetoptionskill"):ShowWindow(1)
 end
-function ASFSOS_QUICKSLOTNEXPBAR_SLOT_USE(frame, slot, argStr, argNum)
-    if GetCraftState() == 1 then
-        return;
-    end
-    
-    if ui.CheckHoldedUI() == true then
-        return;
-    end
-    
-    tolua.cast(slot, "ui::CSlot");
-    local icon = slot:GetIcon();
-    if icon == nil then
-        return;
-    end
-    
-    local iconInfo = icon:GetInfo();
-    local joystickquickslotRestFrame = ui.GetFrame("joystickrestquickslot");
-    if iconInfo:GetCategory() == 'Skill' and joystickquickslotRestFrame:IsVisible() == 0 then
-        ICON_USE(icon);
-        return;
-    end
-    
-    if iconInfo:GetCategory() == 'Ability' and joystickquickslotRestFrame:IsVisible() == 0 then
-        ICON_USE(icon);
-        return;
-    end
-    
-    if icon:GetStringColorTone() == "FFFF0000" then
-        return;
-    end
-    
-    local invenItemInfo = session.GetInvItem(iconInfo.ext);
-    if invenItemInfo == nil then
-        invenItemInfo = session.GetInvItemByType(iconInfo.type);
-    elseif invenItemInfo.type ~= iconInfo.type then
-        return;
-    end
-    
-    if invenItemInfo == nil then
-        if iconInfo:GetCategory() == 'Item' then
-            icon:SetColorTone("FFFF0000");
-            icon:SetText('0', 'quickiconfont', ui.RIGHT, ui.BOTTOM, -2, 1);
-        end
-        return;
-    end
-    
-    local itemobj = GetIES(invenItemInfo:GetObject());
-    if TRY_TO_USE_WARP_ITEM(invenItemInfo, itemobj) == 1 then
-        return;
-    end
-    
-    if invenItemInfo.count == 0 then
-        icon:SetColorTone("FFFF0000");
-        icon:SetText(invenItemInfo.count, 'quickiconfont', ui.RIGHT, ui.BOTTOM, -2, 1);
-        return;
-    end
-    
-    if true == BEING_TRADING_STATE() then
-        return;
-    end
-    
-    local invItemAllowReopen = ''
-    if itemobj ~= nil then
-        invItemAllowReopen = TryGetProp(itemobj, 'AllowReopen')
-    end
-    
-    local groupName = itemobj.ItemType;
-    local gachaCubeFrame = ui.GetFrame('gacha_cube')
-    if groupName == 'Consume' and gachaCubeFrame ~= nil and gachaCubeFrame:IsVisible() == 1 and invItemAllowReopen == 'YES' then
-        return
-    end
-    
-    ICON_USE(icon);
-end
+
 function ASFSOS_GETVALID()
     return EBI_try_catch{
         try = function()
