@@ -279,7 +279,7 @@
     "file" : "anotheroneofinventory",
     "extension" : "ipf",
     "fileVersion" : "v0.0.1",
-    "releaseTag" : "anotheroneofstatbars-v0.0.1",
+    "releaseTag" : "anotheroneofinventory-v0.0.1",
     "unicode" : "📖",
     "description" : "もう一つのインベントリ画面を提供します。おまけ機能として、キーボード操作限定でクイックスロットを拡張します。",
     "tags" : [
