@@ -1,13 +1,30 @@
-local acutil = require('acutil')
+-- Anotheroneofinventory
+local addonName = "anotheroneofinventory"
+local addonNameLower = string.lower(addonName)
+--作者名
+local author = 'ebisuke'
 
-local g = {}
-g.frame = nil
-g.tick = 0
-g.first = nil
-g.second = nil
-g.logpath = string.format('../addons/%s/log.txt', "anotheroneofinventory")
-g.debug = false
-g.seltarget=0
+--アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
+_G['ADDONS'] = _G['ADDONS'] or {}
+_G['ADDONS'][author] = _G['ADDONS'][author] or {}
+_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
+local g = _G['ADDONS'][author][addonName]
+local acutil = require('acutil')
+g.logpathalt = string.format('../addons/%s/log_alt.txt', addonName)
+g.settingsaltFileLoc = string.format('../addons/%s/settings_alt.json',addonName)
+g.settingsalt=g.settings or {}
+g.personalsettingsalt = g.personalsettingsalt or {}
+g.alttick=0
+g.personalsettingsaltFileLoc = ""
+
+local function AUTO_CAST(ctrl)
+    if(ctrl==nil)then
+        trace=debug.traceback()
+        return
+    end
+    ctrl = tolua.cast(ctrl, ctrl:GetClassString());
+	return ctrl;
+end
 
 
 function EBI_try_catch(what)
@@ -37,7 +54,7 @@ local function DBGOUT(msg)
                 CHAT_SYSTEM(msg)
                 
                 print(msg)
-                local fd = io.open(g.logpath, "a")
+                local fd = io.open(g.logpathalt, "a")
                 fd:write(msg .. "\n")
                 fd:flush()
                 fd:close()
@@ -61,6 +78,55 @@ local function ERROUT(msg)
 
 end
 
+function AOI_ALT_SAVE_SETTINGS()
+    --CAMPCHEF_SAVETOSTRUCTURE()
+    acutil.saveJSON(g.settingsaltFileLoc, g.settingsalt)
+    g.personalsettingsaltFileLoc = string.format('../addons/%s/settings_alt_%s.json', addonNameLower,tostring( session.GetMySession():GetCID()))
+    DBGOUT("psn"..g.personalsettingsaltFileLoc)
+    acutil.saveJSON(g.personalsettingsaltFileLoc, g.personalsettingsalt)
+end
+
+
+function AOI_ALT_LOAD_SETTINGS()
+    DBGOUT("LOAD_SETTING")
+    g.settings = {}
+    local t, err = acutil.loadJSON(g.settingsaltFileLoc, g.settingsalt)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        ERROUT(string.format('[%s] cannot load setting files', addonName))
+        g.settingsalt = {invokekey=nil}
+    else
+        --設定ファイル読み込み成功時処理
+        g.settingsalt = t
+        if (not g.settingsalt.version) then
+            g.settings.version = 0
+        
+        end
+    end
+    g.personalsettingsalt={}
+    g.personalsettingsaltFileLoc = string.format('../addons/%s/settings_alt_%s.json', addonNameLower,tostring( session.GetMySession():GetCID()))
+    local t, err = acutil.loadJSON(g.personalsettingsaltFileLoc, g.personalsettingsalt)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        ERROUT(string.format('[%s] cannot load personal setting files', addonName))
+        g.personalsettingsalt = {}
+    else
+        --設定ファイル読み込み成功時処理
+        g.personalsettingsalt = t
+        if (not g.personalsettingsalt.version) then
+            g.personalsettingsalt.version = 0
+        end
+    end
+    AOI_ALT_UPGRADE_SETTINGS()
+    AOI_ALT_SAVE_SETTINGS()
+
+end
+
+
+function AOI_ALT_UPGRADE_SETTINGS()
+    local upgraded = false
+    return upgraded
+end
 
 
 
@@ -68,10 +134,13 @@ end
 function ANOTHERONEOFINVENTORYALT_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-            g.frame = frame
+
             addon:RegisterMsg('OPEN_SELECT_TARGET', 'AOI_ALT_OPEN_SELECT_TARGET_FROM_PARTY');
             --frame:ShowWindow(0)
+            g.personalsettingsalt ={}
+            AOI_ALT_LOAD_SETTINGS()
             AOI_ALT_INIT()
+            ui.GetFrame("anotheroneofinventoryalt"):ShowWindow(0)
         end,
         catch = function(error)
             ERROUT(error)
@@ -82,10 +151,12 @@ function AOI_ALT_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame("anotheroneofinventoryalt")
-            g.tick = (g.tick + 1) % 100
+            g.tickalt = g.tickalt or 0
+            g.tickalt = (g.tickalt + 1) % 100
             -- print("timer")
             if (frame:IsVisible() == 0) then
-                if keyboard.IsKeyDown("V") == 1 and (ui.GetFocusObject() == nil or ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") then
+                if g.settingsalt.invokekey~=nil and keyboard.IsKeyDown(g.settingsalt.invokekey) == 1 
+                and (ui.GetFocusObject() == nil or ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") and ui.IsFrameVisible("chat_frame")~=1 then
                     if (ui.IsFrameVisible("anotheroneofinventoryalt") == 0) then
                         DBGOUT("SHOW")
                         AOI_ALT_SHOW()
@@ -94,51 +165,51 @@ function AOI_ALT_ON_TIMER(frame)
                 end
                 return
             end
-            if (g.seltarget ) then
-                g.seltarget = g.seltarget - 1
+            if (g.seltargetalt ) then
+                g.seltargetalt = g.seltargetalt - 1
             end
             if (mouse.IsLBtnPressed() == 0 and g.liftslot) then
                 DBGOUT("LIFT END")
                 
                 g.liftslot = nil
             end
-            if (keyboard.IsKeyPressed("V") == 0 and frame:IsVisible() == 1) then
+            if (  g.settingsalt.invokekey~=nil and keyboard.IsKeyPressed(g.settingsalt.invokekey) == 0 and frame:IsVisible() == 1) then
                 AOI_ALT_DO()
                 return
             end
             
             if (keyboard.IsKeyDown("LEFT") == 1) then
                 
-                if (g.first == nil) then
-                    g.first = 2
+                if (g.firstalt == nil) then
+                    g.firstalt = 2
                 else
-                    g.second = 2
+                    g.secondalt = 2
                     AOI_ALT_DO()
                 end
             
             end
             if (keyboard.IsKeyDown("RIGHT") == 1) then
                 
-                if (g.first == nil) then
-                    g.first = 4
+                if (g.firstalt == nil) then
+                    g.firstalt = 4
                 else
-                    g.second = 4
+                    g.secondalt = 4
                     AOI_ALT_DO()
                 end
             end
             if (keyboard.IsKeyDown("UP") == 1) then
-                if (g.first == nil) then
-                    g.first = 1
+                if (g.firstalt == nil) then
+                    g.firstalt = 1
                 else
-                    g.second = 1
+                    g.secondalt = 1
                     AOI_ALT_DO()
                 end
             end
             if (keyboard.IsKeyDown("DOWN") == 1) then
-                if (g.first == nil) then
-                    g.first = 3
+                if (g.firstalt == nil) then
+                    g.firstalt = 3
                 else
-                    g.second = 3
+                    g.secondalt = 3
                     AOI_ALT_DO()
                 end
             end
@@ -154,8 +225,8 @@ function AOI_ALT_ON_TIMER(frame)
                 local ox = 50 + 150
                 local oy = 150 + 60
                 local first, second
-                first = g.first
-                second = g.second
+                first = g.firstalt
+                second = g.secondalt
                 if (first) then
                     
                     
@@ -206,8 +277,8 @@ end
 function AOI_ALT_SHOW()
     EBI_try_catch{
         try = function()
-            g.first = nil
-            g.second = nil
+            g.firstalt = nil
+            g.secondalt = nil
             AOI_ALT_GENERATESLOTS()
             local frame = ui.GetFrame("anotheroneofinventoryalt")
             frame:ShowWindow(1)
@@ -231,7 +302,7 @@ function AOI_ALT_DO()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame("anotheroneofinventoryalt")
-            local slot = frame:GetChild("s" .. tostring(g.first) .. tostring(g.second))
+            local slot = frame:GetChild("s" .. tostring(g.firstalt) .. tostring(g.secondalt))
             local edit = frame:GetChild("dummyedit")
             AUTO_CAST(edit)
             edit:ReleaseFocus()
@@ -261,7 +332,7 @@ function AOI_ALT_DO()
                         elseif (stik.mode == "Skill") then
                             local icon = slot:GetIcon()
                             local skillCls = GetClassByType("Skill", stik.clsid)
-                            g.seltarget = 5
+                            g.seltargetalt = 5
                             
                             QUICKSLOTNEXPBAR_SLOT_USE(nil, slot)
                         
@@ -284,7 +355,7 @@ end
 function AOI_ALT_OPEN_SELECT_TARGET_FROM_PARTY(frame, msg, argStr, showHPGauge)
     EBI_try_catch{
         try = function()
-            if (not g.seltarget or g.seltarget<=0) then
+            if (not g.seltargetalt or g.seltargetalt<=0) then
                 print("BYE")
                 geSkillControl.SetPartyMemberTarget(1, nil, argStr);
                 geSkillControl.SetPartyMemberTarget(2, nil, argStr);
@@ -294,7 +365,7 @@ function AOI_ALT_OPEN_SELECT_TARGET_FROM_PARTY(frame, msg, argStr, showHPGauge)
                 return
             end
             print("ON")
-            g.seltarget = 0
+            g.seltargetalt = 0
             frame=ui.GetFrame('party_recommend');   
             frame:ShowWindow(1);
             geSkillControl.SetPartyMemberTarget(1, session.loginInfo.GetAID(), argStr);
@@ -327,8 +398,7 @@ function AOI_ALT_INIT()
             --frame:EnableDrawFrame(1)
             frame:SetOffset(1920 / 2 - 450, 1080 / 2 - 350)
             frame:Resize(900, 700)
-            AOI_VALUES.settings.stik = AOI_VALUES.settings.stik or {}
-            g.settings = g.settings or {}
+            
             
             
             local edit = frame:CreateOrGetControl("edit", "dummyedit", 0, 0, 0, 0)
@@ -347,7 +417,7 @@ function AOI_ALT_GENERATESLOTS()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame("anotheroneofinventoryalt")
-            g.settings = g.settings or AOI_VALUES.settings.stik
+
             
             for first = 1, 4 do
                 
@@ -402,6 +472,13 @@ function AOI_ALT_GENERATESLOTS()
                         QUICKSLOT_MAKE_GAUGE(slot)
                         AOI_SET_QUICK_SLOT(slot, icon, type, iesID)
                     
+                    else
+                        slot:RemoveAllChild()
+                        slot:ClearIcon()
+                        
+                        slot:ReleaseBlink();
+                        slot:SetText("")
+                        slot:SetSkinName("invenslot2")
                     end
                     slot:EnableDrag(1)
                     slot:EnableDrop(1)
@@ -650,6 +727,9 @@ function AOI_SET_QUICK_SLOT(slot, lifticon, type, iesID)
         SET_QUICKSLOT_OVERHEAT(slot);
         SET_QUICKSLOT_TOOLSKILL(slot);
     end
+
+    slot:SetEventScript(ui.DROP, "AOI_ALT_ONDROP")
+    slot:SetEventScript(ui.LBUTTONDOWN, "AOI_ALT_ONLIFT")
 end
 
 function AOI_ALT_GENERATESLOT(slot, liftIcon)
@@ -660,6 +740,7 @@ function AOI_ALT_GENERATESLOT(slot, liftIcon)
             local imageName = iconInfo.imageName
             local clsid = iconInfo.type
             local iesid = iconInfo:GetIESID()
+            QUICKSLOT_MAKE_GAUGE(slot)
             AOI_SET_QUICK_SLOT(slot, liftIcon, clsid, iesid)
         
         end,
@@ -674,7 +755,7 @@ function AOI_ALT_ONDROP(frame, slot, argstr, argnum)
             local frame = ui.GetFrame("anotheroneofinventoryalt")
             AUTO_CAST(slot)
             
-            QUICKSLOT_MAKE_GAUGE(slot)
+    
             AOI_ALT_GENERATESLOT(slot, ui.GetLiftIcon())
             --save
             local first, second
@@ -692,8 +773,8 @@ function AOI_ALT_ONDROP(frame, slot, argstr, argnum)
                         imageName = info.imageName
                     })
             end
-            g.liftslot = nil
-            ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+            g.liftslotalt = nil
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -701,19 +782,20 @@ function AOI_ALT_ONDROP(frame, slot, argstr, argnum)
     }
 end
 function AOI_ALT_ONLIFT(frame, ctrl)
-    g.liftslot = ctrl
+    g.liftslotalt = ctrl
 end
 function AOI_STIK_SAVE(first, second, tbl)
-    g.settings = g.settings or AOI_VALUES.settings.stik
+    g.personalsettingsalt = g.personalsettingsalt 
     
-    g.settings["L" .. tostring(first)] = g.settings["L" .. tostring(first)] or {}
-    g.settings["L" .. tostring(first)]["L" .. tostring(second)] = tbl
+    g.personalsettingsalt["L" .. tostring(first)] = g.personalsettingsalt["L" .. tostring(first)] or {}
+    g.personalsettingsalt["L" .. tostring(first)]["L" .. tostring(second)] = tbl
+    AOI_ALT_SAVE_SETTINGS()
 end
 function AOI_STIK_LOAD(first, second)
-    g.settings = g.settings or AOI_VALUES.settings.stik
-    if not g.settings["L" .. tostring(first)] then
+    g.personalsettingsalt = g.personalsettingsalt 
+    if not g.personalsettingsalt["L" .. tostring(first)] then
         return nil
     end
-    return g.settings["L" .. tostring(first)]["L" .. tostring(second)]
+    return g.personalsettingsalt["L" .. tostring(first)]["L" .. tostring(second)]
 end
-g.settings = AOI_VALUES.settings.stik or {}
+

@@ -15,19 +15,18 @@ g.settings = g.settings or {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofinventory"
-g.debug = true
+g.debug = false
 g.resizing = nil
 g.x = nil
 g.y = nil
 g.findstr = ""
-g.frame=nil
-g.frames = {}
+
 g.filters = {
         
-        {name = "Fav", text = "★", tooltip = "Favorites", imagename = "aoi_favorites", original = nil},
+        --{name = "Fav", text = "★", tooltip = "Favorites", imagename = "aoi_favorites", original = nil},
         {name = "All", text = "All", tooltip = "All", imagename = "aoi_all", original = "All"},
         {name = "Equ", text = "Equ", tooltip = "Equip", imagename = "aoi_equip", original = "Equip"},
-        {name = "Spl", text = "Spl", tooltip = "Comsume Item", imagename = "aoi_consume", original = "Consume"},
+        {name = "Spl", text = "Spl", tooltip = "Consume Item", imagename = "aoi_consume", original = "Consume"},
         {name = "Rcp", text = "Rcp", tooltip = "Recipe", imagename = "aoi_recipe", original = "Recipe"},
         {name = "Crd", text = "Crd", tooltip = "Card", imagename = "aoi_card", original = "Card"},
         {name = "Etc", text = "Etc", tooltip = "Etc", imagename = "aoi_etc", original = "Etc"},
@@ -38,6 +37,7 @@ g.filters = {
         {name = "Lim", text = "Lim", tooltip = "Time Limited", imagename = "aoi_timelimited", original = nil},
         {name = "Fnd", text = "Fnd", tooltip = "Find", imagename = "aoi_find", original = nil},
 }
+
 g.filterbyname = {}
 for _, v in ipairs(g.filters) do
     g.filterbyname[v.name] = v
@@ -62,7 +62,14 @@ function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
 
-
+local function AUTO_CAST(ctrl)
+    if(ctrl==nil)then
+        
+        return
+    end
+    ctrl = tolua.cast(ctrl, ctrl:GetClassString());
+	return ctrl;
+end
 
 local function DBGOUT(msg)
     
@@ -95,6 +102,72 @@ local function ERROUT(msg)
     }
 
 end
+
+local function _GET_SOCKET_ADD_VALUE(item, invItem, i)    
+	
+    if invItem:IsAvailableSocket(i) == false then
+        return;
+	end
+	
+	local gem = invItem:GetEquipGemID(i);
+    if gem == 0 then
+        return;
+    end
+    
+	local gemExp = invItem:GetEquipGemExp(i);
+	local roastingLv = invItem:GetEquipGemRoastingLv(i);
+    local props = {};
+    local gemclass = GetClassByType("Item", gem);
+    local lv = GET_ITEM_LEVEL_EXP(gemclass, gemExp);
+    local prop = geItemTable.GetProp(gem);
+    local socketProp = prop:GetSocketPropertyByLevel(lv);
+    local type = item.ClassID;
+    local benefitCnt = socketProp:GetPropCountByType(type);
+    for i = 0 , benefitCnt - 1 do
+        local benefitProp = socketProp:GetPropAddByType(type, i);
+        props[#props + 1] = {benefitProp:GetPropName(), benefitProp.value}
+    end
+    
+    local penaltyCnt = socketProp:GetPropPenaltyCountByType(type);
+    local penaltyLv = lv - roastingLv;
+    if 0 > penaltyLv then
+        penaltyLv = 0;
+    end
+    local socketPenaltyProp = prop:GetSocketPropertyByLevel(penaltyLv);
+    for i = 0 , penaltyCnt - 1 do
+        local penaltyProp = socketPenaltyProp:GetPropPenaltyAddByType(type, i);
+        local value = penaltyProp.value
+        penaltyProp:GetPropName()
+        props[#props + 1] = {penaltyProp:GetPropName(), penaltyProp.value}
+    end
+    return props;
+end
+
+local function _GET_ITEM_SOCKET_ADD_VALUE(targetPropName, item)
+	local invItem, where = GET_INV_ITEM_BY_ITEM_OBJ(item);
+	if invItem == nil then
+		return 0;
+	end
+
+    local value = 0;
+    local sockets = {};
+    if item.MaxSocket > 100 then item.MaxSocket = 0 end
+    for i=0, item.MaxSocket - 1 do
+        sockets[#sockets + 1] = _GET_SOCKET_ADD_VALUE(item, invItem, i);
+    end
+
+    for i = 1, #sockets do
+        local props = sockets[i];
+        for j = 1, #props do
+            local prop = props[j]
+            if prop[1] == targetPropName or ( (prop[1] == "PATK") and (targetPropName == "ATK")) then                
+                value = value + prop[2];
+            end
+        end
+    end
+    return value;
+end
+
 function ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
     --CAMPCHEF_SAVETOSTRUCTURE()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
@@ -133,12 +206,13 @@ end
 function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
+            g.initialized = false
             frame = ui.GetFrame(g.framename)
             g.addon = addon
-            g.frame = frame
+            
             --g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(CAMPCHEF_GETCID()))
             acutil.addSysIcon('AOI', 'sysmenu_inv', 'another one of inventory', 'ANOTHERONEOFINVENTORY_TOGGLE_FRAME')
-            addon:RegisterMsg('GAME_START_3SEC', 'AOI_INIT')
+            addon:RegisterMsg('GAME_START', 'AOI_INIT')
             --ccするたびに設定を読み込む
             if not g.loaded then
                 g.loaded = true
@@ -173,9 +247,9 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
             frame:SetOffset(g.settings.x, g.settings.y)
             frame:Resize(g.settings.w, g.settings.h)
             
-            g.frame:SetSkinName("None")
-            g.frame:ShowWindow(1)
-            g.initialized = false
+            ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
+            ui.GetFrame("anotheroneofinventory"):ShowWindow(1)
+           
         end,
         catch = function(error)
             ERROUT(error)
@@ -194,11 +268,16 @@ function ANOTHERONEOFINVENTORY_TOGGLE_FRAME(frame)
     ui.ToggleFrame(g.framename)
 
 end
-
+function AOI_ISINITIALIZED()
+    return g.initialized and ui.GetFrame(g.framename) and ui.GetFrame(g.framename):GetChildRecursively("aoi_slt")
+end
 function AOI_UPDATE_INVENTORY_TOGGLE_ITEM(frame)
     local ret = UPDATE_INVENTORY_TOGGLE_ITEM_OLD(frame)
     frame = ui.GetFrame(g.framename)
-    if g.frame:IsVisible() == 0 or not g.initialized then
+    if (not AOI_ISINITIALIZED()) then
+        return
+    end
+    if ui.GetFrame("anotheroneofinventory"):IsVisible() == 0 or not g.initialized then
         return;
     end
     
@@ -220,11 +299,16 @@ function AOI_UPDATE_INVENTORY_TOGGLE_ITEM(frame)
 end
 function AOI_UPDATE_INVENTORY_EXP_ORB(frame, ctrl, num, str, time)
     local ret = UPDATE_INVENTORY_EXP_ORB_OLD(frame, ctrl, num, str, time)
-    if g.frame:IsVisible() == 0 or not g.initialized then
+    frame = ui.GetFrame(g.framename)
+    if (not AOI_ISINITIALIZED()) then
+        return
+    end
+    if ui.GetFrame("anotheroneofinventory"):IsVisible() == 0 or not g.initialized then
         return ret;
     end
     local invenframe = ui.GetFrame("inventory")
-    frame = ui.GetFrame(g.framename)
+
+    
     local itemGuid = invenframe:GetUserValue("EXP_ORB_EFFECT");
     if itemGuid == "None" then
         return ret;
@@ -261,17 +345,24 @@ function AOI_UPDATE_INVENTORY_EXP_ORB(frame, ctrl, num, str, time)
 end
 function AOI_INVENTORY_UPDATE_ICONS(frame)
     INVENTORY_UPDATE_ICONS_OLD(frame)
+    if (not AOI_ISINITIALIZED()) then
+        return
+    end
     AOI_INV_REFRESH()
 end
 function AOI_INVENTORY_UPDATE_ICONS(frame)
     INVENTORY_UPDATE_ICONS_OLD(frame)
+    if (not AOI_ISINITIALIZED()) then
+        return
+    end
     AOI_INV_REFRESH()
 end
 
 function AOI_INIT()
     EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory") or ui.GetFrame(g.framename)
+    
             frame:EnableMove(1)
             frame:SetSkinName("chat_window")
             frame:EnableHittestFrame(1)
@@ -339,14 +430,14 @@ function AOI_INIT()
             timer:SetUpdateScript("AOI_ON_TIMER");
             timer:Start(0.01);
             
-            
+            frame:SetOffset(g.settings.x, g.settings.y)
+            frame:Resize(g.settings.w, g.settings.h)
             
             AOI_TAB_HIGHLIGHT()
             AOI_RESIZE()
             AOI_INV_REFRESH()
             AOI_INIT_FIND()
-            frame:SetOffset(g.settings.x, g.settings.y)
-            frame:Resize(g.settings.w, g.settings.h)
+           
             g.initialized = true
         end,
         catch = function(error)
@@ -359,13 +450,13 @@ function AOI_CLEARANDINIT_SLOT(slot)
     slot:ClearIcon()
     
     slot:ReleaseBlink();
-    
+    slot:SetText("")
     slot:SetSkinName("aoi_invenslot_none")
     INIT_INVEN_SLOT(slot)
 
 end
 function AOI_TAB_HIGHLIGHT()
-    local frame = g.frame
+    local frame = ui.GetFrame("anotheroneofinventory")
     for _, v in ipairs(g.filters) do
         local gbox = frame:GetChild("aoi_gboxtab")
         AUTO_CAST(gbox)
@@ -395,7 +486,7 @@ end
 function AOI_RESIZE()
     EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory")
             local gboxslot = GET_CHILD_RECURSIVELY(frame, "aoi_gboxslt")
             AUTO_CAST(gboxslot)
             local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
@@ -419,7 +510,7 @@ end
 
 function AOI_TAB_ON_CLICK(frame, msg, argStr, argNum)
     g.settings.filter = argStr
-    local frame = g.frame
+    local frame = ui.GetFrame("anotheroneofinventory")
     local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
     local gbox = GET_CHILD_RECURSIVELY(frame, "aoi_gboxslt")
     AUTO_CAST(gbox)
@@ -433,12 +524,12 @@ function AOI_INIT_FIND()
     EBI_try_catch{
         try = function()
             if g.settings.filter == "Fnd" then
-                local frame = g.frame
+                local frame = ui.GetFrame("anotheroneofinventory")
                 frame:GetChild("aoi_finderlabel"):ShowWindow(1)
                 frame:GetChild("aoi_finder"):ShowWindow(1)
             
             else
-                local frame = g.frame
+                local frame = ui.GetFrame("anotheroneofinventory")
                 frame:GetChild("aoi_finderlabel"):ShowWindow(0)
                 frame:GetChild("aoi_finder"):ShowWindow(0)
             
@@ -480,7 +571,7 @@ function AOI_INVENTORY_ON_MSG(frame, msg, argStr, argNum)
             elseif msg == 'INV_ITEM_REMOVE' then
                 AOI_INV_REMOVE(argStr)
             --ReserveScript("AOI_INV_REFRESH()",0.15)
-            elseif msg == 'ITEM_PROP_UPDATE' or msg == "INV_ITEM_CHANGE_COUNT" then
+            elseif msg == 'ITEM_PROP_UPDATE' or msg == "INV_ITEM_CHANGE_COUNT" or msg=="UPDATE_LOCK_STATE" then
                 AOI_INV_ITEM_UPDATE(argStr)
                 --if (not AOI_INV_ITEM_UPDATE(argStr)) then
                     --AOI_INV_REFRESH()
@@ -502,7 +593,7 @@ end
 function AOI_INV_ITEM_UPDATE(argStr)
     return EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory")
             local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
             if (slt) then
                 AUTO_CAST(slt)
@@ -525,10 +616,10 @@ function AOI_INV_ITEM_UPDATE(argStr)
                                 end
                                 
                                 if slotItem and slotItem:GetIESID() == argStr and session.GetInvItemByGuid(slotItem:GetIESID()) then
-                                    INV_SLOT_UPDATE(ui.GetFrame("inventory"), slotItem, slot)
+ 
                                     local invItem = slotItem
-                                    
-                                    SET_SLOT_ITEM_TEXT_USE_INVCOUNT(slot, invItem, itemCls, invItem.count, "{s14}{ol}{#FFFFFF}");
+                                    AOI_INV_SLOT_SETITEM(slot,invItem,itemCls)
+
                                     return true
                                 
                                 end
@@ -613,7 +704,7 @@ end
 function AOI_INV_ADD(guid)
     return EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory")
             local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
             local invItem = session.GetInvItemByGuid(guid)
             if (slt and invItem and AOI_INV_FILTER(invItem)) then
@@ -627,12 +718,12 @@ function AOI_INV_ADD(guid)
                         
                         AOI_CLEARANDINIT_SLOT(slot)
                         AOI_INV_SLOT_SETITEM(slot, invItem)
-                        --DBGOUT("ADD INSERT")
+                        DBGOUT("ADD INSERT")
                         return
                     end
                 end
                 --行を増やす
-                slt:SetColRow(slt:GetCol(), slt:GetRow() + 1)
+                slt:ExpandRow()
                 for i = 0, slt:GetSlotCount() - 1 do
                     local slot = slt:GetSlotByIndex(i)
                     AUTO_CAST(slot)
@@ -641,7 +732,7 @@ function AOI_INV_ADD(guid)
                         
                         AOI_CLEARANDINIT_SLOT(slot)
                         AOI_INV_SLOT_SETITEM(slot, invItem)
-                        --DBGOUT("ADD APPEND")
+                        DBGOUT("ADD APPEND")
                         return
                     end
                 end
@@ -658,7 +749,7 @@ end
 function AOI_INV_REMOVE(guid)
     return EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory")
             local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
             if (slt) then
                 AUTO_CAST(slt)
@@ -669,25 +760,26 @@ function AOI_INV_REMOVE(guid)
                     AUTO_CAST(slot)
                     local icon = slot:GetIcon();
                     if (icon == nil) then
-                        
+                        DBGOUT("REMOVED1")
                         AOI_CLEARANDINIT_SLOT(slot)
                     else
                         local iconInfo = icon:GetInfo();
                         local slotItem = session.GetInvItemByGuid(iconInfo:GetIESID())
                         if (slotItem == nil) then
-                            
+                            DBGOUT("REMOVED2")
                             AOI_CLEARANDINIT_SLOT(slot)
                         else
                             local itemCls = GetIES(slotItem:GetObject())
                             if (itemCls == nil) then
-                                
+                                DBGOUT("REMOVED3")
                                 AOI_CLEARANDINIT_SLOT(slot)
                             else
                                 
                                 if slotItem:GetIESID() == guid then
                                     
                                     AOI_CLEARANDINIT_SLOT(slot)
-                                --DBGOUT("REMOVED")
+                                    DBGOUT("REMOVED4")
+                                    return
                                 end
                             end
                         end
@@ -704,7 +796,9 @@ end
 function AOI_INV_REFRESH()
     return EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory")
+       
+                
             local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
             AUTO_CAST(slt)
             local gboxslot = GET_CHILD_RECURSIVELY(frame, "aoi_gboxslt")
@@ -716,32 +810,12 @@ function AOI_INV_REFRESH()
             local sortedList = session.GetInvItemSortedList();
             local invItemCount = sortedList:size();
             local slotidx = 0
-            local count = invItemCount
-            local baseidclslist, baseidcnt = GetClassList("inven_baseid");
-            local wlimit = math.floor((slt:GetWidth()) / slotsize)
-            slt:SetSlotSize(slotsize, slotsize)
-            if (g.settings.view == 1) then
-                slt:SetSlotSize(slt:GetWidth(), slotsize)
-                wlimit = 1
-            end
-            
-            slt:SetSpc(0, 0)
-            
-            slt:SetColRow(math.min(wlimit, count), math.max(1, math.ceil(count / wlimit)))
-            
-            
-            slt:CreateSlots()
-            slt:EnableDrag(1)
-            slt:EnableDrop(1)
-            slt:EnablePop(1)
-            
-            local sortedList = session.GetInvItemSortedList();
-            local invItemCount = sortedList:size();
+
             g.invitems = {}
             for i = 0, invItemCount - 1 do
                 
                 local invItem = sortedList:at(i);
-                if invItem ~= nil and (invItem.type ~= 900011) then --ignore silver
+                if invItem ~= nil and AOI_INV_FILTER(invItem) and (invItem.type ~= 900011) then --ignore silver
                     
                     local itemObj = GetIES(invItem:GetObject())
                     if (itemObj ~= nil) then
@@ -763,7 +837,7 @@ function AOI_INV_REFRESH()
             --ソート
             if (g.settings.sortby) then
                 
-                if (g.settings.sortorder ~= 0) then
+                if (g.settings.sortorder == 0) then
                     table.sort(g.invitems, function(a, b)
                             
                             local compareresult
@@ -796,6 +870,24 @@ function AOI_INV_REFRESH()
                     end)
                 end
             end
+            local count = #g.invitems
+            local wlimit = math.floor((gboxslot:GetWidth()-18) / slotsize)
+            slt:SetSlotSize(slotsize, slotsize)
+            if (g.settings.view == 1) then
+                slt:SetSlotSize(gboxslot:GetWidth()-18, slotsize)
+                wlimit = 1
+            end
+            
+            slt:SetSpc(0, 0)
+            
+            slt:SetColRow(math.min(wlimit, count), math.max(1, math.ceil(count / wlimit)))
+            
+            
+            slt:CreateSlots()
+            slt:EnableDrag(1)
+            slt:EnableDrop(1)
+            slt:EnablePop(1)
+
             g.invrefresher = 1
             g.invrefresh = true
             g.invrefresheridx = 0
@@ -809,7 +901,7 @@ function AOI_INV_REFRESH()
     }
 end
 function AOI_INV_REFRESHENER()
-    local frame = g.frame
+    local frame = ui.GetFrame("anotheroneofinventory")
     local sortedList = session.GetInvItemSortedList();
     local invItemCount = #g.invitems
     local slotidx = g.invrefresheridx or 0
@@ -817,8 +909,12 @@ function AOI_INV_REFRESHENER()
     
     local cancel = false
     local limit = 30
+    if(g.settings.view==1)then
+        limit=20
+    end
     for i = g.invrefresher, #g.invitems do
         local slot = slt:GetSlotByIndex(slotidx)
+        
         local invItem = g.invitems[i].item
         if (slotidx >= #g.invitems) then
             cancel = true
@@ -828,7 +924,7 @@ function AOI_INV_REFRESHENER()
         local itemCls = GetIES(invItem:GetObject())
         
         
-        if (itemCls ~= nil and AOI_INV_FILTER(invItem)) then
+        if (itemCls ~= nil) then
             AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
             slotidx = slotidx + 1
             g.invrefresheridx = slotidx
@@ -837,7 +933,7 @@ function AOI_INV_REFRESHENER()
         
         end
         
-        g.invrefresher = i
+        g.invrefresher = i+1
         if (limit == 0) then
             break
         end
@@ -855,6 +951,17 @@ function AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
     if (g.settings.view == 1) then
         slot = parentslot:CreateOrGetControl("slot", "dummyslot", 0, 0, slotsize, slotsize)
         AUTO_CAST(slot)
+        local icon = CreateIcon(parentslot);
+        local itemobj = GetIES(invItem:GetObject());	
+        local imageName = GET_EQUIP_ITEM_IMAGE_NAME(itemobj, 'Icon');
+        local iconImgName  = GET_ITEM_ICON_IMAGE(itemobj);
+        local itemType = invItem.type;
+        icon:Set("aoi_transparent", 'Item', itemType, invItem.invIndex, invItem:GetIESID(), invItem.count);
+        icon:Resize(0,0)
+        parentslot:EnableDrag(0)
+        parentslot:EnableDrop(0)
+        parentslot:EnablePop(0)
+        parentslot:SetColorTone("00000000")
     end
     --local remainInvItemCount = GET_REMAIN_INVITEM_COUNT(invItem);
     UPDATE_INVENTORY_SLOT(slot, invItem, itemCls);
@@ -890,8 +997,83 @@ function AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
     slot:EnableDrag(1)
     
     if (g.settings.view == 1) then
+        
         local text = parentslot:CreateOrGetControl("richtext", "aoi_name", slotsize + 5, 2, slot:GetWidth() - 5 - slotsize, slot:GetHeight())
         text:SetText("{s14}{ol}" .. itemCls.Name)
+        text:EnableHitTest(0)
+        local offsetbase=250
+        local offset=math.max(offsetbase,text:GetWidth())
+        if(itemCls.GroupName=="Card")then
+            
+            local textdesc = parentslot:CreateOrGetControl("richtext", "aoi_desc", slotsize + 5+offset+20, 2, slot:GetWidth() - 5-offset-20 - slotsize, slot:GetHeight())
+            textdesc:SetText("{#AAAAAA}{s12}{ol}"..itemCls.Desc)
+            textdesc:EnableHitTest(0)
+        elseif (itemCls.GroupName=="Weapon" or itemCls.GroupName=="SubWeapon" or itemCls.GroupName=="Armor")then
+            local desc=""
+            local basicTooltipProp = 'None';
+            
+            if itemCls.BasicTooltipProp~=nil and itemCls.BasicTooltipProp ~= 'None' then
+                local basicTooltipPropList = string.split(itemCls.BasicTooltipProp, ';');
+                for i = 1, #basicTooltipPropList do
+                    basicTooltipProp = basicTooltipPropList[i];
+                    local pc = GetMyPCObject();
+                    local ignoreReinf = TryGetProp(pc, 'IgnoreReinforce', 0);
+                    local bonusReinf = TryGetProp(pc, 'BonusReinforce', 0);
+                    local overReinf = TryGetProp(pc, 'OverReinforce', 0);
+                    local reinforceaddvalue = 0
+                    local socketaddvalue = 0
+                    local typeiconname = nil
+                    local typestring = nil
+                    local arg1 = nil
+                    local arg2 = nil
+                    if TryGetProp(itemCls, 'EquipGroup') ~= 'SubWeapon' then
+                        overReinf = 0;
+                    end
+                    if TryGetProp(itemCls, 'GroupName') ~= 'Weapon' then
+                        bonusReinf = 0; 
+                    end
+                    if basicTooltipProp == 'ATK' then
+                        typeiconname = 'test_sword_icon'
+                        typestring = ScpArgMsg("Melee_Atk")
+                        if TryGetProp(itemCls, 'EquipGroup') == "SubWeapon" then
+                            typestring = ScpArgMsg("PATK_SUB")
+                        end
+                        reinforceaddvalue = math.floor( GET_REINFORCE_ADD_VALUE_ATK(itemCls, ignoreReinf, bonusReinf + overReinf, basicTooltipProp) )
+                        socketaddvalue =  _GET_ITEM_SOCKET_ADD_VALUE(basicTooltipProp, itemCls);		
+                        arg1 = itemCls.MINATK - reinforceaddvalue + socketaddvalue;
+                        arg2 = itemCls.MAXATK - reinforceaddvalue + socketaddvalue;
+                        desc=desc.."ATK:"..tostring(arg1+reinforceaddvalue).."-"..tostring(arg2+reinforceaddvalue).." "
+                    elseif basicTooltipProp == 'MATK' then
+                        typeiconname = 'test_sword_icon'
+                        typestring = ScpArgMsg("Magic_Atk")
+                        reinforceaddvalue = math.floor( GET_REINFORCE_ADD_VALUE_ATK(itemCls, ignoreReinf, bonusReinf + overReinf, basicTooltipProp) )
+                        socketaddvalue =  _GET_ITEM_SOCKET_ADD_VALUE(basicTooltipProp, itemCls)
+                        arg1 = itemCls.MATK - reinforceaddvalue;
+                        arg2 = itemCls.MATK - reinforceaddvalue;
+                        desc=desc.."MATK:"..tostring(arg1+reinforceaddvalue+socketaddvalue).." "
+                    else
+                        typeiconname = 'test_shield_icon'
+                        typestring = ScpArgMsg(basicTooltipProp);
+                        --print(basicTooltipProp)
+                        if itemCls.RefreshScp ~= 'None' then
+                            local scp = _G[itemCls.RefreshScp];
+                            if scp ~= nil then
+                                scp(itemCls);
+                            end
+                        end
+                        reinforceaddvalue = GET_REINFORCE_ADD_VALUE(basicTooltipProp, itemCls, ignoreReinf, bonusReinf + overReinf);
+                        socketaddvalue =  _GET_ITEM_SOCKET_ADD_VALUE(basicTooltipProp, itemCls)
+                        arg1 = TryGetProp(itemCls, basicTooltipProp) - reinforceaddvalue - socketaddvalue;
+                        arg2 = TryGetProp(itemCls, basicTooltipProp) - reinforceaddvalue - socketaddvalue;
+                        desc=desc..basicTooltipProp..":"..tostring(arg1+reinforceaddvalue+socketaddvalue).." "
+                    end
+                    
+                end
+            end
+            local textdesc = parentslot:CreateOrGetControl("richtext", "aoi_desc", slotsize + 5+offset+20, 2, slot:GetWidth() - 5-offset-20 - slotsize, slot:GetHeight())
+            textdesc:SetText("{#AAAAAA}{s12}{ol}".."LV:"..tostring(itemCls.UseLv).." "..desc)
+            textdesc:EnableHitTest(0)
+        end
         parentslot:SetEventScript(ui.LBUTTONDOWN, "AOI_SLOT_ON_LBUTTTONDOWN");
     
     end
@@ -928,31 +1110,33 @@ function AOI_ON_TIMER()
                         g.lifticon = false
                         g.liftslot:EnableDrag(0)
                         g.liftdelay = nil
-                        g.frame:SetName(g.framename)
+                        ui.GetFrame("anotheroneofinventory"):SetName(g.framename)
                         g.invenframe = ui.GetFrame("inventory")
                         local original = ui.GetFrame("inventory")
                         original:SetName("inventory")
                     end
                 end
             end
-            local frame = g.frame
-            local framecheck = AOI_CHECK_FRAME()
-            if (framecheck) then
-                
-                if (not g.checkedframe) then
-                    g.checkedframe = framecheck
-                    if (frame:GetX() < 700) then
-                        g.checkframeneedtoreturn = frame:GetX()
-                        frame:SetOffset(700, frame:GetY())
+            if AOI_ISINITIALIZED() then
+                local frame = ui.GetFrame("anotheroneofinventory")
+                local framecheck = AOI_CHECK_FRAME()
+                if ( framecheck) then
+                    
+                    if (not g.checkedframe) then
+                        g.checkedframe = framecheck
+                        if (frame:GetX() < 700) then
+                            g.checkframeneedtoreturn = frame:GetX()
+                            frame:SetOffset(700, frame:GetY())
+                        end
                     end
-                end
-            else
-                if (g.checkedframe) then
-                    if (g.checkframeneedtoreturn) then
-                        frame:SetOffset(g.checkframeneedtoreturn, frame:GetY())
+                else
+                    if (g.checkedframe) then
+                        if (g.checkframeneedtoreturn) then
+                            frame:SetOffset(g.checkframeneedtoreturn, frame:GetY())
+                        end
+                        g.checkframeneedtoreturn = nil
+                        g.checkedframe = nil
                     end
-                    g.checkframeneedtoreturn = nil
-                    g.checkedframe = nil
                 end
             end
         end,
@@ -970,9 +1154,18 @@ function AOI_SLOT_ON_LBUTTTONDOWN(frame, ctrl, argstr, argnum)
             -- pretend frame trick
             g.lifticon = true
             g.liftslot = ctrl
-            
-            CHECK_INV_LBTN(g.invenframe, ctrl, argstr, argnum)
-            ReserveScript("AOI_SLOT_STARTDRAG()", 0.01)
+            if(keyboard.IsKeyPressed("LALT")==1 or keyboard.IsKeyPressed("RALT")==1)then
+                local icon=ctrl:GetIcon()
+                local iconInfo=icon:GetInfo()
+                local invItem=session.GetInvItemByGuid(iconInfo:GetIESID())
+                local itemObj=GetIES(invItem:GetObject())
+                g.liftslot:EnableDrag(0)
+                INV_ITEM_LOCK_LBTN_CLICK( ui.GetFrame("inventory"),invItem,ctrl)
+                g.liftslot:EnableDrag(1)
+            else
+                CHECK_INV_LBTN(g.invenframe, ctrl, argstr, argnum)
+                ReserveScript("AOI_SLOT_STARTDRAG()", 0.01)
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -988,9 +1181,10 @@ function AOI_SLOT_ON_RBUTTONDBLCLICK(frame, ctrl, argstr, argnum)
             g.lifticon = true
             g.liftslot = ctrl
             local invenframe = ui.GetFrame("inventory")
-            frame:SetName("inventory")
-            CHECK_INV_LBTN(invenframe, ctrl, argstr, argnum)
-            ReserveScript("AOI_SLOT_STARTDRAG()", 0.01)
+           
+            ui.GetFrame("anotheroneofinventory"):SetName("inventory")
+            INVENTORY_RBDOUBLE_ITEMUSE(invenframe, ctrl, argstr, argnum)
+            ui.GetFrame("anotheroneofinventory"):SetName(g.framename)
         end,
         catch = function(error)
             ERROUT(error)
@@ -1003,10 +1197,13 @@ function AOI_SLOT_ON_RBUTTONDOWN(frame, ctrl, argstr, argnum)
         try = function()
             
             -- pretend frame trick
-            local invenframe = ui.GetFrame("inventory")
-            frame:SetName("inventory")
-            INVENTORY_RBDOUBLE_ITEMUSE(invenframe, ctrl, argstr, argnum)
-            ReserveScript("AOI_SLOT_STARTDRAG()", 0.01)
+          
+           
+                local invenframe = ui.GetFrame("inventory")
+                ui.GetFrame("anotheroneofinventory"):SetName("inventory")
+                INVENTORY_RBDC_ITEMUSE(invenframe, ctrl, argstr, argnum)
+                ui.GetFrame("anotheroneofinventory"):SetName(g.framename)
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -1017,9 +1214,9 @@ end
 function AOI_SLOT_STARTDRAG()
     EBI_try_catch{
         try = function()
-            local frame = g.frame
+            local frame = ui.GetFrame("anotheroneofinventory")
             local original = ui.GetFrame("inventory")
-            g.frame:SetName("inventory")
+            ui.GetFrame("anotheroneofinventory"):SetName("inventory")
             original:SetName("inventory")
         
         end,
@@ -1038,6 +1235,10 @@ function AOI_CHECK_FRAME()
         "shop",
         "oblation_sell",
         "legendcardupgrade",
+        "itemrandomreset",
+        "enchantarmoropen",
+        "puzzlecraft",
+        "itemcraft_alchemist",
     }
     for _, v in ipairs(frames) do
         if ui.IsFrameVisible(v) == 1 then
@@ -1116,5 +1317,3 @@ function AOI_ON_RCLICK()
         end
     }
 end
-
-AOI_VALUES = g
