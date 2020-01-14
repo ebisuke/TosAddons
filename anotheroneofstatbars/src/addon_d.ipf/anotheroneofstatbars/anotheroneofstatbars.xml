@@ -5,6 +5,7 @@
     <option closebutton="false" hideable="false" useimageitem="true"/>
     <layer layerlevel="90"/>
     <draw drawtitlebar="false" drawframe="true"/>
+    <skin frameskin="None"/> 
     <input hittest="true" hittestframe="false" movable="true"/>
 	<controls>
 		<timer name="addontimer" rect="0 0 10 10"/>
