@@ -63,6 +63,10 @@ local triggerlist = {
     S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_goduma", needs = 5},
     S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_gymas", needs = 5},
     S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_smugis", needs = 5},
+    S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_aqkrova", needs = 5},
+    S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atagal", needs = 5},
+    S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_liris", needs = 5},
+    S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_proverbs", needs = 5},
 
 }
 
@@ -186,33 +190,76 @@ function ASFSOS_UPDATE_FORKEYBOARD()
         try = function()
             local frame = ui.GetFrame('quickslotnexpbar');
             local sklCnt = frame:GetUserIValue('SKL_MAX_CNT');
-            
-            for i = 0, MAX_QUICKSLOT_CNT - 1 do
-                local quickSlotInfo = quickslot.GetInfoByIndex(i);
-                local applied = false
-                
-                if quickSlotInfo.type ~= 0 then
+            if (frame:IsVisible() == 1) then
+                for i = 0, MAX_QUICKSLOT_CNT - 1 do
+                    local quickSlotInfo = quickslot.GetInfoByIndex(i);
+                    local applied = false
                     
-                    local updateslot = false;
-                    
-                    
-                    if quickSlotInfo.category == 'Skill' then
-                        updateslot = true;
-                    end
-                    
-                    
-                    if true == updateslot and quickSlotInfo.category ~= 'NONE' and  triggerlist["S" .. tostring( quickSlotInfo.type)] ~= nil then
-                        local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot")
-                        ASFSOS_SETINFO(slot, quickSlotInfo.type)
+                    if quickSlotInfo.type ~= 0 then
                         
-                        --LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, quickSlotInfo.category, quickSlotInfo.type, quickSlotInfo:GetIESID(), 0, true, true);
-                        applied = true
+                        local updateslot = false;
+                        
+                        
+                        if quickSlotInfo.category == 'Skill' then
+                            updateslot = true;
+                        end
+                        
+                        
+                        if true == updateslot and quickSlotInfo.category ~= 'NONE' and triggerlist["S" .. tostring(quickSlotInfo.type)] ~= nil then
+                            local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot")
+                            ASFSOS_SETINFO(slot, quickSlotInfo.type)
+                            
+                            --LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, quickSlotInfo.category, quickSlotInfo.type, quickSlotInfo:GetIESID(), 0, true, true);
+                            applied = true
+                        end
+                    end
+                    if (applied == false) then
+                        local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot");
+                        
+                        ASFSOS_CLEARSLOT(slot)
                     end
                 end
-                if (applied == false) then
-                    local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot");
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function ASFSOS_UPDATE_FORJOYSTICK()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame('joystickquickslot');
+            if (frame:IsVisible() == 1) then
+                local sklCnt = frame:GetUserIValue('SKL_MAX_CNT');
+                
+                for i = 0, MAX_SLOT_CNT - 1 do
+                    local quickSlotInfo = quickslot.GetInfoByIndex(i);
+                    local applied = false
                     
-                    ASFSOS_CLEARSLOT(slot)
+                    if quickSlotInfo.type ~= 0 then
+                        
+                        local updateslot = false;
+                        
+                        
+                        if quickSlotInfo.category == 'Skill' then
+                            updateslot = true;
+                        end
+                        
+                        
+                        if true == updateslot and quickSlotInfo.category ~= 'NONE' and triggerlist["S" .. tostring(quickSlotInfo.type)] ~= nil then
+                            local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot")
+                            ASFSOS_SETINFO(slot, quickSlotInfo.type)
+                            
+                            --LEGEXPPOTIONGAUGE_SET_QUICK_SLOT(frame, slot, quickSlotInfo.category, quickSlotInfo.type, quickSlotInfo:GetIESID(), 0, true, true);
+                            applied = true
+                        end
+                    end
+                    if (applied == false) then
+                        local slot = GET_CHILD_RECURSIVELY(frame, "slot" .. i + 1, "ui::CSlot");
+                        
+                        ASFSOS_CLEARSLOT(slot)
+                    end
                 end
             end
         end,
@@ -279,6 +326,7 @@ function ASFSOS_CLEARSLOT(slot)
 end
 function ASFSOS_UPDATE()
     ASFSOS_UPDATE_FORKEYBOARD()
+    ASFSOS_UPDATE_FORJOYSTICK()
     if (g.currentcooldown > 0) then
         g.currentcooldown = math.max(0, g.currentcooldown - 500)
     end
@@ -301,7 +349,7 @@ end
 function ASFSOS_DO_SKILL(clsid)
     EBI_try_catch{
         try = function()
-        
+            
             g.skillinfo = session.GetSkill(clsid);
             if (g.skillinfo == nil) then
                 ReserveScript("quickslot.SwapWeapon()", 0.5)
@@ -347,7 +395,7 @@ function ASFSOS_ICON_USE(object, reAction)
                         if (skillInfo == nil) then
                             --g.waitforend = valid.clsid
                             g.clsid = valid.clsid
-                            ReserveScript("quickslot.SwapWeapon()",0.25)
+                            ReserveScript("quickslot.SwapWeapon()", 0.25)
                             ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.75)
                         else
                             control.Skill(valid.clsid)
