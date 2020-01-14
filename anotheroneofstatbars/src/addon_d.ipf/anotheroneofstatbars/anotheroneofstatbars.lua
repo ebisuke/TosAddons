@@ -35,7 +35,7 @@ g.durmax = 0
 g.tick = 0
 g.fixsp=nil
 g.fixhp=nil
-
+g.fanatic=nil
 g.spskill=nil
 local triggerlist = {
     S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
@@ -202,8 +202,10 @@ function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
     local stat = info.GetStat(session.GetMyHandle());
     local clsid_arcane=1018
     local clsid_healing=2001
+    local clsid_fanaticism=2104
     local handle = session.GetMyHandle();
     local buffcount = info.GetBuffCount(handle);
+    g.fanatic=nil
     for i = 0, buffcount - 1 do
         local buff = info.GetBuffIndexed(handle, i);
         local buffCls = GetClassByType("Buff", buff.buffID);
@@ -221,6 +223,9 @@ function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
                 g.fixhp=stat.HP
             end
             fhp=true
+        end
+        if(buff.buffID==clsid_fanaticism)then
+            g.fanatic=true
         end
         
     end
@@ -280,6 +285,7 @@ function AOS_INIT()
             g.durmin = 0
             g.durmax = 0
             g.tick=0
+            g.fanatic=nil
             AOS_RENDER()
         end,
         catch = function(error)
@@ -567,9 +573,13 @@ function AOS_DRAW_HPBAR(frame,pic)
             pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remhpw, oy + 5, "spray_large_bs", "FFFF0000")
         end
     end
-    
-    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FF22FF77")
-    pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FF11CC55")
+    if g.fanatic then
+        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FFFFBB77")
+        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FFDDAA44")
+    else
+        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FF22FF77")
+        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FF11CC55")
+    end
     if(g.remshpw>0)then
         if (g.remshpw ~= g.curshpw) then
             if (colsw > g.curshpw) then
