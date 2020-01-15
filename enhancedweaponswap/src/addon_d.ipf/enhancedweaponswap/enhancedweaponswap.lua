@@ -29,8 +29,8 @@ end
 g.debug = true
 g.settings=g.settings or {}
 g.waitforswapskill=nil
-g.settings.primary=nil
-g.retain=nil
+--g.settings.primary=nil
+g.restore=nil
 local itemdefine={
     {Name="weapon_unused",Type=nil,Text="{ol}{s16}No use"},
     {Name="weapon_OHS",Type="OneHandSword",Text="{img weapon_OHS 20 20}"},
@@ -127,8 +127,8 @@ function EWS_WEAPONSWAP_FAIL()
 end
 function EWS_WEAPONSWAP_SLOT_SUCCESS()
     if( g.waitforswapskill)then
-        control.Skill( g.waitforswapskill);
-        g.retain= g.waitforswapskill
+        ReserveScript(string.format("control.Skill(%d)",g.waitforswapskill),0.01);
+        g.restore= g.waitforswapskill
         g.waitforswapskill=nil
         
     end
@@ -136,13 +136,14 @@ end
 function EWS_ON_TIMER()
     EBI_try_catch{
         try = function()
-            if(g.retain)then
+            if(g.restore)then
                 local actor=GetMyActor()
                 local skillId =  actor:GetUseSkill()
-                if(skillId~=g.retain)then
-                    
-                   --ReserveScript("quickslot.SwapWeapon()",0.01)
-                    g.retain=nil
+                if(skillId==0 and actor:IsSkillState()==false)then
+                    -- 重複なし遅延1.5秒
+                    DebounceScript("EWS_SWAPTO1",1.5,0)
+                    DBGOUT("RESTORE")
+                    g.restore=nil
                 end
             end
         end,
@@ -189,7 +190,22 @@ end
 function EWSC_TOGGLE()
     ui.ToggleFrame("enhancedweaponswapconfig")
 end
-
+function EWS_SWAPTO1()
+    EWS_SWAP(1)
+end
+function EWS_SWAPTO2()
+    EWS_SWAP(2)
+end
+function EWS_SWAP(swap)
+    local frame = ui.GetFrame("inventory");
+    if(frame:GetUserIValue('CURRENT_WEAPON_INDEX')~=swap)then
+        DO_WEAPON_SWAP(frame, swap)
+    end
+end
+function EWS_GETSWAP()
+    local frame = ui.GetFrame("inventory");
+    return frame:GetUserIValue('CURRENT_WEAPON_INDEX')
+end
 function EWS_CONFIG_SELECTEDITEM(parent,ctrl)
    
     EBI_try_catch{
@@ -210,8 +226,10 @@ function EWS_ICON_USE_JUMPER(object, reAction)
 end
 
 function EWS_ICON_USE(object, reAction)
+    return EBI_try_catch{
+        try = function()
     local iconPt = object;
-    if iconPt  ~=  nil then
+    if iconPt  ~=  nil and g.settings.primary then
         local icon = tolua.cast(iconPt, 'ui::CIcon');
 		
         local iconInfo = icon:GetInfo();
@@ -220,11 +238,25 @@ function EWS_ICON_USE(object, reAction)
             local obj=GetClassByType("Skill",iconInfo.type)
             if(obj.ReqObject == "None" or  obj.ReqObject:find(g.settings.primary))then
                 --swap
-                --ReserveScript("quickslot.SwapWeapon()",0.01)
-                g.waitforswapskill=iconInfo.type
+
+                if(EWS_GETSWAP()==2)then
+                    DBGOUT("IMMEDIATE")
+                    control.Skill(iconInfo.type);
+                    g.restore=iconInfo.type
+                    g.waitforswapskill=nil
+                else
+                    DBGOUT("SWAP")
+                    
+                    EWS_SWAPTO2()
+                    
+                    g.waitforswapskill=iconInfo.type
+                    --g.restore=iconInfo.type
+                end
+                
                 return true
             else
                 --ign
+                DBGOUT("IGN ".. obj.ReqObject)
                 return false
             end
         else
@@ -232,4 +264,9 @@ function EWS_ICON_USE(object, reAction)
         end
     end
     return false
+end,
+catch = function(error)
+    ERROUT(error)
+end
+}
 end
