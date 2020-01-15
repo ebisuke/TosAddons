@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="enemystat" x="300" y="300" width="250" height="20" create="open">
+    <frame layout_gravity="left top" scale_align="left top"/>
+    <option closebutton="false" hideable="false" useimageitem="true"/>
+    <skin frameskin="None"/> 
+    <layer layerlevel="30"/>
+    <draw drawtitlebar="false" drawframe="true"/>
+    <input hittest="true" hittestframe="true" movable="true"/>
+	<controls>
+		<timer name="addontimer" rect="0 0 10 10"/>
+		
+	</controls>
+</uiframe>
