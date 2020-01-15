@@ -212,7 +212,7 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
             
             --g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(CAMPCHEF_GETCID()))
             acutil.addSysIcon('AOI', 'sysmenu_inv', 'another one of inventory', 'ANOTHERONEOFINVENTORY_TOGGLE_FRAME')
-            addon:RegisterMsg('GAME_START', 'AOI_INIT')
+            addon:RegisterMsg('GAME_START_3SEC', 'AOI_INIT')
             --ccするたびに設定を読み込む
             if not g.loaded then
                 g.loaded = true
@@ -244,9 +244,8 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
             
             
             ANOTHERONEOFINVENTORY_LOAD_SETTINGS()
-            frame:SetOffset(g.settings.x, g.settings.y)
-            frame:Resize(g.settings.w, g.settings.h)
-            
+           
+           
             ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
             ui.GetFrame("anotheroneofinventory"):ShowWindow(1)
            
@@ -362,7 +361,8 @@ function AOI_INIT()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame("anotheroneofinventory") or ui.GetFrame(g.framename)
-    
+            frame:Resize(g.settings.w, g.settings.h)
+            frame:SetOffset(g.settings.x, g.settings.y)
             frame:EnableMove(1)
             frame:SetSkinName("chat_window")
             frame:EnableHittestFrame(1)
@@ -1126,6 +1126,9 @@ function AOI_ON_TIMER()
                         g.checkedframe = framecheck
                         if (frame:GetX() < 700) then
                             g.checkframeneedtoreturn = frame:GetX()
+                            g.checkframeneedtoreturnh=frame:GetHeight()
+                            g.checkframeneedtoreturnw=frame:GetWidth()
+                            
                             frame:SetOffset(700, frame:GetY())
                         end
                     end
@@ -1133,6 +1136,7 @@ function AOI_ON_TIMER()
                     if (g.checkedframe) then
                         if (g.checkframeneedtoreturn) then
                             frame:SetOffset(g.checkframeneedtoreturn, frame:GetY())
+                            frame:Resize( g.checkframeneedtoreturnw,g.checkframeneedtoreturnh)
                         end
                         g.checkframeneedtoreturn = nil
                         g.checkedframe = nil
@@ -1239,6 +1243,7 @@ function AOI_CHECK_FRAME()
         "enchantarmoropen",
         "puzzlecraft",
         "itemcraft_alchemist",
+        "hiddenability_make",
     }
     for _, v in ipairs(frames) do
         if ui.IsFrameVisible(v) == 1 then
@@ -1262,7 +1267,7 @@ function AOI_SAVE_POSITION()
             g.settings.w = frame:GetWidth()
             g.settings.h = frame:GetHeight()
             ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
-            g.checkframeneedtoreturn = nil
+            
         end,
         catch = function(error)
             ERROUT(error)
