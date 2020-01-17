@@ -1,0 +1,6 @@
+E:\ToSProject\TosAddons\wikihelp\tool\toswikicrawler\toswikicrawler\obj\Debug\toswikicrawler.csprojAssemblyReference.cache
+E:\ToSProject\TosAddons\wikihelp\tool\toswikicrawler\toswikicrawler\bin\Debug\toswikicrawler.exe.config
+E:\ToSProject\TosAddons\wikihelp\tool\toswikicrawler\toswikicrawler\bin\Debug\toswikicrawler.exe
+E:\ToSProject\TosAddons\wikihelp\tool\toswikicrawler\toswikicrawler\bin\Debug\toswikicrawler.pdb
+E:\ToSProject\TosAddons\wikihelp\tool\toswikicrawler\toswikicrawler\obj\Debug\toswikicrawler.exe
+E:\ToSProject\TosAddons\wikihelp\tool\toswikicrawler\toswikicrawler\obj\Debug\toswikicrawler.pdb

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="skillcombiner" x="0" y="0" width="600" height="1080">
+	<draw drawtitlebar="false"/>
+	<skin frameskin=" "/>
+	<frame fullheight="true" fasthide="true" layout_gravity="left top" open="pip" margin="-750 0 0 0" keyboardselectframe="true"/>
+	<input maxwidth="1280" moveable="false"/>
+	<layer layerlevel="80"/>
+	<opencheck scp="UI_CHECK_PROP" strarg="status" numarg="1"/>
+	<option closebutton="false"/>
+	<sound opensound="skill_window_open" closesound="skill_window_close"/>
+	<script OpenScp="SKILLCOMBINER_OPEN" CloseScp="SKILLCOMBINER_CLOSE"/>
+	<userconfig ADD_STAT_COLOR="{#00FF00}" BEFORE_STAT_COLOR="{#FF6600}" BTNUP_STAT_COLOR="{@st41b}" CHANGE_STAT_FONTNAME="orange_16_b_ol" DEFAULT_STAT_VALUE_FONTNAME="white_16_ol" DEFAULT_STAT_NAME_FONTNAME="yellow_16_ol" StatIconStartX="10" DEFAULT_TITLE_TEXT="SkillCombiner"/>
+	<controls>
+		<groupbox name="equip" rect="0 0 600 990" margin="0 40 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="false" skin="test_frame_low"/>
+		<groupbox name="pipwin_top_my" rect="0 0 600 126" margin="0 0 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" scrollbar="false" skin="test_frame_topf1"/>
+		<button name="close" rect="0 0 44 44" margin="0 20 28 0" layout_gravity="right top" LBtnUpArgNum="" LBtnUpScp="ui.CloseFrame(&apos;skillcombiner&apos;)" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" caption="" clicksound="button_click_big" image="testclose_button" oversound="button_over" texttooltip="{@st59}캐릭터 정보를 닫습니다{/}"/>
+		<richtext name="NameText" rect="0 0 200 30" layout_gravity="center top" caption="캐릭터 이름 출력" frameOpenAnim=" " hittest="false" spacey="0" textalign="left center" margin="0 16 0 0"/>
+		<!--<picture name="titlepicture" rect="0 0 44 44" margin="10 -700 0 0" layout_gravity="left top" image="button_status"/>-->
+		
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

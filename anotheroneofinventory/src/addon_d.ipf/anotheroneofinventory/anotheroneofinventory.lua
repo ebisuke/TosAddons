@@ -944,6 +944,7 @@ function AOI_INV_REFRESHENER()
     end
 end
 function AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
+    local frame = ui.GetFrame("inventory")
     if (itemCls == nil) then
         itemCls = GetIES(invItem:GetObject())
     end

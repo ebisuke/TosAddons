@@ -2,6 +2,7 @@
 */obj/*
 /.*/*
 .idea
+.vs
 pseudoforecast/converter/xml/*
 tmp.ipf
 pseudoforecast_enhanced/converter/xml/*
@@ -12,3 +13,12 @@ wikihelp/tool/toswikicrawler/.vs/*
 wikihelp/tool/toswikicrawler/toswikicrawler/obj/Debug/*
 wikihelp/tool/toswikicrawler/toswikicrawler/bin/Debug/*
 wikihelp/src/ui.ipf/skin/*
+housingsimulator/tool/HousingRenderer/Assets/housing/*
+housingsimulator/tool/HousingRenderer/Assets/Editor/*
+housingsimulator/tool/HousingRenderer/Assets/housing/*
+*.meta
+housingsimulator/tool/HousingRenderer/obj/*
+housingsimulator/tool/HousingRenderer/Temp/*
+housingsimulator/tool/HousingRenderer/Logs/*
+housingsimulator/tool/HousingRenderer/Library/*
+

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="wikihelp" x="0" y="0" width="800" height="1080">
+	<draw drawtitlebar="false"/>
+	<skin frameskin=" "/>
+	<frame fullheight="true" fasthide="true" layout_gravity="left top" open="pip" margin="-750 0 0 0" keyboardselectframe="true"/>
+	<input maxwidth="1280" moveable="false"/>
+	<layer layerlevel="80"/>
+	<opencheck scp="UI_CHECK_PROP" strarg="status" numarg="1"/>
+	<option closebutton="false"/>
+	<sound opensound="character_item_window_open" closesound="character_item_window_close"/>
+	<script OpenScp="WIKIHELP_OPEN" CloseScp="WIKIHELP_CLOSE"/>
+	<userconfig ADD_STAT_COLOR="{#00FF00}" BEFORE_STAT_COLOR="{#FF6600}" BTNUP_STAT_COLOR="{@st41b}" CHANGE_STAT_FONTNAME="orange_16_b_ol" DEFAULT_STAT_VALUE_FONTNAME="white_16_ol" DEFAULT_STAT_NAME_FONTNAME="yellow_16_ol" StatIconStartX="10" DEFAULT_TITLE_TEXT="WikiHelp"/>
+	<controls>
+		<groupbox name="equip" rect="0 0 800 990" margin="0 40 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="false" skin="test_frame_low"/>
+		<groupbox name="pipwin_top_my" rect="0 0 800 126" margin="0 0 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" scrollbar="false" skin="test_frame_topf1"/>
+		<button name="close" rect="0 0 44 44" margin="0 20 28 0" layout_gravity="right top" LBtnUpArgNum="" LBtnUpScp="ui.CloseFrame(&apos;wikihelp&apos;)" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" caption="" clicksound="button_click_big" image="testclose_button" oversound="button_over" texttooltip="{@st59}캐릭터 정보를 닫습니다{/}"/>
+		<richtext name="NameText" rect="0 0 200 30" layout_gravity="center top" caption="캐릭터 이름 출력" frameOpenAnim=" " hittest="false" spacey="0" textalign="left center" margin="0 16 0 0"/>
+		<picture name="titlepicture" rect="0 0 44 44" margin="10 -700 0 0" layout_gravity="left top" image="button_status"/>
+		<button name="changeName" rect="0 0 560 33" margin="0 16 0 0" layout_gravity="center top" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" skin="name_glasss_btn" oversound="button_over" spacey="0" textoffset="-1 0"/>
+		<button name="btnback" rect="70 0 50 33" margin="0 16 0 0" layout_gravity="left top" caption="<-" MouseOffAnim="btn_mouseoff" LBtnUpScp="WIKIHELP_BACK()" MouseOnAnim="btn_mouseover" clicksound="button_click_big" skin="name_glasss_btn" oversound="button_over" spacey="0" textoffset="-1 0"/>
+		<richtext name="LevJobText" rect="0 0 200 20" layout_gravity="center top" caption="MenuBar" fontname="white_20_ol_ds" hittest="false" spacey="0" textalign="left center" margin="0 56 0 0"/>
+		<button name="resize" rect="0 0 30 30" margin="0 3 0 0" layout_gravity="right top" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" image="button_chat_scale" oversound="button_over" resizeframe="true" texttooltip="{@st59}채팅창 크기 조절{/}"/>
+		
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>
