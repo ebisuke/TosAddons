@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="housingsimulator" x="0" y="0" width="1200" height="720" create="open">
+	<frame title="None" layout_gravity="left bottom" margin="2 0 0 13" scale_align="center bottom"/>
+	<draw drawframe="true" drawtitlebar="false"/>
+	<input moveable="true" minwidth="100" minheight="30" hittestframe="false" moveintitlebar="false" resize="true" resizerange="60 30 1800 1000"/>
+	<option visible="true" hideable="true" useimageitem="true" closebutton="false"/>
+	<layer layerlevel="79"/>
+	<option closebutton="false"/>
+	<sound opensound="window_open" closesound="window_close"/>
+	<userconfig GBOX_LEFT_MARGIN="0" GBOX_TOP_MARGIN="36" GBOX_BOTTOM_MARGIN="0" GBOX_RIGHT_MARGIN="1" TEXTCHAT_FONTSTYLE_NORMAL="{#FFFFFF}{b}{ol}" TEXTCHAT_FONTSTYLE_SHOUT="{#da6e0f}{b}{ol}" TEXTCHAT_FONTSTYLE_PARTY="{#86E57F}{b}{ol}" TEXTCHAT_FONTSTYLE_GUILD="{#A566FF}{b}{ol}" TEXTCHAT_FONTSTYLE_NOTICE="{#FF0000}{b}" TEXTCHAT_FONTSTYLE_SYSTEM="{#FFE400}{b}{ol}" CTRLSET_OFFSETX="63" TEXTCHAT_FONTSTYLE_LINK="{#FFFF00}"/>
+	<animation frameOpenAnim="dialog_start" frameCloseAnim="dialog_end"/>
+	
+	<controls>
+	    <button name="resize" rect="0 0 30 30" margin="0 3 0 0" layout_gravity="right top" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" image="button_chat_scale" oversound="button_over" resizeframe="true" texttooltip="{@st59}채팅창 크기 조절{/}"/>
+
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>
