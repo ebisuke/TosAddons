@@ -19,8 +19,8 @@ g.debug = true
 g.handle = nil
 g.interlocked = false
 g.currentIndex = 1
-g.x=nil
-g.y=nil
+g.x = nil
+g.y = nil
 --ライブラリ読み込み
 CHAT_SYSTEM("[TESTBOARD]loaded")
 local acutil = require('acutil')
@@ -130,7 +130,6 @@ function TESTBOARD_ON_INIT(addon, frame)
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
             timer:Start(0.1);
             --TESTBOARD_SHOW(g.frame)
-            
             TESTBOARD_INIT()
             g.frame:ShowWindow(0)
         end,
@@ -155,13 +154,10 @@ function TESTBOARD_INIT()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            local pic = frame:CreateOrGetControl("picture", "pic", 0, 80, 0, 0)
-            tolua.cast(pic, "ui::CWebPicture")
-            pic:Resize(frame:GetWidth(), frame:GetHeight()-80)
-            pic:ShowWindow(0)
-            pic:SetUrlInfo("https://tos.mochisuke.jp/blog/wp-content/uploads/2019/12/Marnoks_TestBoard.jpg")
-            pic:EnableHitTest(1)
-            
+            local button = frame:CreateOrGetControl("button", "btn", 0, 80, 200, 100)
+            AUTO_CAST(button)
+            button:SetEventScript(ui.LBUTTONUP, "TESTBOARD_ACTIVATE_DPS")
+            button:SetText("INJECT LOVE!")
         end,
         catch = function(error)
             TESTBOARD_ERROUT(error)
@@ -171,48 +167,42 @@ end
 function TESTBOARD_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
-            -- local frame = ui.GetFrame(g.framename)
-            -- local pic = frame:GetChild("pic")
-            -- tolua.cast(pic, "ui::CPicture")
-
-            -- local x, y = GET_LOCAL_MOUSE_POS(pic);
-            -- if mouse.IsLBtnPressed() ~= 0 then
-            --     if(g.x==nil or g.y==nil )then
-            --         g.x=x
-            --         g.y=y
-            --     end
-            --     --print(string.format("draw %d,%d",x,y))
-            --     local pics=pic:GetPixelColor(x, y);
-            --     --print("pics "..tostring(pics))
-                
-            --     pic:DrawBrush(g.x,g.y,x,y, "spray_8", "FFFF0000");
-            --     pic:Invalidate()
-            --     g.x=x
-            --     g.y=y
-            -- else
-            --     g.x=nil
-            --     g.y=nil
-            -- end
-
-            -- local fndList, fndCount = SelectObject(GetMyActor(), 400, 'ALL');
-            -- local flag = 0
-            
-            -- for index = 1, fndCount do
-                
-            --     local enemyHandle = GetHandle(fndList[index]);
-            --     if(enemyHandle~=nil)then
-            --         local enemy = world.GetActor(enemyHandle);
-
-            --         if enemy ~= nil then
-            --             local apc=enemy:GetPCApc()
-            --             local aid=enemy:GetPCApc():GetAID();
-            --             local opc=session.otherPC.GetByStrAID(aid)
-            --             if(opc~=nil)then
-            --                --print(tostring(opc:GetPartyInfo()))
-            --             end
-            --         end
-            --     end 
-            -- end
+        -- local frame = ui.GetFrame(g.framename)
+        -- local pic = frame:GetChild("pic")
+        -- tolua.cast(pic, "ui::CPicture")
+        -- local x, y = GET_LOCAL_MOUSE_POS(pic);
+        -- if mouse.IsLBtnPressed() ~= 0 then
+        --     if(g.x==nil or g.y==nil )then
+        --         g.x=x
+        --         g.y=y
+        --     end
+        --     --print(string.format("draw %d,%d",x,y))
+        --     local pics=pic:GetPixelColor(x, y);
+        --     --print("pics "..tostring(pics))
+        --     pic:DrawBrush(g.x,g.y,x,y, "spray_8", "FFFF0000");
+        --     pic:Invalidate()
+        --     g.x=x
+        --     g.y=y
+        -- else
+        --     g.x=nil
+        --     g.y=nil
+        -- end
+        -- local fndList, fndCount = SelectObject(GetMyActor(), 400, 'ALL');
+        -- local flag = 0
+        -- for index = 1, fndCount do
+        --     local enemyHandle = GetHandle(fndList[index]);
+        --     if(enemyHandle~=nil)then
+        --         local enemy = world.GetActor(enemyHandle);
+        --         if enemy ~= nil then
+        --             local apc=enemy:GetPCApc()
+        --             local aid=enemy:GetPCApc():GetAID();
+        --             local opc=session.otherPC.GetByStrAID(aid)
+        --             if(opc~=nil)then
+        --                --print(tostring(opc:GetPartyInfo()))
+        --             end
+        --         end
+        --     end
+        -- end
         end,
         catch = function(error)
             TESTBOARD_ERROUT(error)
@@ -223,14 +213,42 @@ function TESTBOARD_WEBB()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            local web=frame:CreateOrGetControl("browser","web",0,80,frame:GetWidth(),frame:GetHeight()-80)
+            local web = frame:CreateOrGetControl("browser", "web", 0, 80, frame:GetWidth(), frame:GetHeight() - 80)
             
-            web:SetUrlinfo("https://www.google.com");	
+            web:SetUrlinfo("https://www.google.com");
             web:SetForActiveX(true);
             web:ShowBrowser(true);
         end,
         catch = function(error)
             TESTBOARD_ERROUT(error)
+        end
+    }
+end
+function TESTBOARD_HEXTOSTRING(hex)
+    return string.char(hex % 0x100) .. string.char(hex / 0x100 % 0x100) .. string.char(hex / 0x10000 % 0x100) .. string.char(hex / 0x1000000 % 0x100)
+end
+function TESTBOARD_ACTIVATE_DPS()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+            
+            local resultlist = session.GetItemIDList();
+            
+            print(tostring(session.dps.SendStartDpsMsg));
+            --print(tostring(lists))
+            local dummy = frame:CreateOrGetControl("richtext", "dummy", 0, 0, 0, 0);
+            local ptr = GetVoidPointer(dummy)
+         
+            
+            --local ptr4=tolua.cast(ptr3,"ui::CRichText")
+            --ptr4:SetOffset(0,0)
+            --print(tostring(ptr3.worldPoint))
+        
+        --local actor=GetVoidPointer(result,"ui::CObject");
+        --pint(tostring(actor))
+        end,
+        catch = function(error)
+            TESTBOARD_ERROUT(tostring(error))
         end
     }
 end

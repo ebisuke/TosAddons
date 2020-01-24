@@ -880,7 +880,7 @@ function AOI_INV_REFRESH()
             
             slt:SetSpc(0, 0)
             
-            slt:SetColRow(math.min(wlimit, count), math.max(1, math.ceil(count / wlimit)))
+            slt:SetColRow(wlimit, math.max(1, math.ceil(count / wlimit)))
             
             
             slt:CreateSlots()
@@ -1245,6 +1245,8 @@ function AOI_CHECK_FRAME()
         "puzzlecraft",
         "itemcraft_alchemist",
         "hiddenability_make",
+        "legendprefix",
+        "itemdungeon",
     }
     for _, v in ipairs(frames) do
         if ui.IsFrameVisible(v) == 1 then
