@@ -232,23 +232,22 @@ function TESTBOARD_ACTIVATE_DPS()
         try = function()
             local frame = ui.GetFrame(g.framename)
             
-            local resultlist = session.GetItemIDList();
+
+            local targetinfo = info.GetTargetInfo( session.GetMyHandle() );
+            local p=tolua.cast(targetinfo,"MINMAP_MATCH")
+            p.worldPoint.x=0x008c5260
+            local hoge={0x008c5260}
+            local fd=io.open("c:\\temp\\hoge.txt","w")
+            EnumWindows = alien.user32.EnumWindows
+            print("A:"..tostring(EnumWindows))   
             
-            print(tostring(session.dps.SendStartDpsMsg));
-            --print(tostring(lists))
-            local dummy = frame:CreateOrGetControl("richtext", "dummy", 0, 0, 0, 0);
-            local ptr = GetVoidPointer(dummy)
-         
-            
-            --local ptr4=tolua.cast(ptr3,"ui::CRichText")
-            --ptr4:SetOffset(0,0)
-            --print(tostring(ptr3.worldPoint))
-        
-        --local actor=GetVoidPointer(result,"ui::CObject");
-        --pint(tostring(actor))
+            --print("C:"..tostring(ptr3.minimapPoint))
+            fd:close()
+
+
         end,
         catch = function(error)
-            TESTBOARD_ERROUT(tostring(error))
+            TESTBOARD_ERROUT("FAIL:"..tostring(error))
         end
     }
 end
