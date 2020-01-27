@@ -93,6 +93,7 @@ function PSEUDOFORECAST_ICON_USE_JUMPER(object, reAction)
    
 	EBI_try_catch{
 		try = function()
+			
 			PSEUDOFORECAST_ICON_USE(object, reAction)
 		
 		end,
