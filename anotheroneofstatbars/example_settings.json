@@ -1,0 +1,155 @@
+{
+    "y": 776,
+    "x": 472,
+    "version": 0,
+    "diamond": {
+        "shownumber": true,
+        "buffs": {
+            "S4271": {
+                "name": "Korup"
+            },
+            "S4348": {
+                "name": "Liris"
+            },
+            "S4287": {
+                "name": "Goduma"
+            },
+            "S2153": {
+                "name": "Bendrinti"
+            },
+            "S4270": {
+                "name": "Rykuma"
+            },
+            "S4288": {
+                "name": "Gymas"
+            },
+            "S2157": {
+                "name": "Kraujas"
+            },
+            "S4350": {
+                "name": "Proverbs"
+            },
+            "S4289": {
+                "name": "Smugis"
+            },
+            "S2156": {
+                "name": "Mergaite"
+            },
+            "S4285": {
+                "name": "Apsauga"
+            },
+            "S4286": {
+                "name": "Bendrinti"
+            },
+            "S4318": {
+                "name": "Aqkrova"
+            },
+            "S2158": {
+                "name": "Gyvenimas"
+            },
+            "S2154": {
+                "name": "Tiksline"
+            },
+            "nouse": false
+        },
+        "skills": {
+            "S100003": {
+                "prefix": "Set_mergaite",
+                "clsid": 100003,
+                "needs": 5,
+                "skill": "Velcoffer_Mergaite"
+            },
+            "S100014": {
+                "prefix": "Set_goduma",
+                "clsid": 100014,
+                "needs": 5,
+                "skill": "Varna_Goduma"
+            },
+            "S100011": {
+                "prefix": "Set_korup",
+                "clsid": 100011,
+                "needs": 5,
+                "skill": "Savinose_Korup"
+            },
+            "S100004": {
+                "prefix": "Set_kraujas",
+                "clsid": 100004,
+                "needs": 5,
+                "skill": "Velcoffer_Kraujas"
+            },
+            "S100017": {
+                "prefix": "Set_aqkrova",
+                "clsid": 100017,
+                "needs": 5,
+                "skill": "Varna_Aqkrova"
+            },
+            "S100015": {
+                "prefix": "Set_gymas",
+                "clsid": 100015,
+                "needs": 5,
+                "skill": "Varna_Gymas"
+            },
+            "S100010": {
+                "prefix": "Set_rykuma",
+                "clsid": 100010,
+                "needs": 5,
+                "skill": "Savinose_Rykuma"
+            },
+            "S100020": {
+                "prefix": "Set_proverbs",
+                "clsid": 100020,
+                "needs": 5,
+                "skill": "Varna_Proverbs"
+            },
+            "S100001": {
+                "prefix": "Set_sumazinti",
+                "clsid": 100001,
+                "needs": 5,
+                "skill": "Velcoffer_Sumazinti"
+            },
+            "S100002": {
+                "prefix": "Set_tiksline",
+                "clsid": 100002,
+                "needs": 5,
+                "skill": "Velcoffer_Tiksline"
+            },
+            "S100013": {
+                "prefix": "Set_bendrinti",
+                "clsid": 100013,
+                "needs": 5,
+                "skill": "Savinose_Bendrinti"
+            },
+            "S100005": {
+                "prefix": "Set_gyvenimas",
+                "clsid": 100005,
+                "needs": 5,
+                "skill": "Velcoffer_Gyvenimas"
+            },
+            "S100012": {
+                "prefix": "Set_apsauga",
+                "clsid": 100012,
+                "needs": 5,
+                "skill": "Savinose_Apsauga"
+            },
+            "S100018": {
+                "prefix": "Set_atagal",
+                "clsid": 100018,
+                "needs": 5,
+                "skill": "Varna_Atagal"
+            },
+            "S100016": {
+                "prefix": "Set_smugis",
+                "clsid": 100016,
+                "needs": 5,
+                "skill": "Varna_Smugis"
+            },
+            "S100019": {
+                "prefix": "Set_liris",
+                "clsid": 100019,
+                "needs": 5,
+                "skill": "Varna_Liris"
+            },
+            "nouse": true
+        }
+    }
+}
