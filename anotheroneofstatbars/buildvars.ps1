@@ -1,3 +1,3 @@
 $addonname="anotheroneofstatbars"
 
-$version="v0.0.5"
+$version="v0.1.0"

@@ -11,7 +11,10 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.version = 0
-g.settings = {x = 300, y = 300}
+g.settings =g.settings or {
+    x = 300,
+    y = 300,
+}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofstatbars"
@@ -36,25 +39,9 @@ g.tick = 0
 g.fixsp=nil
 g.fixhp=nil
 g.fanatic=nil
-g.spskill=nil
-local triggerlist = {
-    S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
-    S100002 = {skill = "Velcoffer_Tiksline", clsid = 100002, prefix = "Set_tickline", needs = 5},
-    S100003 = {skill = "Velcoffer_Mergaite", clsid = 100003, prefix = "Set_mergaite", needs = 5},
-    S100004 = {skill = "Velcoffer_Kraujas", clsid = 100004, prefix = "Set_kraujas", needs = 5},
-    S100005 = {skill = "Velcoffer_Gyvenimas", clsid = 100005, prefix = "Set_gyvenimas", needs = 5},
-    S100010 = {skill = "Savinose_Rykuma", clsid = 100010, prefix = "Set_rykuma", needs = 5},
-    S100011 = {skill = "Savinose_Korup", clsid = 100011, prefix = "Set_korup", needs = 5},
-    S100012 = {skill = "Savinose_Apsauga", clsid = 100012, prefix = "Set_apsauga", needs = 5},
-    S100013 = {skill = "Savinose_Bendrinti", clsid = 100013, prefix = "Set_bendrinti", needs = 5},
-    S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_goduma", needs = 5},
-    S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_gymas", needs = 5},
-    S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_smugis", needs = 5},
-    S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_aqkrova", needs = 5},
-    S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atagal", needs = 5},
-    S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_liris", needs = 5},
-    S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_proverbs", needs = 5},
-}
+
+g.buffs={}
+
 
 --ライブラリ読み込み
 CHAT_SYSTEM("[AOS]loaded")
@@ -103,6 +90,7 @@ local function DBGOUT(msg)
     }
 
 end
+
 local function ERROUT(msg)
     EBI_try_catch{
         try = function()
@@ -114,6 +102,82 @@ local function ERROUT(msg)
     }
 
 end
+function AOS_DEFAULT_DIAMOND()
+    return {
+        --shows buff duration(priority use)
+        buffs={
+            --S100001 = {buff = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
+        
+            ["S4271"]={
+                name="Korup"
+            },
+            ["S4318"]={
+                name="Aqkrova"
+            },
+            ["S4348"]={
+                name="Liris"
+            },
+            ["S2156"]={
+                name="Mergaite"
+            },
+            ["S4287"]={
+                name="Goduma"
+            },
+            ["S4270"]={
+                name="Rykuma"
+            },
+            ["S4350"]={
+                name="Proverbs"
+            },
+            ["S4289"]={
+                name="Smugis"
+            },
+            ["S2154"]={
+                name="Tiksline"
+            },
+            ["S4288"]={
+                name="Gymas"
+            },
+            ["S2158"]={
+                name="Gyvenimas"
+            },
+            ["S2157"]={
+                name="Kraujas"
+            },
+            ["S4285"]={
+                name="Apsauga"
+            },
+            ["S4286"]={
+                name="Bendrinti"
+            },
+            ["S2153"]={
+                name="Sumazinti"
+            },
+            nouse=true,
+        },
+        --shows skill cooldown(resessive use)
+        skills={
+            S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
+            S100002 = {skill = "Velcoffer_Tiksline", clsid = 100002, prefix = "Set_tiksline", needs = 5},
+            S100003 = {skill = "Velcoffer_Mergaite", clsid = 100003, prefix = "Set_mergaite", needs = 5},
+            S100004 = {skill = "Velcoffer_Kraujas", clsid = 100004, prefix = "Set_kraujas", needs = 5},
+            S100005 = {skill = "Velcoffer_Gyvenimas", clsid = 100005, prefix = "Set_gyvenimas", needs = 5},
+            S100010 = {skill = "Savinose_Rykuma", clsid = 100010, prefix = "Set_rykuma", needs = 5},
+            S100011 = {skill = "Savinose_Korup", clsid = 100011, prefix = "Set_korup", needs = 5},
+            S100012 = {skill = "Savinose_Apsauga", clsid = 100012, prefix = "Set_apsauga", needs = 5},
+            S100013 = {skill = "Savinose_Bendrinti", clsid = 100013, prefix = "Set_bendrinti", needs = 5},
+            S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_goduma", needs = 5},
+            S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_gymas", needs = 5},
+            S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_smugis", needs = 5},
+            S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_aqkrova", needs = 5},
+            S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atagal", needs = 5},
+            S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_liris", needs = 5},
+            S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_proverbs", needs = 5},
+            nouse=false,
+        },
+
+    }
+end
 function AOS_SAVE_SETTINGS()
     --CAMPCHEF_SAVETOSTRUCTURE()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
@@ -122,12 +186,15 @@ end
 
 function AOS_LOAD_SETTINGS()
     DBGOUT("LOAD_SETTING")
-    g.settings = {foods = {}}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
         DBGOUT(string.format('[%s] cannot load setting files', addonName))
-        g.settings = {x = 300, y = 300}
+        g.settings = {
+            x = 300, 
+            y = 300,
+            diamond=AOS_DEFAULT_DIAMOND()
+        }
     else
         --設定ファイル読み込み成功時処理
         g.settings = t
@@ -136,7 +203,7 @@ function AOS_LOAD_SETTINGS()
         
         end
     end
-    
+
     AOS_UPGRADE_SETTINGS()
     AOS_SAVE_SETTINGS()
 
@@ -145,6 +212,10 @@ end
 
 function AOS_UPGRADE_SETTINGS()
     local upgraded = false
+    if(g.settings.diamond==nil)then
+        g.settings.diamond=AOS_DEFAULT_DIAMOND()
+        upgraded=true
+    end
     return upgraded
 end
 -- if OLD_ON_AOS_OBJ_ENTER==nil then
@@ -199,8 +270,8 @@ function AOS_ON_FPS_UPDATE()
 end
 function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
 
+    
     local fhp=false
-
     local fsp=false
     --アーケインエナジーを探す
     local stat = info.GetStat(session.GetMyHandle());
@@ -231,7 +302,24 @@ function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
         if(buff.buffID==clsid_fanaticism)then
             g.fanatic=true
         end
-        
+        if(not g.settings.diamond.buffs.nouse and g.settings.diamond.buffs["S"..tostring(buff.buffID)])then
+            if(msg=="BUFF_ADD")then
+
+                if(argNum==buff.buffID and not g.buffs[buff.buffID])then
+                    g.buffs[buff.buffID]={
+                        maxtime=buff.time,
+                    }
+                    DBGOUT("BUFFADD"..tostring(buff.buffID))
+                end
+            
+            elseif(argNum==buff.buffID and msg=="BUFF_REMOVE")then
+                if(g.buffs[buff.buffID])then
+                    g.buffs[buff.buffID]=nil
+                    DBGOUT("BUFFREMOVE"..tostring(buff.buffID))
+                end
+            end
+            
+        end
     end
     if(not fhp)then
         g.fixhp=nil
@@ -290,6 +378,7 @@ function AOS_INIT()
             g.durmax = 0
             g.tick=0
             g.fanatic=nil
+            g.bufflist={}
             AOS_RENDER()
         end,
         catch = function(error)
@@ -353,14 +442,6 @@ function AOS_ON_TIMER(frame)
                 local durmin, durmax = AOS_CALC_CURDUR()
                 g.durmin = durmin
                 g.durmax = durmax
-                g.spskill=nil
-                for _,v in pairs(triggerlist) do
-                    local skillInfo = session.GetSkill(v.clsid);
-                    if(skillInfo)then
-                        g.spskill=v.clsid
-                        break
-                    end
-                end
                 
 
                 g.tick = 100
@@ -699,21 +780,34 @@ function AOS_DRAW_STAMINABAR(frame,pic)
     
 end
 function AOS_DRAW_SPECIALSKILLBAR(frame,pic)
-    if(g.spskill==nil)then
-        return
-    end
-    local skl=session.GetSkill(g.spskill);
-    if(skl==nil)then
-        return
-    end
-    local skillpercent= skl:GetCurrentCoolDownTime()*100/skl:GetTotalCoolDownTime()
-    -- pic:DrawBrush(400, 41 - 5, 400, 41 + 5, "spray_dia", "AA000000")
-    -- pic:DrawBrush(400 - 5, 41, 400 + 5, 41, "spray_dia", "AA000000")
+    local curtime,maxtime=AOS_GET_DIAMOND_VALUE()
+   
     local ox=500
     local oy=41
     local off=25
     local color="FF00FFFFFF"
     local spray="spray_2"
+    if(g.settings.diamond.shownumber)then
+        local gbox=frame:CreateOrGetControl("groupbox","gboxsklnumber",ox-off,oy-off,off*2,off*2)
+        AUTO_CAST(gbox)
+        gbox:EnableHitTest(0)
+        local txt=gbox:CreateOrGetControl("richtext","txtsklnumber",0,0,0,0)
+        AUTO_CAST(txt)
+        txt:SetGravity(ui.CENTER_HORZ,ui.CENTER_VERT)
+        local touch = frame:GetChild("touchbar")
+        if(curtime==nil)then
+            touch:SetColorTone("FFFFFFFF")
+            txt:SetText("")
+        else
+            touch:SetColorTone("44FFFFFF")
+            txt:SetText("{@st43}{ol}{b}{s24}{#FFFFFF}"..AOS_TO_TIME_STRING(curtime))
+        end
+        txt:EnableHitTest(0)
+    end
+    if(curtime==nil)then
+        return
+    end
+    local skillpercent= curtime*100/maxtime
     if(skillpercent>=75)then
         local r=(skillpercent-75)/25.0
         DrawPolyLine(pic,{
@@ -753,6 +847,52 @@ function AOS_DRAW_SPECIALSKILLBAR(frame,pic)
             color
         )
     end
+end
+function AOS_GET_DIAMOND_VALUE()
+    --find buff
+    if(not g.settings.diamond.buffs.nouse)then
+        local handle = session.GetMyHandle();
+        local buffcount = info.GetBuffCount(handle);
+        
+        for i = 0, buffcount - 1 do
+            local buff = info.GetBuffIndexed(handle, i);
+            local recbuf=g.buffs[buff.buffID]
+            if(recbuf)then
+                --バフ時間を返す
+                return buff.time,recbuf.maxtime
+            end
+        end
+    end
+    if( not g.settings.diamond.skills.nouse)then
+        --find skill
+        for k,v in pairs(g.settings.diamond.skills) do
+    
+            if(k~="nouse" and v)then
+                local skillInfo = session.GetSkill(tonumber(k:sub(2)));
+                if(skillInfo)then
+                    if(skillInfo:GetCurrentCoolDownTime()>0)then
+                        return skillInfo:GetCurrentCoolDownTime(),skillInfo:GetTotalCoolDownTime()
+                    end
+                end
+            end
+        
+            
+        end
+    end
+    return nil,nil
+end
+function AOS_TO_TIME_STRING(millisec)
+    local sec=(millisec/1000)
+    if(sec <= 60)then
+        return tostring(math.ceil(sec))
+    end
+    if(sec <= 60*60)then
+        return tostring(math.ceil(sec/60)).."m"
+    end
+    if(sec <= 60*60*24)then
+        return tostring(math.ceil(sec/(60*60))).."h"
+    end
+    return tostring(math.ceil(sec/(60*60*24))).."d"
 end
 function AOS_LBTNDOWN(parent, ctrl)
     local frame = parent:GetTopParentFrame();
