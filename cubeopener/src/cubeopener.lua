@@ -159,7 +159,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                 
                 local stat = info.GetStat(session.GetMyHandle());		
                 if stat.HP <= 0 then
-                    return false;
+                    return true;
                 end
                 
                 local itemtype = invitem.type;
@@ -180,6 +180,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                             --再開封可能
                             g.openitem=invitem
                             INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'キューブいくつ開きますか？', 'CUBEOPENER_CUBEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
+                            return true
                         else
                             return false
                         end
@@ -190,7 +191,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
 
                         g.openitem=invitem
                         INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'イベントアイテムいくつ開きますか？', 'CUBEOPENER_EVENTOPEN',  invitem.count, 1, invitem.count, nil, nil, 1)
-                    
+                        return true
                     --use
                     else
                         g.openitem=nil
