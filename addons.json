@@ -286,6 +286,19 @@
       "inventory",
       "quickslot"
     ]
+  },
+  {
+    "name" : "Cube Opener",
+    "file" : "cubeopener",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "cubeopener-v0.0.1",
+    "unicode" : "📖",
+    "description" : "キューブを楽に開きます",
+    "tags" : [
+      "inventory",
+      "cube"
+    ]
   }
   
   
