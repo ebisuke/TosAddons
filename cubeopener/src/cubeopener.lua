@@ -110,7 +110,7 @@ function CUBEOPENER_REQUEST_TRADE_ITEM(frame, ctrl, argStr, argNum)
 		local argStr = string.format("%s#%d", itemGuid, selected);
 		
         for i=1,g.total do
-    	    ReserveScript(string.format("pc.ReqExecuteTx('SCR_TX_TRADE_SELECT_ITEM','%s' );",argStr),0.3*i)
+    	    ReserveScript(string.format("pc.ReqExecuteTx('SCR_TX_TRADE_SELECT_ITEM','%s' );",argStr),0.5*i)
     	end
 	end
 
@@ -219,7 +219,7 @@ function CUBEOPENER_CUBEOPEN(frame, cnt)
     local delay=0.01
     for i=1,cnt do
 
-        delay=delay+0.35
+        delay=delay+0.5
    
         ReserveScript(string.format("CUBEOPENER_INVICONUSE('%s');",g.openitem:GetIESID()),delay)
         
