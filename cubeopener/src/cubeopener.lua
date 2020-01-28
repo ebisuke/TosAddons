@@ -19,6 +19,7 @@ g.debug = false
 g.framename="cubeopener"
 g.total=nil
 g.openitem=nil
+
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -63,6 +64,8 @@ function CUBEOPENER_ON_INIT(addon, frame)
             acutil.setupHook(CUBEOPENER_INVENTORY_RBDC_ITEMUSE_JUMPER, "INVENTORY_RBDC_ITEMUSE")
             acutil.setupHook(CUBEOPENER_OPEN_TRADE_SELECT_ITEM_JUMPER, "OPEN_TRADE_SELECT_ITEM")
             acutil.setupHook(CUBEOPENER_REQUEST_TRADE_ITEM_JUMPER, "REQUEST_TRADE_ITEM")
+            acutil.setupHook(CUBEOPENER_CANCEL_TRADE_ITEM_JUMPER, "CANCEL_TRADE_ITEM")
+    
             frame:ShowWindow(1)
         end,
         catch = function(error)
@@ -80,6 +83,14 @@ function CUBEOPENER_REQUEST_TRADE_ITEM_JUMPER(frame, ctrl, argStr, argNum)
     else
         CUBEOPENER_REQUEST_TRADE_ITEM(frame, ctrl, argStr, argNum)
     end
+end
+function CUBEOPENER_CANCEL_TRADE_ITEM_JUMPER(frame, ctrl, argStr, argNum)
+    CANCEL_TRADE_ITEM_OLD(frame, ctrl, argStr, argNum)
+    CUBEOPENER_CANCEL_TRADE_ITEM(frame, ctrl, argStr, argNum)
+end
+function CUBEOPENER_CANCEL_TRADE_ITEM(frame, ctrl, argStr, argNum)
+    g.total=nil
+    g.openitem=nil
 end
 function CUBEOPENER_REQUEST_TRADE_ITEM(frame, ctrl, argStr, argNum)
     local box = frame:GetChild('box');
@@ -111,7 +122,9 @@ function CUBEOPENER_REQUEST_TRADE_ITEM(frame, ctrl, argStr, argNum)
 		
         for i=1,g.total do
     	    ReserveScript(string.format("pc.ReqExecuteTx('SCR_TX_TRADE_SELECT_ITEM','%s' );",argStr),0.5*i)
-    	end
+        end
+        g.total=nil
+        g.openitem=nil
 	end
 
 	frame = frame:GetTopParentFrame();
@@ -178,7 +191,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                         if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
                             --再開封可能
-                            g.openitem=invitem
+                            g.openitemresv=invitem
                             INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'キューブいくつ開きますか？', 'CUBEOPENER_CUBEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
                             return true
                         else
@@ -211,7 +224,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
     }
 end
 function CUBEOPENER_EVENTOPEN(frame, cnt)
-   
+
     g.total=cnt
     INV_ICON_USE(g.openitem)
 end
