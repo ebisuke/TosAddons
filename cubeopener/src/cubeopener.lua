@@ -159,7 +159,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                 
                 local stat = info.GetStat(session.GetMyHandle());		
                 if stat.HP <= 0 then
-                    return true;
+                    return false;
                 end
                 
                 local itemtype = invitem.type;
@@ -201,7 +201,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                 
                 
                 
-                return true;
+                return false;
          
         end,
         catch = function(error)
