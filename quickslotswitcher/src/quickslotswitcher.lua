@@ -109,6 +109,7 @@ end
 function QSS_SET_CURRENTQUICKSLOT(qs)
     DBGOUT(tostring(g.personalsettings.currentno))
     g.personalsettings.quickslots[g.personalsettings.currentno]=qs
+    g.personalsettings.quickslotcount=quickslot.GetActiveSlotCnt()
     QSS_SAVE_SETTINGS()
 end
 function QSS_SHOW()
@@ -176,6 +177,7 @@ end
 function QSS_LOAD_CURRENTQUICKSLOT()
     EBI_try_catch{
         try = function()
+            quickslot.SetActiveSlotCnt(g.personalsettings.quickslotcount or 40);
             local curCnt = quickslot.GetActiveSlotCnt();		
             if curCnt < 20 or curCnt > 40 then
                 curCnt = 20;
@@ -270,6 +272,7 @@ function QSS_LOAD_SETTINGS()
         g.personalsettings = {
             currentno=1,
             maxno=4,
+            quickslotcount=40,
             quickslots={
                 [1]={},
                 [2]={},

@@ -159,57 +159,60 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                 if nil == invitem then
                     return;
                 end
-                
-                if true == invitem.isLockState then
-                    ui.SysMsg(ClMsg("MaterialItemIsLock"));
-                    return true;
-                end
-            
-                --ここでイベントキューブを開く
-                --if true == RUN_CLIENT_SCP(invitem) then
-                --    return true;
-                --end
-                
-                local stat = info.GetStat(session.GetMyHandle());		
-                if stat.HP <= 0 then
-                    return true;
-                end
-                
-                local itemtype = invitem.type;
-                local curTime = item.GetCoolDown(itemtype);
-                if curTime ~= 0 then
-                    imcSound.PlaySoundEvent("skill_cooltime");
-                    return true;
-                end
-
+               
                 --それはキューブ？
                 local groupName = itemobj.GroupName;
                 DBGOUT(groupName)
-                if(groupName=="Cube")then
-                    local rerollPrice =TryGet(itemobj, "NumberArg1")
-                    if(rerollPrice==0 or not rerollPrice)then
+                if(groupName=="Cube" or groupName=="Event" )then
+                        
+                    if true == invitem.isLockState then
+                        ui.SysMsg(ClMsg("MaterialItemIsLock"));
+                        return true;
+                    end
+                
+                    --ここでイベントキューブを開く
+                    --if true == RUN_CLIENT_SCP(invitem) then
+                    --    return true;
+                    --end
+                    
+                    local stat = info.GetStat(session.GetMyHandle());		
+                    if stat.HP <= 0 then
+                        return true;
+                    end
+                    
+                    local itemtype = invitem.type;
+                    local curTime = item.GetCoolDown(itemtype);
+                    if curTime ~= 0 then
+                        imcSound.PlaySoundEvent("skill_cooltime");
+                        return true;
+                    end
+
+                    if(groupName=="Cube")then
+                        local rerollPrice =TryGet(itemobj, "NumberArg1")
+                        if(rerollPrice==0 or not rerollPrice)then
+                            if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
+
+                                --再開封可能
+                                g.openitemresv=invitem
+                                INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'キューブいくつ開きますか？', 'CUBEOPENER_CUBEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
+                                return true
+                            else
+                                return false
+                            end
+                        end
+                    elseif(groupName=="Event")then
+                        --再開封可能
                         if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
-                            --再開封可能
-                            g.openitemresv=invitem
-                            INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'キューブいくつ開きますか？', 'CUBEOPENER_CUBEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
+                            g.openitem=invitem
+                            INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'イベントアイテムいくつ開きますか？', 'CUBEOPENER_EVENTOPEN',  invitem.count, 1, invitem.count, nil, nil, 1)
                             return true
+                        --use
                         else
+                            g.openitem=nil
                             return false
-                        end
+                        end 
                     end
-                elseif(groupName=="Event")then
-                    --再開封可能
-                    if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
-
-                        g.openitem=invitem
-                        INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'イベントアイテムいくつ開きますか？', 'CUBEOPENER_EVENTOPEN',  invitem.count, 1, invitem.count, nil, nil, 1)
-                        return true
-                    --use
-                    else
-                        g.openitem=nil
-                        return false
-                    end 
                 end
                 
                 
