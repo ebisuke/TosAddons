@@ -14,7 +14,7 @@ local function startswith(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
 end
 local acutil = require('acutil')
-g = {}
+local g = {}
 g.debug = false
 g.framename="cubeopener"
 g.total=nil
