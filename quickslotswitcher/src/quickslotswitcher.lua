@@ -1,4 +1,4 @@
---cubeopener
+--quickslotswitcher
 local addonName = "quickslotswitcher"
 local addonNameLower = string.lower(addonName)
 --作者名
@@ -79,6 +79,8 @@ function QUICKSLOTSWITCHER_ON_INIT(addon, frame)
             addon:RegisterMsg('REGISTER_QUICK_SKILL', 'QSS_ON_UPDATE');
             addon:RegisterMsg('REGISTER_QUICK_ITEM', 'QSS_ON_UPDATE');
             frame:ShowWindow(1)
+            QSS_LOAD_SETTINGS()
+            QSS_INIT()
         end,
         catch = function(error)
             DBGOUT(error)
@@ -86,7 +88,7 @@ function QUICKSLOTSWITCHER_ON_INIT(addon, frame)
     }
 end
 function QSS_INIT()
-    QSS_CHANGENO( g.personalsettings.currentno,false)
+    
 end
 function QSS_CHANGENO(no,force)
  
@@ -95,6 +97,7 @@ function QSS_CHANGENO(no,force)
         g.personalsettings.currentno=no
     
         QSS_LOAD_CURRENTQUICKSLOT()
+        QSS_SAVE_SETTINGS()
     else
         g.personalsettings.currentno=no
     
@@ -132,6 +135,7 @@ end
 
 function QSS_ON_UPDATE()
     DebounceScript("QSS_SAVE_CURRENTQUICKSLOT",0.5,0)
+    DebounceScript("QSS_SAVE_SETTINGS",1,0)
 end
 function QSS_SAVE_CURRENTQUICKSLOT()
     EBI_try_catch{
@@ -256,6 +260,7 @@ function QSS_LOAD_SETTINGS()
         
         end
     end
+    local newdata=false
     g.personalsettings = {}
     g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,session.GetMySession():GetCID())
     local t, err = acutil.loadJSON(g.personalsettingsFileLoc, g.personalsettings)
@@ -273,6 +278,7 @@ function QSS_LOAD_SETTINGS()
             }
 
         }
+        newdata=true
     else
         --設定ファイル読み込み成功時処理
         g.personalsettings = t
@@ -283,7 +289,9 @@ function QSS_LOAD_SETTINGS()
     end
     QSS_UPGRADE_SETTINGS()
     QSS_SAVE_SETTINGS()
-
+    if newdata==false then
+        QSS_LOAD_CURRENTQUICKSLOT()
+    end
 end
 
 
