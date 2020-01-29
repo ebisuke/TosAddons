@@ -52,7 +52,7 @@ local g = g or {}
 
 g.location = g.location or nil
 g.debug = true
-g.finding = g.finding or nil
+g.finding = true
 function FINDPORTALSHOP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -115,7 +115,7 @@ function FINDPORTALSHOP_LISTING()
         try = function()
             if (g.finding) then
                 --比較的遠くまでのポータルショップを探す
-                local objList, objCount = SelectObject(GetMyPCObject(), 100000, 'ALL', 1)
+                local objList, objCount = SelectObject(GetMyPCObject(), 400, 'ALL', 1)
                 local portals = {}
                 portals = {name = "", title = "", pchandle = 0, mapname = nil, position = nil}
                 portals = {}
@@ -125,6 +125,7 @@ function FINDPORTALSHOP_LISTING()
                     local hnd = GetHandle(itm);
                     if (hnd) then
                         local tgt = info.GetTargetInfo(hnd);
+                        local actor=world.GetActor(hnd)
                         if (itm.ClassName == "PC") and (tgt.IsDummyPC == 1) then
                             --ダミーPC
                             --グループ名取得
@@ -134,10 +135,17 @@ function FINDPORTALSHOP_LISTING()
                             if (groupname ~= nil) then
                                 --ショップの情報を仕入れる
                                 --ポタ屋
+                                session.SetMyPageOwnerHandle(hnd)
+                                local sellBalloon = ui.GetFrame("SELL_BALLOON_" .. actor:GetHandleVal());
+                                if sellBalloon ~= nil then
+                                    local sellType = sellBalloon:GetUserIValue("SELL_TYPE");
+                                    session.autoSeller.RequestOpenShop(actor:GetHandleVal(), sellType);
+                                end
+                                local groupInfo = session.autoSeller.GetByIndex("Portal", 0);
                                 DBGOUT(tostring(session.autoSeller.GetCount("Portal")))
                                 for j = 0, session.autoSeller.GetCount("Portal") - 1 do
                                     DBGOUT(tostring(j))
-                                    local titleName = session.autoSeller.GetTitle(groupname);
+                                    local titleName = session.autoSeller.GetTitle("Portal");
                                     local itemInfo = session.autoSeller.GetByIndex("Portal", j);
                                     local propValue = itemInfo:GetArgStr();
                                     local portalInfoList = StringSplit(propValue, "@"); -- portalPos@openedTime
@@ -149,10 +157,10 @@ function FINDPORTALSHOP_LISTING()
                                     local mapCls = GetClass('Map', mapName);
                                     --絞り込み開始
                                     DBGOUT(string.format("%s %s %s", groupname, titleName, mapName))
-                                    if (g.finding:match(mapName)) then
-                                        DBGOUT("MATCH")
-                                        session.minimap.AddIconInfo("GuildIndun", "trasuremapmark", MakeVec3(x, y, z), titleName, true, "None", 0.75);
-                                    end
+                                    -- if (g.finding:match(mapName)) then
+                                    --     DBGOUT("MATCH")
+                                    --     session.minimap.AddIconInfo("GuildIndun", "trasuremapmark", MakeVec3(x, y, z), titleName, true, "None", 0.75);
+                                    -- end
                                 end
                             
                             end
