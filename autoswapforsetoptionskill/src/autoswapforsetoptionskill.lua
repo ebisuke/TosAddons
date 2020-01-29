@@ -51,22 +51,22 @@ local function ERROUT(msg)
 end
 
 local triggerlist = {
-    S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
-    S100002 = {skill = "Velcoffer_Tiksline", clsid = 100002, prefix = "Set_tiksline", needs = 5},
-    S100003 = {skill = "Velcoffer_Mergaite", clsid = 100003, prefix = "Set_mergaite", needs = 5},
-    S100004 = {skill = "Velcoffer_Kraujas", clsid = 100004, prefix = "Set_kraujas", needs = 5},
-    S100005 = {skill = "Velcoffer_Gyvenimas", clsid = 100005, prefix = "Set_gyvenimas", needs = 5},
+    S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_Sumazin", needs = 5},
+    S100002 = {skill = "Velcoffer_Tiksline", clsid = 100002, prefix = "Set_Tiksline", needs = 5},
+    S100003 = {skill = "Velcoffer_Mergaite", clsid = 100003, prefix = "Set_Mergaite", needs = 5},
+    S100004 = {skill = "Velcoffer_Kraujas", clsid = 100004, prefix = "Set_Kraujas", needs = 5},
+    S100005 = {skill = "Velcoffer_Gyvenimas", clsid = 100005, prefix = "Set_Gyvenimas", needs = 5},
     S100010 = {skill = "Savinose_Rykuma", clsid = 100010, prefix = "Set_rykuma", needs = 5},
     S100011 = {skill = "Savinose_Korup", clsid = 100011, prefix = "Set_korup", needs = 5},
-    S100012 = {skill = "Savinose_Apsauga", clsid = 100012, prefix = "Set_apsauga", needs = 5},
-    S100013 = {skill = "Savinose_Bendrinti", clsid = 100013, prefix = "Set_bendrinti", needs = 5},
-    S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_goduma", needs = 5},
-    S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_gymas", needs = 5},
-    S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_smugis", needs = 5},
-    S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_aqkrova", needs = 5},
-    S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atagal", needs = 5},
-    S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_liris", needs = 5},
-    S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_proverbs", needs = 5},
+    S100012 = {skill = "Savinose_Apsauga", clsid = 100012, prefix = "Set_Apsauga", needs = 5},
+    S100013 = {skill = "Savinose_Bendrinti", clsid = 100013, prefix = "Set_Bendrinti", needs = 5},
+    S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_Goduma", needs = 5},
+    S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_Gymas", needs = 5},
+    S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_Smugis", needs = 5},
+    S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_apkrova", needs = 5},
+    S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atgal", needs = 5},
+    S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_Liris", needs = 5},
+    S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_Proverbs", needs = 5},
 
 }
 
