@@ -1109,7 +1109,7 @@ function AOI_ON_TIMER()
                     else
                         
                         g.lifticon = false
-                        g.liftslot:EnableDrag(0)
+                        --g.liftslot:EnableDrag(1)
                         g.liftdelay = nil
                         ui.GetFrame("anotheroneofinventory"):SetName(g.framename)
                         g.invenframe = ui.GetFrame("inventory")
@@ -1247,6 +1247,7 @@ function AOI_CHECK_FRAME()
         "hiddenability_make",
         "legendprefix",
         "itemdungeon",
+        "guildgrowth",
     }
     for _, v in ipairs(frames) do
         if ui.IsFrameVisible(v) == 1 then

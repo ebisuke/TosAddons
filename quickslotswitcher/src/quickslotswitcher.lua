@@ -74,6 +74,8 @@ function QUICKSLOTSWITCHER_ON_INIT(addon, frame)
             local timer = GET_CHILD(ui.GetFrame("quickslotswitcher"), "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("QSS_ON_TIMER")
             timer:Start(0.01)
+            acutil.setupHook(QSS_QUICKSLOT_REFRESH,"QUICKSLOT_REFRESH")
+
             addon:RegisterMsg('FPS_UPDATE', 'QSS_SHOW');
             addon:RegisterMsg('QUICKSLOT_LIST_GET', 'QSS_ON_UPDATE');
             addon:RegisterMsg('REGISTER_QUICK_SKILL', 'QSS_ON_UPDATE');
@@ -88,10 +90,10 @@ function QUICKSLOTSWITCHER_ON_INIT(addon, frame)
     }
 end
 function QSS_INIT()
-    
+    QSS_CHANGENO(g.personalsettings.currentno)
 end
 function QSS_CHANGENO(no,force)
- 
+    DBGOUT("NO:"..tostring(no))
     if(force)then
         QSS_SAVE_CURRENTQUICKSLOT()
         g.personalsettings.currentno=no
@@ -100,17 +102,18 @@ function QSS_CHANGENO(no,force)
         QSS_SAVE_SETTINGS()
     else
         g.personalsettings.currentno=no
-    
+        QSS_LOAD_CURRENTQUICKSLOT()
     end
 end
 function QSS_GET_CURRENTQUICKSLOT()
+    DBGOUT(tostring(g.personalsettings.currentno))
     return g.personalsettings.quickslots[g.personalsettings.currentno]
 end
 function QSS_SET_CURRENTQUICKSLOT(qs)
     DBGOUT(tostring(g.personalsettings.currentno))
     g.personalsettings.quickslots[g.personalsettings.currentno]=qs
     g.personalsettings.quickslotcount=quickslot.GetActiveSlotCnt()
-    QSS_SAVE_SETTINGS()
+
 end
 function QSS_SHOW()
     ui.GetFrame(g.framename):ShowWindow(1)
@@ -138,17 +141,16 @@ function QSS_ON_UPDATE()
     DebounceScript("QSS_SAVE_CURRENTQUICKSLOT",0.5,0)
     DebounceScript("QSS_SAVE_SETTINGS",1,0)
 end
+function QSS_QUICKSLOT_REFRESH(curCnt)
+    QUICKSLOT_REFRESH_OLD(curCnt)
+    quickslot.SetActiveSlotCnt(curCnt);
+    --QSS_SAVE_CURRENTQUICKSLOT()
+end
 function QSS_SAVE_CURRENTQUICKSLOT()
     EBI_try_catch{
         try = function()
             local curCnt = quickslot.GetActiveSlotCnt();		
-            if curCnt < 20 or curCnt > 40 then
-                curCnt = 20;
-            end
-        
-            if curCnt % 10 ~= 0 then
-                curCnt = 20;
-            end
+
             --KEYBOARD
             local frame = ui.GetFrame('quickslotnexpbar');
             local sklCnt = frame:GetUserIValue('SKL_MAX_CNT');
@@ -177,15 +179,9 @@ end
 function QSS_LOAD_CURRENTQUICKSLOT()
     EBI_try_catch{
         try = function()
-            quickslot.SetActiveSlotCnt(g.personalsettings.quickslotcount or 40);
-            local curCnt = quickslot.GetActiveSlotCnt();		
-            if curCnt < 20 or curCnt > 40 then
-                curCnt = 20;
-            end
-        
-            if curCnt % 10 ~= 0 then
-                curCnt = 20;
-            end
+
+
+          
             --KEYBOARD
             local frame = ui.GetFrame('quickslotnexpbar');
             local sklCnt = frame:GetUserIValue('SKL_MAX_CNT');
@@ -216,6 +212,10 @@ function QSS_LOAD_CURRENTQUICKSLOT()
                     end
                 end
             end
+            local curCnt = g.personalsettings.quickslotcount or 40
+            quickslot.SetActiveSlotCnt(curCnt);
+            QUICKSLOT_REFRESH(curCnt);
+
             DBGOUT("LOADED")
             quickslot.RequestSave();
             
@@ -291,10 +291,11 @@ function QSS_LOAD_SETTINGS()
         end
     end
     QSS_UPGRADE_SETTINGS()
-    QSS_SAVE_SETTINGS()
     if newdata==false then
         QSS_LOAD_CURRENTQUICKSLOT()
     end
+    QSS_SAVE_SETTINGS()
+    
 end
 
 
