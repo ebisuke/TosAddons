@@ -193,7 +193,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                             if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
                                 --再開封可能
-                                g.openitemresv=invitem
+                                g.openitem=invitem
                                 INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'キューブいくつ開きますか？', 'CUBEOPENER_CUBEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
                                 return true
                             else
