@@ -39,7 +39,6 @@ end
 local function startswith(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
 end
-
 g.debug = true
 g.settings = g.settings or {}
 g.waitforswapskill = nil
@@ -48,9 +47,12 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.restore = nil
 g.wait = false
-
+g.personalsettings = g.personalsettings or {
+    combos = {}
+}
+g.currentdata=g.currentdata or nil 
 -----------------------------------------------------------------------------------------------
-local itemdefine = {
+g.itemdefine = {
     {Name = "weapon_unused", Type = nil, Text = "{ol}{s16}No use"},
     {Name = "weapon_OHS", Type = "OneHandSword", Text = "{img weapon_OHS 20 20}"},
     {Name = "weapon_Tsword", Type = "TwoHandSword", Text = "{img weapon_Tsword 20 20}"},
@@ -68,39 +70,39 @@ local itemdefine = {
     {Name = "weapon_Tmace", Type = "TwoHandMace", Text = "{img weapon_Tmace 20 20}"}
 }
 
-local special = {
+g.special = {
     [1000001] = {text = "purple1", category = "Special", icon = "ews_purple_1", clsid = 1000001},
     [2000001] = {text = "yellow1", category = "Special", icon = "ews_yellow_1", clsid = 2000001},
     [3000001] = {text = "red1", category = "Special", icon = "ews_red_1", clsid = 3000001},
     [4000001] = {text = "blue1", category = "Special", icon = "ews_blue_1", clsid = 4000001},
     [5000001] = {text = "green1", category = "Special", icon = "ews_green_1", clsid = 5000001},
 }
-local iconcategorylist = {"Skill", "Item", "Ability", "Special"}
-local chain = {
+g.iconcategorylist = {"Skill", "Item", "Ability", "Special"}
+g.chain = {
         
         --templateには暗黙的にname,viewnameがつきます
         trigger = {
             -- any percel(skill)
-            any = {text = "Any", icon = nil, fnconfig = EWS_GENERATECONFIGVIEW_SKILL, template = {}, fntostring = function(data) return "Any:" + data.category + ":" + data.clsid end,
+            any = {text = "Any", icon = nil, fnconfig = EWSC_GENERATECONFIGVIEW_SKILL,fnsaveconfig = EWS_SAVECONFIG_SKILL, template = {}, fntostring = function(data) return "Any:" + data.category + ":" + data.clsid end,
                 category = "",
             },
             
             -- Specified percel(skill)
-            skill = {text = "Specified Skill", icon = nil, fnconfig = EWS_GENERATECONFIGVIEW_SPECIFIEDSKILL, fntostring = function(data) return "SpecialSkill:" + tostring(data.clsid) end, template = {
+            skill = {text = "Specified Skill", icon = nil, fnconfig = EWSC_GENERATECONFIGVIEW_SPECIFIEDSKILL,fnsaveconfig = EWS_SAVECONFIG_SPECIFIEDSKILL, fntostring = function(data) return "SpecialSkill:" + tostring(data.clsid) end, template = {
                 clsid = {},
             }
             },
             -- Specified percel(skill)
-            special = {text = "Special Icon", icon = nil, fnconfig = EWS_GENERATECONFIGVIEW_SPECIAL, fntostring = function(data) return "Skill:" + tostring(data.clsid) end, template = {
+            special = {text = "Special Icon", icon = nil, fnconfig = EWSC_GENERATECONFIGVIEW_SPECIAL, fntostring = function(data) return "Skill:" + tostring(data.clsid) end, template = {
                 clsid = {},
             }
             },
             -- keyboard percel(key)
-            keyboard = {text = "Keyboard", icon = nil, fnconfig = EWS_GENERATECONFIGVIEW_KEYBOARD, fntostring = function(data) return "Keyboard:" + tostring(data.key) end, template = {
+            keyboard = {text = "Keyboard", icon = nil, fnconfig = EWSC_GENERATECONFIGVIEW_KEYBOARD, fntostring = function(data) return "Keyboard:" + tostring(data.key) end, template = {
                 key = ""
             }},
             -- joystick percel(key)
-            joystick = {text = "Joystick", icon = nil, fnconfig = EWS_GENERATECONFIGVIEW_JOYSTICK, fntostring = function(data) return "Joystick:" + tostring(data.key) end, template = {
+            joystick = {text = "Joystick", icon = nil, fnconfig = EWSC_GENERATECONFIGVIEW_JOYSTICK, fntostring = function(data) return "Joystick:" + tostring(data.key) end, template = {
                 key = ""
             }},
         
@@ -109,13 +111,13 @@ local chain = {
             always = {text = "Always True", icon = nil, fncondition = function() return true end, fnconfig = nil, template = {
                 
                 }},
-            exactweapontype = {text = "Skill's weapontype is...", icon = nil, fncondition = EWS_CONDITION_EXACTWEAPONTYPE, fnconfig = EWS_GENERATECONFIGVIEW_WEAPONTYPE, template = {
+            exactweapontype = {text = "Skill's weapontype is...", icon = nil, fncondition = EWS_CONDITION_EXACTWEAPONTYPE, fnconfig = EWSC_GENERATECONFIGVIEW_WEAPONTYPE, template = {
                 weapontype = ""
             }},
-            canuseweapontype = {text = "Skill can use ...", icon = nil, fncondition = EWS_CONDITION_CANUSEWEAPONTYPE, fnconfig = EWS_GENERATECONFIGVIEW_WEAPONTYPE, template = {
+            canuseweapontype = {text = "Skill can use ...", icon = nil, fncondition = EWS_CONDITION_CANUSEWEAPONTYPE, fnconfig = EWSC_GENERATECONFIGVIEW_WEAPONTYPE, template = {
                 weapontype = ""
             }},
-            lua = {text = "Lua", icon = nil, fncondition = EWS_CONDITION_LUA, fnconfig = EWS_GENERATECONFIGVIEW_LUA, template = {
+            lua = {text = "Lua", icon = nil, fncondition = EWS_CONDITION_LUA, fnconfig = EWSC_GENERATECONFIGVIEW_LUA, template = {
                 code = ""
             }},
         
@@ -123,45 +125,45 @@ local chain = {
         action = {
             nop = {text = "No op", icon = nil, fnaction = function() return true end, fnconfig = nil, color = "FFFFFF", template = {
                 }},
-            doperformedskill = {text = "Do performed skill", icon = nil, fnaction = EWS_ACTION_DOPERFORMEDSKILL, fnconfig = nil, color = "FFFFFF", template = {
+            doattemptedskill = {text = "Do attempted skill", icon = nil, fnaction = EWS_ACTION_DOATTEMPTEDSKILL, fnconfig = nil, color = "FFFFFF", template = {
                 heuristicswap = false,
                 clsid = 0
             }},
-            doskill = {text = "Do skill", icon = nil, fnaction = EWS_ACTION_DOSKILL, fnconfig = EWS_GENERATECONFIGVIEW_DOSKILL, color = "FFFFFF", template = {
+            doskill = {text = "Do skill", icon = nil, fnaction = EWS_ACTION_DOSKILL, fnconfig = EWSC_GENERATECONFIGVIEW_DOSKILL, color = "FFFFFF", template = {
                 heuristicswap = false,
                 clsid = 0
             }},
-            say = {text = "Say", icon = nil, fnaction = EWS_ACTION_SAY, fnconfig = EWS_GENERATECONFIGVIEW_SAY, color = "FFFFFF", template = {
+            say = {text = "Say", icon = nil, fnaction = EWS_ACTION_SAY, fnconfig = EWSC_GENERATECONFIGVIEW_SAY, color = "FFFFFF", template = {
                 text = ""
             }},
-            use = {text = "Use Item", icon = nil, fnaction = EWS_ACTION_USE, fnconfig = EWS_GENERATECONFIGVIEW_USE, color = "FFFFFF", template = {
+            use = {text = "Use Item", icon = nil, fnaction = EWS_ACTION_USE, fnconfig = EWSC_GENERATECONFIGVIEW_USE, color = "FFFFFF", template = {
                 clsid = {},
             }},
-            swap = {text = "Swap Weapon", icon = nil, fnaction = EWS_ACTION_SWAPWEAPON, fnconfig = EWS_GENERATECONFIGVIEW_SWAPWEAPON, color = "FFFFFF", template = {
+            swap = {text = "Swap Weapon", icon = nil, fnaction = EWS_ACTION_SWAPWEAPON, fnconfig = EWSC_GENERATECONFIGVIEW_SWAPWEAPON, color = "FFFFFF", template = {
                 text = ""
             }},
-            wait = {text = "Wait", icon = nil, fnaction = EWS_ACTION_WAIT, fnconfig = EWS_GENERATECONFIGVIEW_WAIT, color = "FFFFFF", template = {
+            wait = {text = "Wait", icon = nil, fnaction = EWS_ACTION_WAIT, fnconfig = EWSC_GENERATECONFIGVIEW_WAIT, color = "FFFFFF", template = {
                 
                 }},
-            lua = {text = "Lua", icon = nil, fnaction = EWS_ACTION_LUA, fnconfig = EWS_GENERATECONFIGVIEW_LUA, color = "FFFFFF", template = {
+            lua = {text = "Lua", icon = nil, fnaction = EWS_ACTION_LUA, fnconfig = EWSC_GENERATECONFIGVIEW_LUA, color = "FFFFFF", template = {
                 code = ""
             }},
         
         },
 }
-local function getchain(name) 
-    for k,v in pairs(chain.trigger)do
-        if k==name then
+function g.getchain(name)
+    for k, v in pairs(g.chain.trigger) do
+        if k == name then
             return v
         end
     end
-    for k,v in pairs(chain.condition)do
-        if k==name then
+    for k, v in pairs(g.chain.condition) do
+        if k == name then
             return v
         end
-    end    
-    for k,v in pairs(chain.action)do
-        if k==name then
+    end
+    for k, v in pairs(g.chain.action) do
+        if k == name then
             return v
         end
     end
@@ -348,101 +350,7 @@ function EWS_ON_TIMER()
         end
     }
 end
-function EWSC_INIT()
-    
-    EBI_try_catch{
-        try = function()
-            local frame = ui.GetFrame("enhancedweaponswapconfig")
-            frame:Resize(840, 700)
-            local gbox = frame:CreateOrGetControl("groupbox", "gbox", 50, 100, 730, 500)
-            AUTO_CAST(gbox)
-            gbox:EnableHittestGroupBox(true)
-            gbox:EnableHitTest(1)
-            gbox:EnableScrollBar(1)
-            gbox:SetSkinName("None")
 
-            local listtrigger = gbox:CreateOrGetControl("listbox", "triggers", 10, 40, 230, gbox:GetHeight() - 150)
-            AUTO_CAST(listtrigger)
-            local listcondition = gbox:CreateOrGetControl("listbox", "condition", 250, 40, 230, gbox:GetHeight() - 150)
-            AUTO_CAST(listcondition)
-            local listaction = gbox:CreateOrGetControl("listbox", "action", 490, 40, 230,  gbox:GetHeight() - 150)
-            AUTO_CAST(listaction)
-
-            gbox:EnableHittestGroupBox(true)
-            gbox:EnableHitTest(1)
-            gbox:EnableScrollBar(1)
-            gbox:SetSkinName("None")
-
-            local gconfig = frame:CreateOrGetControl("groupbox", "gconfig", 50, gbox:GetHeight() - 230+230, 730, 180)
-
-            AUTO_CAST(gconfig)
-            gconfig:EnableHittestGroupBox(true)
-            gconfig:EnableHitTest(1)
-            gconfig:EnableScrollBar(1)
-            gconfig:SetSkinName("bg2")
-            listtrigger:SetEventScript(ui.LBUTTONUP,"EWS_TRIGGER_ONSELECTED")
-
-            listcondition:SetEventScript(ui.LBUTTONUP,"EWS_CONDITION_ONSELECTED")
-            listaction:SetEventScript(ui.LBUTTONUP,"EWS_ACTION_ONSELECTED")
-            -- listtrigger:SetSkinName("bg2")
-            -- listtrigger:SetTextByKey("selectionimage","bar_selection")
-            -- listtrigger:SetTextByKey("cursoronimage","bar_cursoron")
-            -- listtrigger:SetClickSound("button_click")
-            -- listtrigger:SetTextByKey("showtitle","false")
-            -- listcondition:SetSkinName("bg2")
-            -- listcondition:SetTextByKey("selectionimage","bar_selection")
-            -- listcondition:SetTextByKey("cursoronimage","bar_cursoron")
-            -- listcondition:SetClickSound("button_click")
-            -- listcondition:SetTextByKey("showtitle","false")
-            -- listaction:SetSkinName("bg2")
-            -- listaction:SetTextByKey("selectionimage","bar_selection")
-            -- listaction:SetTextByKey("cursoronimage","bar_cursoron")
-            -- listaction:SetTextByKey("showtitle","false")
-            -- listaction:SetClickSound("button_click")
-
-            -- listtrigger:Invalidate()
-            -- listcondition:Invalidate()
-            -- listaction:Invalidate()
-            
-            local btnaddtrigger = gbox:CreateOrGetControl("button", "btnaddtrigger", 10, 0, 40, 40)
-            AUTO_CAST(btnaddtrigger)
-            btnaddtrigger:SetSkinName("test_pvp_btn")
-            btnaddtrigger:SetText("{s24}{ol}+")
-            btnaddtrigger:SetEventScript(ui.LBUTTONUP, "EWS_ONBUTTON_ADDTRIGGER")
-            btnaddtrigger:SetEventScriptArgNumber(ui.LBUTTONUP, 0);
-            local btndeltrigger = gbox:CreateOrGetControl("button", "btndeltrigger", 50, 0, 40, 40)
-            AUTO_CAST(btndeltrigger)
-            btndeltrigger:SetSkinName("test_pvp_btn")
-            btndeltrigger:SetText("{s24}{ol}-")
-            local btnaddcondition = gbox:CreateOrGetControl("button", "btnaddcondition", 260, 0, 40, 40)
-            AUTO_CAST(btnaddcondition)
-            btnaddcondition:SetSkinName("test_pvp_btn")
-            btnaddcondition:SetText("{s24}{ol}+")
-            btnaddcondition:SetEventScript(ui.LBUTTONUP, "EWS_ONBUTTON_ADDCONDITION")
-            btnaddcondition:SetEventScriptArgNumber(ui.LBUTTONUP, 0);
-            local btndelcondition = gbox:CreateOrGetControl("button", "btndelcondition", 300, 0, 40, 40)
-            AUTO_CAST(btndelcondition)
-            btndelcondition:SetSkinName("test_pvp_btn")
-            btndelcondition:SetText("{s24}{ol}-")
-            local btnaddaction = gbox:CreateOrGetControl("button", "btnaddaction", 500, 0, 40, 40)
-            AUTO_CAST(btnaddaction)
-            btnaddaction:SetSkinName("test_pvp_btn")
-            btnaddaction:SetText("{s24}{ol}+")
-            btnaddaction:SetEventScript(ui.LBUTTONUP, "EWS_ONBUTTON_ADDACTION")
-            btnaddaction:SetEventScriptArgNumber(ui.LBUTTONUP, 0);
-            local btndelaction = gbox:CreateOrGetControl("button", "btndelaction", 540, 0, 40, 40)
-            AUTO_CAST(btndelaction)
-            btndelaction:SetSkinName("test_pvp_btn")
-            btndelaction:SetText("{s24}{ol}-")
-            EWSC_INITTREE(frame, gbox, g.personalsettings.combos)
-        
-        --add button
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
 function EWS_ONBUTTON_ADDTRIGGER(frame, ctrl, argstr, argnum)
     EBI_try_catch{
         try = function()
@@ -483,29 +391,39 @@ function EWS_ONBUTTON_ADDACTION(frame, ctrl, argstr, argnum)
     context:Resize(300, context:GetHeight())
     ui.OpenContextMenu(context)
 end
-function EWS_TRIGGER_ONSELECTED(frame,ctrl)
-    AUTO_CAST(ctrl)
-    local idx=ctrl:GetSelItemIndex()
-    if(idx==-1) then
-        return
-    end
-    idx=idx+1
- 
-    EWS_INITCONFIG(g.personalsettings.combos[idx].trigger)
+function EWS_TRIGGER_ONSELECTED(frame, ctrl)
+    EBI_try_catch{
+        try = function()
+            AUTO_CAST(ctrl)
+            local idx = ctrl:GetSelItemIndex()
+            if (idx == -1) then
+                return
+            end
+            idx = idx + 1
+            DBGOUT("SELECTED")
+            EWS_INITCONFIG(g.personalsettings.combos[idx].trigger)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
 function EWS_INITCONFIG(data)
-    local frame=ui.GetFrame("enhancedweaponswapconfig")
-    local gconfig=frame:GetChild("gconfig")
+    local frame = ui.GetFrame("enhancedweaponswapconfig")
+    local gconfig = frame:GetChild("gconfig")
     AUTO_CAST(gconfig)
-    if( getchain(data.name).fnconfig~=nil)then
-        getchain(data.name).fnconfig(gconfig,data)
+    if (getchain(data.name).fnconfig ~= nil) then
+        gconfig:RemoveAllChild()
+        getchain(data.name).fnconfig(gconfig, data)
+        g.currentdata=data
     end
 end
 function EWS_ADDTRIGGER(txt)
     EBI_try_catch{
         try = function()
             print(txt)
-            g.personalsettings.combos[#g.personalsettings.combos + 1].trigger = deepcopy(chain.trigger[txt].template) or {}
+            g.personalsettings.combos[#g.personalsettings.combos + 1] = {}
+            g.personalsettings.combos[#g.personalsettings.combos].trigger = deepcopy(chain.trigger[txt].template) or {}
             g.personalsettings.combos[#g.personalsettings.combos].trigger.name = txt
             EWSC_INITTREE()
         end,
@@ -514,37 +432,7 @@ function EWS_ADDTRIGGER(txt)
         end
     }
 end
-function EWSC_INITTREE(frame, gbox, combos)
-    if frame == nil then
-        frame = ui.GetFrame("enhancedweaponswapconfig")
-    end
-    if gbox == nil then
-        gbox = frame:GetChild("gbox")
-    end
-    if combos == nil then
-        combos = g.personalsettings.combos or {}
-    end
-    local listtrigger = gbox:GetChild("triggers")
-    AUTO_CAST(listtrigger)
-    local listcondition = gbox:GetChild("condition")
-    AUTO_CAST(listcondition)
-    local listaction = gbox:GetChild("action")
-    AUTO_CAST(listaction)
-    listtrigger:ClearItemAll();
-    listaction:ClearItemAll();
-    listcondition:ClearItemAll();
 
-    
-    local w = listtrigger:GetWidth()
-    local padding = {0, 0, 0, 35}
-    
-    for k, v in ipairs(combos) do
-
- 
-        listtrigger:AddItem(getchain(v.name).text,k-1 );
-        DBGOUT(v.name)
-    end
-end
 function EWS_3SEC()
     EWS_HOOK()
 end
@@ -603,20 +491,7 @@ end
 function EWS_WAIT(mode)
     g.wait = mode
 end
-function EWS_CONFIG_SELECTEDITEM(parent, ctrl)
-    
-    EBI_try_catch{
-        try = function()
-            AUTO_CAST(ctrl)
-            g.settings.primary = itemdefine[ctrl:GetSelItemIndex() + 1].Name
-            DBGOUT("SELECTED")
-            EWS_SAVE_SETTINGS()
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
+
 function EWS_ICON_USE_JUMPER(object, reAction)
     if (not EWS_ICON_USE(object, reAction)) then
         ICON_USE_OLD(object, reAction)
@@ -747,9 +622,5 @@ function EWS_DYNAMIC_CASTINGBAR_ON_MSG(frame, msg, argStr, maxTime, isVisivle)
         g.casting = false;
     end
 
-
-end
-function EWS_GENERATECONFIGVIEW_SPECIFIEDSKILL(gconfig,data)
-    local slot=gconfig:CreateOrGetControl("slot","skillslot",20,20,60,60)
 
 end

@@ -1,14 +1,13 @@
--- EnhancedWeaponSwap
-local addonName = "EnhancedWeaponSwapView"
+-- EnhancedWeaponSwapView
+local addonName = "EnhancedWeaponSwap"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
-
---アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
 _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
+
 local acutil = require('acutil')
 
 local function EBI_try_catch(what)
@@ -25,8 +24,6 @@ end
 local function startswith(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
 end
-
-g.debug = false
 
 
 local function DBGOUT(msg)
