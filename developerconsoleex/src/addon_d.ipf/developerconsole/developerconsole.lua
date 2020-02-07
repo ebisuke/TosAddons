@@ -362,9 +362,9 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             local tbl2=string.match(input:GetCursurLeftText():lower(), "([%w_%s]-)$")
             local tbl=tbl1 or tbl2 or "_G"
             --validate
-            local f = lstr(tbl);
+            local f = lstr("return ("..tbl..")");
             local status, error = pcall(f);
-            if(not status)then
+            if(not status or type(error)=="function")then
                 tbl=_G
             else
                 tbl=error or _G
