@@ -362,7 +362,7 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             local tbl2=string.match(input:GetCursurLeftText():lower(), "([%w_%s]-)$")
             local tbl=tbl1 or tbl2 or "_G"
             --validate
-            local f = lstr("return "..tbl);
+            local f = lstr(tbl);
             local status, error = pcall(f);
             if(not status)then
                 tbl=_G
@@ -520,7 +520,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 end
 
                 AUTO_CAST(list)
-                if DEVELOPERCONSOLE_INTELLI then
+                if DEVELOPERCONSOLE_INTELLI and DEVELOPERCONSOLE_INTELLI_ITERATOR then
                     --イテレータを回す
                     local limit = 10000
                     
