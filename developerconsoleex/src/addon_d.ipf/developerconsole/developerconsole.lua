@@ -59,7 +59,7 @@ function DEVELOPERCONSOLE_ON_INIT(addon, frame)
         DEVELOPERCONSOLE_SETTINGSLOADED = true
     end
     DEVELOPERCONSOLE_LOG = {}
-    DEVELOPERCONSOLE_RESIZE()
+    DEVELOPERCONSOLE_INIT()
     CLEAR_CONSOLE();
 end
 function DEVELOPERCONSOLE_SAVE_SETTINGS()
@@ -88,6 +88,7 @@ function DEVELOPERCONSOLE_INIT()
             frame:EnableMove(1);
             frame:SetEventScript(ui.RESIZE, "DEVELOPERCONSOLE_ON_RESIZE")
             frame:SetEventScript(ui.RBUTTONDOWN, "DEVELOPERCONSOLE_DEBUG_RELOAD")
+            frame:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_SAVE_OFFSET")
             if DEVELOPERCONSOLE_SETTINGS.x ~= nil then
                 frame:SetOffset(DEVELOPERCONSOLE_SETTINGS.x, DEVELOPERCONSOLE_SETTINGS.y)
                 frame:Resize(DEVELOPERCONSOLE_SETTINGS.w, DEVELOPERCONSOLE_SETTINGS.h)
@@ -114,12 +115,13 @@ function DEVELOPERCONSOLE_INIT()
             DEVELOPERCONSOLE_RESIZE()
             local isf = ui.GetFrame("developerconsoleintellisense")
             isf:SetSkinName("bg")
-            isf:Resize(400, 300)
+            isf:Resize(600, 300)
             local list = isf:GetChild("triggers");
             AUTO_CAST(list)
             list:SetOffset(0, 0)
-            list:Resize(400, 300)
+            list:Resize(600, 300)
             list:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ON_DETERMINE_INTELLI")
+            list:SetFontName("white_16_ol")
         end,
         catch = function(error)
             ERROUT(error)
@@ -225,6 +227,7 @@ function DEVELOPERCONSOLE_SAVE_OFFSET()
 end
 function DEVELOPERCONSOLE_ON_RESIZE()
     DEVELOPERCONSOLE_RESIZE()
+    DEVELOPERCONSOLE_SAVE_OFFSET()
 end
 function DEVELOPERCONSOLE_CONTEXT()
     local frame = ui.GetFrame("developerconsole");
@@ -343,7 +346,7 @@ function DEVELOPERCONSOLE_PRINT_TEXT(text)
         DEVELOPERCONSOLE_ADDTEXT(text);
     end
 end
-function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower)
+function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower,noval)
     local frame = ui.GetFrame("developerconsole")
     local isf = ui.GetFrame("developerconsoleintellisense")
     local input = frame:GetChild("input");
@@ -353,13 +356,20 @@ function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower)
         tex=tex:lower()
 
     end
-    local tbl1 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']*)[%.%:%(%)][%w_%s]-$")
-    local tbl2= string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']*[%[%]\"%\'])[%w_%s]-$")
-    local tbl3 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']*)$")
-    local tbl = 
+    local tbl0 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)]$")
+    local tbl1 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)][%w_%s]-$")
+    local tbl2= string.match(tex, "([%w_%.%:%s]*[%[%]\"%\'])[%w_%s]-$")
+    local tbl3 = string.match(tex, "([%w_%.%:%s]*)$")
+    local tbl 
+    if(noval)then
+    tbl=tbl0 or tbl3 or tbl1 or tbl2 or "_G"
+    else
+    tbl=
     DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl3) or 
     DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl1) or 
     DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl2) or "_G"
+    end
+    
     return tbl
 end
 function DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(code)
@@ -451,7 +461,7 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
             AUTO_CAST(list)
             local sel = ""
             if (list:GetSelItemIndex() >= 0) then
-                sel = list:GetSelItemText()
+                sel = list:GetSelItemText():match("^(.*)  ")
             else
                 
                 return
@@ -467,7 +477,8 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
                     local r=input:GetCursurRightText()
                     input:SetText(s .. sel .. r)
                     input:Invalidate()
-                    local code=DEVELOPERCONSOLE_INTELLISENSE_PICK(true)
+                    local code=DEVELOPERCONSOLE_INTELLISENSE_PICK(true,true)
+        
                     local codeg = string.gsub(code, "\"", "\\\"")
                     local f = lstr("return (" .. codeg .. ")");
                     local status, error = pcall(f);
@@ -542,11 +553,11 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                     end
                 else
                     if 1 == keyboard.IsKeyPressed("UP") then
-                        
-                        elseif 1 == keyboard.IsKeyPressed("DOWN") then
-                        
-                        else
-                            DEVELOPERCONSOLE_KEYDOWNFLAG = false
+                    
+                    elseif 1 == keyboard.IsKeyPressed("DOWN") then
+                    
+                    else
+                        DEVELOPERCONSOLE_KEYDOWNFLAG = false
                     end
                 end
                 
@@ -641,8 +652,16 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                             break
                         end
                         if (DEVELOPERCONSOLE_INTELLI_STR == "" or k:lower():starts(DEVELOPERCONSOLE_INTELLI_STR)) then
-                            list:AddItem(tostring(k), DEVELOPERCONSOLE_INTELLI_COUNT)
-                            
+                            local f = lstr("return (" .. tostring(k) .. ")");
+                            local status, error = pcall(f);
+                            local tbl
+                            if (not status ) then
+                                tbl = nil
+                            else
+                                tbl = error
+                            end
+                            list:AddItem(tostring(k).."  {s14}{#999999}"..type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
+                        
                             DEVELOPERCONSOLE_INTELLI_COUNT = DEVELOPERCONSOLE_INTELLI_COUNT + 1
                             if (list:GetSelItemIndex() < 0) then
                                 list:SelectItem(0)
