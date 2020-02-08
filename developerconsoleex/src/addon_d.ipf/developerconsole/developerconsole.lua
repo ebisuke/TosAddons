@@ -4,11 +4,12 @@ local acutil = require("acutil");
 DEVELOPERCONSOLE_SETTINGSLOCATION = string.format('../addons/%s/settings.json', "developerconsole")
 DEVELOPERCONSOLE_TEMPTEXTLOCATION = string.format('../addons/%s/temptext.txt', "developerconsole")
 DEVELOPERCONSOLE_SETTINGS = DEVELOPERCONSOLE_SETTINGS or {}
-DEVELOPERCONSOLE_DEBUG = true
+DEVELOPERCONSOLE_DEBUG = false
 DEVELOPERCONSOLE_CURSOR = 0
 DEVELOPERCONSOLE_INTELLI = false
 DEVELOPERCONSOLE_INTELLI_COUNT = 0
 DEVELOPERCONSOLE_INTELLI_TABLE = nil
+DEVELOPERCONSOLE_INTELLI_PREFIX=""
 DEVELOPERCONSOLE_INTELLI_STR = ""
 DEVELOPERCONSOLE_INTELLI_ITERATOR = nil
 DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
@@ -49,7 +50,7 @@ local function pairs_sorted(tbl, fun)
     end
     table.sort(sortkey, fun)
     
-    return sortkey, ipairs(sortkey)
+    return ipairs(sortkey)
 end
 local function iter_filter(iter, fun)
     
@@ -168,6 +169,7 @@ function DEVELOPERCONSOLE_INIT()
             
             local execute = frame:GetChild("execute");
             execute:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ENTER_KEY")
+            execute:Invalidate()
             local btnopt = frame:CreateOrGetControl("button", "btnopt", 0, 0, 0, 0)
             btnopt:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_CONTEXT")
             btnopt:SetText("...")
@@ -432,12 +434,13 @@ function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower, noval)
         tex = tex:lower()
     
     end
-    local tbl0 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)]$")
+   
     local tbl1 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)][%w_%s]-$")
     local tbl2 = string.match(tex, "([%w_%.%:%s]*[%[%]\"%\'])[%w_%s]-$")
     local tbl3 = string.match(tex, "([%w_%.%:%s]*)$")
     local tbl
     if (noval) then
+        local tbl0 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)]$")
         tbl = tbl0 or tbl3 or tbl1 or tbl2 or "_G"
     else
         tbl =
@@ -499,7 +502,7 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             end
             local code
             if (code == nil) then
-                code = DEVELOPERCONSOLE_INTELLISENSE_PICK()
+                code = DEVELOPERCONSOLE_INTELLISENSE_PICK(true)
             end
             local frame = ui.GetFrame("developerconsole")
             local isf = ui.GetFrame("developerconsoleintellisense")
@@ -530,9 +533,12 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             else
                 tbl = _G
             end
-            
-            if (tbl) then
-                DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR, _, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = pairs_sorted(tbl)
+
+            if (tbl and code ~= "_") then
+
+                DEVELOPERCONSOLE_INTELLI_ITERATOR, DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = pairs_sorted(tbl)
+    
+                DEVELOPERCONSOLE_INTELLI_PREFIX=code
                 DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
                 DEVELOPERCONSOLE_INTELLI_COUNT = 0
                 DEVELOPERCONSOLE_INTELLI_SELECT = 0
@@ -774,9 +780,8 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 AUTO_CAST(list)
                 if DEVELOPERCONSOLE_INTELLI and DEVELOPERCONSOLE_INTELLI_ITERATOR then
                     --イテレータを回す
-                    local limit = 1000
-                    
-                    
+                    local limit = 10000
+
                     for i = 0, limit do
                         local k, v = DEVELOPERCONSOLE_INTELLI_ITERATOR(DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY)
                         DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = k
@@ -789,28 +794,18 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                             break
                         end
                         if (DEVELOPERCONSOLE_INTELLI_STR == "" or v.k:lower():starts(DEVELOPERCONSOLE_INTELLI_STR)) then
-                            local f = lstr("return (" .. tostring(v.k) .. ")");
+                            
+                            local f = lstr("return (" .. tostring(DEVELOPERCONSOLE_INTELLI_PREFIX or "").."."..tostring(v.k) .. ")");
                             local status, error = pcall(f);
-                            local tbl
-                            if (not status) then
-                                tbl = nil
+                            local tbl=error
+                            if(tbl~=nil) then
+                            list:AddItem(tostring(v.k) .. "  {s15}{ol}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
                             else
-                                tbl = error
+                                list:AddItem(tostring(v.k) .. "  {s15}{ol}{#FF9999} ??", DEVELOPERCONSOLE_INTELLI_COUNT)
                             end
-                            -- if (type(tbl) == "function") then
-                            --     local sig=DEVELOPERCONSOLE_GET_FN_SIGNATURE(tbl)
-                            --     if(sig)then
-                            --         list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. "function("..table.concat(sig,",")..")", DEVELOPERCONSOLE_INTELLI_COUNT)
-                            --     else
-                            --         list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
-                            --     end
-                            -- else
-                            --     list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
-                            -- end
-                            list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
                             DEVELOPERCONSOLE_INTELLI_COUNT = DEVELOPERCONSOLE_INTELLI_COUNT + 1
                             if (list:GetSelItemIndex() < 0) then
-                                list:SelectItem(0)
+                                --list:SelectItem(0)
                             end
                             if (DEVELOPERCONSOLE_INTELLI_COUNT > 100) then
                                 DEVELOPERCONSOLE_INTELLI = false
@@ -821,10 +816,6 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                         
                         end
                     end
-                    --list:ShowWindow(1)
-                    --list:Resize(list:GetTopParentFrame():GetWidth(), list:GetTopParentFrame():GetHeight())
-                    --list:Invalidate()
-
                 end
             end
         end,
