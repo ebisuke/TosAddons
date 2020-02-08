@@ -8,11 +8,11 @@ DEVELOPERCONSOLE_DEBUG = true
 DEVELOPERCONSOLE_CURSOR = 0
 DEVELOPERCONSOLE_INTELLI = false
 DEVELOPERCONSOLE_INTELLI_COUNT = 0
-DEVELOPERCONSOLE_INTELLI_TABLE=nil
+DEVELOPERCONSOLE_INTELLI_TABLE = nil
 DEVELOPERCONSOLE_INTELLI_STR = ""
 DEVELOPERCONSOLE_INTELLI_ITERATOR = nil
 DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
-DEVELOPERCONSOLE_INTELLI_SELECT=0
+DEVELOPERCONSOLE_INTELLI_SELECT = 0
 local lstr = loadstring or load
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -119,7 +119,7 @@ function DEVELOPERCONSOLE_INIT()
             AUTO_CAST(list)
             list:SetOffset(0, 0)
             list:Resize(400, 300)
-            list:SetEventScript(ui.LBUTTONUP,"DEVELOPERCONSOLE_DETERMINE_INTELLI")
+            list:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ON_DETERMINE_INTELLI")
         end,
         catch = function(error)
             ERROUT(error)
@@ -209,7 +209,7 @@ function DEVELOPERCONSOLE_ON_TYPE()
     local text = input:GetCursurLeftText();
     if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
         if (text:match("([%w_%.])$") ~= nil) then
-            DEVELOPERCONSOLE_INTELLISENSE(frame)
+            DEVELOPERCONSOLE_INTELLISENSE()
         else
             ui.CloseFrame("developerconsoleintellisense")
         end
@@ -343,13 +343,55 @@ function DEVELOPERCONSOLE_PRINT_TEXT(text)
         DEVELOPERCONSOLE_ADDTEXT(text);
     end
 end
+function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower)
+    local frame = ui.GetFrame("developerconsole")
+    local isf = ui.GetFrame("developerconsoleintellisense")
+    local input = frame:GetChild("input");
+    AUTO_CAST(input)
+    local tex=input:GetCursurLeftText()
+    if(not nolower)then
+        tex=tex:lower()
+
+    end
+    local tbl1 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']*)[%.%:%(%)][%w_%s]-$")
+    local tbl2= string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']*[%[%]\"%\'])[%w_%s]-$")
+    local tbl3 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']*)$")
+    local tbl = 
+    DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl3) or 
+    DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl1) or 
+    DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl2) or "_G"
+    return tbl
+end
+function DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(code)
+    if(code==nil)then
+        return nil
+    end
+    local tbl = nil
+    local codeg = string.gsub(code, "\"", "\\\"")
+    local f = lstr("return (" .. codeg .. ")");
+    local status, error = pcall(f);
+    if (not status or type(error) == "function") then
+        tbl = nil
+    elseif(type(error)=="table")then
+        tbl = code
+    elseif(type(error)=="userdata" or error~=nil)then
+        tbl = code
+    end
+    
+    return tbl
+end
 function DEVELOPERCONSOLE_INTELLISENSE()
     EBI_try_catch{
         try = function()
-            local frame=ui.GetFrame("developerconsole")
+            local code
+            if (code == nil) then
+                code = DEVELOPERCONSOLE_INTELLISENSE_PICK()
+            end
+            local frame = ui.GetFrame("developerconsole")
             local isf = ui.GetFrame("developerconsoleintellisense")
             local input = frame:GetChild("input");
             AUTO_CAST(input)
+            isf:SetGravity(ui.LEFT,ui.BOTTOM)
             isf:ShowWindow(1)
             isf:SetOffset(frame:GetX() + input:GetX() + math.min(#input:GetCursurLeftText() * 8, frame:GetWidth()), frame:GetY() + input:GetY() + input:GetHeight())
             local list = isf:GetChild("triggers");
@@ -358,41 +400,109 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             
             --絞り込み
             DEVELOPERCONSOLE_INTELLI = true
-            local tbl1=string.match(input:GetCursurLeftText():lower(), "([%w_%.%s]-)%.[%w_%s]*$")
-            local tbl2=string.match(input:GetCursurLeftText():lower(), "([%w_%s]-)$")
-            local tbl=tbl1 or tbl2 or "_G"
+            
             --validate
-            local f = lstr("return ("..tbl..")");
+            local tbl = nil
+            local codeg = string.gsub(code, "\"", "\\\"")
+            local f = lstr("return (" .. codeg .. ")");
             local status, error = pcall(f);
-            if(not status or type(error)=="function")then
-                tbl=_G
+            if (not status or type(error) == "function") then
+                tbl = _G
+            elseif(type(error)=="table")then
+                tbl = error or _G
+            elseif(error==nil)then
+                tbl = error or _G
             else
-                tbl=error or _G
+                tbl = _G
+            
             end
             
-            DEVELOPERCONSOLE_INTELLI_TABLE=tbl
-            DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
-            DEVELOPERCONSOLE_INTELLI_ITERATOR = pairs(DEVELOPERCONSOLE_INTELLI_TABLE)
-            DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
-            DEVELOPERCONSOLE_INTELLI_COUNT = 0
-            DEVELOPERCONSOLE_INTELLI_SELECT=0
+            if(tbl)then
+                DEVELOPERCONSOLE_INTELLI_TABLE = tbl
+                DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
+                DEVELOPERCONSOLE_INTELLI_ITERATOR = pairs(DEVELOPERCONSOLE_INTELLI_TABLE)
+                DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
+                DEVELOPERCONSOLE_INTELLI_COUNT = 0
+                DEVELOPERCONSOLE_INTELLI_SELECT = 0
+            end
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function DEVELOPERCONSOLE_DETERMINE_INTELLI()
-    local frame=ui.GetFrame("developerconsole")
-    local isf = ui.GetFrame("developerconsoleintellisense")
-    local input = frame:GetChild("input");
-    local s=string.match(input:GetCursurLeftText(),"(.-)[%w_]*$") or input:GetCursurLeftText()
-    local list = isf:GetChild("triggers");
-    AUTO_CAST(list)
-    if(list:GetSelItemIndex()>=0)then
-        input:SetText(s..list:GetSelItemText()..input:GetCursurRightText())
-    end
-    ReserveScript('ui.CloseFrame("developerconsoleintellisense")',0.01)
+function DEVELOPERCONSOLE_ON_DETERMINE_INTELLI()
+    
+    DEVELOPERCONSOLE_DETERMINE_INTELLI()
+
+
+end
+function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
+    EBI_try_catch{
+        try = function()
+            
+            local frame = ui.GetFrame("developerconsole")
+            local isf = ui.GetFrame("developerconsoleintellisense")
+            local input = frame:GetChild("input");
+            local s = string.match(input:GetCursurLeftText(), "(.-)[%w_]*$") or input:GetCursurLeftText()
+            local list = isf:GetChild("triggers");
+            
+            
+            AUTO_CAST(list)
+            local sel = ""
+            if (list:GetSelItemIndex() >= 0) then
+                sel = list:GetSelItemText()
+            else
+                
+                return
+            end
+            
+            if (continue) then
+                
+                
+                if (1 == keyboard.IsKeyPressed("PERIOD")) then
+                    input:SetText(s .. sel .. input:GetCursurRightText())
+                    ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
+                else
+                    local r=input:GetCursurRightText()
+                    input:SetText(s .. sel .. r)
+                    input:Invalidate()
+                    local code=DEVELOPERCONSOLE_INTELLISENSE_PICK(true)
+                    local codeg = string.gsub(code, "\"", "\\\"")
+                    local f = lstr("return (" .. codeg .. ")");
+                    local status, error = pcall(f);
+                    local tbl
+                    if (not status ) then
+                        tbl = nil
+                    else
+                        tbl = error
+                    end
+                    
+                    if(type(tbl)=="table")then
+                        input:SetText(s .. sel .. "." ..r)
+                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
+                    elseif(type(tbl)=="function")then
+                        input:SetText(s .. sel .."(" ..r)
+                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
+                    else
+                        input:SetText(s .. sel  .. r)
+                        ReserveScript('ui.CloseFrame("developerconsoleintellisense")', 0.01)
+            
+                    end
+                end
+
+               
+            else
+
+                input:SetText(s .. sel .. input:GetCursurRightText())
+                ReserveScript('ui.CloseFrame("developerconsoleintellisense")', 0.01)
+            end
+        
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
 function DEVELOPERCONSOLE_UPDATE(frame)
     EBI_try_catch{
@@ -459,7 +569,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                     tolua.cast(editbox, "ui::CEditControl");
                     --最後のスペースを消す
                     editbox:SetText(editbox:GetCursurLeftText():sub(1, -2) .. editbox:GetCursurRightText())
-                    DEVELOPERCONSOLE_INTELLISENSE(frame)
+                    DEVELOPERCONSOLE_INTELLISENSE()
                 end
             end
             if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
@@ -474,51 +584,45 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 if 1 == keyboard.IsKeyPressed("LEFT") or 1 == keyboard.IsKeyPressed("RIGHT") then
                     DEVELOPERCONSOLE_ON_TYPE()
                 end
-                local cur=list:GetSelItemIndex() 
+                local cur = list:GetSelItemIndex()
                 if 1 == keyboard.IsKeyDown("UP") then
-                
+                    
                     list:DeSelectItemAll()
-                    list:SelectItem(math.max(0,cur-1))
+                    list:SelectItem(math.max(0, cur - 1))
                     list:Invalidate()
-                    
+                
                 elseif 1 == keyboard.IsKeyDown("DOWN") then
-                   
+                    
                     
                     list:DeSelectItemAll()
-                    list:SelectItem(math.min(DEVELOPERCONSOLE_INTELLI_COUNT-1,cur+1))
+                    list:SelectItem(math.min(DEVELOPERCONSOLE_INTELLI_COUNT - 1, cur + 1))
                     list:Invalidate()
                 
                 elseif 1 == keyboard.IsKeyDown("NEXT") then
-                   
-                    list:DeSelectItemAll()
-                    list:SelectItem(math.min(DEVELOPERCONSOLE_INTELLI_COUNT-1,cur+7))
-                    list:Invalidate()
                     
-                elseif 1 == keyboard.IsKeyDown("PRIOR") then
+                    list:DeSelectItemAll()
+                    list:SelectItem(math.min(DEVELOPERCONSOLE_INTELLI_COUNT - 1, cur + 7))
+                    list:Invalidate()
                 
-                    list:DeSelectItemAll()
-                    list:SelectItem(math.max(0,cur-7))
-                    list:Invalidate()
+                elseif 1 == keyboard.IsKeyDown("PRIOR") then
                     
+                    list:DeSelectItemAll()
+                    list:SelectItem(math.max(0, cur - 7))
+                    list:Invalidate()
+                
                 end
-                if 1 == keyboard.IsKeyDown("ENTER") or 1 == keyboard.IsKeyDown("TAB")  then
-                    local s=string.match(editbox:GetCursurLeftText(),"(.-)[%w_]*$") or editbox:GetCursurLeftText()
-                    if(list:GetSelItemIndex()>=0)then
-                        editbox:SetText(s..list:GetSelItemText()..editbox:GetCursurRightText())
-                    end
-                    ReserveScript('ui.CloseFrame("developerconsoleintellisense")',0.01)
+                if 1 == keyboard.IsKeyDown("ENTER") then
+                    DEVELOPERCONSOLE_DETERMINE_INTELLI()
                 end
-                if 1 == keyboard.IsKeyDown("TAB")  then
-                    local s=string.match(editbox:GetCursurLeftText(),"(.-)[%w_]*$") or editbox:GetCursurLeftText()
-                    if(list:GetSelItemIndex()>=0)then
-                        editbox:SetText(s..list:GetSelItemText().."."..editbox:GetCursurRightText())
-                    end
-                    ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()",0.01)
+                if 1 == keyboard.IsKeyDown("TAB") or 1 == keyboard.IsKeyDown("PERIOD") then
+
+                    DEVELOPERCONSOLE_DETERMINE_INTELLI(true)
+                
                 end
                 if 1 == keyboard.IsKeyDown("ESCAPE") then
                     ui.CloseFrame("developerconsoleintellisense")
                 end
-
+                
                 AUTO_CAST(list)
                 if DEVELOPERCONSOLE_INTELLI and DEVELOPERCONSOLE_INTELLI_ITERATOR then
                     --イテレータを回す
@@ -540,7 +644,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                             list:AddItem(tostring(k), DEVELOPERCONSOLE_INTELLI_COUNT)
                             
                             DEVELOPERCONSOLE_INTELLI_COUNT = DEVELOPERCONSOLE_INTELLI_COUNT + 1
-                            if(list:GetSelItemIndex()<0)then
+                            if (list:GetSelItemIndex() < 0) then
                                 list:SelectItem(0)
                             end
                             if (DEVELOPERCONSOLE_INTELLI_COUNT > 100) then
@@ -553,6 +657,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                         end
                     end
                     list:ShowWindow(1)
+                    list:Resize(list:GetTopParentFrame():GetWidth(),list:GetTopParentFrame():GetHeight())
                     list:Invalidate()
                 end
             end
@@ -565,6 +670,8 @@ function DEVELOPERCONSOLE_UPDATE(frame)
 end
 function DEVELOPERCONSOLE_ENTER_KEY(frame, control, argStr, argNum)
     if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
+        DEVELOPERCONSOLE_DETERMINE_INTELLI()
+
         ui.CloseFrame("developerconsoleintellisense")
     else
         
