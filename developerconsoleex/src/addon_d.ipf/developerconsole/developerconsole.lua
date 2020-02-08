@@ -42,14 +42,14 @@ local function pairs_sorted(tbl, fun)
     for k, v in pairs(tbl) do
         n = n + 1
         sortkey[n] = {k = k, v = v}
-        
+    
     end
     fun = fun or function(a, b)
         return a.k < b.k
     end
     table.sort(sortkey, fun)
-
-    return ipairs(sortkey)
+    
+    return sortkey, ipairs(sortkey)
 end
 local function iter_filter(iter, fun)
     
@@ -59,7 +59,7 @@ local function iter_filter(iter, fun)
         while true do
             
             nxt, val = iter(tbl, nxt)
-          
+            
             if (not nxt) then
                 return
             end
@@ -71,11 +71,11 @@ local function iter_filter(iter, fun)
         return
     end
 end
-local function iter_concat(iter, iter2,init1,init2)
+local function iter_concat(iter, iter2, init1, init2)
     
     return coroutine.wrap(
         function(t, k)
-            k=init1
+            k = init1
             while true do
                 local n, v = iter(t, k)
                 if (n == nil) then
@@ -83,7 +83,7 @@ local function iter_concat(iter, iter2,init1,init2)
                 end
                 t, k = coroutine.yield(n, v)
             end
-            k=init2
+            k = init2
             while true do
                 local n, v = iter2(t, k)
                 if (n == nil) then
@@ -91,10 +91,10 @@ local function iter_concat(iter, iter2,init1,init2)
                 end
                 t, k = coroutine.yield(n, v)
             end
-           
+            
             return
         end
-        )
+)
 end
 
 
@@ -121,7 +121,7 @@ function DEVELOPERCONSOLE_ON_INIT(addon, frame)
         DEVELOPERCONSOLE_SETTINGSLOADED = true
     end
     DEVELOPERCONSOLE_LOG = {}
-    DEVELOPERCONSOLE_RESIZE()
+    DEVELOPERCONSOLE_INIT()
     CLEAR_CONSOLE();
 end
 function DEVELOPERCONSOLE_SAVE_SETTINGS()
@@ -150,6 +150,7 @@ function DEVELOPERCONSOLE_INIT()
             frame:EnableMove(1);
             frame:SetEventScript(ui.RESIZE, "DEVELOPERCONSOLE_ON_RESIZE")
             frame:SetEventScript(ui.RBUTTONDOWN, "DEVELOPERCONSOLE_DEBUG_RELOAD")
+            frame:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_SAVE_OFFSET")
             if DEVELOPERCONSOLE_SETTINGS.x ~= nil then
                 frame:SetOffset(DEVELOPERCONSOLE_SETTINGS.x, DEVELOPERCONSOLE_SETTINGS.y)
                 frame:Resize(DEVELOPERCONSOLE_SETTINGS.w, DEVELOPERCONSOLE_SETTINGS.h)
@@ -175,13 +176,19 @@ function DEVELOPERCONSOLE_INIT()
             timer:Start(0.01);
             DEVELOPERCONSOLE_RESIZE()
             local isf = ui.GetFrame("developerconsoleintellisense")
-            isf:SetSkinName("bg")
-            isf:Resize(400, 300)
+            isf:SetSkinName("None")
+            isf:Resize(600, 230)
+            local sig=isf:CreateOrGetControl("richtext","signature",0,0,0,0)
+            sig:EnableHitTest(0)
+            sig:Resize(600, 30)
+            sig:SetSkinName("editbox")
             local list = isf:GetChild("triggers");
             AUTO_CAST(list)
-            list:SetOffset(0, 0)
-            list:Resize(400, 300)
+            list:SetOffset(0, 30)
+            list:Resize(600, 200)
             list:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ON_DETERMINE_INTELLI")
+            list:SetFontName("white_16_ol")
+            list:SetSkinName("listbox")
         end,
         catch = function(error)
             ERROUT(error)
@@ -270,10 +277,14 @@ function DEVELOPERCONSOLE_ON_TYPE()
     local input = frame:GetChild("input");
     local text = input:GetCursurLeftText();
     if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
-        if (text:match("([%w_%.])$") ~= nil) then
+        if (text:match("([%w_%.%,%(%)])$") ~= nil) then
             DEVELOPERCONSOLE_INTELLISENSE()
         else
             ui.CloseFrame("developerconsoleintellisense")
+        end
+    else
+        if (text:match("([%w_%.%,%(%)])$") ~= nil) then
+            DEVELOPERCONSOLE_INTELLISENSE()
         end
     end
 end
@@ -287,11 +298,17 @@ function DEVELOPERCONSOLE_SAVE_OFFSET()
 end
 function DEVELOPERCONSOLE_ON_RESIZE()
     DEVELOPERCONSOLE_RESIZE()
+    DEVELOPERCONSOLE_SAVE_OFFSET()
 end
 function DEVELOPERCONSOLE_CONTEXT()
     local frame = ui.GetFrame("developerconsole");
     local context = ui.CreateContextMenu("Context", "", 0, 0, 300, 100)
     ui.AddContextMenuItem(context, "Clear Console", "CLEAR_CONSOLE()")
+    if (DEVELOPERCONSOLE_SETTINGS.intellisense) then
+        ui.AddContextMenuItem(context, "Disable AutoCompletion", "DEVELOPERCONSOLE_TOGGLEENABLE_INTELLISENSE()")
+    else
+        ui.AddContextMenuItem(context, "Enable AutoCompletion", "DEVELOPERCONSOLE_TOGGLEENABLE_INTELLISENSE()")
+    end
     ui.AddContextMenuItem(context, "Do File", "DEVELOPERCONSOLE_DOFILE_CHOOSE()")
     ui.AddContextMenuItem(context, "Debug Frame", "TOGGLE_UI_DEBUG()")
     ui.AddContextMenuItem(context, "{} to <>", "DEVELOPERCONSOLE_ESCAPEBRACKET()")
@@ -405,7 +422,7 @@ function DEVELOPERCONSOLE_PRINT_TEXT(text)
         DEVELOPERCONSOLE_ADDTEXT(text);
     end
 end
-function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower)
+function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower, noval)
     local frame = ui.GetFrame("developerconsole")
     local isf = ui.GetFrame("developerconsoleintellisense")
     local input = frame:GetChild("input");
@@ -415,15 +432,71 @@ function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower)
         tex = tex:lower()
     
     end
-    local tbl1 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']-)[%.%:%(%)][%w_%s]*$")
-    local tbl2 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']-[%[%]\"%\'])[%w_%s]*$")
-    local tbl3 = string.match(tex, "([%w_%.%:%s%(%)%[%]%\"%\']-)$")
-    local tbl = tbl1 or tbl2 or tbl3 or "_G"
+    local tbl0 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)]$")
+    local tbl1 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)][%w_%s]-$")
+    local tbl2 = string.match(tex, "([%w_%.%:%s]*[%[%]\"%\'])[%w_%s]-$")
+    local tbl3 = string.match(tex, "([%w_%.%:%s]*)$")
+    local tbl
+    if (noval) then
+        tbl = tbl0 or tbl3 or tbl1 or tbl2 or "_G"
+    else
+        tbl =
+            DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl3) or
+            DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl1) or
+            DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl2) or "_G"
+    end
+    
+    return tbl
+end
+function DEVELOPERCONSOLE_INTELLISENSE_PICK_FN()
+    local frame = ui.GetFrame("developerconsole")
+    local isf = ui.GetFrame("developerconsoleintellisense")
+    local input = frame:GetChild("input");
+    AUTO_CAST(input)
+    local tex = input:GetCursurLeftText()
+    local lv=1
+    local pos=#tex
+    while pos>=1 do
+        local c=tex:sub(pos,pos)
+        if(c=="(")then
+            lv=lv-1
+            if(lv==0)then
+                break
+            end
+        elseif(c==")")then
+            lv=lv+1
+        end
+        pos=pos-1
+    end
+
+    local tbl = string.match(tex:sub(1,pos), "([%w_%.%:%[%]%\"%\'%,]*)%([^%(]-$")
+    
+    return tbl
+end
+function DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(code)
+    if (code == nil) then
+        return nil
+    end
+    local tbl = nil
+    local codeg = string.gsub(code, "\"", "\\\"")
+    local f = lstr("return (" .. codeg .. ")");
+    local status, error = pcall(f);
+    if (not status or type(error) == "function") then
+        tbl = nil
+    elseif (type(error) == "table") then
+        tbl = code
+    elseif (type(error) == "userdata" or error ~= nil) then
+        tbl = code
+    end
+    
     return tbl
 end
 function DEVELOPERCONSOLE_INTELLISENSE()
     EBI_try_catch{
         try = function()
+            if (not DEVELOPERCONSOLE_SETTINGS.intellisense) then
+                return
+            end
             local code
             if (code == nil) then
                 code = DEVELOPERCONSOLE_INTELLISENSE_PICK()
@@ -431,7 +504,9 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             local frame = ui.GetFrame("developerconsole")
             local isf = ui.GetFrame("developerconsoleintellisense")
             local input = frame:GetChild("input");
+            local sig=isf:GetChild("signature")
             AUTO_CAST(input)
+            isf:SetGravity(ui.LEFT, ui.BOTTOM)
             isf:ShowWindow(1)
             isf:SetOffset(frame:GetX() + input:GetX() + math.min(#input:GetCursurLeftText() * 8, frame:GetWidth()), frame:GetY() + input:GetY() + input:GetHeight())
             local list = isf:GetChild("triggers");
@@ -447,26 +522,44 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             local f = lstr("return (" .. codeg .. ")");
             local status, error = pcall(f);
             if (not status or type(error) == "function") then
-                
                 tbl = _G
-            else
+            elseif (type(error) == "table") then
                 tbl = error or _G
+            elseif (error == nil) then
+                tbl = error or _G
+            else
+                tbl = _G
             end
             
-            DEVELOPERCONSOLE_INTELLI_TABLE = tbl
-            DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
-            local iter = pairs_sorted(DEVELOPERCONSOLE_INTELLI_TABLE)
-            DEVELOPERCONSOLE_INTELLI_ITERATOR =
-                iter_concat(iter_filter(iter, function(k, v)
-                    print(v.k)
-                    return string.starts(v.k, DEVELOPERCONSOLE_INTELLI_STR)
-                end),
-                iter_filter(iter, function(k, v)
-                    return string.match(v.k, DEVELOPERCONSOLE_INTELLI_STR)
-                end),0,0)
-            DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
-            DEVELOPERCONSOLE_INTELLI_COUNT = 0
-            DEVELOPERCONSOLE_INTELLI_SELECT = 0
+            if (tbl) then
+                DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR, _, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = pairs_sorted(tbl)
+                DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
+                DEVELOPERCONSOLE_INTELLI_COUNT = 0
+                DEVELOPERCONSOLE_INTELLI_SELECT = 0
+            end
+
+            --signature
+            local ins=DEVELOPERCONSOLE_INTELLISENSE_PICK_FN()
+            if(ins)then
+                local f = lstr("return " .. ins .. "");
+                local status, err = pcall(f);
+                if (not status or type(err) == "function") then
+                    local t=DEVELOPERCONSOLE_GET_FN_SIGNATURE(err)
+                    if t and t.spr then
+                        sig:SetText("{@st43}{s16}{ol}{#FFFF22}"..t.name.."("..table.concat(t.spr,",")..")")
+                        sig:ShowWindow(1)
+                    else
+                        sig:SetText("{@st43}{s16}{ol}{#FF2222}".."??(...)")
+                        sig:ShowWindow(1)
+                    end
+                else
+                    sig:SetText("")
+                    sig:ShowWindow(0)
+                end
+            else
+                sig:SetText("")
+                sig:ShowWindow(0)
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -474,10 +567,7 @@ function DEVELOPERCONSOLE_INTELLISENSE()
     }
 end
 function DEVELOPERCONSOLE_ON_DETERMINE_INTELLI()
-    
     DEVELOPERCONSOLE_DETERMINE_INTELLI()
-
-
 end
 function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
     EBI_try_catch{
@@ -493,7 +583,7 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
             AUTO_CAST(list)
             local sel = ""
             if (list:GetSelItemIndex() >= 0) then
-                sel = list:GetSelItemText()
+                sel = list:GetSelItemText():match("^(.*)  ")
             else
                 
                 return
@@ -504,12 +594,13 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
                 
                 if (1 == keyboard.IsKeyPressed("PERIOD")) then
                     input:SetText(s .. sel .. input:GetCursurRightText())
-                
+                    ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
                 else
                     local r = input:GetCursurRightText()
-                    input:SetText(s .. sel .. input:GetCursurRightText())
+                    input:SetText(s .. sel .. r)
                     input:Invalidate()
-                    local code = DEVELOPERCONSOLE_INTELLISENSE_PICK(true)
+                    local code = DEVELOPERCONSOLE_INTELLISENSE_PICK(true, true)
+                    
                     local codeg = string.gsub(code, "\"", "\\\"")
                     local f = lstr("return (" .. codeg .. ")");
                     local status, error = pcall(f);
@@ -522,16 +613,16 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
                     
                     if (type(tbl) == "table") then
                         input:SetText(s .. sel .. "." .. r)
+                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
                     elseif (type(tbl) == "function") then
                         input:SetText(s .. sel .. "(" .. r)
-                    
+                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
                     else
-                        
                         input:SetText(s .. sel .. r)
+                        ReserveScript('ui.CloseFrame("developerconsoleintellisense")', 0.01)
+                    
                     end
                 end
-                
-                ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
             else
                 
                 input:SetText(s .. sel .. input:GetCursurRightText())
@@ -541,6 +632,21 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
         end,
         catch = function(error)
             ERROUT(error)
+        end
+    }
+end
+function DEVELOPERCONSOLE_GET_FN_SIGNATURE(func)
+    return EBI_try_catch{
+        try = function()
+            local info = debug.getinfo(func)
+            
+            local src = info.source:split("\n")
+            local name,sfn = src[info.linedefined]:match("function (.*)%((.-)%)")
+            return {name=name,spr=sfn:split(",")}
+        end,
+        catch = function(error)
+            return nil
+        
         end
     }
 end
@@ -608,7 +714,10 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                     local editbox = frame:GetChild("input");
                     tolua.cast(editbox, "ui::CEditControl");
                     --最後のスペースを消す
-                    editbox:SetText(editbox:GetCursurLeftText():sub(1, -2) .. editbox:GetCursurRightText())
+                    local tex=editbox:GetCursurLeftText()
+                    if(tex:match(" $"))then
+                        editbox:SetText(editbox:GetCursurLeftText():sub(1, -2) .. editbox:GetCursurRightText())
+                    end
                     DEVELOPERCONSOLE_INTELLISENSE()
                 end
             end
@@ -655,7 +764,6 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                     DEVELOPERCONSOLE_DETERMINE_INTELLI()
                 end
                 if 1 == keyboard.IsKeyDown("TAB") or 1 == keyboard.IsKeyDown("PERIOD") then
-                    
                     DEVELOPERCONSOLE_DETERMINE_INTELLI(true)
                 
                 end
@@ -666,7 +774,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 AUTO_CAST(list)
                 if DEVELOPERCONSOLE_INTELLI and DEVELOPERCONSOLE_INTELLI_ITERATOR then
                     --イテレータを回す
-                    local limit = 10000
+                    local limit = 1000
                     
                     
                     for i = 0, limit do
@@ -680,9 +788,26 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                             
                             break
                         end
-                        if (DEVELOPERCONSOLE_INTELLI_STR == "" or v.n:lower():starts(DEVELOPERCONSOLE_INTELLI_STR)) then
-                            list:AddItem(tostring(k), DEVELOPERCONSOLE_INTELLI_COUNT)
-                            
+                        if (DEVELOPERCONSOLE_INTELLI_STR == "" or v.k:lower():starts(DEVELOPERCONSOLE_INTELLI_STR)) then
+                            local f = lstr("return (" .. tostring(v.k) .. ")");
+                            local status, error = pcall(f);
+                            local tbl
+                            if (not status) then
+                                tbl = nil
+                            else
+                                tbl = error
+                            end
+                            -- if (type(tbl) == "function") then
+                            --     local sig=DEVELOPERCONSOLE_GET_FN_SIGNATURE(tbl)
+                            --     if(sig)then
+                            --         list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. "function("..table.concat(sig,",")..")", DEVELOPERCONSOLE_INTELLI_COUNT)
+                            --     else
+                            --         list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
+                            --     end
+                            -- else
+                            --     list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
+                            -- end
+                            list:AddItem(tostring(v.k) .. "  {s14}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
                             DEVELOPERCONSOLE_INTELLI_COUNT = DEVELOPERCONSOLE_INTELLI_COUNT + 1
                             if (list:GetSelItemIndex() < 0) then
                                 list:SelectItem(0)
@@ -696,8 +821,10 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                         
                         end
                     end
-                    list:ShowWindow(1)
-                    list:Invalidate()
+                    --list:ShowWindow(1)
+                    --list:Resize(list:GetTopParentFrame():GetWidth(), list:GetTopParentFrame():GetHeight())
+                    --list:Invalidate()
+
                 end
             end
         end,
@@ -709,6 +836,8 @@ function DEVELOPERCONSOLE_UPDATE(frame)
 end
 function DEVELOPERCONSOLE_ENTER_KEY(frame, control, argStr, argNum)
     if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
+        DEVELOPERCONSOLE_DETERMINE_INTELLI()
+        
         ui.CloseFrame("developerconsoleintellisense")
     else
         
@@ -770,4 +899,8 @@ function DEVELOPERCONSOLE_EXEC(frame, commandText, originalstr)
         end
     end
 
+end
+function DEVELOPERCONSOLE_TOGGLEENABLE_INTELLISENSE()
+    DEVELOPERCONSOLE_SETTINGS.intellisense = not DEVELOPERCONSOLE_SETTINGS.intellisense
+    DEVELOPERCONSOLE_SAVE_SETTINGS()
 end
