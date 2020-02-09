@@ -542,6 +542,9 @@ function DEVELOPERCONSOLE_ADDTEXT(text)
         tolua.cast(textlog, "ui::CTextView");
         textlog:AddText(text, "white_16_ol");
         DEVELOPERCONSOLE_LOG[#DEVELOPERCONSOLE_LOG + 1] = text
+        if(#DEVELOPERCONSOLE_LOG>1000)then
+            table.remove(DEVELOPERCONSOLE_LOG,1)
+        end
     end
 end
 function DEVELOPERCONSOLE_PRINT_TEXT(text)
