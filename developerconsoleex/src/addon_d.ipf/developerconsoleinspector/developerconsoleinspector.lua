@@ -88,36 +88,57 @@ end
 
 
 function DEVELOPERCONSOLEINSPECTOR_ON_INIT(addon, frame)
-    
-    DEVELOPERCONSOLEINSPECTOR_INIT()
-    if DEVELOPERCONSOLE_SETTINGS.ix ~= nil then
-        frame:SetOffset(DEVELOPERCONSOLE_SETTINGS.ix, DEVELOPERCONSOLE_SETTINGS.iy)
-        frame:Resize(DEVELOPERCONSOLE_SETTINGS.iw, DEVELOPERCONSOLE_SETTINGS.ih)
-        if (DEVELOPERCONSOLE_SETTINGS.visible) then
-            frame:ShowWindow(1);
-        else
-            frame:ShowWindow(0);
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame("developerconsoleinspector")
+            DEVELOPERCONSOLEINSPECTOR_INIT()
+            if DEVELOPERCONSOLE_SETTINGS.ix ~= nil then
+                frame:SetOffset(DEVELOPERCONSOLE_SETTINGS.ix, DEVELOPERCONSOLE_SETTINGS.iy)
+                frame:Resize(DEVELOPERCONSOLE_SETTINGS.iw, DEVELOPERCONSOLE_SETTINGS.ih)
+                if (DEVELOPERCONSOLE_SETTINGS.visible) then
+                    frame:ShowWindow(1);
+                else
+                    frame:ShowWindow(0);
+                end
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
         end
-    end
+    }
 end
 function DEVELOPERCONSOLEINSPECTOR_OPEN()
-    DEVELOPERCONSOLEINSPECTOR_INIT()
-    DEVELOPERCONSOLE_SETTINGS.visible = true
-    local frame = ui.GetFrame("developerconsoleinspector")
-    local timer = frame:GetChild("deeptimer")
-    AUTO_CAST(timer)
-    timer:SetUpdateScript("DEVELOPERCONSOLEINSPECTOR_ON_DEEPTIMER")
-    timer:Start(0.01)
-    DEVELOPERCONSOLEINSPECTOR_START_INSPECT()
-    DEVELOPERCONSOLE_SAVE_SETTINGS()
+    EBI_try_catch{
+        try = function()
+            DEVELOPERCONSOLEINSPECTOR_INIT()
+            DEVELOPERCONSOLE_SETTINGS.visible = true
+            local frame = ui.GetFrame("developerconsoleinspector")
+            local timer = frame:GetChild("deeptimer")
+            AUTO_CAST(timer)
+            timer:SetUpdateScript("DEVELOPERCONSOLEINSPECTOR_ON_DEEPTIMER")
+            timer:Start(0.01)
+            DEVELOPERCONSOLEINSPECTOR_START_INSPECT()
+            DEVELOPERCONSOLE_SAVE_SETTINGS()
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
 function DEVELOPERCONSOLEINSPECTOR_CLOSE()
-    DEVELOPERCONSOLE_SETTINGS.visible = false
-    local frame = ui.GetFrame("developerconsoleinspector")
-    local timer = frame:GetChild("deeptimer")
-    AUTO_CAST(timer)
-    timer:Stop()
-    DEVELOPERCONSOLE_SAVE_SETTINGS()
+    EBI_try_catch{
+        try = function()
+            DEVELOPERCONSOLE_SETTINGS.visible = false
+            local frame = ui.GetFrame("developerconsoleinspector")
+            local timer = frame:GetChild("deeptimer")
+            AUTO_CAST(timer)
+            timer:Stop()
+            DEVELOPERCONSOLE_SAVE_SETTINGS()
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
 function DEVELOPERCONSOLEINSPECTOR_INIT()
     EBI_try_catch{
@@ -189,7 +210,7 @@ function DEVELOPERCONSOLEINSPECTOR_ADV_ON_LBUTTONDBLCLICK()
             local adv = frame:GetChildRecursively("inspector")
             AUTO_CAST(adv)
             AUTO_CAST(edittable)
-            local key = adv:GetObjectXY(tonumber(adv:GetSelectedKey()),0):GetText()
+            local key = adv:GetObjectXY(tonumber(adv:GetSelectedKey()), 0):GetText()
             if (key) then
                 if (edittable:GetText() ~= "") then
                     edittable:SetText(edittable:GetText() .. "." .. key)
@@ -214,21 +235,21 @@ function DEVELOPERCONSOLEINSPECTOR_COPY(mode)
             local adv = frame:GetChildRecursively("inspector")
             AUTO_CAST(adv)
             AUTO_CAST(edittable)
-            local select=tonumber(adv:GetSelectedKey())
+            local select = tonumber(adv:GetSelectedKey())
             local cpy
-            if(mode=="FullName")then
-                local key = adv:GetObjectXY(select,0):GetText()
-                cpy=edittable:GetText() .. "." .. key
-
+            if (mode == "FullName") then
+                local key = adv:GetObjectXY(select, 0):GetText()
+                cpy = edittable:GetText() .. "." .. key
+            
             else
-                local key = adv:GetObjectXY(select,mode):GetText()
-                cpy=key
+                local key = adv:GetObjectXY(select, mode):GetText()
+                cpy = key
             end
             
-            if(cpy~=nil)then
+            if (cpy ~= nil) then
                 ui.WriteClipboardText(cpy)
             end
-            
+        
         end,
         catch = function(error)
             ERROUT(error)
@@ -263,7 +284,7 @@ function DEVELOPERCONSOLEINSPECTOR_START_INSPECT(force, clear)
         gbox:UpdateData();
         gbox:SetCurLine(0);
         gbox:InvalidateScrollBar();
-
+    
     end
     local code = edittable:GetText()
     local search = editsearch:GetText()
@@ -275,16 +296,16 @@ function DEVELOPERCONSOLEINSPECTOR_START_INSPECT(force, clear)
     local status, r = pcall(f);
     if (status and type(r) == "table") then
         tbl = r
-        
+    
     else
         if (DEVELOPERCONSOLE_SETTINGS.enableevalfunc) then
-            f = lstr("return "..code);
+            f = lstr("return " .. code);
             local f2 = lstr(code);
             status, r = pcall(f);
-            if (not status or type(r)=="function") then
+            if (not status or type(r) == "function") then
                 status, r = pcall(f2);
             end
-            if (not status or r==nil) then
+            if (not status or r == nil) then
                 adv:ClearUserItems()
                 DEVELOPERCONSOLEINSPECTOR_ENABLETIMER(false)
                 fail:SetText("{ol}{s16}{#FF4444}FAILED")
@@ -297,7 +318,7 @@ function DEVELOPERCONSOLEINSPECTOR_START_INSPECT(force, clear)
             return
         end
     end
-    if(type(tbl)~="table")then
+    if (type(tbl) ~= "table") then
         adv:ClearUserItems()
         DEVELOPERCONSOLEINSPECTOR_ENABLETIMER(false)
         fail:SetText("{ol}{s16}{#FF4444}NOT A TABLE")
@@ -410,7 +431,7 @@ function DEVELOPERCONSOLEINSPECTOR_ON_DEEPTIMER()
                         else
                         --add or update
                         local item
-                        local key =  g.pos+1
+                        local key = g.pos + 1
                         item = adv:SetItem(key, 0, v.k, "white_16_ol")
                         item:SetTextAlign("left", "top");
                         item:SetTextTooltip(v.k)
@@ -438,7 +459,7 @@ function DEVELOPERCONSOLEINSPECTOR_ON_DEEPTIMER()
                         local width = adv:GetColWidth(2);
                         item:Resize(width, item:GetHeight());
                         g.pos = g.pos + 1
-                        if(adv:GetHeight()<20 * g.pos)then
+                        if (adv:GetHeight() < 20 * g.pos) then
                             adv:Resize(adv:GetWidth(), 20 * g.pos)
                         end
                         --adv:UpdateAdvBox();
@@ -450,9 +471,6 @@ function DEVELOPERCONSOLEINSPECTOR_ON_DEEPTIMER()
                         end
                     end
                 --FIXWIDTH_ADVBOX_ITEM(adv, 2, item)
-                
-                
-                
                 end
             end
         end,

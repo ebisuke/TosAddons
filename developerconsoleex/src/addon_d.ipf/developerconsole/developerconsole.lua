@@ -938,7 +938,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 AUTO_CAST(list)
                 if DEVELOPERCONSOLE_INTELLI and DEVELOPERCONSOLE_INTELLI_ITERATOR then
                     --イテレータを回す
-                    local limit = 10000
+                    local limit = 5000
                     
                     for i = 0, limit do
                         local k, v = DEVELOPERCONSOLE_INTELLI_ITERATOR(DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY)
