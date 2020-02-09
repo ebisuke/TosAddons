@@ -4,16 +4,17 @@ local acutil = require("acutil");
 DEVELOPERCONSOLE_SETTINGSLOCATION = string.format('../addons/%s/settings.json', "developerconsole")
 DEVELOPERCONSOLE_TEMPTEXTLOCATION = string.format('../addons/%s/temptext.txt', "developerconsole")
 DEVELOPERCONSOLE_SETTINGS = DEVELOPERCONSOLE_SETTINGS or {}
-DEVELOPERCONSOLE_DEBUG = false
+DEVELOPERCONSOLE_DEBUG = true
 DEVELOPERCONSOLE_CURSOR = 0
 DEVELOPERCONSOLE_INTELLI = false
 DEVELOPERCONSOLE_INTELLI_COUNT = 0
 DEVELOPERCONSOLE_INTELLI_TABLE = nil
-DEVELOPERCONSOLE_INTELLI_PREFIX=""
+DEVELOPERCONSOLE_INTELLI_PREFIX = ""
 DEVELOPERCONSOLE_INTELLI_STR = ""
 DEVELOPERCONSOLE_INTELLI_ITERATOR = nil
 DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
 DEVELOPERCONSOLE_INTELLI_SELECT = 0
+DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=false
 local lstr = loadstring or load
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -169,10 +170,12 @@ function DEVELOPERCONSOLE_INIT()
             
             local execute = frame:GetChild("execute");
             execute:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ENTER_KEY")
-            execute:Invalidate()
+            execute:SetFontName("white_16_ol")
+
             local btnopt = frame:CreateOrGetControl("button", "btnopt", 0, 0, 0, 0)
             btnopt:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_CONTEXT")
             btnopt:SetText("...")
+            btnopt:SetFontName("white_16_ol")
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("DEVELOPERCONSOLE_UPDATE");
             timer:Start(0.01);
@@ -180,7 +183,7 @@ function DEVELOPERCONSOLE_INIT()
             local isf = ui.GetFrame("developerconsoleintellisense")
             isf:SetSkinName("None")
             isf:Resize(600, 230)
-            local sig=isf:CreateOrGetControl("richtext","signature",0,0,0,0)
+            local sig = isf:CreateOrGetControl("richtext", "signature", 0, 0, 0, 0)
             sig:EnableHitTest(0)
             sig:Resize(600, 30)
             sig:SetSkinName("editbox")
@@ -191,6 +194,7 @@ function DEVELOPERCONSOLE_INIT()
             list:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ON_DETERMINE_INTELLI")
             list:SetFontName("white_16_ol")
             list:SetSkinName("listbox")
+        --list:AddColumn("")
         end,
         catch = function(error)
             ERROUT(error)
@@ -198,15 +202,27 @@ function DEVELOPERCONSOLE_INIT()
     }
 end
 function DEVELOPERCONSOLE_DEBUG_RELOAD()
-    local ebi = "E:\\\\ToSProject\\\\TosAddons\\\\developerconsoleex\\\\src\\\\addon_d.ipf\\\\developerconsole\\\\developerconsole.lua"
     if DEVELOPERCONSOLE_DEBUG then
+        local ebi = "E:\\\\ToSProject\\\\TosAddons\\\\developerconsoleex\\\\src\\\\addon_d.ipf\\\\developerconsole\\\\developerconsole.lua"
+        if DEVELOPERCONSOLE_DEBUG then
+            local f = assert(lstr('dofile("' .. ebi .. '")'));
+            local status, error = pcall(f);
+            if not status then
+                CHAT_SYSTEM(tostring(error));
+            else
+                CHAT_SYSTEM("RELOADED DC")
+                DEVELOPERCONSOLE_INIT()
+            end
+        end
+        ebi = "E:\\\\ToSProject\\\\TosAddons\\\\developerconsoleex\\\\src\\\\addon_d.ipf\\\\developerconsoleinspector\\\\developerconsoleinspector.lua"
+   
         local f = assert(lstr('dofile("' .. ebi .. '")'));
         local status, error = pcall(f);
         if not status then
             CHAT_SYSTEM(tostring(error));
         else
-            CHAT_SYSTEM("RELOADED DC")
-            DEVELOPERCONSOLE_INIT()
+            CHAT_SYSTEM("RELOADED DCI")
+            DEVELOPERCONSOLEINSPECTOR_INIT()
         end
     end
 end
@@ -221,16 +237,18 @@ function DEVELOPERCONSOLE_RESIZE()
             local w = frame:GetWidth()
             local h = frame:GetHeight()
             local m = 10
+            local nl = 0
+            local nlmargin = 20 * nl
             local btm = 30
             textViewLog:SetOffset(m, m)
-            textViewLog:Resize(w - m * 2, h - m * 2 - btm)
+            textViewLog:Resize(w - m * 2, h - m * 2 - btm - nlmargin)
             
-            input:SetOffset(m, h - m - btm)
+            input:SetOffset(m, h - m - btm - nlmargin)
             --trick
-            input:Resize(w - m * 2 - 40, 40)
+            input:Resize(w - m * 2 - 70, 40 + nlmargin)
             input:Invalidate()
-            input:Resize(w - m * 2 - 40, 30)
-            
+            input:Resize(w - m * 2 - 70, 30 + nlmargin)
+            input:Invalidate()
             
             execute:SetOffset(w - 70 - m, h - m - btm)
             execute:Resize(40, 30)
@@ -240,7 +258,7 @@ function DEVELOPERCONSOLE_RESIZE()
             frame:Invalidate()
         end,
         catch = function(error)
-            ERROUT(error)
+            --ERROUT(error)
         end
     }
 end
@@ -250,6 +268,7 @@ function DEVELOPERCONSOLE_LOG_ON_RCLICK()
     ui.AddContextMenuItem(context, "Copy", "DEVELOPERCONSOLE_COPY()")
     context:Resize(100, context:GetHeight())
     ui.OpenContextMenu(context)
+
 end
 function DEVELOPERCONSOLE_COPY()
     local f
@@ -282,7 +301,7 @@ function DEVELOPERCONSOLE_ON_TYPE()
         if (text:match("([%w_%.%,%(%)])$") ~= nil) then
             DEVELOPERCONSOLE_INTELLISENSE()
         else
-            ui.CloseFrame("developerconsoleintellisense")
+            DEVELOPERCONSOLE_INTELLI_CLOSE()
         end
     else
         if (text:match("([%w_%.%,%(%)])$") ~= nil) then
@@ -296,6 +315,11 @@ function DEVELOPERCONSOLE_SAVE_OFFSET()
     DEVELOPERCONSOLE_SETTINGS.y = frame:GetY()
     DEVELOPERCONSOLE_SETTINGS.w = frame:GetWidth()
     DEVELOPERCONSOLE_SETTINGS.h = frame:GetHeight()
+    local frame = ui.GetFrame("developerconsoleinspector");
+    DEVELOPERCONSOLE_SETTINGS.ix = frame:GetX()
+    DEVELOPERCONSOLE_SETTINGS.iy = frame:GetY()
+    DEVELOPERCONSOLE_SETTINGS.iw = frame:GetWidth()
+    DEVELOPERCONSOLE_SETTINGS.ih = frame:GetHeight()
     DEVELOPERCONSOLE_SAVE_SETTINGS()
 end
 function DEVELOPERCONSOLE_ON_RESIZE()
@@ -305,23 +329,132 @@ end
 function DEVELOPERCONSOLE_CONTEXT()
     local frame = ui.GetFrame("developerconsole");
     local context = ui.CreateContextMenu("Context", "", 0, 0, 300, 100)
+    ui.AddContextMenuItem(context, "Toggle Inspector", "ui.ToggleFrame('developerconsoleinspector')")
     ui.AddContextMenuItem(context, "Clear Console", "CLEAR_CONSOLE()")
     if (DEVELOPERCONSOLE_SETTINGS.intellisense) then
         ui.AddContextMenuItem(context, "Disable AutoCompletion", "DEVELOPERCONSOLE_TOGGLEENABLE_INTELLISENSE()")
     else
         ui.AddContextMenuItem(context, "Enable AutoCompletion", "DEVELOPERCONSOLE_TOGGLEENABLE_INTELLISENSE()")
     end
+    ui.AddContextMenuItem(context, "-> Add Tag Snippet{nl}   (Press ALT + ENTER to execute)", "DEVELOPERCONSOLE_CONTEXT_SUB_TAG()")
     ui.AddContextMenuItem(context, "Do File", "DEVELOPERCONSOLE_DOFILE_CHOOSE()")
     ui.AddContextMenuItem(context, "Debug Frame", "TOGGLE_UI_DEBUG()")
     ui.AddContextMenuItem(context, "{} to <>", "DEVELOPERCONSOLE_ESCAPEBRACKET()")
     ui.AddContextMenuItem(context, "<> to {}", "DEVELOPERCONSOLE_SURROUNDBRACKET()")
     ui.AddContextMenuItem(context, "Show Explorer", "DEVELOPERCONSOLE_EXPLORER()")
+    ui.AddContextMenuItem(context, "-> Useful? Stuff Frames", "DEVELOPERCONSOLE_CONTEXT_SUB_FRAMES()")
+    
+    context:Resize(300, context:GetHeight())
+    ui.OpenContextMenu(context)
+
+end
+function DEVELOPERCONSOLE_CONTEXT_SUB_FRAMES()
+    local context = ui.CreateContextMenu("Context_Sub", "", 0, 0, 300, 100)
+    
+    local frames = {
+        "font_list"
+    }
+    
+    for _, v in ipairs(frames) do
+        ui.AddContextMenuItem(context, v, "ui.ToggleFrame('" .. v .. "');ui.GetFrame('" .. v .. "'):EnableMove(1)")
+    end
     context:Resize(300, context:GetHeight())
     ui.OpenContextMenu(context)
 end
+function DEVELOPERCONSOLE_CONTEXT_SUB_TAG()
+    
+    EBI_try_catch{
+        try = function()
+            
+            local context = ui.CreateContextMenu("Context_Sub", "", 0, 0, 300, 100)
+            local myPartyInfo = session.party.GetPartyInfo();
+            local partyID="_"
+            local name="_"
+            if(myPartyInfo~=nil)then
+                partyID = myPartyInfo.info:GetPartyID();	
+                name=myPartyInfo.info.name
+            end
+            local list = {
+                {n="Image",v= "\'{img _ 20 20}{/}\'"},
+                {n="Current Location",v = "DEVELOPERCONSOLE_CONTECT_ADDLINKPOS"},
+                {n="Current Party Link",v= "\'{a SLP "..tostring(partyID).."}{#0000FF}{img link_party 24 24}"..name.."{/}{/}{/}\'"},
+            }
+            for _, v in ipairs(list) do
+
+                ui.AddContextMenuItem(context, v.n, "DEVELOPERCONSOLE_CONTEXT_SUB_TAG_EXEC(\"" .. tostring(v.v) .. "\")")
+            end
+            context:Resize(300, context:GetHeight())
+            ui.OpenContextMenu(context)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        
+        end
+    }
+end
+function DEVELOPERCONSOLE_CONTEXT_SUB_TAG_EXEC(v)
+    EBI_try_catch{
+        try = function()
+            v = v:gsub("%{", "｛"):gsub("%}", "｝")
+            local f = lstr("return " .. v .. "");
+            local status, vv = pcall(f);
+          
+            if status then
+                if type(vv) == 'function' then
+                    DEVELOPERCONSOLE_CONTEXT_ADDEDIT(vv())
+                else
+                    DEVELOPERCONSOLE_CONTEXT_ADDEDIT(vv)
+                end
+            else
+                print("ERR"..tostring(vv))
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
+        
+        end
+    }
+end
+function DEVELOPERCONSOLE_CONTECT_ADDLINKPOS()
+
+    local mapName = session.GetMapName()
+    local actorPos = world.GetActorPos(session.GetMyHandle());	
+    local mapprop = geMapTable.GetMapProp(mapName);
+    local pos = mapprop:WorldPosToMinimapPos(actorPos.x, actorPos.z, m_mapWidth, m_mapHeight);	
+    local worldPos = mapprop:MinimapPosToWorldPos(pos.x, pos.y, m_mapWidth, m_mapHeight);
+    local text = MAKE_LINK_MAP_TEXT(mapName, worldPos.x, worldPos.y);
+    return text
+end
+function DEVELOPERCONSOLE_CONTEXT_ADDEDIT(text)
+    EBI_try_catch{
+        try = function()
+            
+            local frame = ui.GetFrame("developerconsole");
+            local input = frame:GetChild("input");
+            AUTO_CAST(input)
+            text = text:gsub("%{", "｛"):gsub("%}", "｝")
+            text=dictionary.ReplaceDicIDInCompStr(text)
+            input:SetText(input:GetCursurLeftText() .. text .. input:GetCursurRightText())
+            input:Invalidate()
+        end,
+        catch = function(error)
+            ERROUT(error)
+        
+        end
+    }
+end
 function DEVELOPERCONSOLE_DOFILE_CHOOSE(frame)
-    local frame = ui.GetFrame("developerconsole");
-    INPUT_STRING_BOX_CB(frame, "Input the path of lua script", "DEVELOPERCONSOLE_DOFILE", "", nil, nil, 260, false)
+    EBI_try_catch{
+        try = function()
+            
+            local frame = ui.GetFrame("developerconsole");
+            INPUT_STRING_BOX_CB(frame, "Input the path of lua script", "DEVELOPERCONSOLE_DOFILE", "", nil, nil, 260, false)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        
+        end
+    }
 end
 function DEVELOPERCONSOLE_DOFILE(frame, argStr)
     EBI_try_catch{
@@ -434,14 +567,13 @@ function DEVELOPERCONSOLE_INTELLISENSE_PICK(nolower, noval)
         tex = tex:lower()
     
     end
-   
-    local tbl1 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)][%w_%s]-$")
-    local tbl2 = string.match(tex, "([%w_%.%:%s]*[%[%]\"%\'])[%w_%s]-$")
-    local tbl3 = string.match(tex, "([%w_%.%:%s]*)$")
+    
+    
+    local tbl3 = string.match(tex, "([%w_%.%:%s]*[%.%:%(%)%[%]\"%\'])[%w_%s]-$")
     local tbl
     if (noval) then
-        local tbl0 = string.match(tex, "([%w_%.%:%s]*)[%.%:%(%)]$")
-        tbl = tbl0 or tbl3 or tbl1 or tbl2 or "_G"
+        local tbl0 = string.match(tex, "([%w_%.%:%s]*)$")
+        tbl = tbl0 or tbl3 or "_G"
     else
         tbl =
             DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(tbl3) or
@@ -457,22 +589,22 @@ function DEVELOPERCONSOLE_INTELLISENSE_PICK_FN()
     local input = frame:GetChild("input");
     AUTO_CAST(input)
     local tex = input:GetCursurLeftText()
-    local lv=1
-    local pos=#tex
-    while pos>=1 do
-        local c=tex:sub(pos,pos)
-        if(c=="(")then
-            lv=lv-1
-            if(lv==0)then
+    local lv = 1
+    local pos = #tex
+    while pos >= 1 do
+        local c = tex:sub(pos, pos)
+        if (c == "(") then
+            lv = lv - 1
+            if (lv == 0) then
                 break
             end
-        elseif(c==")")then
-            lv=lv+1
+        elseif (c == ")") then
+            lv = lv + 1
         end
-        pos=pos-1
+        pos = pos - 1
     end
-
-    local tbl = string.match(tex:sub(1,pos), "([%w_%.%:%[%]%\"%\'%,]*)%([^%(]-$")
+    
+    local tbl = string.match(tex:sub(1, pos), "([%w_%.%:%[%]%\"%\'%,]*)%([^%(]-$")
     
     return tbl
 end
@@ -480,12 +612,14 @@ function DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(code)
     if (code == nil) then
         return nil
     end
+    code = code:gsub("[%.%(]$", "")
+    
     local tbl = nil
     local codeg = string.gsub(code, "\"", "\\\"")
     local f = lstr("return (" .. codeg .. ")");
     local status, error = pcall(f);
-    if (not status or type(error) == "function") then
-        tbl = nil
+    if (type(error) == "function") then
+        tbl = code
     elseif (type(error) == "table") then
         tbl = code
     elseif (type(error) == "userdata" or error ~= nil) then
@@ -494,7 +628,7 @@ function DEVELOPERCONSOLE_INTELLISENSE_VALIDATE(code)
     
     return tbl
 end
-function DEVELOPERCONSOLE_INTELLISENSE()
+function DEVELOPERCONSOLE_INTELLISENSE(choosefirst)
     EBI_try_catch{
         try = function()
             if (not DEVELOPERCONSOLE_SETTINGS.intellisense) then
@@ -507,7 +641,7 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             local frame = ui.GetFrame("developerconsole")
             local isf = ui.GetFrame("developerconsoleintellisense")
             local input = frame:GetChild("input");
-            local sig=isf:GetChild("signature")
+            local sig = isf:GetChild("signature")
             AUTO_CAST(input)
             isf:SetGravity(ui.LEFT, ui.BOTTOM)
             isf:ShowWindow(1)
@@ -533,29 +667,35 @@ function DEVELOPERCONSOLE_INTELLISENSE()
             else
                 tbl = _G
             end
-
+            
             if (tbl and code ~= "_") then
-
+                
                 DEVELOPERCONSOLE_INTELLI_ITERATOR, DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = pairs_sorted(tbl)
-    
-                DEVELOPERCONSOLE_INTELLI_PREFIX=code
+                
+                DEVELOPERCONSOLE_INTELLI_PREFIX = code
                 DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
                 DEVELOPERCONSOLE_INTELLI_COUNT = 0
                 DEVELOPERCONSOLE_INTELLI_SELECT = 0
+                if(choosefirst==1)then
+                    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=true
+                elseif(choosefirst==0) then
+                    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=false
+                end
+           
             end
-
+            
             --signature
-            local ins=DEVELOPERCONSOLE_INTELLISENSE_PICK_FN()
-            if(ins)then
+            local ins = DEVELOPERCONSOLE_INTELLISENSE_PICK_FN()
+            if (ins) then
                 local f = lstr("return " .. ins .. "");
                 local status, err = pcall(f);
                 if (not status or type(err) == "function") then
-                    local t=DEVELOPERCONSOLE_GET_FN_SIGNATURE(err)
+                    local t = DEVELOPERCONSOLE_GET_FN_SIGNATURE(err)
                     if t and t.spr then
-                        sig:SetText("{@st43}{s16}{ol}{#FFFF22}"..t.name.."("..table.concat(t.spr,",")..")")
+                        sig:SetText("{@st43}{s16}{ol}{#FFFF22}" .. t.name .. "(" .. table.concat(t.spr, ",") .. ")")
                         sig:ShowWindow(1)
                     else
-                        sig:SetText("{@st43}{s16}{ol}{#FF2222}".."??(...)")
+                        sig:SetText("{@st43}{s16}{ol}{#FF2222}" .. "??(...)")
                         sig:ShowWindow(1)
                     end
                 else
@@ -619,20 +759,20 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
                     
                     if (type(tbl) == "table") then
                         input:SetText(s .. sel .. "." .. r)
-                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
+                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE(1)", 0.02)
                     elseif (type(tbl) == "function") then
                         input:SetText(s .. sel .. "(" .. r)
-                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE()", 0.02)
+                        ReserveScript("DEVELOPERCONSOLE_INTELLISENSE(1)", 0.02)
                     else
                         input:SetText(s .. sel .. r)
-                        ReserveScript('ui.CloseFrame("developerconsoleintellisense")', 0.01)
-                    
+                        ReserveScript('DEVELOPERCONSOLE_INTELLI_CLOSE()', 0.01)
+                   
                     end
                 end
             else
                 
                 input:SetText(s .. sel .. input:GetCursurRightText())
-                ReserveScript('ui.CloseFrame("developerconsoleintellisense")', 0.01)
+                ReserveScript('DEVELOPERCONSOLE_INTELLI_CLOSE()', 0.01)
             end
         
         end,
@@ -641,14 +781,18 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
         end
     }
 end
+function DEVELOPERCONSOLE_INTELLI_CLOSE()
+    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=false
+    ui.CloseFrame("developerconsoleintellisense")
+end
 function DEVELOPERCONSOLE_GET_FN_SIGNATURE(func)
     return EBI_try_catch{
         try = function()
             local info = debug.getinfo(func)
             
             local src = info.source:split("\n")
-            local name,sfn = src[info.linedefined]:match("function (.*)%((.-)%)")
-            return {name=name,spr=sfn:split(",")}
+            local name, sfn = src[info.linedefined]:match("function (.*)%((.-)%)")
+            return {name = name, spr = sfn:split(",")}
         end,
         catch = function(error)
             return nil
@@ -702,6 +846,7 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                     end
                 end
                 
+                
                 if 1 == keyboard.IsKeyDown("LBRACKET") and (keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1) then
                     local editbox = frame:GetChild("input");
                     tolua.cast(editbox, "ui::CEditControl");
@@ -713,25 +858,27 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                     editbox:SetText(editbox:GetText() .. "｝")
                 end
                 if 1 == keyboard.IsKeyDown("ENTER") and (keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1) then
-                    
+                    -- local editbox = frame:GetChild("input");
+                    -- editbox:SetText(editbox:GetText() .. "{nl}")
+                    -- editbox:Invalidate()
                     DEVELOPERCONSOLE_ENTER_KEY(frame)
                 end
                 if 1 == keyboard.IsKeyDown("SPACE") and (keyboard.IsKeyPressed("LCTRL") == 1 or keyboard.IsKeyPressed("RCTRL") == 1) then
                     local editbox = frame:GetChild("input");
                     tolua.cast(editbox, "ui::CEditControl");
                     --最後のスペースを消す
-                    local tex=editbox:GetCursurLeftText()
-                    if(tex:match(" $"))then
+                    local tex = editbox:GetCursurLeftText()
+                    if (tex:match(" $")) then
                         editbox:SetText(editbox:GetCursurLeftText():sub(1, -2) .. editbox:GetCursurRightText())
                     end
-                    DEVELOPERCONSOLE_INTELLISENSE()
+                    DEVELOPERCONSOLE_INTELLISENSE(true)
                 end
             end
             if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
                 local editbox = frame:GetChild("input");
                 tolua.cast(editbox, "ui::CEditControl");
                 if (editbox:IsHaveFocus() == 0) then
-                    ui.CloseFrame("developerconsoleintellisense")
+                    DEVELOPERCONSOLE_INTELLI_CLOSE()
                 end
                 local isf = ui.GetFrame("developerconsoleintellisense")
                 local list = isf:GetChild("triggers");
@@ -769,19 +916,27 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 if 1 == keyboard.IsKeyDown("ENTER") then
                     DEVELOPERCONSOLE_DETERMINE_INTELLI()
                 end
-                if 1 == keyboard.IsKeyDown("TAB") or 1 == keyboard.IsKeyDown("PERIOD") then
-                    DEVELOPERCONSOLE_DETERMINE_INTELLI(true)
+                if 1 == keyboard.IsKeyDown("TAB")  then
+                    if(list:GetSelItemIndex()<0)then
+                        list:DeSelectItemAll()
+                        list:SelectItem(0)
+                    end
+                    DEVELOPERCONSOLE_DETERMINE_INTELLI(1)
+                
+                end
+                if  1 == keyboard.IsKeyDown("PERIOD") then
+                    DEVELOPERCONSOLE_DETERMINE_INTELLI(1)
                 
                 end
                 if 1 == keyboard.IsKeyDown("ESCAPE") then
-                    ui.CloseFrame("developerconsoleintellisense")
+                    DEVELOPERCONSOLE_INTELLI_CLOSE()
                 end
                 
                 AUTO_CAST(list)
                 if DEVELOPERCONSOLE_INTELLI and DEVELOPERCONSOLE_INTELLI_ITERATOR then
                     --イテレータを回す
                     local limit = 10000
-
+                    
                     for i = 0, limit do
                         local k, v = DEVELOPERCONSOLE_INTELLI_ITERATOR(DEVELOPERCONSOLE_INTELLI_TABLE, DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY)
                         DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = k
@@ -795,17 +950,17 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                         end
                         if (DEVELOPERCONSOLE_INTELLI_STR == "" or v.k:lower():starts(DEVELOPERCONSOLE_INTELLI_STR)) then
                             
-                            local f = lstr("return (" .. tostring(DEVELOPERCONSOLE_INTELLI_PREFIX or "").."."..tostring(v.k) .. ")");
+                            local f = lstr("return (" .. tostring(DEVELOPERCONSOLE_INTELLI_PREFIX or "") .. "." .. tostring(v.k) .. ")");
                             local status, error = pcall(f);
-                            local tbl=error
-                            if(tbl~=nil) then
-                            list:AddItem(tostring(v.k) .. "  {s15}{ol}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
+                            local tbl = error
+                            if (tbl ~= nil) then
+                                list:AddItem(tostring(v.k) .. "  {s15}{ol}{#999999}" .. type(tbl), DEVELOPERCONSOLE_INTELLI_COUNT)
                             else
                                 list:AddItem(tostring(v.k) .. "  {s15}{ol}{#FF9999} ??", DEVELOPERCONSOLE_INTELLI_COUNT)
                             end
                             DEVELOPERCONSOLE_INTELLI_COUNT = DEVELOPERCONSOLE_INTELLI_COUNT + 1
-                            if (list:GetSelItemIndex() < 0) then
-                                --list:SelectItem(0)
+                            if (list:GetSelItemIndex() < 0 and DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST) then
+                                list:SelectItem(0)
                             end
                             if (DEVELOPERCONSOLE_INTELLI_COUNT > 100) then
                                 DEVELOPERCONSOLE_INTELLI = false
@@ -829,7 +984,7 @@ function DEVELOPERCONSOLE_ENTER_KEY(frame, control, argStr, argNum)
     if ui.IsFrameVisible("developerconsoleintellisense") == 1 then
         DEVELOPERCONSOLE_DETERMINE_INTELLI()
         
-        ui.CloseFrame("developerconsoleintellisense")
+        DEVELOPERCONSOLE_INTELLI_CLOSE()
     else
         
         local textlog = frame:GetChild("textview_log");
