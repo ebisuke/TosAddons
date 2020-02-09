@@ -4,10 +4,10 @@
     "name" : "Developer Console Ex",
     "file" : "developerconsole",
     "extension" : "ipf",
-    "fileVersion" : "v1.1.0",
-    "releaseTag" : "devconsole_v1.1.0",
+    "fileVersion" : "v2.0.0",
+    "releaseTag" : "devconsole_v2.0.0",
     "unicode" : "📖",
-    "description" : "DeveloperConsoleの私的改造版です。ITOSのそれとは競合します。",
+    "description" : "DeveloperConsoleの私的改造版です。",
     "tags" : [
       "development",
       "developerconsole"

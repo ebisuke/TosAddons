@@ -156,7 +156,7 @@ function TESTBOARD_INIT()
             local frame = ui.GetFrame(g.framename)
             local button = frame:CreateOrGetControl("button", "btn", 0, 80, 200, 100)
             AUTO_CAST(button)
-            button:SetEventScript(ui.LBUTTONUP, "TESTBOARD_ACTIVATE_DPS")
+            button:SetEventScript(ui.LBUTTONUP, "TESTBOARD_TEST")
             button:SetText("INJECT LOVE!")
         end,
         catch = function(error)
@@ -227,22 +227,23 @@ end
 function TESTBOARD_HEXTOSTRING(hex)
     return string.char(hex % 0x100) .. string.char(hex / 0x100 % 0x100) .. string.char(hex / 0x10000 % 0x100) .. string.char(hex / 0x1000000 % 0x100)
 end
-function TESTBOARD_ACTIVATE_DPS()
+function TESTBOARD_TEST()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
+            local ss=""
+            --MarketSearch(1, 0, "ナ", "", {}, {}, 10);
+            MarketRecipeSearch(1,nil,10)
+            -- local targetinfo = info.GetTargetInfo( session.GetMyHandle() );
+            -- local p=tolua.cast(targetinfo,"MINMAP_MATCH")
+            -- p.worldPoint.x=0x008c5260
+            -- local hoge={0x008c5260}
+            -- local fd=io.open("c:\\temp\\hoge.txt","w")
+            -- EnumWindows = alien.user32.EnumWindows
+            -- print("A:"..tostring(EnumWindows))   
             
-
-            local targetinfo = info.GetTargetInfo( session.GetMyHandle() );
-            local p=tolua.cast(targetinfo,"MINMAP_MATCH")
-            p.worldPoint.x=0x008c5260
-            local hoge={0x008c5260}
-            local fd=io.open("c:\\temp\\hoge.txt","w")
-            EnumWindows = alien.user32.EnumWindows
-            print("A:"..tostring(EnumWindows))   
-            
-            --print("C:"..tostring(ptr3.minimapPoint))
-            fd:close()
+            -- --print("C:"..tostring(ptr3.minimapPoint))
+            -- fd:close()
 
 
         end,

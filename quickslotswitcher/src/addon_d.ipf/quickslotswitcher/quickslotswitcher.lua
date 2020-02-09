@@ -418,7 +418,6 @@ function QSS_LOAD_SETTINGS()
         g.settings = t
         if (not g.settings.version) then
             g.settings.version = 0
-        
         end
     end
     local newdata=false
