@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uiframe name="developerconsole" x="0" y="0" width="800" height="500">
+<uiframe name="developerconsole" x="0" y="0" width="800" height="500" >
     <frame layout_gravity="left bottom"/>
-	<input hittest="true" movable="true" moveintitlebar="false" hittestframe="true"  resize="true" resizerange="60 30 1800 1000"/>
+	<input hittest="true" movable="true" moveintitlebar="false" hittestframe="true"  resize="true" resizerange="150 90 1800 1000"/>
     <option hideable="true"/>
     <draw blend="95"/>
 	<script OpenScp="DEVELOPERCONSOLE_OPEN" CloseScp="DEVELOPERCONSOLE_CLOSE"/>
