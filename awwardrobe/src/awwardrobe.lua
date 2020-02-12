@@ -75,7 +75,15 @@ local translationtable={
     alertunwear={jp="[AWW]全部脱ぎます",  eng="[AWW]Unwear equips."},
     alertplzselect={jp="[AWW]装備セットを選択してください",  eng="[AWW]Please select an equipment set."},
 }
-
+local function EP12()
+    if(option.GetCurrentCountry()~="Japanese")then
+        return true
+    elseif (ui.GetFrame("accountwarehouse"):GetChild("accountwarehouse_tab"))then
+        return true
+    else
+        return false
+    end
+end
 local function L_(str)
     if(option.GetCurrentCountry()=="Japanese")then
         return translationtable[str].jp
@@ -368,30 +376,35 @@ function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
     AWWARDROBE_try(function()
         local frame = ui.GetFrame("accountwarehouse")
         local timer = frame:CreateOrGetControl("timer", "timer", 0, 0, 0, 0)
-        -- tolua.cast(timer,"ui::CAddOnTimer")
-        -- timer:SetUpdateScript("AWWARDROBE_ProcessScript")
-        -- timer:Start(0.001)
 
         --initialize
-        local btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 70, 30)
+        local btnawwwithdraw 
+        local btnawwdeposit
+        local btnawwconfig
+        local cbwardrobe
+        
+        if(EP12())then
+            btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 135, 180, 70, 30)
+            btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 215, 180, 70, 30)
+            btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 295, 180, 70, 30)
+            cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 135, 160, 250, 20)
+        else
+            btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 70, 30)
+            btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 190, 120, 70, 30)
+            btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 350, 120, 70, 30)
+            cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
+        end
+        tolua.cast(cbwardrobe, "ui::CDropList")
         btnawwwithdraw:SetText(L_("btnawwwithdraw"))
         btnawwwithdraw:SetTextTooltip(L_("tipbtnawwwithdraw"))
         btnawwwithdraw:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_WITHDRAW")
-        local btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 190, 120, 70, 30)
         btnawwdeposit:SetText(L_("btnawwdeposit"))
         btnawwdeposit:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_DEPOSIT")
-        --btnawwdeposit:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_UNWEARALL")
         btnawwdeposit:SetTextTooltip(L_("tipbtnawwdeposit"))
-        -- local btnawwchange = frame:CreateOrGetControl("button", "btnawwchange", 270, 120, 70, 30)
-        -- btnawwchange:SetText(L_("btnawwchange"))
-        -- btnawwchange:SetTextTooltip(L_("tipbtnawwchange"))
-        -- btnawwchange:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_ON_CHANGE")
-        local btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 350, 120, 70, 30)
         btnawwconfig:SetText(L_("btnawwconfig"))
         btnawwconfig:SetTextTooltip(L_("tipbtnawwconfig"))
         btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
-        local cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
-        tolua.cast(cbwardrobe, "ui::CDropList")
+
         cbwardrobe:SetSkinName("droplist_normal")
         cbwardrobe:SetTextTooltip(L_("tipcbwardrobe"))
         AWWARDROBE_UPDATE_DROPBOXAW()
