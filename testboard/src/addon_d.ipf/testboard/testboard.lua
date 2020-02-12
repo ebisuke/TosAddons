@@ -21,6 +21,7 @@ g.interlocked = false
 g.currentIndex = 1
 g.x = nil
 g.y = nil
+g.buffs={}
 --ライブラリ読み込み
 CHAT_SYSTEM("[TESTBOARD]loaded")
 local acutil = require('acutil')
@@ -122,6 +123,10 @@ function TESTBOARD_ON_INIT(addon, frame)
                 
                 g.loaded = true
             end
+            addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
+            addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
+            addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
+            
             --  --コンテキストメニュー
             -- frame:SetEventScript(ui.RBUTTONDOWN, "AFKMUTE_TOGGLE")
             -- --ドラッグ
@@ -228,27 +233,86 @@ function TESTBOARD_HEXTOSTRING(hex)
     return string.char(hex % 0x100) .. string.char(hex / 0x100 % 0x100) .. string.char(hex / 0x10000 % 0x100) .. string.char(hex / 0x1000000 % 0x100)
 end
 function TESTBOARD_TEST()
+    
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            local ss=""
-            --MarketSearch(1, 0, "ナ", "", {}, {}, 10);
-            MarketRecipeSearch(1,nil,10)
-            -- local targetinfo = info.GetTargetInfo( session.GetMyHandle() );
-            -- local p=tolua.cast(targetinfo,"MINMAP_MATCH")
-            -- p.worldPoint.x=0x008c5260
-            -- local hoge={0x008c5260}
-            -- local fd=io.open("c:\\temp\\hoge.txt","w")
-            -- EnumWindows = alien.user32.EnumWindows
-            -- print("A:"..tostring(EnumWindows))   
-            
-            -- --print("C:"..tostring(ptr3.minimapPoint))
-            -- fd:close()
-
-
+            local ss = ""
+        --MarketSearch(1, 0, "ナ", "", {}, {}, 10);
+        --MarketRecipeSearch(1,nil,10)
+        -- local targetinfo = info.GetTargetInfo( session.GetMyHandle() );
+        -- local p=tolua.cast(targetinfo,"MINMAP_MATCH")
+        -- p.worldPoint.x=0x008c5260
+        -- local hoge={0x008c5260}
+        -- local fd=io.open("c:\\temp\\hoge.txt","w")
+        -- EnumWindows = alien.user32.EnumWindows
+        -- print("A:"..tostring(EnumWindows))
+        -- --print("C:"..tostring(ptr3.minimapPoint))
+        -- fd:close()
         end,
         catch = function(error)
-            TESTBOARD_ERROUT("FAIL:"..tostring(error))
+            TESTBOARD_ERROUT("FAIL:" .. tostring(error))
+        end
+    }
+end
+function TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
+    local totalTime = 20000;
+    local curTime = 0;
+    EBI_try_catch{
+        try = function()
+            
+            local iconInfo = icon:GetInfo();
+            totalTime=g.buffs[ iconInfo.type] or 0
+            local buff = info.GetBuff(session.GetMyHandle(), iconInfo.type);
+            if buff ~= nil then
+              
+                
+                curTime = buff.time;
+                
+            end
+            local n=127+math.min(128,math.max(0,curTime*128/totalTime))
+            icon:SetColorTone(string.format("%02X%02X%02X%02X",n,n,n,n));
+        end,
+        catch = function(error)
+            TESTBOARD_ERROUT("FAIL:" .. tostring(error))
+        end
+    }
+    print(tostring(curTime)..","..tostring(totalTime))
+    return curTime, totalTime;
+end
+function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
+    EBI_try_catch{
+        try = function()
+            local handle = session.GetMyHandle();
+            if msg == "BUFF_ADD" then
+                local buff = info.GetBuff(session.GetMyHandle(), argNum);
+                g.buffs[argNum]=buff.time
+                for i = 0, 2 do
+
+                    for k=0,#s_buff_ui.slotlist[i]-1 do
+                        local slot=s_buff_ui.slotlist[i][k]
+                        if slot:IsVisible() ~= 0 then
+                            local icon = slot:GetIcon();
+                            icon:SetOnCoolTimeUpdateScp('TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN');
+                            print("here")
+                            icon:ClearText();
+                            icon:SetCoolTimeMode(true,false)
+                            slot:SetSkinName("ebi_cool")
+                            slot:Invalidate()
+                            icon:Invalidate()
+                        end
+                    end
+                end
+            
+            elseif msg == "BUFF_REMOVE" then
+                g.buffs[argNum]=nil
+            elseif msg == "BUFF_UPDATE" then
+                local buff = info.GetBuff(session.GetMyHandle(),argNum);
+                g.buffs[argNum]=buff.time
+            end
+        end,
+        catch = function(error)
+            TESTBOARD_ERROUT("FAIL:" .. tostring(error))
         end
     }
 end
