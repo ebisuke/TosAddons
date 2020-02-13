@@ -123,9 +123,9 @@ function TESTBOARD_ON_INIT(addon, frame)
                 
                 g.loaded = true
             end
-            addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
-            addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
-            addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
+            --addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
+            --addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
+            --addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
             
             --  --コンテキストメニュー
             -- frame:SetEventScript(ui.RBUTTONDOWN, "AFKMUTE_TOGGLE")
@@ -275,7 +275,7 @@ function TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
           
         end,
         catch = function(error)
-            TESTBOARD_ERROUT("FAIL:" .. tostring(error))
+            --TESTBOARD_ERROUT("FAIL:" .. tostring(error))
         end
     }
  
@@ -311,7 +311,8 @@ function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
                 g.buffs[argNum]=nil
             elseif msg == "BUFF_UPDATE" then
                 local buff = info.GetBuff(session.GetMyHandle(),argNum);
-                g.buffs[argNum].time={buff.time}
+                g.buffs[argNum]=g.buffs[argNum] or {}
+                g.buffs[argNum].time=buff.time
             end
         end,
         catch = function(error)
