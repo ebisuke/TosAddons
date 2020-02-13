@@ -256,28 +256,29 @@ function TESTBOARD_TEST()
     }
 end
 function TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
+    
     local totalTime = 20000;
     local curTime = 0;
     EBI_try_catch{
         try = function()
             
             local iconInfo = icon:GetInfo();
-            totalTime=g.buffs[ iconInfo.type] or 0
+            if(g.buffs[ iconInfo.type]~=nil)then
+                totalTime=g.buffs[ iconInfo.type].time or 0
+            end
             local buff = info.GetBuff(session.GetMyHandle(), iconInfo.type);
             if buff ~= nil then
               
-                
-                curTime = buff.time;
-                
+                curTime=buff.time;
+                local n=127+math.min(128,math.max(0,curTime*128/totalTime))
             end
-            local n=127+math.min(128,math.max(0,curTime*128/totalTime))
-            icon:SetColorTone(string.format("%02X%02X%02X%02X",n,n,n,n));
+          
         end,
         catch = function(error)
             TESTBOARD_ERROUT("FAIL:" .. tostring(error))
         end
     }
-    print(tostring(curTime)..","..tostring(totalTime))
+ 
     return curTime, totalTime;
 end
 function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
@@ -286,7 +287,7 @@ function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
             local handle = session.GetMyHandle();
             if msg == "BUFF_ADD" then
                 local buff = info.GetBuff(session.GetMyHandle(), argNum);
-                g.buffs[argNum]=buff.time
+                g.buffs[argNum]={time=buff.time}
                 for i = 0, 2 do
 
                     for k=0,#s_buff_ui.slotlist[i]-1 do
@@ -294,11 +295,13 @@ function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
                         if slot:IsVisible() ~= 0 then
                             local icon = slot:GetIcon();
                             icon:SetOnCoolTimeUpdateScp('TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN');
-                            print("here")
-                            icon:ClearText();
-                            icon:SetCoolTimeMode(true,false)
+                           
+                            -- icon:ClearText();
+                            slot:SetIcon(icon)
+                            slot:EnableDrag(0)
+                            slot:EnableDrop(0)
                             slot:SetSkinName("ebi_cool")
-                            slot:Invalidate()
+
                             icon:Invalidate()
                         end
                     end
@@ -308,7 +311,7 @@ function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
                 g.buffs[argNum]=nil
             elseif msg == "BUFF_UPDATE" then
                 local buff = info.GetBuff(session.GetMyHandle(),argNum);
-                g.buffs[argNum]=buff.time
+                g.buffs[argNum].time={buff.time}
             end
         end,
         catch = function(error)
@@ -316,3 +319,4 @@ function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
         end
     }
 end
+
