@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by imc (imc) -->
+<!-- edited with XMLSpy v2008 sp1 (http://www.altova.com) by MintPC (Mi) -->
+<skinset name="Base">
+    <skinlist category="frames">
+        <skin name="smallui_dot_skillslot" texture="\skin\ebi_oh.tga">
+            <img name="off" imgrect="0 0 4 9"/>
+            <img name="on" imgrect="9 0 4 9"/>
+        </skin>
+
+    </skinlist>
+</skinset>

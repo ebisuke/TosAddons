@@ -244,11 +244,13 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
             
             
             ANOTHERONEOFINVENTORY_LOAD_SETTINGS()
-           
+            
            
             ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
-            ui.GetFrame("anotheroneofinventory"):ShowWindow(1)
-           
+
+            if(not g.settings.noshow)then
+                ui.GetFrame("anotheroneofinventory"):ShowWindow(1)
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -258,14 +260,19 @@ end
 function ANOTHERONEOFINVENTORY_SHOW(frame)
     frame = ui.GetFrame(g.framename)
     frame:ShowWindow(1)
+    g.settings.noshow=false
+    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
 end
 function ANOTHERONEOFINVENTORY_CLOSE(frame)
     frame = ui.GetFrame(g.framename)
     frame:ShowWindow(0)
+    g.settings.noshow=true
+    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
 end
 function ANOTHERONEOFINVENTORY_TOGGLE_FRAME(frame)
+    g.settings.noshow=not (not (ui.IsFrameVisible(g.framename)==1))
     ui.ToggleFrame(g.framename)
-
+    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
 end
 function AOI_ISINITIALIZED()
     return g.initialized and ui.GetFrame(g.framename) and ui.GetFrame(g.framename):GetChildRecursively("aoi_slt")
