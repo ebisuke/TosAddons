@@ -1,6 +1,7 @@
 # Small UI
-小さいUIを提供します。(クイックスロットは現状キーボードのみ)
-Small is beautiful.
+小さいUIを提供します。(クイックスロットは現状キーボードのみ)  
+Small is beautiful.  
+![screenshot_20200213_00005](https://user-images.githubusercontent.com/50558182/74440328-2844d900-4eb1-11ea-900d-01e29b78a22c.jpg)
 ## 概要
 ### マップ
 * 横幅が小さくなり、正方形になります
