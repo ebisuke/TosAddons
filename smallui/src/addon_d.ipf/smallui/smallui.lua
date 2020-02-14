@@ -87,6 +87,7 @@ function SMALLUI_ON_INIT(addon, frame)
             addontimer:Start(0.01)
             addontimer:EnableHideUpdate(1)
             g.frame:ShowWindow(1)
+            g.frame:SetOffset(0,0)
         end,
         catch = function(error)
             ERROUT(error)
@@ -237,24 +238,24 @@ end
 function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     local frame
     frame = ui.GetFrame("openingameshopbtn")
-    frame:SetMargin(0, 150, -20, 0)
+    frame:SetMargin(0, 160, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
     frame = ui.GetFrame("minimizedalarm")
-    frame:SetMargin(0, 180, -20, 0)
-    SMALLUI_DO_SMALL_BUTTON(frame)
+    frame:SetMargin(0, 190, 0, 0)
+    SMALLUI_DO_SMALL_BANNER(frame)
     frame = ui.GetFrame("minimized_tp_button")
-    frame:SetMargin(0, 240, -20, 0)
+    frame:SetMargin(0, 220, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
     
     frame = ui.GetFrame("minimized_guild_housing")
-    frame:SetMargin(0, 270, -20, 0)
+    frame:SetMargin(0, 220, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
     frame = ui.GetFrame("minimizedeventbanner")
-    frame:SetMargin(0, 330,0 , 0)
-    --SMALLUI_DO_SMALL_BUTTON(frame)
+    frame:SetMargin(0, 250,0 , 0)
+    SMALLUI_DO_SMALL_BANNER(frame)
     frame = ui.GetFrame("minimized_godprotection_button")
-    frame:SetMargin(0, 300, -20, 0)
-    SMALLUI_DO_SMALL_BUTTON(frame)
+    frame:SetMargin(0, 270,0, 0)
+    --SMALLUI_DO_SMALL_BUTTON(frame)
 
 end
 function SMALLUI_DO_SMALL_BUTTON(frame)
@@ -263,7 +264,11 @@ function SMALLUI_DO_SMALL_BUTTON(frame)
         if (g:GetClassString() == "ui::CButton") then
             AUTO_CAST(g)
             g:EnableImageStretch(true)
+        elseif (g:GetClassString() == "ui::CPicture") then
+            AUTO_CAST(g)
+            g:SetEnableStretch(1)
         end
+        g:SetGravity(ui.RIGHT,ui.TOP)
         if (g:GetUserValue("su_resized") == nil or g:GetUserValue("su_resized") == "None") then
             local margin = g:GetMargin()
             g:Resize(g:GetWidth() / 2, g:GetHeight() / 2)
@@ -273,13 +278,40 @@ function SMALLUI_DO_SMALL_BUTTON(frame)
             --print("already resized "..g:GetUserValue("su_resized"))
             end
     end
+    frame:Resize(30,30)
+end
+function SMALLUI_DO_SMALL_BANNER(frame)
+    local gbox = frame:GetChild("gbox")
+    gbox:Resize(30,30)
+    AUTO_CAST(gbox)
+    gbox:EnableHittestGroupBox(true)
+    local g = gbox:GetChild("pic")
+    g:SetOffset(0,0)
+    if (g:GetClassString() == "ui::CButton") then
+        AUTO_CAST(g)
+        g:EnableImageStretch(true)
+    elseif (g:GetClassString() == "ui::CPicture") then
+        AUTO_CAST(g)
+        g:SetEnableStretch(1)
+    end
+    g:SetGravity(ui.RIGHT,ui.TOP)
+    g:EnableHitTest(1)
+    if (g:GetUserValue("su_resized") == nil or g:GetUserValue("su_resized") == "None") then
+        local margin = g:GetMargin()
+        g:Resize(g:GetWidth() / 2, g:GetHeight() / 2)
+        g:SetUserValue("su_resized", "true")
+    --print("resized")
+    else
+        --print("already resized "..g:GetUserValue("su_resized"))
+    end
+    frame:Resize(30,30)
 end
 function SMALLUI_ON_TIMER()
     local frame = ui.GetFrame("questinfoset_2")
-    frame:Resize(300, 630)
+    frame:Resize(300, 550)
     frame:SetMargin(0, 400, 0, 0)
     
-    frame:GetChild("member"):Resize(300, 600)
+    frame:GetChild("member"):Resize(300, 450)
     frame:GetChild("member"):SetMargin(100, 100, 0, 0)
     --frame:GetChild("QUEST_SHARE"):Resize(200,frame:GetChild("QUEST_SHARE"):GetHeight())
     for i = 0, frame:GetChildCount() - 1 do

@@ -307,7 +307,7 @@
     "file" : "smallui",
     "extension" : "ipf",
     "fileVersion" : "v0.0.1",
-    "releaseTag" : "smallui-v0.0.1",
+    "releaseTag" : "smallui-v0.0.2",
     "unicode" : "📖",
     "description" : "小さいUIを提供します",
     "tags" : [
