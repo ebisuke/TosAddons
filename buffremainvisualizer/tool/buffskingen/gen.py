@@ -18,19 +18,21 @@ def main():
             for i in c:
                 if(i.tag=="image"):
                     if("name" in i.attrib):
-                        xmltable[i.attrib["name"]]={
-                            "name":i.attrib["name"],
+                        xmltable[i.attrib["name"].lower()]={
+                            "name":i.attrib["name"].lower(),
                             "file":i.attrib["file"],
                             "imgrect":i.attrib["imgrect"],
                         }
-    for s in glob.glob(datapath+"ies.ipf\\buff*.ies"):
-        p=pandas.read_csv(s,encoding='utf-8')
-        for r in p.iterrows():
-            if("Icon" in r[1]):
-                iconname="icon_"+str(r[1]["Icon"])
-                if iconname in xmltable:
-                    bufftable[iconname]=xmltable[iconname]
-
+    for s in glob.glob(datapath+"ies.ipf\\*.ies"):
+        try:
+            p=pandas.read_csv(s,encoding='utf-8')
+            for r in p.iterrows():
+                if("Icon" in r[1]):
+                    iconname="icon_"+str(r[1]["Icon"]).lower()
+                    if iconname in xmltable:
+                        bufftable[iconname]=xmltable[iconname]
+        except:
+            pass
     # gen
     root=ET.Element("skinset")
     tree=ET.ElementTree(element=root)
@@ -38,7 +40,7 @@ def main():
     imglist.set("category","bmvaddon")
     for s in bufftable.values() :
         skin=ET.SubElement(imglist,"skin")
-        skin.set("name","bmvaddon_"+s["name"])
+        skin.set("name","bmvaddon_"+s["name"].lower())
         skin.set("texture",s["file"])
         # elem = ET.SubElement(skin, "img")
         # elem.set("name", "slot")
