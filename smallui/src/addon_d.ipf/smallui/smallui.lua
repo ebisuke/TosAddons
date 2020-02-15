@@ -15,7 +15,7 @@ g.settings = {x = 300, y = 300, volume = 100, mute = false}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "smallui"
-g.debug = true
+g.debug = false
 g.handle = nil
 g.interlocked = false
 g.currentIndex = 1
@@ -194,14 +194,17 @@ end
 function SMALLUI_SMALLIFY_MINIMAP()
     local frame = ui.GetFrame("minimap")
     local minimap = ui.GetFrame("minimap")
+    local diffx=200-310
+    local diffy=200-230
+
     frame:Resize(200, 200)
     frame:SetMargin(0, 70, 35, 0)
     local gbox = frame:GetChild("mbg")
     gbox:Resize(200, 200)
     local map = frame:GetChild("map")
-    map:SetOffset(-100, -100)
+    map:SetOffset(0, 0)
     local map = frame:GetChild("map_bg")
-    map:SetOffset(-100, -100)
+    map:SetOffset(0,0)
     
     frame = ui.GetFrame("mapareatext")
     frame:Resize(200, 20)
@@ -232,7 +235,25 @@ function SMALLUI_SMALLIFY_MINIMAP()
     frame:GetChild("open_map"):SetMargin(140, 0, 0, 5)
     frame:GetChild("ZOOM_INFO"):ShowWindow(0)
 
-
+    if(obde)then
+        DBGOUT("OBDE Supported")
+        obde.CalculateMinimapAxis  = function(self, parent, actor)
+            local cursize = GET_MINIMAPSIZE();
+            local pictureui = GET_CHILD(parent, "map", "ui::CPicture");
+            local mmw = pictureui:GetImageWidth() * (100 + cursize) / 100;
+            local mmh = pictureui:GetImageHeight() * (100 + cursize) / 100;
+        
+            local mypos = info.GetPositionInMap(session.GetMyHandle(), mmw, mmh);
+        
+            local pos = actor:GetPos();
+            local mapprop = session.GetCurrentMapProp();
+            local mmpos = mapprop:WorldPosToMinimapPos(pos, mmw, mmh);
+            return {
+              x = mmpos.x - (mypos.x - mini_frame_hw)+diffx/2,
+              y = mmpos.y - (mypos.y - mini_frame_hh)+diffy/2
+            };
+          end
+    end
 
 end
 function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
