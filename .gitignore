@@ -6,7 +6,6 @@
 pseudoforecast/converter/xml/*
 tmp.ipf
 pseudoforecast_enhanced/converter/xml/*
-
 pseudoforecast/converter/luadata
 pseudoforecast_enhanced/converter/luadata
 wikihelp/tool/toswikicrawler/.vs/*
@@ -21,4 +20,5 @@ housingsimulator/tool/HousingRenderer/obj/*
 housingsimulator/tool/HousingRenderer/Temp/*
 housingsimulator/tool/HousingRenderer/Logs/*
 housingsimulator/tool/HousingRenderer/Library/*
-
+/buffremainvisualizer/tool/buffskingen/venv/
+/buffremainvisualizer/tool/buffskingen/venv/
