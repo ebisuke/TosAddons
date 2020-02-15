@@ -23,14 +23,16 @@ def main():
                             "file":i.attrib["file"],
                             "imgrect":i.attrib["imgrect"],
                         }
-    for s in glob.glob(datapath+"ies.ipf\\buff*.ies"):
-        p=pandas.read_csv(s,encoding='utf-8')
-        for r in p.iterrows():
-            if("Icon" in r[1]):
-                iconname="icon_"+str(r[1]["Icon"])
-                if iconname in xmltable:
-                    bufftable[iconname]=xmltable[iconname]
-
+    for s in glob.glob(datapath+"ies.ipf\\*.ies"):
+        try:
+            p=pandas.read_csv(s,encoding='utf-8')
+            for r in p.iterrows():
+                if("Icon" in r[1]):
+                    iconname="icon_"+str(r[1]["Icon"])
+                    if iconname in xmltable:
+                        bufftable[iconname]=xmltable[iconname]
+        except:
+            pass
     # gen
     root=ET.Element("skinset")
     tree=ET.ElementTree(element=root)
