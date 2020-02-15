@@ -85,7 +85,7 @@ function BUFFREMAINVISUALIZER_ON_INIT(addon, frame)
             g.frame:ShowWindow(0)
         end,
         catch = function(error)
-            TESTBOARD_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -105,8 +105,14 @@ function BUFFREMAINVISUALIZER_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
             if buff ~= nil then
               
                 curTime=buff.time;
-                local n=math.max(0,(math.min(127,curTime*127/buff.time)))+128
-                icon:SetColorTone(string.format("%02X%02X%02X%02X",n,n,n,n))
+                local n
+                
+                if(totalTime~=0)then
+                    n=128
+                else
+                    n=255
+                end
+                icon:SetColorTone(string.format("%02XFFFFFF",n))
             end
           
         end,
@@ -125,30 +131,7 @@ function BUFFREMAINVISUALIZER_BUFF_ON_MSG(frame, msg, argStr, argNum)
                
                 local buff = info.GetBuff(session.GetMyHandle(), argNum);
                 g.buffs[argNum]={time=buff.time}
-                for i = 0, 2 do
-
-                    for k=0,#s_buff_ui.slotlist[i]-1 do
-                        local slot=s_buff_ui.slotlist[i][k]
-                        if slot:IsVisible() ~= 0 then
-                            local icon = slot:GetIcon();
-                            icon:SetOnCoolTimeUpdateScp('BUFFREMAINVISUALIZER_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN');
-                           
-                            -- icon:ClearText();
-                            slot:SetIcon(icon)
-                            slot:EnableDrag(0)
-                            slot:EnableDrop(0)
-                            slot:SetSkinName("ebi_cool")
-                            slot:EnableDrag(0)
-                            slot:EnableSubIcon(1)
-                            local subicon=CreateIconByIndex(slot,2)
-                            subicon:SetImage("bmv_sub")
-                            local n=127
-                            --icon:SetColorTone(string.format("FF%02X%02X%02X",n,n,n))
-                            icon:Invalidate()
-                        end
-                    end
-                end
-            
+                
             elseif msg == "BUFF_REMOVE" then
                 g.buffs[argNum]=nil
             elseif msg == "BUFF_UPDATE" then
@@ -157,6 +140,32 @@ function BUFFREMAINVISUALIZER_BUFF_ON_MSG(frame, msg, argStr, argNum)
                 g.buffs[argNum].time=buff.time
                 
             end
+            for i = 0, 2 do
+
+                for k=0,#s_buff_ui.slotlist[i]-1 do
+                    local slot=s_buff_ui.slotlist[i][k]
+                    if slot:IsVisible() ~= 0 then
+                        local icon = slot:GetIcon();
+                        icon:SetOnCoolTimeUpdateScp('BUFFREMAINVISUALIZER_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN');
+                        local iconInfo=icon:GetInfo()
+                        local buff=GetClassByType("Buff",iconInfo.type)
+                        -- icon:ClearText();
+                        slot:SetIcon(icon)
+                        slot:EnableDrag(0)
+                        slot:EnableDrop(0)
+                       
+                        slot:SetSkinName("bmvaddon_icon_"..buff.Icon)
+                        slot:EnableDrag(0)
+
+                        local n=127
+                        --icon:SetColorTone(string.format("FF%02X%02X%02X",n,n,n))
+                        icon:Invalidate()
+                    else
+                        slot:SetSkinName("")
+                    end
+                end
+            end
+        
         end,
         catch = function(error)
             ERROUT("FAIL:" .. tostring(error))
