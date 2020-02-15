@@ -203,10 +203,17 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                     elseif(groupName=="Event")then
                         --再開封可能
                         if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
+                            if(itemobj.ClientScp=="None")then
+                                --キューブ仕様
+                                g.openitem=invitem
+                                INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'イベントキューブいくつ開きますか？', 'CUBEOPENER_CUBEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
+                                return true
+                            else
 
-                            g.openitem=invitem
-                            INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'イベントアイテムいくつ開きますか？', 'CUBEOPENER_EVENTOPEN',  invitem.count, 1, invitem.count, nil, nil, 1)
-                            return true
+                                g.openitem=invitem
+                                INPUT_NUMBER_BOX(ui.GetFrame(g.framename), 'イベントアイテムいくつ開きますか？', 'CUBEOPENER_EVENTOPEN',  invitem.count, 1, invitem.count, nil, nil, 1)
+                                return true
+                            end
                         --use
                         else
                             g.openitem=nil
