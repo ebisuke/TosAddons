@@ -153,8 +153,10 @@ function BUFFREMAINVISUALIZER_BUFF_ON_MSG(frame, msg, argStr, argNum)
                         slot:SetIcon(icon)
                         slot:EnableDrag(0)
                         slot:EnableDrop(0)
+                        
+                        slot:SetSkinName("bmvaddon_icon_"..buff.Icon:lower())
+
                        
-                        slot:SetSkinName("bmvaddon_icon_"..buff.Icon)
                         slot:EnableDrag(0)
 
                         local n=127
