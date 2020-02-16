@@ -108,11 +108,17 @@ function BUFFREMAINVISUALIZER_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
                 local n
                 
                 if(totalTime~=0)then
-                    n=128
+                    n=64
                 else
                     n=255
                 end
-                icon:SetColorTone(string.format("%02XFFFFFF",n))
+                if(curTime>5000)then
+                    icon:SetColorTone(string.format("FF%02X%02X%02X",n,n,n))
+                else
+                    --icon:SetColorTone(string.format("%02X%02X%02X%02X",n,math.min(255,n*2),math.min(255,n*2),math.min(255,n*2)))
+                    icon:SetColorTone("FFFFFFFF")
+                end
+               
             end
           
         end,
