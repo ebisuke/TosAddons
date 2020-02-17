@@ -131,6 +131,7 @@ function AFKMUTE_ON_INIT(addon, frame)
 
             acutil.slashCommand("/afkmute", AFKMUTE_PROCESS_COMMAND)
             addon:RegisterMsg('GAME_START_3SEC', 'AFKMUTE_SHOW')
+            addon:RegisterMsg('FPS_UPDATE', 'AFKMUTE_SHOW')
             --ccするたびに設定を読み込む
             if not g.loaded then
                 
