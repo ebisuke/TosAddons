@@ -1,4 +1,4 @@
-﻿$addonname="pseudoforecast"
+﻿$addonname="pseudoforecastitos"
 $emoji="📖"
 $prefix="__"
 $version="v0.4.0"
