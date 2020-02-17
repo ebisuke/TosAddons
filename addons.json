@@ -321,15 +321,27 @@
     "name" : "Buff Remain Visualizer",
     "file" : "buffremainvisualizer",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.3",
-    "releaseTag" : "buffremainvisualizer-v0.0.3",
+    "fileVersion" : "v0.0.4",
+    "releaseTag" : "buffremainvisualizer-v0.0.4",
     "unicode" : "📖",
     "description" : "バフの残り時間を可視化します 今のところプレイヤーのみの適用です  ",
     "tags" : [
       "buff"
     ]
   }
-  
+  ,
+  {
+    "name" : "Pseudo Forecast For ITOS",
+    "file" : "pseudoforecastitos",
+    "extension" : "ipf",
+    "fileVersion" : "v0.4.0",
+    "releaseTag" : "pseudoforecastitos-v0.4.0",
+    "unicode" : "📖",
+    "description" : "Forecastを疑似体験できる ITOS用",
+    "tags" : [
+      "forecast"
+    ]
+  }
   
 
 ]

@@ -108,11 +108,11 @@ function BUFFREMAINVISUALIZER_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
                 local n
                 
                 if(totalTime~=0)then
-                    n=64
+                    n=48
                 else
                     n=255
                 end
-                if(curTime>5000)then
+                if(curTime>0)then
                     icon:SetColorTone(string.format("FF%02X%02X%02X",n,n,n))
                 else
                     --icon:SetColorTone(string.format("%02X%02X%02X%02X",n,math.min(255,n*2),math.min(255,n*2),math.min(255,n*2)))
@@ -146,9 +146,12 @@ function BUFFREMAINVISUALIZER_BUFF_ON_MSG(frame, msg, argStr, argNum)
                 g.buffs[argNum].time=buff.time
                 
             end
-            for i = 0, 2 do
+            for i = 0, s_buff_ui["buff_group_cnt"] do
+                local slotlist = s_buff_ui["slotlist"][i];
+                local slotcount = s_buff_ui["slotcount"][i];
+                local captionlist = s_buff_ui["captionlist"][i];
+                for k=0,slotcount-1 do
 
-                for k=0,#s_buff_ui.slotlist[i]-1 do
                     local slot=s_buff_ui.slotlist[i][k]
                     if slot:IsVisible() ~= 0 then
                         local icon = slot:GetIcon();
@@ -165,9 +168,10 @@ function BUFFREMAINVISUALIZER_BUFF_ON_MSG(frame, msg, argStr, argNum)
                        
                         slot:EnableDrag(0)
 
-                        local n=127
+                        --local n=127
                         --icon:SetColorTone(string.format("FF%02X%02X%02X",n,n,n))
                         icon:Invalidate()
+                        slot:Invalidate()
                     else
                         slot:SetSkinName("")
                     end

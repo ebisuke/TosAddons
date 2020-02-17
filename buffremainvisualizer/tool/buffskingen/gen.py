@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import pandas
 import re
 import glob
-datapath="E:\\Analyze\\newtos\\extract\\"
+datapath="E:\\Analyze\\engtos\\extract\\"
 xmltable={}
 bufftable={}
 def main():

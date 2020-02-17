@@ -18,7 +18,7 @@ patfrm={
     "FAN": "Fan",
 }
 PSEUDOFORECAST_DATA = {}
-filelist=glob.glob("E:\\Analyze\\newtos\\extract\\skill_bytool.ipf\\*.xml")
+filelist=glob.glob("E:\\Analyze\\engtos\\extract\\skill_bytool.ipf\\*.xml")
 for filename in filelist:
     with open(filename,encoding='utf_8') as f:
         data=f.read()
