@@ -95,7 +95,7 @@ function PSEUDOFORECAST_ICON_USE_JUMPER(object, reAction)
 		try = function()
 			
 			PSEUDOFORECAST_ICON_USE(object, reAction)
-		
+			
 		end,
 		catch = function(error)
 			CHAT_SYSTEM(error)
@@ -113,18 +113,21 @@ function PSEUDOFORECAST_ICON_USE(object, reAction)
     if iconPt ~= nil then
         local icon = tolua.cast(iconPt, 'ui::CIcon');
         
-        local iconInfo = icon:GetInfo();
+		local iconInfo = icon:GetInfo();
+		print("call2")
 		if iconInfo:GetCategory() == 'Skill' then
 			local class = GetClassByType("Skill", iconInfo.type)
 			local myActor = GetMyActor();
 			local skillobj=session.GetSkill(iconInfo.type)
 			--CHAT_SYSTEM(string.format("%s,%s,%d,%d",tostring(myActor:IsSkillState()),class.ClassName,skillobj:GetRemainRefreshTimeMS(),skillobj:GetCurrentCoolDownTime()))
+			
 			if(myActor:IsSkillState()==false and 
 			skillobj:GetRemainRefreshTimeMS()<=0 and 
 			skillobj:GetCurrentCoolDownTime()<=0)then
-
+				
 				--それは使える？
 				if(control.IsSkillIconUsable(iconInfo.type)==1)then
+				
 					ReserveScript(string.format("PSEUDOFORECAST_JUDGSKILL(%d)",iconInfo.type),0.01)
 				end
 			
@@ -156,14 +159,16 @@ function PSEUDOFORECAST_SKILL(skillclsid)
 			local angle = fsmactor.GetAngle(actor)
 			PSEUDOFORECAST_ORIGIN={x=pos.x,y=pos.y,z=pos.z}
 			PSEUDOFORECAST_ANGLE=angle
-			
+			print("call3"..className)
 			if(xmlskls)then
+				print("call4")
 				if(class.Target~="Actor")then
 					for i=1,#xmlskls do
 						local xmlskl=xmlskls[i]
 						--CHAT_SYSTEM("IN"..tostring(xmlskl.timestart))
 						ReserveScript(string.format('PSEUDOFORECAST_DELAYED_SKILLACTION("%s",%d)',
 						class.ClassName,i),xmlskl.timestart/1000.0)
+						print("call5")
 					end
 
 					
