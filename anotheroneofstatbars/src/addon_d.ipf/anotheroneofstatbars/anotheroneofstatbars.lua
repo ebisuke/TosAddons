@@ -242,6 +242,8 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             addon:RegisterMsg('BUFF_ADD', 'AOS_BUFF_UPDATE');
             addon:RegisterMsg('BUFF_REMOVE', 'AOS_BUFF_UPDATE');
             addon:RegisterMsg('BUFF_UPDATE', 'AOS_BUFF_UPDATE');
+            addon:RegisterMsg("SHOW_SOUL_CRISTAL", "AOS_SHOW_SOUL_CRISTAL");
+            addon:RegisterMsg("UPDATE_SOUL_CRISTAL", "AOS_UPDATE_SOUL_CRISTAL");
             if not g.loaded then
                 
                 g.loaded = true
@@ -267,6 +269,29 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
 end
 function AOS_ON_FPS_UPDATE()
     g.frame:ShowWindow(1)
+end
+function AOS_SHOW_SOUL_CRISTAL(frame, msg, argStr, argNum)
+    local frame = ui.GetFrame(g.framename)
+    local soulcrystal = frame:GetChild("soulcrystal")
+    AUTO_CAST(soulcrystal)
+    soulcrystal:ShowWindow(1)
+    soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}"..tostring(argNum).."/"..tostring(argNum))
+
+end
+function AOS_UPDATE_SOUL_CRISTAL(frame, msg, maxStr, curCount)
+    local frame = ui.GetFrame(g.framename)
+    local soulcrystal = frame:GetChild("soulcrystal")
+    local maxCount=tonumber(maxStr)
+    AUTO_CAST(soulcrystal)
+    local count = frame:GetUserIValue('MAX_COUNT');
+	if count == 0 and 	maxCount  ~= 0 then
+		frame:SetUserValue('SOULCRYSTAL_MAX_COUNT', 	maxCount );
+	else
+		maxCount = frame:GetUserIValue('SOULCRYSTAL_MAX_COUNT');
+	end
+    local curnum=maxCount-curCount
+    soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}"..tostring(curnum).."/"..tostring(maxCount))
+    
 end
 function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
 
@@ -339,8 +364,10 @@ function AOS_INIT()
             frame:Resize(1400, 80)
             local pic = frame:CreateOrGetControl("picture", "pic", 0, 0, frame:GetWidth(), frame:GetHeight())
             local touch = frame:CreateOrGetControl("picture", "touchbar", 500 - 20, 22, 40, 40)
+            local soulcrystal = frame:CreateOrGetControl("richtext", "soulcrystal", 500 - 30, 5, 40, 40)
             tolua.cast(pic, "ui::CPicture")
             tolua.cast(touch, "ui::CPicture")
+            AUTO_CAST(soulcrystal)
             pic:EnableHitTest(0)
             pic:CreateInstTexture()
             pic:FillClonePicture("00000000")
@@ -350,6 +377,9 @@ function AOS_INIT()
             touch:SetEventScript(ui.MOUSEWHEEL, "AOS_MOUSEWHEEL");
             touch:SetEventScript(ui.LBUTTONDOWN, "AOS_LBTNDOWN");
             touch:SetEventScript(ui.LBUTTONUP, "AOS_LBTNUP");
+            touch:SetEventScript(ui.RBUTTONUP, "AOS_RBTNUP");
+            soulcrystal:ShowWindow(0)
+            soulcrystal:EnableHitTest(0)
             local etc = GetMyEtcObject()
             local jobClassID = TryGetProp(etc, 'RepresentationClassID', 'None')
             local repreJobCls = GetClassByType('Job', jobClassID);
@@ -911,6 +941,9 @@ function AOS_LBTNUP(parent, ctrl)
     g.x = nil
     g.y = nil
     AOS_SAVE_SETTINGS()
+end
+function AOS_RBTNUP(parent, ctrl)
+    HEDADSUPDISPLAY_CAMP_BTN_CLICK()
 end
 function AOS_PROCESS_MOUSE(ctrl)
     return EBI_try_catch{
