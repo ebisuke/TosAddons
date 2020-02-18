@@ -40,7 +40,7 @@ end
 
 
 
-function TESTBOARD_DBGOUT(msg)
+local function DBGOUT(msg)
     
     EBI_try_catch{
         try = function()
@@ -60,7 +60,7 @@ function TESTBOARD_DBGOUT(msg)
     }
 
 end
-function TESTBOARD_ERROUT(msg)
+local function ERROUT(msg)
     EBI_try_catch{
         try = function()
             CHAT_SYSTEM(msg)
@@ -139,7 +139,7 @@ function TESTBOARD_ON_INIT(addon, frame)
             g.frame:ShowWindow(0)
         end,
         catch = function(error)
-            TESTBOARD_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -165,7 +165,7 @@ function TESTBOARD_INIT()
             button:SetText("INJECT LOVE!")
         end,
         catch = function(error)
-            TESTBOARD_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -210,7 +210,7 @@ function TESTBOARD_ON_TIMER(frame)
         -- end
         end,
         catch = function(error)
-            TESTBOARD_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -225,7 +225,7 @@ function TESTBOARD_WEBB()
             web:ShowBrowser(true);
         end,
         catch = function(error)
-            TESTBOARD_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -251,7 +251,7 @@ function TESTBOARD_TEST()
         -- fd:close()
         end,
         catch = function(error)
-            TESTBOARD_ERROUT("FAIL:" .. tostring(error))
+            ERROUT("FAIL:" .. tostring(error))
         end
     }
 end
@@ -316,7 +316,7 @@ function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
             end
         end,
         catch = function(error)
-            TESTBOARD_ERROUT("FAIL:" .. tostring(error))
+            ERROUT("FAIL:" .. tostring(error))
         end
     }
 end

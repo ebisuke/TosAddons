@@ -342,6 +342,19 @@
       "forecast"
     ]
   }
-  
+  ,
+  {
+    "name" : "Mini Expbar",
+    "file" : "miniexpbar",
+    "extension" : "ipf",
+    "fileVersion" : "v0.0.1",
+    "releaseTag" : "miniexpbar-v0.0.1",
+    "unicode" : "📖",
+    "description" : "小さい経験値バーです",
+    "tags" : [
+      "gauge",
+      "expbar"
+    ]
+  }
 
 ]
