@@ -212,8 +212,8 @@
     "name" : "Afkmute",
     "file" : "afkmute",
     "extension" : "ipf",
-    "fileVersion" : "v0.0.4",
-    "releaseTag" : "afkmute-v0.0.4",
+    "fileVersion" : "v0.0.5",
+    "releaseTag" : "afkmute-v0.0.5",
     "unicode" : "📖",
     "description" : "一時的に音を消したいときに",
     "tags" : [

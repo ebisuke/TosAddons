@@ -130,7 +130,7 @@ function AFKMUTE_ON_INIT(addon, frame)
             --g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(CAMPCHEF_GETCID()))
 
             acutil.slashCommand("/afkmute", AFKMUTE_PROCESS_COMMAND)
-            addon:RegisterMsg('GAME_START_3SEC', 'AFKMUTE_SHOW')
+            addon:RegisterMsg('GAME_START_3SEC', 'AFKMUTE_3SEC')
             addon:RegisterMsg('FPS_UPDATE', 'AFKMUTE_SHOW')
             --ccするたびに設定を読み込む
             if not g.loaded then
@@ -152,14 +152,21 @@ function AFKMUTE_ON_INIT(addon, frame)
         end
     }
 end
-function AFKMUTE_SHOW(frame)
+function AFKMUTE_3SEC(frame)
     frame=ui.GetFrame(g.framename)
-    AFKMUTE_LOAD_SETTINGS()
-    AFKMUTE_INITFRAME(frame)
-    frame:SetOffset(g.settings.x, g.settings.y);
+    
+    AFKMUTE_SHOW(frame)
     if(g.settings.mute==true)then
         AFKMUTE_RESTORATION(frame)
     end
+    frame:SetOffset(g.settings.x, g.settings.y);
+    AFKMUTE_LOAD_SETTINGS()
+    AFKMUTE_INITFRAME(frame)
+   
+end
+function AFKMUTE_SHOW(frame)
+    frame=ui.GetFrame(g.framename)
+    frame:ShowWindow(1)
 end
 function AFKMUTE_TOGGLE(frame)
     EBI_try_catch{
