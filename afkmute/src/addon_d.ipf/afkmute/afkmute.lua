@@ -154,8 +154,9 @@ function AFKMUTE_ON_INIT(addon, frame)
 end
 function AFKMUTE_3SEC(frame)
     frame=ui.GetFrame(g.framename)
-    frame:SetOffset(g.settings.x, g.settings.y);
     AFKMUTE_LOAD_SETTINGS()
+    frame:SetOffset(g.settings.x, g.settings.y);
+   
     AFKMUTE_INITFRAME(frame)
     AFKMUTE_SHOW(frame)
     if(g.settings.mute==true)then
