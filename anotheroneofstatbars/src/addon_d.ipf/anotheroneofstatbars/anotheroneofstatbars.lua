@@ -382,18 +382,15 @@ function AOS_INIT()
             soulcrystal:EnableHitTest(0)
             local etc = GetMyEtcObject()
             local jobClassID = TryGetProp(etc, 'RepresentationClassID', 'None')
-            local repreJobCls = GetClassByType('Job', jobClassID);
-            touch:SetTextTooltip(repreJobCls.Name);
-            local MySession = session.GetMyHandle()
             if jobClassID == 'None' or tonumber(jobClassID) == 0 then
+                local MySession = session.GetMyHandle()
                 jobClassID = info.GetJob(MySession);
             end
-            
             local jobCls = GetClassByType('Job', jobClassID);
             local jobIcon = TryGetProp(jobCls, 'Icon');
             if jobIcon ~= nil then
                 touch:SetImage(jobIcon)
-            
+                touch:SetTextTooltip(jobCls.Name);
             end
 
             g.remhpw = 0
