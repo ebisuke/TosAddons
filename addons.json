@@ -266,8 +266,8 @@
     "name" : "Another One of Statbars",
     "file" : "anotheroneofstatbars",
     "extension" : "ipf",
-    "fileVersion" : "v0.1.1",
-    "releaseTag" : "anotheroneofstatbars-v0.1.1",
+    "fileVersion" : "v0.1.2",
+    "releaseTag" : "anotheroneofstatbars-v0.1.2",
     "unicode" : "📖",
     "description" : "ちょっと変わったステータスバーを追加します",
     "tags" : [
