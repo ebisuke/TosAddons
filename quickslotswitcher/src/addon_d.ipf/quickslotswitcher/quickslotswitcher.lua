@@ -240,7 +240,9 @@ function QSS_ON_TIMER()
     EBI_try_catch{
         try = function()
             if(g.loaded)then
-                if((ui.GetFocusObject() == nil or ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") and ui.IsFrameVisible("chat_frame")~=1)then
+                if((ui.GetFocusObject() == nil or 
+                ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") and 
+                ui.IsFrameVisible("chat_frame")~=1)then
                     if(keyboard.IsKeyDown(g.settings.keys.toggle)==1)then
                         local no=g.personalsettings.currentno+1
                         if(no > g.personalsettings.maxno)then
@@ -429,7 +431,7 @@ function QSS_LOAD_SETTINGS()
         ERROUT(string.format('[%s] cannot load personal setting files', addonName))
         g.personalsettings = {
             currentno=1,
-            maxno=4,
+            maxno=2,
             quickslotcount=40,
             quickslots={
                 [1]={},
