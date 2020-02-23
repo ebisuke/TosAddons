@@ -2,6 +2,9 @@
 小さいUIを提供します。(クイックスロットは現状キーボードのみ)  
 Small is beautiful.  
 ![screenshot_20200213_00005](https://user-images.githubusercontent.com/50558182/74440328-2844d900-4eb1-11ea-900d-01e29b78a22c.jpg)
+
+`/suic`とチャットで入力することで設定画面を表示できます。
+To configure, please enter `/suic` in chat window.
 ## 概要
 ### マップ
 * 横幅が小さくなり、正方形になります
