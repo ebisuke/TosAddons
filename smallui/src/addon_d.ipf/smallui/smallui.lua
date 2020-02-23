@@ -292,10 +292,17 @@ function SMALLUI_SMALLIFY_MINIMAP()
             local pos = actor:GetPos();
             local mapprop = session.GetCurrentMapProp();
             local mmpos = mapprop:WorldPosToMinimapPos(pos, mmw, mmh);
-            return {
-              x = mmpos.x - (mypos.x - mini_frame_hw)+diffx/2,
-              y = mmpos.y - (mypos.y - mini_frame_hh)+diffy/2
-            };
+            if(g.settings.resizeminimap)then
+                return {
+                x = mmpos.x - (mypos.x - mini_frame_hw)+diffx/2,
+                y = mmpos.y - (mypos.y - mini_frame_hh)+diffy/2
+                };
+            else
+                return {
+                    x = mmpos.x - (mypos.x - mini_frame_hw),
+                    y = mmpos.y - (mypos.y - mini_frame_hh)
+                    };
+            end
           end
     end
 
