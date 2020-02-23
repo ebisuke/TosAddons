@@ -88,20 +88,64 @@ function SMALLUI_ON_INIT(addon, frame)
             addontimer:EnableHideUpdate(1)
             g.frame:ShowWindow(1)
             g.frame:SetOffset(0,0)
+            SMALLUI_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
+
+function SMALLUI_SAVE_SETTINGS()
+    --CAMPCHEF_SAVETOSTRUCTURE()
+    acutil.saveJSON(g.settingsFileLoc, g.settings)
+end
+function  SMALLUI_LOAD_SETTINGS()
+    DBGOUT("LOAD_SETTING")
+    g.settings = {}
+    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        ERROUT(string.format('[%s] cannot load setting files', addonName))
+        g.settings = {}
+    else
+        --設定ファイル読み込み成功時処理
+        g.settings = t
+        if (not g.settings.version) then
+            g.settings.version = 0
+        
+        end
+    end
+    SMALLUICONFIG_GENERATEDEFAULT(g.settings)
+    SMALLUI_UPGRADE_SETTINGS()
+    SMALLUI_SAVE_SETTINGS()
+
+end
+
+
+function  SMALLUI_UPGRADE_SETTINGS()
+    local upgraded = false
+    return upgraded
+end
+
 function SMALLUI_3SEC()
     EBI_try_catch{
         try = function()
             --SMALLUI_REPLACE("quickslotnexpbar")
-            SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
-            SMALLUI_SMALLIFY_QUICKSLOT()
-            SMALLUI_SMALLIFY_MINIMAP()
-            SMALLUI_SMALLIFY_CHATFRAME()
+            SMALLUI_LOAD_SETTINGS()
+            if(g.settings.resizeminimap)then
+                SMALLUI_SMALLIFY_MINIMAP()
+            end
+            if(g.settings.repositionbuttons)then
+                SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
+            end
+            if(g.settings.resizequickslot)then
+                SMALLUI_SMALLIFY_QUICKSLOT()
+            end
+            if(g.settings.resizechat)then
+                SMALLUI_SMALLIFY_CHATFRAME()
+            end
+
         end,
         catch = function(error)
             ERROUT(error)
@@ -111,9 +155,9 @@ end
 
 function SMALLUI_SMALLIFY_QUICKSLOT()
     local frame = ui.GetFrame("quickslotnexpbar")
-    local sz = 32
-    local slsz = 32
-    local line = 280 + 45-20
+    local sz = g.settings.quickslotsize
+    local slsz = g.settings.quickslotsize
+    local line = 280
     local x
     x = -100
     for i = 1, 10 do
@@ -123,7 +167,7 @@ function SMALLUI_SMALLIFY_QUICKSLOT()
         x = x + sz
     end
     line = line - sz
-    x = -100 - 35 / 2
+    x = -100 - g.settings.quickslotsize / 2
     for i = 11, 20 do
         local slot = frame:GetChild("slot" .. tostring(i))
         slot:SetMargin(x, line, 0, 0)
@@ -131,7 +175,7 @@ function SMALLUI_SMALLIFY_QUICKSLOT()
         x = x + sz
     end
     line = line - sz
-    x = -100 - 35
+    x = -100 - g.settings.quickslotsize
     for i = 21, 30 do
         local slot = frame:GetChild("slot" .. tostring(i))
         slot:SetMargin(x, line, 0, 0)
@@ -139,7 +183,7 @@ function SMALLUI_SMALLIFY_QUICKSLOT()
         x = x + sz
     end
     line = line - sz
-    x = -100 - 35 / 2
+    x = -100 - g.settings.quickslotsize / 2
     for i = 31, 40 do
         local slot = frame:GetChild("slot" .. tostring(i))
         slot:SetMargin(x, line, 0, 0)
@@ -328,32 +372,36 @@ function SMALLUI_DO_SMALL_BANNER(frame)
     frame:Resize(30,30)
 end
 function SMALLUI_ON_TIMER()
-    local frame = ui.GetFrame("questinfoset_2")
-    frame:Resize(300, 550)
-    frame:SetMargin(0, 400, 0, 0)
-    
-    frame:GetChild("member"):Resize(300, 450)
-    frame:GetChild("member"):SetMargin(100, 100, 0, 0)
-    --frame:GetChild("QUEST_SHARE"):Resize(200,frame:GetChild("QUEST_SHARE"):GetHeight())
-    for i = 0, frame:GetChildCount() - 1 do
-        local g = frame:GetChildByIndex(i)
-        if (g:GetWidth() > 200) then
-            g:Resize(300, g:GetHeight())
+    if(g.settings.resizequestlist)then
+        local frame = ui.GetFrame("questinfoset_2")
+        frame:Resize(300, 550)
+        frame:SetMargin(0, 400, 0, 0)
+        
+        frame:GetChild("member"):Resize(300, 450)
+        frame:GetChild("member"):SetMargin(100, 100, 0, 0)
+        --frame:GetChild("QUEST_SHARE"):Resize(200,frame:GetChild("QUEST_SHARE"):GetHeight())
+        for i = 0, frame:GetChildCount() - 1 do
+            local g = frame:GetChildByIndex(i)
+            if (g:GetWidth() > 200) then
+                g:Resize(300, g:GetHeight())
+            end
+            local m = g:GetMargin()
+            if (m.right > 300) then
+                g:SetMargin(m.left, m.top, 300, m.bottom)
+            end
         end
-        local m = g:GetMargin()
-        if (m.right > 300) then
-            g:SetMargin(m.left, m.top, 300, m.bottom)
-        end
+        local frame = ui.GetFrame("minimap")
+        local mini_pos = frame:GetChild("my")
+        AUTO_CAST(mini_pos)
+        mini_pos:SetOffset(frame:GetWidth() / 2 - mini_pos:GetImageWidth() / 2, frame:GetHeight() / 2 - mini_pos:GetImageHeight() / 2);
     end
-    local frame = ui.GetFrame("minimap")
-    local mini_pos = frame:GetChild("my")
-    AUTO_CAST(mini_pos)
-    mini_pos:SetOffset(frame:GetWidth() / 2 - mini_pos:GetImageWidth() / 2, frame:GetHeight() / 2 - mini_pos:GetImageHeight() / 2);
-
 end
 function SMALLUI_EVERY()
     ui.GetFrame(g.framename):ShowWindow(1)
-    SMALLUI_SMALLIFY_CHATFRAME()
+    if(g.settings.resizechat)then
+
+        SMALLUI_SMALLIFY_CHATFRAME()
+    end
 end
 function SMALLUI_SMALLIFY_CHATFRAME()
     local frame = ui.GetFrame("chatframe")
