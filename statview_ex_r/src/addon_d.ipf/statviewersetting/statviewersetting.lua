@@ -8,10 +8,10 @@ end
 function STATVIEWERSETTING_SAVE_STATSETTINGS()
 	local mySession = session.GetMySession();
 	local cid = mySession:GetCID();
-	acutil.saveJSON("../addons/statviewer_ex/"..cid..".json", _G["STATVIEWER_EX"]["statsettings"]);
-	local statframe = ui.GetFrame("statviewer_ex");
+	acutil.saveJSON("../addons/statview_ex_r/"..cid..".json", _G["STATVIEW_EX_R"]["statsettings"]);
+	local statframe = ui.GetFrame("statview_ex_r");
 	statframe:RemoveAllChild();
-	STATVIEWER_EX_UPDATE(statframe)
+	STATVIEW_EX_R_UPDATE(statframe)
 end
 
 function STATVIEWERSETTING_COMMAND(command)
@@ -156,7 +156,7 @@ function STATVIEWERSETTING_CREATE_UI()
 		check:SetOverSound('button_over');
 		check:SetEventScript(ui.LBUTTONUP, "STATVIEWERSETTING_TOGGLE_CHECK_FLG");
 		check:SetEventScriptArgString(ui.LBUTTONUP, rtLabel[i].ename);
-		if _G["STATVIEWER_EX"]["statsettings"][rtLabel[i].ename] then
+		if _G["STATVIEW_EX_R"]["statsettings"][rtLabel[i].ename] then
 			check:SetCheck(1);
 		else
 			check:SetCheck(0);
@@ -199,7 +199,7 @@ function STATVIEWERSETTING_CREATE_UI()
 		check:SetOverSound('button_over');
 		check:SetEventScript(ui.LBUTTONUP, "STATVIEWERSETTING_TOGGLE_CHECK_FLG");
 		check:SetEventScriptArgString(ui.LBUTTONUP, rtLabel[i].ename);
-		if _G["STATVIEWER_EX"]["statsettings"][rtLabel[i].ename] then
+		if _G["STATVIEW_EX_R"]["statsettings"][rtLabel[i].ename] then
 			check:SetCheck(1);
 		else
 			check:SetCheck(0);
@@ -243,7 +243,7 @@ function STATVIEWERSETTING_CREATE_UI()
 		check:SetOverSound('button_over');
 		check:SetEventScript(ui.LBUTTONUP, "STATVIEWERSETTING_TOGGLE_CHECK_FLG");
 		check:SetEventScriptArgString(ui.LBUTTONUP, rtLabel[i].ename);
-		if _G["STATVIEWER_EX"]["statsettings"][rtLabel[i].ename] then
+		if _G["STATVIEW_EX_R"]["statsettings"][rtLabel[i].ename] then
 			check:SetCheck(1);
 		else
 			check:SetCheck(0);
@@ -290,7 +290,7 @@ function STATVIEWERSETTING_CREATE_UI()
 		check:SetOverSound('button_over');
 		check:SetEventScript(ui.LBUTTONUP, "STATVIEWERSETTING_TOGGLE_CHECK_FLG");
 		check:SetEventScriptArgString(ui.LBUTTONUP, rtLabel[i].ename);
-		if _G["STATVIEWER_EX"]["statsettings"][rtLabel[i].ename] then
+		if _G["STATVIEW_EX_R"]["statsettings"][rtLabel[i].ename] then
 			check:SetCheck(1);
 		else
 			check:SetCheck(0);
@@ -370,7 +370,7 @@ function STATVIEWERSETTING_CREATE_UI_COMMONDATA()
 	tolua.cast(memo, "ui::CEditControl");
 	memo:SetGravity(ui.LEFT, ui.TOP);
 	memo:SetFontName("white_16_ol");
-	memo:SetText(_G["STATVIEWER_EX"]["common1"].MEMO);
+	memo:SetText(_G["STATVIEW_EX_R"]["common1"].MEMO);
 
 	local savebtn = frame:CreateOrGetControl("button", "statviewersetting_savebutton", 450, 690, 150, 24);
 	tolua.cast(savebtn, "ui::CButton");
@@ -403,16 +403,16 @@ function STATVIEWERSETTING_SELECT_COLOR(parent, ctrl, argStr, argNum)
 	local colorText = string.sub(argStr, 1, 6 );
 	local ename = string.sub(argStr, 8 );
 
-	_G["STATVIEWER_EX"]["statsettings"][ename.."_COLOR"] = colorText;
+	_G["STATVIEW_EX_R"]["statsettings"][ename.."_COLOR"] = colorText;
 	STATVIEWERSETTING_SAVE_STATSETTINGS();
 
 end
 
 function STATVIEWERSETTING_TOGGLE_CHECK_FLG(frame, ctrl, argStr, argNum)
 	if ctrl:IsChecked() == 1 then
-		_G["STATVIEWER_EX"]["statsettings"][argStr] = true;
+		_G["STATVIEW_EX_R"]["statsettings"][argStr] = true;
 	else
-		_G["STATVIEWER_EX"]["statsettings"][argStr] = false;
+		_G["STATVIEW_EX_R"]["statsettings"][argStr] = false;
 	end
 	STATVIEWERSETTING_SAVE_STATSETTINGS();
 end
@@ -421,7 +421,7 @@ function STATVIEWERSETTING_CHANGE_DROPLIST(no)
 	local frame = ui.GetFrame("statviewersetting");
 	local memo = GET_CHILD(frame, "statviewersetting_memo");
 	tolua.cast(memo, "ui::CEditControl");
-	memo:SetText(_G["STATVIEWER_EX"]["common"..no].MEMO);
+	memo:SetText(_G["STATVIEW_EX_R"]["common"..no].MEMO);
 
 	local savebtn = GET_CHILD(frame, "statviewersetting_savebutton");
 	tolua.cast(savebtn, "ui::CButton");
@@ -448,9 +448,9 @@ function STATVIEWERSETTING_COMMONSAVE_SAVE(no)
 	local frame = ui.GetFrame("statviewersetting");
 	local memo = GET_CHILD(frame, "statviewersetting_memo");
 	tolua.cast(memo, "ui::CEditControl");
-	_G["STATVIEWER_EX"]["statsettings"].MEMO=memo:GetText();
-	acutil.saveJSON("../addons/statviewer_ex/common"..no..".json", _G["STATVIEWER_EX"]["statsettings"]);
-	_G["STATVIEWER_EX"]["common"..no] = _G["STATVIEWER_EX"]["statsettings"]
+	_G["STATVIEW_EX_R"]["statsettings"].MEMO=memo:GetText();
+	acutil.saveJSON("../addons/statview_ex_r/common"..no..".json", _G["STATVIEW_EX_R"]["statsettings"]);
+	_G["STATVIEW_EX_R"]["common"..no] = _G["STATVIEW_EX_R"]["statsettings"]
 end
 
 function STATVIEWERSETTING_COMMONLOAD_CHECK(frame, ctrl, argStr, argNum)
@@ -466,11 +466,11 @@ function STATVIEWERSETTING_COMMONLOAD_CHECK(frame, ctrl, argStr, argNum)
 end
 
 function STATVIEWERSETTING_COMMONSAVE_LOAD(no)
-	_G["STATVIEWER_EX"]["statsettings"] = _G["STATVIEWER_EX"]["common"..no]
+	_G["STATVIEW_EX_R"]["statsettings"] = _G["STATVIEW_EX_R"]["common"..no]
 	STATVIEWERSETTING_SAVE_STATSETTINGS()
 	STATVIEWERSETTING_CREATE_UI()
-	local statframe = ui.GetFrame("statviewer_ex");
+	local statframe = ui.GetFrame("statview_ex_r");
 	statframe:RemoveAllChild();
-	STATVIEWER_EX_UPDATE(statframe)
+	STATVIEW_EX_R_UPDATE(statframe)
 end
 

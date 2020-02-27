@@ -1,4 +1,4 @@
-statviewer_ex
+statview_ex
 --
 ![alt text](https://i.imgur.com/ybXYd88.png "JP Screenshot")  
 
@@ -17,7 +17,7 @@ Excrulonさんのstatviewerアドオンを改造したTorahamuさんのstatviewe
 
 	■注意
 
-手動で入れていた方は「addons」フォルダの「statviewer_ex」フォルダの内容を「statviewer_ex_r」フォルダにコピーしてください。  
+手動で入れていた方は「addons」フォルダの「statviewer_ex」フォルダの内容を「statview_ex_r」フォルダにコピーしてください。  
 
 
 	■使い方
@@ -40,7 +40,7 @@ This is a modified version of Excrulon's statviewer addon.
 
 	■ Caution
 
-If you have put it manually please copy the contents of the "statviewer_ex" folder in the "addons" folder to the "statviewer_ex_r" folder.  
+If you have put it manually please copy the contents of the "statview_ex" folder in the "addons" folder to the "statviewer_ex_r" folder.  
 
 	■ Installation
 

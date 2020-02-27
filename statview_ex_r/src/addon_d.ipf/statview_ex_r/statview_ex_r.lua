@@ -32,98 +32,98 @@ local label = {
 };
 local ctrlPos = {}
 
-function STATVIEWER_EX_R_ON_INIT(addon, frame)
-	STATVIEWER_EX_R_LOAD_SETTINGS();
-	STATVIEWER_EX_R_UPDATE(frame);
-	addon:RegisterOpenOnlyMsg("PC_PROPERTY_UPDATE", "STATVIEWER_EX_R_UPDATE");
-	addon:RegisterOpenOnlyMsg("STAT_UPDATE", "STATVIEWER_EX_R_UPDATE");
+function STATVIEW_EX_R_ON_INIT(addon, frame)
+	STATVIEW_EX_R_LOAD_SETTINGS();
+	STATVIEW_EX_R_UPDATE(frame);
+	addon:RegisterOpenOnlyMsg("PC_PROPERTY_UPDATE", "STATVIEW_EX_R_UPDATE");
+	addon:RegisterOpenOnlyMsg("STAT_UPDATE", "STATVIEW_EX_R_UPDATE");
 
-	_G["STATVIEWER_EX_R"].isDragging = false;
-	frame:SetEventScript(ui.LBUTTONDOWN, "STATVIEWER_EX_R_START_DRAG");
-	frame:SetEventScript(ui.LBUTTONUP, "STATVIEWER_EX_R_END_DRAG");
-	frame:SetEventScript(ui.RBUTTONDOWN, "STATVIEWER_EX_R_CALL_MENU");
+	_G["STATVIEW_EX_R"].isDragging = false;
+	frame:SetEventScript(ui.LBUTTONDOWN, "STATVIEW_EX_R_START_DRAG");
+	frame:SetEventScript(ui.LBUTTONUP, "STATVIEW_EX_R_END_DRAG");
+	frame:SetEventScript(ui.RBUTTONDOWN, "STATVIEW_EX_R_CALL_MENU");
 	
-	STATVIEWER_EX_R_UPDATE_POSITION();
+	STATVIEW_EX_R_UPDATE_POSITION();
 end
 
-function STATVIEWER_EX_R_START_DRAG()
-	_G["STATVIEWER_EX_R"].isDragging = true;
+function STATVIEW_EX_R_START_DRAG()
+	_G["STATVIEW_EX_R"].isDragging = true;
 end
 
-function STATVIEWER_EX_R_END_DRAG()
-	_G["STATVIEWER_EX_R"].isDragging = false;
-	STATVIEWER_EX_R_SAVE_SETTINGS();
+function STATVIEW_EX_R_END_DRAG()
+	_G["STATVIEW_EX_R"].isDragging = false;
+	STATVIEW_EX_R_SAVE_SETTINGS();
 end
 
-function STATVIEWER_EX_R_LOAD_SETTINGS()
+function STATVIEW_EX_R_LOAD_SETTINGS()
 	local acutil = require('acutil');
-	_G["STATVIEWER_EX_R"] = _G["STATVIEWER_EX_R"] or {};
-	local settings, error = acutil.loadJSON("../addons/STATVIEWER_EX_R/settings.json");
+	_G["STATVIEW_EX_R"] = _G["STATVIEW_EX_R"] or {};
+	local settings, error = acutil.loadJSON("../addons/STATVIEW_EX_R/settings.json");
 
 	if error then
-		STATVIEWER_EX_R_SAVE_SETTINGS();
+		STATVIEW_EX_R_SAVE_SETTINGS();
 	else
-		_G["STATVIEWER_EX_R"]["settings"] = settings;
+		_G["STATVIEW_EX_R"]["settings"] = settings;
 	end
-	local objFrame = ui.GetFrame("statviewer_ex_r");
+	local objFrame = ui.GetFrame("statview_ex_r");
 	if objFrame ~= nil then
-		objFrame:EnableMove(_G["STATVIEWER_EX_R"]["settings"]["Movable"] and 1 or 0);
+		objFrame:EnableMove(_G["STATVIEW_EX_R"]["settings"]["Movable"] and 1 or 0);
 	end
 
 	local mySession = session.GetMySession();
 	local cid = mySession:GetCID();
-	local statsettings, error = acutil.loadJSON("../addons/STATVIEWER_EX_R/"..cid..".json");
+	local statsettings, error = acutil.loadJSON("../addons/STATVIEW_EX_R/"..cid..".json");
 
 	if error then
-		STATVIEWER_EX_R_SAVE_STATSETTINGS_INIT(cid, "statsettings");
+		STATVIEW_EX_R_SAVE_STATSETTINGS_INIT(cid, "statsettings");
 	else
-		_G["STATVIEWER_EX_R"]["statsettings"] = statsettings;
+		_G["STATVIEW_EX_R"]["statsettings"] = statsettings;
 	end
 
 	for i = 1 , 10 do
-		STATVIEWER_EX_R_LOAD_COMMON_SETTINGS(i)
+		STATVIEW_EX_R_LOAD_COMMON_SETTINGS(i)
 	end
 end
 
-function STATVIEWER_EX_R_LOAD_COMMON_SETTINGS(no)
+function STATVIEW_EX_R_LOAD_COMMON_SETTINGS(no)
 	local acutil = require('acutil');
-	local statsettings, error = acutil.loadJSON("../addons/STATVIEWER_EX_R/common"..no..".json");
+	local statsettings, error = acutil.loadJSON("../addons/STATVIEW_EX_R/common"..no..".json");
 	if error then
-		STATVIEWER_EX_R_SAVE_STATSETTINGS_INIT("common"..no, "common"..no);
+		STATVIEW_EX_R_SAVE_STATSETTINGS_INIT("common"..no, "common"..no);
 	else
-		_G["STATVIEWER_EX_R"]["common"..no] = statsettings;
+		_G["STATVIEW_EX_R"]["common"..no] = statsettings;
 	end
 end
 
-function STATVIEWER_EX_R_SAVE_SETTINGS()
+function STATVIEW_EX_R_SAVE_SETTINGS()
 	local acutil = require('acutil');
-	_G["STATVIEWER_EX_R"] = _G["STATVIEWER_EX_R"] or {};
+	_G["STATVIEW_EX_R"] = _G["STATVIEW_EX_R"] or {};
 
-	if _G["STATVIEWER_EX_R"]["settings"] == nil then
-		_G["STATVIEWER_EX_R"]["settings"] = {
-			x = STATVIEWER_EX_R_GET_DEFAULT_X();
-			y = STATVIEWER_EX_R_GET_DEFAULT_Y()
+	if _G["STATVIEW_EX_R"]["settings"] == nil then
+		_G["STATVIEW_EX_R"]["settings"] = {
+			x = STATVIEW_EX_R_GET_DEFAULT_X();
+			y = STATVIEW_EX_R_GET_DEFAULT_Y()
 		};
 	else
-		local frame = ui.GetFrame("statviewer_ex_r");
-		_G["STATVIEWER_EX_R"]["settings"].x = frame:GetX();
-		_G["STATVIEWER_EX_R"]["settings"].y = frame:GetY();
+		local frame = ui.GetFrame("statview_ex_r");
+		_G["STATVIEW_EX_R"]["settings"].x = frame:GetX();
+		_G["STATVIEW_EX_R"]["settings"].y = frame:GetY();
 	end
 
-	acutil.saveJSON("../addons/STATVIEWER_EX_R/settings.json", _G["STATVIEWER_EX_R"]["settings"]);
+	acutil.saveJSON("../addons/STATVIEW_EX_R/settings.json", _G["STATVIEW_EX_R"]["settings"]);
 end
 
-function STATVIEWER_EX_R_SAVE_STATSETTINGS()
+function STATVIEW_EX_R_SAVE_STATSETTINGS()
 	local acutil = require('acutil');
 	local mySession = session.GetMySession();
 	local cid = mySession:GetCID();
-	acutil.saveJSON("../addons/STATVIEWER_EX_R/"..cid..".json", _G["STATVIEWER_EX_R"]["statsettings"]);
+	acutil.saveJSON("../addons/STATVIEW_EX_R/"..cid..".json", _G["STATVIEW_EX_R"]["statsettings"]);
 end
 
-function STATVIEWER_EX_R_SAVE_STATSETTINGS_INIT(filename, statval)
-	_G["STATVIEWER_EX_R"] = _G["STATVIEWER_EX_R"] or {};
+function STATVIEW_EX_R_SAVE_STATSETTINGS_INIT(filename, statval)
+	_G["STATVIEW_EX_R"] = _G["STATVIEW_EX_R"] or {};
 
-	_G["STATVIEWER_EX_R"][statval] = {
+	_G["STATVIEW_EX_R"][statval] = {
 		PATK = true;
 		PATK_SUB = true;
 		MATK = true;
@@ -184,127 +184,127 @@ function STATVIEWER_EX_R_SAVE_STATSETTINGS_INIT(filename, statval)
 	};
 
 	local acutil = require('acutil');
-	acutil.saveJSON("../addons/STATVIEWER_EX_R/"..filename..".json", _G["STATVIEWER_EX_R"][statval]);
+	acutil.saveJSON("../addons/STATVIEW_EX_R/"..filename..".json", _G["STATVIEW_EX_R"][statval]);
 end
 
-function STATVIEWER_EX_R_GET_DEFAULT_X()
-	local frame = ui.GetFrame("statviewer_ex_r");
+function STATVIEW_EX_R_GET_DEFAULT_X()
+	local frame = ui.GetFrame("statview_ex_r");
 
 	return (option.GetClientWidth() / 2);
 end
 
-function STATVIEWER_EX_R_GET_DEFAULT_Y()
-	local frame = ui.GetFrame("statviewer_ex_r");
+function STATVIEW_EX_R_GET_DEFAULT_Y()
+	local frame = ui.GetFrame("statview_ex_r");
 
 	return (option.GetClientHeight() / 2);
 end
 
-function STATVIEWER_EX_R_UPDATE_POSITION()
-	local frame = ui.GetFrame("statviewer_ex_r");
+function STATVIEW_EX_R_UPDATE_POSITION()
+	local frame = ui.GetFrame("statview_ex_r");
 
-	if frame ~= nil and not _G["STATVIEWER_EX_R"].isDragging then
-		frame:SetOffset(_G["STATVIEWER_EX_R"]["settings"].x, _G["STATVIEWER_EX_R"]["settings"].y);
+	if frame ~= nil and not _G["STATVIEW_EX_R"].isDragging then
+		frame:SetOffset(_G["STATVIEW_EX_R"]["settings"].x, _G["STATVIEW_EX_R"]["settings"].y);
 	end
 end
 
-function STATVIEWER_EX_R_UPDATE(frame)
+function STATVIEW_EX_R_UPDATE(frame)
 	local pc = GetMyPCObject();
 
-	local dimensions = STATVIEWER_EX_R_GET_DIMENSIONS();
+	local dimensions = STATVIEW_EX_R_GET_DIMENSIONS();
 	ctrlPos = {};
 
 	--frame, statName, statString, yPosition
-	if _G["STATVIEWER_EX_R"]["statsettings"].PATK then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "PATK"     , pc["MINPATK"] .. "~" .. pc["MAXPATK"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].PATK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].PATK then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "PATK"     , pc["MINPATK"] .. "~" .. pc["MAXPATK"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].PATK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].PATK_SUB then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "PATK_SUB" , pc["MINPATK_SUB"] .. "~" .. pc["MAXPATK_SUB"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].PATK_SUB_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].PATK_SUB then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "PATK_SUB" , pc["MINPATK_SUB"] .. "~" .. pc["MAXPATK_SUB"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].PATK_SUB_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].MATK then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "MATK"     , pc["MINMATK"] .. "~" .. pc["MAXMATK"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].MATK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].MATK then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "MATK"     , pc["MINMATK"] .. "~" .. pc["MAXMATK"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].MATK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].EATK then
-		local elementalAttack = STATVIEWER_EX_R_CALCULATE_ELEMENTAL_ATTACK(pc);
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "EATK"     , elementalAttack, dimensions, _G["STATVIEWER_EX_R"]["statsettings"].EATK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].EATK then
+		local elementalAttack = STATVIEW_EX_R_CALCULATE_ELEMENTAL_ATTACK(pc);
+		STATVIEW_EX_R_UPDATE_STAT(frame, "EATK"     , elementalAttack, dimensions, _G["STATVIEW_EX_R"]["statsettings"].EATK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].CRTHR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "CRTHR"    , pc["CRTHR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].CRTHR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].CRTHR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "CRTHR"    , pc["CRTHR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].CRTHR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].CRTATK then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "CRTATK"   , pc["CRTATK"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].CRTATK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].CRTATK then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "CRTATK"   , pc["CRTATK"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].CRTATK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].CRTMATK then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "CRTMATK"   , pc["CRTMATK"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].CRTMATK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].CRTMATK then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "CRTMATK"   , pc["CRTMATK"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].CRTMATK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].HEAL_PWR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "HEAL_PWR" , pc["HEAL_PWR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].HEAL_PWR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].HEAL_PWR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "HEAL_PWR" , pc["HEAL_PWR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].HEAL_PWR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].HR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "HR"       , pc["HR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].HR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].HR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "HR"       , pc["HR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].HR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].BLK_BREAK then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "BLK_BREAK", pc["BLK_BREAK"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].BLK_BREAK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].BLK_BREAK then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "BLK_BREAK", pc["BLK_BREAK"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].BLK_BREAK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].SR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "SR"       , pc["SR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].SR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].SR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "SR"       , pc["SR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].SR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].DEF then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "DEF"      , pc["DEF"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].DEF_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].DEF then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "DEF"      , pc["DEF"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].DEF_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].MDEF then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "MDEF"     , pc["MDEF"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].MDEF_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].MDEF then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "MDEF"     , pc["MDEF"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].MDEF_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].DR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "DR"       , pc["DR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].DR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].DR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "DR"       , pc["DR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].DR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].BLK then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "BLK"      , pc["BLK"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].BLK_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].BLK then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "BLK"      , pc["BLK"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].BLK_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].CRTDR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "CRTDR"    , pc["CRTDR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].CRTDR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].CRTDR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "CRTDR"    , pc["CRTDR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].CRTDR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].SDR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "SDR"      , pc["SDR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].SDR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].SDR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "SDR"      , pc["SDR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].SDR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].RHP then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "RHP"      , pc["RHP"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].RHP_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].RHP then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "RHP"      , pc["RHP"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].RHP_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].RSP then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "RSP"      , pc["RSP"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].RSP_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].RSP then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "RSP"      , pc["RSP"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].RSP_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].MSPD then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "MSPD"     , pc["MSPD"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].MSPD_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].MSPD then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "MSPD"     , pc["MSPD"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].MSPD_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].WHEIGHT then
+	if _G["STATVIEW_EX_R"]["statsettings"].WHEIGHT then
 		local wheight_str = string.format("%.1f/%.1f", pc["NowWeight"], pc["MaxWeight"]);
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "WHEIGHT"  , wheight_str .. "("..tostring(math.floor(pc.NowWeight*100/pc.MaxWeight)).."%)", dimensions, _G["STATVIEWER_EX_R"]["statsettings"].WHEIGHT_COLOR);
+		STATVIEW_EX_R_UPDATE_STAT(frame, "WHEIGHT"  , wheight_str .. "("..tostring(math.floor(pc.NowWeight*100/pc.MaxWeight)).."%)", dimensions, _G["STATVIEW_EX_R"]["statsettings"].WHEIGHT_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].CHANCE then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "CHANCE"  , pc["LootingChance"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].CHANCE_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].CHANCE then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "CHANCE"  , pc["LootingChance"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].CHANCE_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].STR then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "STR"  , pc["STR"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].STR_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].STR then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "STR"  , pc["STR"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].STR_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].CON then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "CON"  , pc["CON"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].CON_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].CON then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "CON"  , pc["CON"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].CON_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].INT then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "INT"  , pc["INT"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].INT_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].INT then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "INT"  , pc["INT"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].INT_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].MNA then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "MNA"  , pc["MNA"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].MNA_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].MNA then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "MNA"  , pc["MNA"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].MNA_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].DEX then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "DEX"  , pc["DEX"], dimensions, _G["STATVIEWER_EX_R"]["statsettings"].DEX_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].DEX then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "DEX"  , pc["DEX"], dimensions, _G["STATVIEW_EX_R"]["statsettings"].DEX_COLOR);
 	end
-	if _G["STATVIEWER_EX_R"]["statsettings"].STATUS then
-		STATVIEWER_EX_R_UPDATE_STAT(frame, "STATUS"  , "{#".._G["STATVIEWER_EX_R"]["statsettings"].STR_COLOR.."}"..pc["STR"] .."{/}/{#".._G["STATVIEWER_EX_R"]["statsettings"].CON_COLOR.."}".. pc["CON"] .."{/}/{#".._G["STATVIEWER_EX_R"]["statsettings"].INT_COLOR.."}".. pc["INT"] .."{/}/{#".._G["STATVIEWER_EX_R"]["statsettings"].MNA_COLOR.."}".. pc["MNA"] .."{/}/{#".._G["STATVIEWER_EX_R"]["statsettings"].DEX_COLOR.."}".. pc["DEX"].."{/}", dimensions, _G["STATVIEWER_EX_R"]["statsettings"].STATUS_COLOR);
+	if _G["STATVIEW_EX_R"]["statsettings"].STATUS then
+		STATVIEW_EX_R_UPDATE_STAT(frame, "STATUS"  , "{#".._G["STATVIEW_EX_R"]["statsettings"].STR_COLOR.."}"..pc["STR"] .."{/}/{#".._G["STATVIEW_EX_R"]["statsettings"].CON_COLOR.."}".. pc["CON"] .."{/}/{#".._G["STATVIEW_EX_R"]["statsettings"].INT_COLOR.."}".. pc["INT"] .."{/}/{#".._G["STATVIEW_EX_R"]["statsettings"].MNA_COLOR.."}".. pc["MNA"] .."{/}/{#".._G["STATVIEW_EX_R"]["statsettings"].DEX_COLOR.."}".. pc["DEX"].."{/}", dimensions, _G["STATVIEW_EX_R"]["statsettings"].STATUS_COLOR);
 	end
 	frame:Resize(dimensions.width, dimensions.height+1);
-	STATVIEWER_EX_R_UPDATE_POSITION();
+	STATVIEW_EX_R_UPDATE_POSITION();
 end
 
-function STATVIEWER_EX_R_GET_DIMENSIONS()
+function STATVIEW_EX_R_GET_DIMENSIONS()
 	local dimensions = {};
 
 	dimensions.x = 0;
@@ -315,7 +315,7 @@ function STATVIEWER_EX_R_GET_DIMENSIONS()
 	return dimensions;
 end
 
-function STATVIEWER_EX_R_CALCULATE_ELEMENTAL_ATTACK(pc)
+function STATVIEW_EX_R_CALCULATE_ELEMENTAL_ATTACK(pc)
 	local elementalAttack = 0;
 
 	elementalAttack = elementalAttack + pc["Fire_Atk"];
@@ -330,7 +330,7 @@ function STATVIEWER_EX_R_CALCULATE_ELEMENTAL_ATTACK(pc)
 	return elementalAttack;
 end
 
-function STATVIEWER_EX_R_GET_STATSTRING(statName)
+function STATVIEW_EX_R_GET_STATSTRING(statName)
 	local country=option.GetCurrentCountry();
 	if string.lower(country)=="japanese" then
 		return label[statName].name
@@ -341,7 +341,7 @@ function STATVIEWER_EX_R_GET_STATSTRING(statName)
 	end
 end
 
-function STATVIEWER_EX_R_UPDATE_STAT(frame, statName, statString, dimensions, fontcolor)
+function STATVIEW_EX_R_UPDATE_STAT(frame, statName, statString, dimensions, fontcolor)
 	if fontcolor == nil then
 		fontcolor = "FFFFFF";
 	end
@@ -349,7 +349,7 @@ function STATVIEWER_EX_R_UPDATE_STAT(frame, statName, statString, dimensions, fo
 	tolua.cast(statRichText, "ui::CRichText");
 	statRichText:SetGravity(ui.LEFT, ui.TOP);
 	statRichText:SetTextAlign("left", "top");
-	statRichText:SetText("{#"..fontcolor.."}{ol}{s16}"..STATVIEWER_EX_R_GET_STATSTRING(statName)..statString.."{/}{/}{/}");
+	statRichText:SetText("{#"..fontcolor.."}{ol}{s16}"..STATVIEW_EX_R_GET_STATSTRING(statName)..statString.."{/}{/}{/}");
 	statRichText:EnableHitTest(0);
 	statRichText:ShowWindow(1);
 
@@ -361,7 +361,7 @@ function STATVIEWER_EX_R_UPDATE_STAT(frame, statName, statString, dimensions, fo
 						  }
 
 	-- 余白を使う の設定があれば高さをおまけする
-	if _G["STATVIEWER_EX_R"]["statsettings"][statName .. "_USEMARGIN"] then
+	if _G["STATVIEW_EX_R"]["statsettings"][statName .. "_USEMARGIN"] then
 		currentHeight = currentHeight + 6;
 	end
 	
@@ -386,7 +386,7 @@ local function log(Caption)
 end
 
 local function GetLocalMousePos()
-	local frame = ui.GetFrame("statviewer_ex_r");
+	local frame = ui.GetFrame("statview_ex_r");
 	if frame == nil then
 		return nil, nil;
 	else
@@ -419,61 +419,61 @@ local function MakeCMenuParentItem(parent, text, child)
 end
 
 -- 移動ロックの設定を切り替える
-function STATVIEWER_EX_R_CHANGE_MOVABLE()
-	if _G["STATVIEWER_EX_R"]["settings"] == nil then return end
-	if _G["STATVIEWER_EX_R"]["settings"]["Movable"] == nil then
-		_G["STATVIEWER_EX_R"]["settings"]["Movable"] = true;
+function STATVIEW_EX_R_CHANGE_MOVABLE()
+	if _G["STATVIEW_EX_R"]["settings"] == nil then return end
+	if _G["STATVIEW_EX_R"]["settings"]["Movable"] == nil then
+		_G["STATVIEW_EX_R"]["settings"]["Movable"] = true;
 	end
-	_G["STATVIEWER_EX_R"]["settings"]["Movable"] = not _G["STATVIEWER_EX_R"]["settings"]["Movable"];
-	local objFrame = ui.GetFrame("statviewer_ex_r");
+	_G["STATVIEW_EX_R"]["settings"]["Movable"] = not _G["STATVIEW_EX_R"]["settings"]["Movable"];
+	local objFrame = ui.GetFrame("statview_ex_r");
 	if objFrame ~= nil then
-		objFrame:EnableMove(_G["STATVIEWER_EX_R"]["settings"]["Movable"] and 1 or 0);
-		STATVIEWER_EX_R_SAVE_SETTINGS();
+		objFrame:EnableMove(_G["STATVIEW_EX_R"]["settings"]["Movable"] and 1 or 0);
+		STATVIEW_EX_R_SAVE_SETTINGS();
 	end
 end
 
 -- 再描画用
-function STATVIEWER_EX_R_REDRAW()
-	local frame = ui.GetFrame("statviewer_ex_r");
+function STATVIEW_EX_R_REDRAW()
+	local frame = ui.GetFrame("statview_ex_r");
 	if frame == nil then return end
 	frame:RemoveAllChild();
-	STATVIEWER_EX_R_UPDATE(frame);
+	STATVIEW_EX_R_UPDATE(frame);
 end
 
 -- 項目のON/OFFの切り替え
-function STATVIEWER_EX_R_TOGGLE_VISIBLE(statName, newVisible)
+function STATVIEW_EX_R_TOGGLE_VISIBLE(statName, newVisible)
 	ui.CloseAllContextMenu();
-	if _G["STATVIEWER_EX_R"]["statsettings"][statName] == nil then return end
-	_G["STATVIEWER_EX_R"]["statsettings"][statName] = (newVisible == 1);
-	STATVIEWER_EX_R_SAVE_STATSETTINGS()
-	STATVIEWER_EX_R_REDRAW();
+	if _G["STATVIEW_EX_R"]["statsettings"][statName] == nil then return end
+	_G["STATVIEW_EX_R"]["statsettings"][statName] = (newVisible == 1);
+	STATVIEW_EX_R_SAVE_STATSETTINGS()
+	STATVIEW_EX_R_REDRAW();
 end
 
 -- 項目の色の切り替え
-function STATVIEWER_EX_R_CHANGE_COLOR(statName, newColor)
+function STATVIEW_EX_R_CHANGE_COLOR(statName, newColor)
 	ui.CloseAllContextMenu();
-	if _G["STATVIEWER_EX_R"]["statsettings"][statName] == nil then return end
-	_G["STATVIEWER_EX_R"]["statsettings"][statName .. "_COLOR"] = newColor;
-	STATVIEWER_EX_R_SAVE_STATSETTINGS()
-	STATVIEWER_EX_R_REDRAW();
+	if _G["STATVIEW_EX_R"]["statsettings"][statName] == nil then return end
+	_G["STATVIEW_EX_R"]["statsettings"][statName .. "_COLOR"] = newColor;
+	STATVIEW_EX_R_SAVE_STATSETTINGS()
+	STATVIEW_EX_R_REDRAW();
 end
 
 -- 余白の有無の切り替え
-function STATVIEWER_EX_R_TOGGLE_USEMARGIN(statName)
-	if _G["STATVIEWER_EX_R"]["statsettings"][statName] == nil then return end
-	if _G["STATVIEWER_EX_R"]["statsettings"][statName .. "_USEMARGIN"] == nil then
-		_G["STATVIEWER_EX_R"]["statsettings"][statName .. "_USEMARGIN"] = true;
+function STATVIEW_EX_R_TOGGLE_USEMARGIN(statName)
+	if _G["STATVIEW_EX_R"]["statsettings"][statName] == nil then return end
+	if _G["STATVIEW_EX_R"]["statsettings"][statName .. "_USEMARGIN"] == nil then
+		_G["STATVIEW_EX_R"]["statsettings"][statName .. "_USEMARGIN"] = true;
 	else
 		-- 本当はFalseだけど、余分な設定文字を消させるためにあえてnilを採用しています
-		_G["STATVIEWER_EX_R"]["statsettings"][statName .. "_USEMARGIN"] = nil;
+		_G["STATVIEW_EX_R"]["statsettings"][statName .. "_USEMARGIN"] = nil;
 	end
-	STATVIEWER_EX_R_SAVE_STATSETTINGS()
-	STATVIEWER_EX_R_REDRAW();
+	STATVIEW_EX_R_SAVE_STATSETTINGS()
+	STATVIEW_EX_R_REDRAW();
 end
 
-function STATVIEWER_EX_R_COMMONLOAD_CHECK(argNum)
+function STATVIEW_EX_R_COMMONLOAD_CHECK(argNum)
 	ui.CloseAllContextMenu();
-	local yesscp = string.format("STATVIEWER_EX_R_COMMONSAVE_LOAD(%d)", argNum);
+	local yesscp = string.format("STATVIEW_EX_R_COMMONSAVE_LOAD(%d)", argNum);
 	local country = string.lower(option.GetCurrentCountry());
 	local msg = ""
 	if country == "japanese" then
@@ -484,21 +484,21 @@ function STATVIEWER_EX_R_COMMONLOAD_CHECK(argNum)
 	ui.MsgBox(msg, yesscp, "None")
 end
 
-function STATVIEWER_EX_R_COMMONSAVE_LOAD(no)
+function STATVIEW_EX_R_COMMONSAVE_LOAD(no)
 	local acutil = require('acutil');
-	local statsettings, error = acutil.loadJSON("../addons/STATVIEWER_EX_R/common"..no..".json");
+	local statsettings, error = acutil.loadJSON("../addons/STATVIEW_EX_R/common"..no..".json");
 	if error then
 		return;
 	else
-		_G["STATVIEWER_EX_R"]["statsettings"] = statsettings;
+		_G["STATVIEW_EX_R"]["statsettings"] = statsettings;
 	end
-	STATVIEWER_EX_R_SAVE_STATSETTINGS()
-	STATVIEWER_EX_R_REDRAW()
+	STATVIEW_EX_R_SAVE_STATSETTINGS()
+	STATVIEW_EX_R_REDRAW()
 end
 
-function STATVIEWER_EX_R_COMMONSAVE_CHECK(argNum)
+function STATVIEW_EX_R_COMMONSAVE_CHECK(argNum)
 	ui.CloseAllContextMenu();
-	local yesscp = string.format("STATVIEWER_EX_R_COMMONSAVE_SAVE(%d)", argNum);
+	local yesscp = string.format("STATVIEW_EX_R_COMMONSAVE_SAVE(%d)", argNum);
 	local country = string.lower(option.GetCurrentCountry());
 	local msg = ""
 	if country == "japanese" then
@@ -509,14 +509,14 @@ function STATVIEWER_EX_R_COMMONSAVE_CHECK(argNum)
 	ui.MsgBox(msg, yesscp, "None")
 end
 
-function STATVIEWER_EX_R_COMMONSAVE_SAVE(no)
+function STATVIEW_EX_R_COMMONSAVE_SAVE(no)
 	local acutil = require('acutil');
-	acutil.saveJSON("../addons/STATVIEWER_EX_R/common"..no..".json", _G["STATVIEWER_EX_R"]["statsettings"]);
-	_G["STATVIEWER_EX_R"]["common"..no] = _G["STATVIEWER_EX_R"]["statsettings"]
-	STATVIEWER_EX_R_REDRAW()
+	acutil.saveJSON("../addons/STATVIEW_EX_R/common"..no..".json", _G["STATVIEW_EX_R"]["statsettings"]);
+	_G["STATVIEW_EX_R"]["common"..no] = _G["STATVIEW_EX_R"]["statsettings"]
+	STATVIEW_EX_R_REDRAW()
 end
 
-function STATVIEWER_EX_R_CALL_MENU(frame)
+function STATVIEW_EX_R_CALL_MENU(frame)
 	local x, y = GET_LOCAL_MOUSE_POS(frame);
 
 	local targetStatName = nil;
@@ -542,7 +542,7 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 	if currentCountry == "japanese" then
 		intTitleWidth = 260;
 	end	
-	local context = ui.CreateContextMenu("STATVIEWER_EX_R_RBTN", "{#006666}=== " .. strTemp .. " ==={/}", 0, 0, intTitleWidth, 0);
+	local context = ui.CreateContextMenu("STATVIEW_EX_R_RBTN", "{#006666}=== " .. strTemp .. " ==={/}", 0, 0, intTitleWidth, 0);
 	MakeCMenuSeparator(context, 240);
 
 	if targetStatName ~= nil then
@@ -554,8 +554,8 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 				local textColor = colorCls.TextColor;
 				MakeCMenuItem(subContextColor
 							, "{#" .. textColor .. "}" .. string.gsub(label[targetStatName][valueKey], ": ", "") .. " (#" .. textColor .. "){/}"
-							, string.format("STATVIEWER_EX_R_CHANGE_COLOR('%s', '%s')", targetStatName, textColor)
-							, (_G["STATVIEWER_EX_R"]["statsettings"][targetStatName .. "_COLOR"] == textColor)
+							, string.format("STATVIEW_EX_R_CHANGE_COLOR('%s', '%s')", targetStatName, textColor)
+							, (_G["STATVIEW_EX_R"]["statsettings"][targetStatName .. "_COLOR"] == textColor)
 							);
 			end
 		end
@@ -569,7 +569,7 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 		if currentCountry == "japanese" then
 			strTemp = "この下に余白を入れる";
 		end	
-		MakeCMenuItem(context, string.format(strTemp, string.gsub(label[targetStatName][valueKey], ": ", "")), string.format("STATVIEWER_EX_R_TOGGLE_USEMARGIN('%s')", targetStatName), _G["STATVIEWER_EX_R"]["statsettings"][targetStatName .. "_USEMARGIN"] or false);
+		MakeCMenuItem(context, string.format(strTemp, string.gsub(label[targetStatName][valueKey], ": ", "")), string.format("STATVIEW_EX_R_TOGGLE_USEMARGIN('%s')", targetStatName), _G["STATVIEW_EX_R"]["statsettings"][targetStatName .. "_USEMARGIN"] or false);
 		MakeCMenuSeparator(context, 240.1);
 	end
 
@@ -608,8 +608,8 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 	for i, key in ipairs(labelIndex) do
 		MakeCMenuItem(subContextDisplay
 					, string.gsub(label[key][valueKey], ": ", "")
-					, string.format("STATVIEWER_EX_R_TOGGLE_VISIBLE('%s', %s)", key, not _G["STATVIEWER_EX_R"]["statsettings"][key] and 1 or 0)
-					, _G["STATVIEWER_EX_R"]["statsettings"][key]
+					, string.format("STATVIEW_EX_R_TOGGLE_VISIBLE('%s', %s)", key, not _G["STATVIEW_EX_R"]["statsettings"][key] and 1 or 0)
+					, _G["STATVIEW_EX_R"]["statsettings"][key]
 					);
 	end
 	subContextDisplay:Resize(160, subContextDisplay:GetHeight());
@@ -631,7 +631,7 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 		strTemp = "共通データ";
 	end	
 	for i = 1, 10 do
-		local memo = _G["STATVIEWER_EX_R"]["common" .. i].MEMO
+		local memo = _G["STATVIEW_EX_R"]["common" .. i].MEMO
 		if memo == nil or memo == "" then
 			memo = ""
 		else
@@ -639,7 +639,7 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 		end
 		MakeCMenuItem(subContextLoad
 					, strTemp .. i .. memo
-					, string.format("STATVIEWER_EX_R_COMMONLOAD_CHECK(%d)", i)
+					, string.format("STATVIEW_EX_R_COMMONLOAD_CHECK(%d)", i)
 					);
 	end
 	subContextLoad:Resize(subContextLoad:GetWidth(), subContextLoad:GetHeight());
@@ -655,7 +655,7 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 		strTemp = "共通データ";
 	end	
 	for i = 1, 10 do
-		local memo = _G["STATVIEWER_EX_R"]["common" .. i].MEMO
+		local memo = _G["STATVIEW_EX_R"]["common" .. i].MEMO
 		if memo == nil or memo == "" then
 			memo = ""
 		else
@@ -663,7 +663,7 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 		end
 		MakeCMenuItem(subContextSave
 					, strTemp .. i .. memo
-					, string.format("STATVIEWER_EX_R_COMMONSAVE_CHECK(%d)", i)
+					, string.format("STATVIEW_EX_R_COMMONSAVE_CHECK(%d)", i)
 					);
 	end
 	subContextSave:Resize(subContextSave:GetWidth(), subContextSave:GetHeight());
@@ -673,14 +673,14 @@ function STATVIEWER_EX_R_CALL_MENU(frame)
 	end	
 	MakeCMenuParentItem(context, strTemp, subContextSave);
 	MakeCMenuSeparator(context, 240.3);
-	if _G["STATVIEWER_EX_R"]["settings"]["Movable"] == nil then
-		_G["STATVIEWER_EX_R"]["settings"]["Movable"] = true;
+	if _G["STATVIEW_EX_R"]["settings"]["Movable"] == nil then
+		_G["STATVIEW_EX_R"]["settings"]["Movable"] = true;
 	end
 	strTemp = "Lock position";
 	if currentCountry == "japanese" then
 		strTemp = "位置を固定する";
 	end	
-	MakeCMenuItem(context, strTemp, "STATVIEWER_EX_R_CHANGE_MOVABLE()", not _G["STATVIEWER_EX_R"]["settings"]["Movable"]);
+	MakeCMenuItem(context, strTemp, "STATVIEW_EX_R_CHANGE_MOVABLE()", not _G["STATVIEW_EX_R"]["settings"]["Movable"]);
 	MakeCMenuSeparator(context, 240.4);
 	strTemp = "Close";
 	if currentCountry == "japanese" then
