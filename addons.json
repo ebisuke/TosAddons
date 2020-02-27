@@ -356,5 +356,18 @@
       "expbar"
     ]
   }
-
+  ,
+	{
+		"name" : "Stat Viewer Ex R",
+		"file" : "statviewer_ex_r",
+		"extension" : "ipf",
+		"fileVersion" : "v0.0.1",
+		"releaseTag" : "statviewer_ex_r",
+		"unicode" : "⛄",
+		"description" : "This is a modified version of Torahamu's modified version of Excrulon's statviewer addon.  Excrulonさんのstatviewerアドオンを改造したTorahamuさんのstatviewer_exを改造しました。[v2.0.0  ReBuild Patch]",
+		"tags" : [
+			"ui",
+			"status"
+		]
+	},
 ]
