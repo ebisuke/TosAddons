@@ -136,7 +136,7 @@ if(not g.loaded)then
     g.personalsettings =AUTOITEMMANAGE_DEFAULTPERSONALSETTINGS()
 end
 
-function AUTOITEMMANAGE_DBGOUT(msg)
+local function DBGOUT(msg)
     
     EBI_try_catch{
         try=function()
@@ -156,7 +156,7 @@ function AUTOITEMMANAGE_DBGOUT(msg)
     }
 
 end
-function AUTOITEMMANAGE_ERROUT(msg)
+local function ERROUT(msg)
     EBI_try_catch{
         try=function()
             CHAT_SYSTEM(msg)
@@ -168,22 +168,22 @@ function AUTOITEMMANAGE_ERROUT(msg)
 
 end
 function AUTOITEMMANAGE_SAVE_SETTINGS()
-    AUTOITEMMANAGE_DBGOUT("SAVE_SETTINGS")
+    DBGOUT("SAVE_SETTINGS")
     AUTOITEMMANAGE_SAVETOSTRUCTURE()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
     --for debug
     g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(AUTOITEMMANAGE_GETCID()))
-    AUTOITEMMANAGE_DBGOUT("psn"..g.personalsettingsFileLoc)
+    DBGOUT("psn"..g.personalsettingsFileLoc)
     acutil.saveJSON(g.personalsettingsFileLoc, g.personalsettings)
 end
 
 function AUTOITEMMANAGE_LOAD_SETTINGS()
-    AUTOITEMMANAGE_DBGOUT("LOAD_SETTINGS "..tostring(AUTOITEMMANAGE_GETCID()))
+    DBGOUT("LOAD_SETTINGS "..tostring(AUTOITEMMANAGE_GETCID()))
     g.settings={}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
-        AUTOITEMMANAGE_DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
         g.settings =  AUTOITEMMANAGE_DEFAULTSETTINGS()
     else
         --設定ファイル読み込み成功時処理
@@ -192,12 +192,12 @@ function AUTOITEMMANAGE_LOAD_SETTINGS()
             g.settings.version=AUTOITEMMANAGE_DEFAULTSETTINGS().version
         end
     end
-    AUTOITEMMANAGE_DBGOUT("LOAD_PSETTINGS "..g.personalsettingsFileLoc)
+    DBGOUT("LOAD_PSETTINGS "..g.personalsettingsFileLoc)
     g.personalsettings={}
     local t, err = acutil.loadJSON(g.personalsettingsFileLoc, g.personalsettings)
     if err then
         --設定ファイル読み込み失敗時処理
-        AUTOITEMMANAGE_DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
         g.personalsettings= AUTOITEMMANAGE_DEFAULTPERSONALSETTINGS()
         
     else
@@ -290,7 +290,7 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
             
             --ASM連携
             --if (OLD_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE == nil and AUTOSAVEMONEY_ITEM_TO_WAREHOUSE ~= nil) then
-            --    AUTOITEMMANAGE_DBGOUT('[AIM]ASMを検知しました')
+            --    DBGOUT('[AIM]ASMを検知しました')
             --    g.foundasm = true
             --    OLD_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE = AUTOSAVEMONEY_ITEM_TO_WAREHOUSE
             --    AUTOSAVEMONEY_ITEM_TO_WAREHOUSE = AUTOITEMMANAGE_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_JUMPER
@@ -303,7 +303,7 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
             frame:ShowWindow(0)
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -324,7 +324,7 @@ function AUTOITEMMANAGE_RESERVE_INIT(frame)
  
         end,
         catch=function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 
@@ -340,7 +340,7 @@ function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
             ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",1)
             local frame=ui.GetFrame(g.framename)
             AUTOITEMMANAGE_INIT_FRAME(frame)
-            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
+            DBGOUT('OPEN WAREHOUSE1')
 
             local frame=ui.GetFrame("camp_ui")
             local btn=frame:CreateOrGetControl('button', 'showconfig', 240, 590, 110, 30)
@@ -350,7 +350,7 @@ function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
             ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
         end,
         catch=function(error)
-            AUTOITEMMANAGE_ERROUT(error)       
+            ERROUT(error)       
         end
     }
 
@@ -361,7 +361,7 @@ function AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE()
     EBI_try_catch{
         try=function()
             ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",1)
-            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
+            DBGOUT('OPEN WAREHOUSE1')
 
             local frame=ui.GetFrame("accountwarehouse")
             local btn=frame:CreateOrGetControl('button', 'showconfig', 400, 80, 100, 30)
@@ -370,7 +370,7 @@ function AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE()
             ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
     end,
     catch=function(error)
-        AUTOITEMMANAGE_ERROUT(error)       
+        ERROUT(error)       
     end
     }
     --end
@@ -383,7 +383,7 @@ function AUTOITEMMANAGE_ON_OPEN_WAREHOUSE()
             ReserveScript("AUTOITEMMANAGE_DELAYED_INIT_FRAME()",1)
             local frame=ui.GetFrame(g.framename)
             AUTOITEMMANAGE_INIT_FRAME(frame)
-            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE1')
+            DBGOUT('OPEN WAREHOUSE1')
 
             local frame=ui.GetFrame("warehouse")
             local btn=frame:CreateOrGetControl('button', 'showconfig', 380, 80, 110, 30)
@@ -393,7 +393,7 @@ function AUTOITEMMANAGE_ON_OPEN_WAREHOUSE()
             ReserveScript("AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()",0.5)
         end,
         catch=function(error)
-            AUTOITEMMANAGE_ERROUT(error)       
+            ERROUT(error)       
         end
     }
 
@@ -408,7 +408,7 @@ end
 function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
     EBI_try_catch {
         try = function()
-            AUTOITEMMANAGE_DBGOUT('OPEN WAREHOUSE_2')
+            DBGOUT('OPEN WAREHOUSE_2')
 
             local cid = session.GetMySession():GetCID()
             local refer=AUTOITEMMANAGE_GETITEMSETTINGS()
@@ -416,7 +416,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
             local accountmode=false
             local campmode=false
             if(AUTOITEMMANAGE_ISENABLED()==0)then
-                AUTOITEMMANAGE_DBGOUT('byebye')
+                DBGOUT('byebye')
                 return
             end
             
@@ -425,7 +425,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                 --アカウント倉庫モード
                 accountmode=true
                 if(sett.refillenableaccountwarehouse==nil or sett.refillenableaccountwarehouse==0)then
-                    AUTOITEMMANAGE_DBGOUT('bye')
+                    DBGOUT('bye')
                     return
                 end                
             else
@@ -437,7 +437,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                     frame= ui.GetFrame('warehouse')
                 end
                 if(sett.refillenablewarehouse==nil or sett.refillenablewarehouse==0)then
-                    AUTOITEMMANAGE_DBGOUT('bye')
+                    DBGOUT('bye')
                     return
                 end       
             end
@@ -450,7 +450,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                     local vv = refer[i]
                    
                     if (vv ~= nil and vv.clsid ~= nil) then
-                        AUTOITEMMANAGE_DBGOUT("bT"..tostring(vv.clsid))
+                        DBGOUT("bT"..tostring(vv.clsid))
                         withdrawlist[#withdrawlist+1] = {
                             clsid = vv.clsid,
                             count = vv.count,
@@ -467,32 +467,32 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                                         local itemObj = GetIES(invItem:GetObject())
                                         -- 含まれるかチェック
 
-                                        --AUTOITEMMANAGE_DBGOUT("bT"..tostring(vv.clsid))
+                                        --DBGOUT("bT"..tostring(vv.clsid))
 
-                                        --AUTOITEMMANAGE_DBGOUT(itemObj.ClassID)
+                                        --DBGOUT(itemObj.ClassID)
                                         if itemObj.ClassID ~= nil and tonumber(itemObj.ClassID) == vv.clsid then
                                             --それはバンドル可能？
                                             if(itemObj.MaxStack <=1)then
                                                 if not EBI_IsNoneOrNil(vv.iesid)then
                                                     --iesidで
                                                     if(invItem:GetIESID()==vv.iesid)then
-                                                        AUTOITEMMANAGE_DBGOUT('DT'..tostring(vv.clsid))
+                                                        DBGOUT('DT'..tostring(vv.clsid))
                                                         withdrawlist[#withdrawlist].having=1
                                                     end
                                                 else
-                                                    AUTOITEMMANAGE_DBGOUT('YOUHAVE'..tostring(vv.clsid))
+                                                    DBGOUT('YOUHAVE'..tostring(vv.clsid))
                                                       --全部引き出したいため計数を無効化
                                                     --    withdrawlist[#withdrawlist].having=1
                                                 end
                                             else
-                                                AUTOITEMMANAGE_DBGOUT('DT'..tostring(vv.clsid))
+                                                DBGOUT('DT'..tostring(vv.clsid))
                                                 withdrawlist[#withdrawlist].having=invItem.count
                                             end
                                             
                                         end
                                     end,
                                     catch = function(error)
-                                        AUTOITEMMANAGE_ERROUT(error)
+                                        ERROUT(error)
                                     end
                                 }
                             end,
@@ -501,7 +501,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                         )
                     end
                 end
-                AUTOITEMMANAGE_DBGOUT('NOW' .. tostring(#withdrawlist))
+                DBGOUT('NOW' .. tostring(#withdrawlist))
                 local slotset = GET_CHILD_RECURSIVELY(frame, 'slotset')
                 AUTO_CAST(slotset)
                 local withdrawcounthp = 0
@@ -532,11 +532,11 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                                     if (iconInfo:GetIESID() == wd.iesid) then
                                         local withdrawcounthp = 1
                                         
-                                        AUTOITEMMANAGE_DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
+                                        DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
                                         session.AddItemID(iconInfo:GetIESID(), withdrawcounthp)
                                         takeitems[#takeitems+1]={iesid=iconInfo:GetIESID(),count=withdrawcounthp}
                                         count = count + 1
-                                        AUTOITEMMANAGE_DBGOUT('ADDB'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
+                                        DBGOUT('ADDB'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
                                         
                                     end
                                 else
@@ -547,11 +547,11 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                                             withdrawcounthp = invItem.count
                                         end
                                         if (withdrawcounthp > 0) then
-                                            AUTOITEMMANAGE_DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
+                                            DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
                                             session.AddItemID(iconInfo:GetIESID(), withdrawcounthp)
                                             takeitems[#takeitems+1]={iesid=iconInfo:GetIESID(),count=withdrawcounthp}
                                             count = count + 1
-                                            AUTOITEMMANAGE_DBGOUT('ADD'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
+                                            DBGOUT('ADD'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
                                         end
                                     end
                                 end
@@ -585,7 +585,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
             end
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -593,10 +593,10 @@ function AUTOITEMMANAGE_FOREACH_TAKEITEM(iesid,count,campmode)
 
     local frame
     if( campmode)then
-        AUTOITEMMANAGE_DBGOUT("CAMPMODE")
+        DBGOUT("CAMPMODE")
         frame=ui.GetFrame("camp_ui")
     else
-        AUTOITEMMANAGE_DBGOUT("WAREHOUSEMODE")
+        DBGOUT("WAREHOUSEMODE")
         frame=ui.GetFrame("warehouse")
     end
     item.TakeItemFromWarehouse(IT_WAREHOUSE, iesid, count, frame:GetUserIValue("HANDLE"));
@@ -641,7 +641,7 @@ function AUTOITEMMANAGE_SAVETOSTRUCTURE()
             if (val == nil or amount == nil or amount == 0 ) then
                 data = {}
             else
-                AUTOITEMMANAGE_DBGOUT('save'..tostring(val))
+                DBGOUT('save'..tostring(val))
                 data = {iesid= iesid,clsid = tonumber(val), count = amount}
             end
 
@@ -679,7 +679,7 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
             if(frame==nil)then
                 frame=ui.GetFrame(g.framename)
             end
-            AUTOITEMMANAGE_DBGOUT("INIT FRAME")
+            DBGOUT("INIT FRAME")
 
             frame:SetEventScript(ui.LBUTTONUP, 'AUTOITEMMANAGE_END_DRAG')
 
@@ -693,7 +693,7 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
             --end
             local obj = frame:CreateOrGetControl('slotset', 'slt', 25, 190, 0, 0)
             if (obj == nil) then
-                AUTOITEMMANAGE_DBGOUT('nil')
+                DBGOUT('nil')
             end
             obj = frame:GetChild('slt')
 
@@ -739,7 +739,7 @@ function AUTOITEMMANAGE_INIT_FRAME(frame)
             AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -770,18 +770,18 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_TEMPDISABLED(frame, slot, argstr, argnum
 
             local chktemporarydisabled = GET_CHILD(frame, 'temporarydisabled')
             if(chktemporarydisabled:IsChecked()==1)then
-                AUTOITEMMANAGE_DBGOUT("TEMP DISABLED")
+                DBGOUT("TEMP DISABLED")
                 g.settings.itemmanagetempdisabled=true
                 --g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()]=true
             else
-                AUTOITEMMANAGE_DBGOUT("TEMP DISABLED CANCELED")
+                DBGOUT("TEMP DISABLED CANCELED")
                 g.settings.itemmanagetempdisabled=false
             end
             AUTOITEMMANAGE_SAVE_SETTINGS()
         end,
         catch=function(error)
 
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 
@@ -793,18 +793,18 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_ENABLED(frame, slot, argstr, argnum)
 
             local chkuseisenabled = GET_CHILD(frame, 'isenabled')
             if(chkuseisenabled:IsChecked()==1)then
-                AUTOITEMMANAGE_DBGOUT("ENABLED")
+                DBGOUT("ENABLED")
                 g.personalsettings.enabled=true
                 --g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()]=true
             else
-                AUTOITEMMANAGE_DBGOUT("DISABLED")
+                DBGOUT("DISABLED")
                 g.personalsettings.enabled=false
             end
             AUTOITEMMANAGE_SAVE_SETTINGS()
         end,
         catch=function(error)
 
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 
@@ -818,11 +818,11 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL(frame, slot, argstr, argnum)
 
             local chkusepersonal = GET_CHILD(frame, 'usepersonal')
             if(chkusepersonal:IsChecked()==1)then
-                AUTOITEMMANAGE_DBGOUT("USE PERSONAL")
+                DBGOUT("USE PERSONAL")
                 g.personalsettings.unusecommon=true
                 --g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()]=true
             else
-                AUTOITEMMANAGE_DBGOUT("UNUSE PERSONAL")
+                DBGOUT("UNUSE PERSONAL")
                 g.personalsettings.unusecommon=false
                 --g.settings.itemmanage.unusecommon[AUTOITEMMANAGE_GETCID()]=false
             end
@@ -832,7 +832,7 @@ function AUTOITEMMANAGE_ON_CHECKCHANGED_USEPERSONAL(frame, slot, argstr, argnum)
         end,
         catch=function(error)
 
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 
@@ -852,12 +852,12 @@ function AUTOITEMMANAGE_ON_RCLICK(frame, slot, argstr, argnum)
                 AUTOITEMMANAGE_SAVE_SETTINGS()
             else
                 imcSound.PlaySoundEvent('inven_arrange');
-                AUTOITEMMANAGE_DBGOUT("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")")
+                DBGOUT("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")")
                 ReserveScript("AUTOITEMMANAGE_CHANGENUMBER("..tostring(argnum)..")",0.05)
             end
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
 
         end
     }
@@ -880,13 +880,13 @@ function AUTOITEMMANAGE_CHANGENUMBER(argnum)
             end
             imcSound.PlaySoundEvent('button_cursor_over_3');
             --RCLICKイベント中にスロットセットをいじってはいけない？
-            AUTOITEMMANAGE_DBGOUT("SLOT NUM EDIT")
+            DBGOUT("SLOT NUM EDIT")
             --local slotset=frame
             for i=0,slotset:GetSlotCount()-1 do
                 local curslot=slotset:GetSlotByIndex(i)
                 curslot:RemoveChild("numberinput")
             end
-            AUTOITEMMANAGE_DBGOUT("DONE-")
+            DBGOUT("DONE-")
             --入力ボックスを出してみる
             
             --slot:SetText("")
@@ -912,14 +912,14 @@ function AUTOITEMMANAGE_CHANGENUMBER(argnum)
             ui.SetEscapeScp("AUTOITEMMANAGE_CLEAN_EDIT")
             --slo:SetEventScriptArgNumber(ui.LOSTFOCUS,index)
             slo:AcquireFocus()
-            AUTOITEMMANAGE_DBGOUT("DONE")
+            DBGOUT("DONE")
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("AUTOITEMMANAGE_EDIT_KEYCHECK");
             timer:Start(0.01);
             g.isediting=true
     end,
     catch = function(error)
-        AUTOITEMMANAGE_ERROUT(error)
+        ERROUT(error)
 
     end
     }
@@ -933,7 +933,7 @@ function AUTOITEMMANAGE_EDIT_KEYCHECK()
                     AUTOITEMMANAGE_CLEAN_EDIT()
                     
                 elseif(1==keyboard.IsKeyPressed("TAB"))then
-                    AUTOITEMMANAGE_DBGOUT("tabbed")
+                    DBGOUT("tabbed")
                     --タブ押した
                     g.editkeydown=true
                     --とりま今のを確定
@@ -982,7 +982,7 @@ function AUTOITEMMANAGE_EDIT_KEYCHECK()
         end
     end,
     catch = function(error)
-        AUTOITEMMANAGE_ERROUT(error)
+        ERROUT(error)
     end
     }
 end
@@ -1000,7 +1000,7 @@ function AUTOITEMMANAGE_CLEAN_EDIT()
         end
     end,
     catch = function(error)
-        AUTOITEMMANAGE_ERROUT(error)
+        ERROUT(error)
     end
     }
 end
@@ -1025,7 +1025,7 @@ end
 
 --     end,
 --     catch = function(error)
---         AUTOITEMMANAGE_ERROUT(error)
+--         ERROUT(error)
 
 --     end
 --     }
@@ -1068,7 +1068,7 @@ function AUTOITEMMANAGE_DETERMINENUMBER(argnum)
 
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
 
         end
     }
@@ -1133,20 +1133,20 @@ function AUTOITEMMANAGE_CLEANSINGSLOT(slot)
     end
 end
 function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
-    AUTOITEMMANAGE_DBGOUT('LOADINGAB')
+    DBGOUT('LOADINGAB')
 
     if(frame==nil)then
-        AUTOITEMMANAGE_DBGOUT('GETFRAME')
+        DBGOUT('GETFRAME')
         frame=ui.GetFrame(g.framename)
     end
-    AUTOITEMMANAGE_DBGOUT('LOADING3')
+    DBGOUT('LOADING3')
     
     local sett=AUTOITEMMANAGE_GETSETTINGS()
     if (frame == nil or sett == nil) then
-        AUTOITEMMANAGE_DBGOUT('NO DATA')
+        DBGOUT('NO DATA')
         return
     end
-    AUTOITEMMANAGE_DBGOUT('LOADING2')
+    DBGOUT('LOADING2')
 
     local obj = frame:GetChild('slt')
     local slotset = tolua.cast(obj, 'ui::CSlotSet')
@@ -1181,19 +1181,19 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                             local invitem =AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(item['iesid'])
                             if(invitem~=nil)then
                                 useclsid=false
-                                AUTOITEMMANAGE_DBGOUT("TYPEA "..item['iesid'])
+                                DBGOUT("TYPEA "..item['iesid'])
                             else
                                 --currently invalid
                                 useclsid=true
-                                AUTOITEMMANAGE_DBGOUT("TYPEB")
+                                DBGOUT("TYPEB")
                             end
                         else
                             useclsid=true
-                            AUTOITEMMANAGE_DBGOUT("TYPEC")
+                            DBGOUT("TYPEC")
                         end
                         local isstackable=false
                         if(useclsid)then
-                            AUTOITEMMANAGE_DBGOUT("BBB"..tostring(item['clsid']))
+                            DBGOUT("BBB"..tostring(item['clsid']))
                             local invitem=AUTOITEMMANAGE_ACQUIRE_ITEM_BY_CLASSID(item['clsid'])
                             if(invitem~=nil)then  
                                 local obj = GetIES(invitem:GetObject())
@@ -1215,7 +1215,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                            
                             SET_SLOT_ITEM_CLS(slot, invcls)
                             SET_SLOT_STYLESET(slot, invcls)
-                            AUTOITEMMANAGE_DBGOUT("GENE")
+                            DBGOUT("GENE")
                         else
                             local invitem =AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(item['iesid'])
                             if( invitem~=nil)then
@@ -1224,14 +1224,14 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                                 if(obj.MaxStack > 1)then
                                     isstackable=true
                                 end
-                                AUTOITEMMANAGE_DBGOUT("AAA:"..item['iesid'])
+                                DBGOUT("AAA:"..item['iesid'])
                                 --SET_SLOT_COUNT_TEXT(slot, item['count'], nil);
                                 --SET_SLOT_COUNT(slot, item['count'])
                                 SET_SLOT_INFO_FOR_WAREHOUSE(slot, invitem,"wholeitem")
                                 --SET_SLOT_ITEM_CLS(slot, obj)
                                 --SET_SLOT_STYLESET(slot, obj)
 
-                                AUTOITEMMANAGE_DBGOUT("GENE2")
+                                DBGOUT("GENE2")
                             else
                                 slot:SetText("{ol}NG")
                                 slot:SetTextAlign("right","bottom")
@@ -1255,7 +1255,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
                 end
             end,
             catch = function(error)
-                AUTOITEMMANAGE_ERROUT(error)
+                ERROUT(error)
             end
         }
     end
@@ -1283,7 +1283,7 @@ function AUTOITEMMANAGE_LOADFROMSTRUCTURE(frame)
     else
         chkisenabled:SetCheck(0)
     end
-    AUTOITEMMANAGE_DBGOUT("LOAD_SUCCESSFUL")
+    DBGOUT("LOAD_SUCCESSFUL")
 end
 function AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(guid)
     local invItem=nil
@@ -1317,11 +1317,11 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                 ui.SysMsg(L_("DropWarn"))
                 return
             end
-            AUTOITEMMANAGE_DBGOUT('dropped')
+            DBGOUT('dropped')
             local liftIcon = ui.GetLiftIcon()
             local liftframe = ui.GetLiftFrame():GetTopParentFrame()
             local optionalarg = liftIcon:GetDumpArgNum()
-            AUTOITEMMANAGE_DBGOUT("FRAMENAME:"..liftframe:GetName())
+            DBGOUT("FRAMENAME:"..liftframe:GetName())
 
             if(optionalarg~= 0)then
                 -- 入れ替え
@@ -1333,7 +1333,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                 local slotset = tolua.cast(slotseto,"ui::CSlotSet")
                 local fromslot=nil
 
-                AUTOITEMMANAGE_DBGOUT("FOUND "..tostring(optionalarg-1))
+                DBGOUT("FOUND "..tostring(optionalarg-1))
                 fromslot=slotset:GetSlotByIndex(optionalarg-1-1)
                 if(fromslot~=nil)then
                     --移動してくる
@@ -1346,14 +1346,14 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                     fromslot:SetUserValue("clsid",oclsid)
                     fromslot:SetUserValue("iesid",oiesid)
                     fromslot:SetUserValue("count",ocount)
-                    AUTOITEMMANAGE_DBGOUT("MOVED "..tostring(slot:GetSlotIndex()))
+                    DBGOUT("MOVED "..tostring(slot:GetSlotIndex()))
                     --保存して反映
                     
                     AUTOITEMMANAGE_SAVETOSTRUCTURE()
                     AUTOITEMMANAGE_SAVE_SETTINGS()
                     AUTOITEMMANAGE_LOADFROMSTRUCTURE()
                 else
-                    AUTOITEMMANAGE_DBGOUT("NO MOVE")
+                    DBGOUT("NO MOVE")
                 end
 
             else
@@ -1362,12 +1362,12 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                 local liftParent = liftIcon:GetParent()
                 local slot = tolua.cast(ctrl, 'ui::CSlot')
                 local iconInfo = liftIcon:GetInfo()
-                AUTOITEMMANAGE_DBGOUT("IESID "..tostring(iconInfo:GetIESID()))
+                DBGOUT("IESID "..tostring(iconInfo:GetIESID()))
                 local invitem = AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(iconInfo:GetIESID())
 
                 
                 if iconInfo == nil or slot == nil or invitem == nil then
-                    AUTOITEMMANAGE_DBGOUT("GB")
+                    DBGOUT("GB")
                     return
                 end
                 local register = false
@@ -1379,7 +1379,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                     --     while (string.starts(parent:GetName(), 'ITEM') == false) do
                     --         parent = parent:GetParent()
                     --         if (parent == nil) then
-                    --             AUTOITEMMANAGE_ERROUT('失敗')
+                    --             ERROUT('失敗')
                     --             return
                     --         end
                     --     end
@@ -1421,10 +1421,10 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                         if(obj.MaxStack <= 1) then
                             isstackable=false
                             slot:SetUserValue('iesid', iconInfo:GetIESID())
-                            AUTOITEMMANAGE_DBGOUT("unstackable")
+                            DBGOUT("unstackable")
                         else
                             slot:SetUserValue('iesid', nil)
-                            AUTOITEMMANAGE_DBGOUT("stackable")
+                            DBGOUT("stackable")
                         end
                         --slot:SetUserValue("iesid",iconInfo:GetIESID())
                         --SET_SLOT_ITEM_CLS(slot, invitems)
@@ -1433,13 +1433,13 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
                     end
                 end
                 if register then
-                    AUTOITEMMANAGE_DBGOUT("regist")
+                    DBGOUT("regist")
                     AUTOITEMMANAGE_CHANGECOUNT(frame, count, slot:GetSlotIndex(),isstackable)
                 end
             end
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
@@ -1455,7 +1455,7 @@ function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index,isstackable)
     end
 end
 function AUTOITEMMANAGE_DETERMINENONSTACKABLE_AS_CLSID()
-    AUTOITEMMANAGE_DBGOUT("SET AS CLSID")
+    DBGOUT("SET AS CLSID")
     local frame=ui.GetFrame(g.framename)
     --iesidを消す
     local obj = frame:GetChild('slt')
@@ -1466,7 +1466,7 @@ function AUTOITEMMANAGE_DETERMINENONSTACKABLE_AS_CLSID()
     AUTOITEMMANAGE_DETERMINE(frame,1)
 end
 function AUTOITEMMANAGE_DETERMINENONSTACKABLE_AS_IESID()
-    AUTOITEMMANAGE_DBGOUT("SET AS IESID")
+    DBGOUT("SET AS IESID")
     local frame=ui.GetFrame(g.framename)
     AUTOITEMMANAGE_DETERMINE(frame,1)
 
@@ -1488,7 +1488,7 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
                         local sclsid=tonumber(sslot:GetUserValue('clsid'))
                         if(sclsid==nil or sclsid == 0)then
                         else
-                            AUTOITEMMANAGE_DBGOUT("ITEM "..tostring(sclsid))
+                            DBGOUT("ITEM "..tostring(sclsid))
                             local invcls = GetClassByType('Item', sclsid)
                             local siesid=sslot:GetUserValue('iesid')
                             if(EBI_IsNoneOrNil(siesid) or EBI_IsNoneOrNil(iesid))then
@@ -1499,7 +1499,7 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
                                 end
                         
                             else
-                                AUTOITEMMANAGE_DBGOUT(siesid)
+                                DBGOUT(siesid)
                                 local invitem=AUTOITEMMANAGE_ACQUIRE_ITEM_BY_GUID(siesid)
                                 if(invitem~=nil)then
                                     local obj=GetIES(invitem:GetObject())
@@ -1507,7 +1507,7 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
                                     if(maxstack<=1)then
                                     
                                         --local siesid=sslot:GetUserValue('iesid')
-                                        AUTOITEMMANAGE_DBGOUT("MINISTA"..iesid.."/"..siesid)
+                                        DBGOUT("MINISTA"..iesid.."/"..siesid)
                                         if(iesid==siesid)then
                                             -- 消す
                                             AUTOITEMMANAGE_CLEANSINGSLOT(sslot)
@@ -1536,7 +1536,7 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
             --     SET_SLOT_ITEM_CLS(slot, obj)
             --     SET_SLOT_STYLESET(slot, obj)
             -- else
-            --     AUTOITEMMANAGE_DBGOUT("HERE")
+            --     DBGOUT("HERE")
             --     local obj = GetIES(invItem:GetObject())
             --     SET_SLOT_COUNT_TEXT(slot, tonumber(cnt))
             --     SET_SLOT_ITEM_CLS(slot, obj)
@@ -1551,7 +1551,7 @@ function AUTOITEMMANAGE_DETERMINE(frame, cnt)
             AUTOITEMMANAGE_LOADFROMSTRUCTURE()
         end,
         catch = function(error)
-            AUTOITEMMANAGE_ERROUT(error)
+            ERROUT(error)
         end
     }
 end
