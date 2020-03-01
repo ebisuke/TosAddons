@@ -88,7 +88,7 @@ function SMALLUI_ON_INIT(addon, frame)
             addontimer:EnableHideUpdate(1)
             g.frame:ShowWindow(1)
             g.frame:SetOffset(0,0)
-            SMALLUI_LOAD_SETTINGS()
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -131,8 +131,10 @@ end
 function SMALLUI_3SEC()
     EBI_try_catch{
         try = function()
+            
             --SMALLUI_REPLACE("quickslotnexpbar")
             SMALLUI_LOAD_SETTINGS()
+            SMALLUICONFIG_INIT()
             if(g.settings.resizeminimap)then
                 SMALLUI_SMALLIFY_MINIMAP()
             end

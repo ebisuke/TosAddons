@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="anotheroneofstatbarsconfig" x="100" y="100" width="500" height="610" create="open">
+	<draw drawnotitlebar="false" drawtitlebar="false"/>
+	<skin frameskin="test_frame_low"/>
+	<frame title="" fullheight="false" fasthide="true" layout_gravity="left top" margin="100 100 0 0"/>
+	<input moveable="true" hittestframe="true" moveintitlebar="false"/>
+	<layer layerlevel="100"/>
+	<option closebutton="false"/>
+	<sound opensound="window_open" closesound="window_close"/>
+	<script OpenScp="ANOTHERONEOFSTATBARSCONFIG_ON_OPEN"/>
+	<controls>
+		<groupbox name="headerBox" rect="0 0 400 55" margin="0 16 0 0" layout_gravity="center top" skin="test_socket_topskin" hittest="false"/>
+		<button name="xBtn" rect="0 0 40 40" margin="0 20 25 0" layout_gravity="right top" image="testclose_button" texttooltip="CLOSE" LBtnUpScp="ANOTHERONEOFSTATBARSCONFIG_CLOSE"/>
+		<richtext name="headerText" rect="0 0 500 50" parent="headerBox" margin="0 5 0 0" layout_gravity="center center" caption="{@st43}AOS Config{/}" hittest="false"/>
+		<!--<slotset name="itemSlotset" rect="0 0 480 500" margin="0 145 0 0" layout_gravity="center top" row="1" col="10" size="65 65" skin="invenslot2" spc="2 2" enabledrop="true" enablepop="true"/>-->
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

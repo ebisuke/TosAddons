@@ -33,6 +33,7 @@ g.personalsettings=g.personalsettings or {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.loaded=g.loaded or false
+g.pressed=false
 local function AUTO_CAST(ctrl)
     if(ctrl==nil)then
         
@@ -116,6 +117,7 @@ function QSS_3SEC()
     QSSC_INIT()
     g.loaded=true
     QSSI_UPDATE_STATUS()
+
 end
 function QSSI_INIT()
     EBI_try_catch{
@@ -125,7 +127,7 @@ function QSSI_INIT()
            
             frame:SetOffset(g.settings.x or 300,g.settings.y or 300)
             frame:SetEventScript(ui.LBUTTONUP, "QSSI_LBUTTONUP");
-            frame:SetEventScript(ui.RBUTTONUP, "QSSI_CONTEXT_MENU");
+            --frame:SetEventScript(ui.RBUTTONUP, "QSSI_CONTEXT_MENU");
             frame:SetSkinName("test_weight_skin")
             frame:EnableMove(1)
             frame:EnableHittestFrame(1)
@@ -243,14 +245,20 @@ function QSS_ON_TIMER()
                 if((ui.GetFocusObject() == nil or 
                 ui.GetFocusObject():GetClassString() ~= "ui::CEditControl") and 
                 ui.IsFrameVisible("chat_frame")~=1)then
-                    if(keyboard.IsKeyDown(g.settings.keys.toggle)==1)then
-                        local no=g.personalsettings.currentno+1
-                        if(no > g.personalsettings.maxno)then
-                            no=1
+                    if(keyboard.IsKeyDown(g.settings.keys.toggle)==1 or 
+                    ((joystick.IsKeyPressed("JOY_BTN_5")==1)and(joystick.IsKeyPressed("JOY_BTN_7")==1)))then
+                        if(not g.pressed)then
+                            local no=g.personalsettings.currentno+1
+                            if(no > g.personalsettings.maxno)then
+                                no=1
+                            end
+                            QSS_CHANGENO(no,true)
+                            imcSound.PlaySoundEvent('button_click_big');
+                            --CHAT_SYSTEM("SWITCH:"..tostring(no))
                         end
-                        QSS_CHANGENO(no,true)
-                        imcSound.PlaySoundEvent('button_click_big');
-                        --CHAT_SYSTEM("SWITCH:"..tostring(no))
+                        g.pressed=true
+                    else
+                        g.pressed=false
                     end
                 end
             end
@@ -407,6 +415,7 @@ function QSS_LOAD_SETTINGS()
             x=300,y=300,
             keys={
                 toggle="B",
+
                 select={
                     [1]=nil,
                     [2]=nil,

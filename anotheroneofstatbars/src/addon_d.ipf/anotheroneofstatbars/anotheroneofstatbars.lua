@@ -14,6 +14,22 @@ g.version = 0
 g.settings =g.settings or {
     x = 300,
     y = 300,
+    style=0,
+    maxlenhp=400,
+    maxlensp=400,
+    maxlenstamina=400,
+    maxlendur=400,
+    minlenhp=100,
+    minlensp=100,
+    minlenstamina=100,
+    minlendur=100,
+    maxhp=100000,
+    maxsp=1000,
+    maxstamina=100000,
+    maxdur=4000
+}
+g.configurepattern={
+
 }
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
@@ -183,18 +199,35 @@ function AOS_SAVE_SETTINGS()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 end
 
-
+function AOS_DEFAULT_SETTINGS()
+    g.settings = {
+        x = 300,
+        y = 300,
+        style=0,
+        maxlenhp=1800,
+        maxlensp=1800,
+        maxlenstamina=400,
+        maxlendur=400,
+        minlenhp=100,
+        minlensp=100,
+        minlenstamina=100,
+        minlendur=100,
+        maxhp=100000,
+        maxsp=10000,
+        maxstamina=100000,
+        maxdur=4000,
+        lock=false,
+        diamond=AOS_DEFAULT_DIAMOND()
+    }
+    ANOTHERONEOFSTATBARSCONFIG_GENERATEDEFAULT( g.settings)
+end
 function AOS_LOAD_SETTINGS()
     DBGOUT("LOAD_SETTING")
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
         DBGOUT(string.format('[%s] cannot load setting files', addonName))
-        g.settings = {
-            x = 300, 
-            y = 300,
-            diamond=AOS_DEFAULT_DIAMOND()
-        }
+        AOS_DEFAULT_SETTINGS()
     else
         --設定ファイル読み込み成功時処理
         g.settings = t
@@ -244,6 +277,7 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             addon:RegisterMsg('BUFF_UPDATE', 'AOS_BUFF_UPDATE');
             addon:RegisterMsg("SHOW_SOUL_CRISTAL", "AOS_SHOW_SOUL_CRISTAL");
             addon:RegisterMsg("UPDATE_SOUL_CRISTAL", "AOS_UPDATE_SOUL_CRISTAL");
+           
             if not g.loaded then
                 
                 g.loaded = true
@@ -267,6 +301,7 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
         end
     }
 end
+
 function AOS_ON_FPS_UPDATE()
     g.frame:ShowWindow(1)
 end
@@ -290,6 +325,7 @@ function AOS_UPDATE_SOUL_CRISTAL(frame, msg, maxStr, curCount)
 		maxCount = frame:GetUserIValue('SOULCRYSTAL_MAX_COUNT');
 	end
     local curnum=maxCount-curCount
+    soulcrystal:ShowWindow(1)
     soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}"..tostring(curnum).."/"..tostring(maxCount))
     
 end
@@ -361,7 +397,7 @@ function AOS_INIT()
         try = function()
             local frame = ui.GetFrame(g.framename)
             frame:RemoveAllChild()
-            frame:Resize(1400, 80)
+            frame:Resize(1920, 300)
             local pic = frame:CreateOrGetControl("picture", "pic", 0, 0, frame:GetWidth(), frame:GetHeight())
             local touch = frame:CreateOrGetControl("picture", "touchbar", 500 - 20, 22, 40, 40)
             local soulcrystal = frame:CreateOrGetControl("richtext", "soulcrystal", 500 - 30, 5, 40, 40)
@@ -390,7 +426,7 @@ function AOS_INIT()
             local jobIcon = TryGetProp(jobCls, 'Icon');
             if jobIcon ~= nil then
                 touch:SetImage(jobIcon)
-                touch:SetTextTooltip(jobCls.Name);
+                touch:SetTextTooltip("{ol}"..jobCls.Name.."{nl}To show camp menu,Press RBtn.{nl}To show AOS menu,Press LSHIFT + RBtn ");
             end
 
             g.remhpw = 0
@@ -459,7 +495,87 @@ function AOS_CALC_CURDUR()
         end
     end
 end
-
+function AOS_CALC_POINT(actualval,minw,maxw,maxav)
+    local valw = math.max(minw, math.min(maxw, actualval * maxw / maxav))
+    return valw
+end
+function AOS_CALC_POINT_ANIMATED(widthval,remwidthval,actualval,actualmax,minw,maxw,maxav,speed)
+    
+    local amax = math.min(maxw, actualmax * maxw / maxav)
+    local valw
+    if(amax<minw)then
+        valw = math.min(maxw, actualval * minw / amax)
+    elseif(actualmax>maxav)then
+        valw = math.min(maxw, actualval * maxw / actualmax)
+  
+    else
+        valw = math.min(maxw, actualval * maxw / maxav)
+  
+    end
+    
+    if (widthval > valw) then
+        --減少
+        if (remwidthval< valw) then
+            --remを増やす
+            remwidthval= valw
+            
+        end
+        --curhpを近づける
+        widthval = math.max(valw, widthval - math.max((widthval - valw) * speed, 1))
+        
+    elseif (widthval < valw) then
+        if (remwidthval< valw) then
+            --remを近づける
+            remwidthval= remwidthval+ math.max((valw - remwidthval) * speed, 1)
+           
+        elseif (remwidthval> valw) then
+            --remを減らす
+            remwidthval= valw
+            
+           
+        else
+            --curhpを近づける
+            widthval = math.min(valw, widthval + math.max((valw - widthval) * speed, 1))
+            
+        end
+    else
+        if (remwidthval> valw) then
+            --remを近づける
+            remwidthval= math.max(valw, remwidthval- math.max((remwidthval- valw) * speed, 1))
+            
+        
+        end
+    end
+    return widthval,remwidthval
+end
+function AOS_CALC_POINT_SIMPLE_ANIMATED(widthval,actualval,actualmax,minw,maxw,maxav,speed)
+        
+    local amax = math.min(maxw, actualmax * maxw / maxav)
+    local valw
+    if(amax<minw)then
+        valw = math.min(maxw, actualval * minw / actualmax)
+    elseif(actualmax>maxav)then
+        valw = math.min(maxw, actualval * maxw / actualmax)
+  
+    else
+        valw = math.min(maxw, actualval * maxw / maxav)
+  
+    end
+    
+    if (widthval > valw) then
+        --減少
+        --curspを近づける
+        widthval = math.max(valw,widthval - math.max((widthval - valw) * speed, 0.10))
+      
+    elseif (widthval < valw) then
+        
+        --curspを近づける
+        widthval= math.min(valw,widthval + math.max((valw - widthval) * speed, 0.10))
+    
+    end
+    
+    return widthval
+end
 function AOS_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
@@ -478,145 +594,157 @@ function AOS_ON_TIMER(frame)
             
             
             local stat = info.GetStat(session.GetMyHandle());
+            local minwidth=0
+           
+            local maxmaxhp=g.settings.maxhp
+            local maxmaxsp=g.settings.maxsp
+            local maxmaxsta=g.settings.maxstamina
+            local maxmaxdur=g.settings.maxdur
+   
+
+            -- local maxhpw = AOS_CALC_POINT(stat.maxHP,minwidth,maxwidth,maxmaxhp)
+            -- local maxshpw = AOS_CALC_POINT(stat.maxHP,minwidth,maxwidth,maxmaxhp)
+            -- local maxspw =AOS_CALC_POINT(stat.maxSP,minwidth,maxwidth,maxmaxsp)
+            -- local maxstaw = AOS_CALC_POINT(stat.MaxStamina,minwidth,maxwidth,maxmaxsta)
+            -- local maxdurw = AOS_CALC_POINT( g.durmax,minwidth,maxwidth,maxmaxdur)
+            -- local curhpw = stat.HP * maxhpw / stat.maxHP
+            -- local curshpw = math.min(g.settings.maxlen, stat.shield * maxshpw / stat.maxHP)
+            -- local curspw = stat.SP * maxspw / stat.maxSP
             
-            local maxhpw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
-            local maxshpw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
-            local maxspw = math.max(100, math.min(400, stat.maxSP * 400 / 10000))
-            local maxstaw = math.max(100, math.min(400, stat.MaxStamina * 400 / 100000))
-            local maxdurw = math.max(100, math.min(400, g.durmax * 400 / 4000))
-            local curhpw = stat.HP * maxhpw / stat.maxHP
-            local curshpw = math.min(400, stat.shield * maxshpw / stat.maxHP)
-            local curspw = stat.SP * maxspw / stat.maxSP
-            
-            local curstaw = stat.Stamina * maxstaw / stat.MaxStamina
-            local curdurw = g.durmin * maxdurw / g.durmax
+            -- local curstaw = stat.Stamina * maxstaw / stat.MaxStamina
+            -- local curdurw = g.durmin * maxdurw / g.durmax
             
             local speed = 0.3
             local speedslow = 0.05
             --HP
+            g.curhpw,g.remhpw=AOS_CALC_POINT_ANIMATED(g.curhpw,g.remhpw,stat.HP,stat.maxHP,minwidth,g.settings.maxlenhp,maxmaxhp,speed)
+            g.curshpw,g.remshpw=AOS_CALC_POINT_ANIMATED(g.curshpw,g.remshpw,stat.shield,stat.maxHP,minwidth,g.settings.maxlenhp,maxmaxhp,speed)
+            g.curspw,g.remspw=AOS_CALC_POINT_ANIMATED(g.curspw,g.remspw,stat.SP,stat.maxSP,minwidth,g.settings.maxlensp,maxmaxsp,speed)
+            g.curstaw=AOS_CALC_POINT_SIMPLE_ANIMATED(g.curstaw,stat.Stamina,stat.MaxStamina,minwidth,g.settings.maxlenstamina,maxmaxsta,speedslow)
+            g.curdurw=AOS_CALC_POINT_SIMPLE_ANIMATED(g.curdurw,g.durmin,g.durmax,minwidth,g.settings.maxlendur,maxmaxdur,speedslow)
 
-            if (g.curhpw > curhpw) then
-                --減少
-                if (g.remhpw < curhpw) then
-                    --remを増やす
-                    g.remhpw = curhpw
-                    render = true
-                end
-                --curhpを近づける
-                g.curhpw = math.max(curhpw, g.curhpw - math.max((g.curhpw - curhpw) * speed, 1))
-                render = true
-            elseif (g.curhpw < curhpw) then
-                if (g.remhpw < curhpw) then
-                    --remを近づける
-                    g.remhpw = g.remhpw + math.max((curhpw - g.remhpw) * speed, 1)
-                    render = true
-                elseif (g.remhpw > curhpw) then
-                    --remを減らす
-                    g.remhpw = curhpw
+            -- if (g.curhpw > curhpw) then
+            --     --減少
+            --     if (g.remhpw < curhpw) then
+            --         --remを増やす
+            --         g.remhpw = curhpw
+            --         render = true
+            --     end
+            --     --curhpを近づける
+            --     g.curhpw = math.max(curhpw, g.curhpw - math.max((g.curhpw - curhpw) * speed, 1))
+            --     render = true
+            -- elseif (g.curhpw < curhpw) then
+            --     if (g.remhpw < curhpw) then
+            --         --remを近づける
+            --         g.remhpw = g.remhpw + math.max((curhpw - g.remhpw) * speed, 1)
+            --         render = true
+            --     elseif (g.remhpw > curhpw) then
+            --         --remを減らす
+            --         g.remhpw = curhpw
                     
-                    render = true
-                else
-                    --curhpを近づける
-                    g.curhpw = math.min(curhpw, g.curhpw + math.max((curhpw - g.curhpw) * speed, 1))
-                    render = true
-                end
-            else
-                if (g.remhpw > curhpw) then
-                    --remを近づける
-                    g.remhpw = math.max(curhpw, g.remhpw - math.max((g.remhpw - curhpw) * speed, 1))
+            --         render = true
+            --     else
+            --         --curhpを近づける
+            --         g.curhpw = math.min(curhpw, g.curhpw + math.max((curhpw - g.curhpw) * speed, 1))
+            --         render = true
+            --     end
+            -- else
+            --     if (g.remhpw > curhpw) then
+            --         --remを近づける
+            --         g.remhpw = math.max(curhpw, g.remhpw - math.max((g.remhpw - curhpw) * speed, 1))
                     
-                    render = true
-                end
-            end
-            --シールド
-            if (g.curshpw > curshpw) then
-                --減少
-                if (g.remshpw < curshpw) then
-                    --remを増やす
-                    g.remshpw = curshpw
-                    render = true
-                end
-                --curshpを近づける
-                g.curshpw = math.max(curshpw, g.curshpw - math.max((g.curshpw - curshpw) * speed, 1))
-                render = true
-            elseif (g.curshpw < curshpw) then
-                if (g.remshpw < curshpw) then
-                    --remを近づける
-                    g.remshpw = g.remshpw + math.max((curshpw - g.remshpw) * speed, 1)
-                    render = true
-                elseif (g.remshpw > curshpw) then
-                    --remを減らす
-                    g.remshpw = curshpw
+            --         render = true
+            --     end
+            -- end
+            -- --シールド
+            -- if (g.curshpw > curshpw) then
+            --     --減少
+            --     if (g.remshpw < curshpw) then
+            --         --remを増やす
+            --         g.remshpw = curshpw
+            --         render = true
+            --     end
+            --     --curshpを近づける
+            --     g.curshpw = math.max(curshpw, g.curshpw - math.max((g.curshpw - curshpw) * speed, 1))
+            --     render = true
+            -- elseif (g.curshpw < curshpw) then
+            --     if (g.remshpw < curshpw) then
+            --         --remを近づける
+            --         g.remshpw = g.remshpw + math.max((curshpw - g.remshpw) * speed, 1)
+            --         render = true
+            --     elseif (g.remshpw > curshpw) then
+            --         --remを減らす
+            --         g.remshpw = curshpw
                     
-                    render = true
-                else
-                    --curshpを近づける
-                    g.curshpw = math.min(curshpw, g.curshpw + math.max((curshpw - g.curshpw) * speed, 1))
-                    render = true
-                end
-            else
-                if (g.remshpw > curshpw) then
-                    --remを近づける
-                    g.remshpw = math.max(curshpw, g.remshpw - math.max((g.remshpw - curshpw) * speed, 1))
+            --         render = true
+            --     else
+            --         --curshpを近づける
+            --         g.curshpw = math.min(curshpw, g.curshpw + math.max((curshpw - g.curshpw) * speed, 1))
+            --         render = true
+            --     end
+            -- else
+            --     if (g.remshpw > curshpw) then
+            --         --remを近づける
+            --         g.remshpw = math.max(curshpw, g.remshpw - math.max((g.remshpw - curshpw) * speed, 1))
                     
-                    render = true
-                end
-            end
+            --         render = true
+            --     end
+            -- end
 
-            --SP
-            if (g.curspw > curspw) then
-                --減少
-                if (g.remspw < curspw) then
-                    --remを増やす
-                    g.remspw = curspw
-                    render = true
-                end
-                --curspを近づける
-                g.curspw = math.max(curspw, g.curspw - math.max((g.curspw - curspw) * speed, 1))
-                render = true
-            elseif (g.curspw < curspw) then
-                if (g.remspw < curspw) then
-                    --remを近づける
-                    g.remspw = g.remspw + math.max((curspw - g.remspw) * speed, 1)
-                    render = true
-                elseif (g.remspw > curspw) then
-                    --remを減らす
-                    g.remspw = curspw
-                    render = true
-                else
-                    --curspを近づける
-                    g.curspw = math.min(curspw, g.curspw + math.max((curspw - g.curspw) * speed, 1))
-                    render = true
-                end
-            else
-                if (g.remspw > curspw) then
-                    --remを近づける
-                    g.remspw = math.max(curspw, g.remspw - math.max((g.remspw - curspw) * speed, 1))
-                    render = true
-                end
-            end
-            if (g.curstaw > curstaw) then
-                --減少
-                --curspを近づける
-                g.curstaw =  math.max(curstaw,g.curstaw - math.max((g.curstaw - curstaw) * speedslow, 0.10))
-                render = true
-            elseif (g.curstaw < curstaw) then
+            -- --SP
+            -- if (g.curspw > curspw) then
+            --     --減少
+            --     if (g.remspw < curspw) then
+            --         --remを増やす
+            --         g.remspw = curspw
+            --         render = true
+            --     end
+            --     --curspを近づける
+            --     g.curspw = math.max(curspw, g.curspw - math.max((g.curspw - curspw) * speed, 1))
+            --     render = true
+            -- elseif (g.curspw < curspw) then
+            --     if (g.remspw < curspw) then
+            --         --remを近づける
+            --         g.remspw = g.remspw + math.max((curspw - g.remspw) * speed, 1)
+            --         render = true
+            --     elseif (g.remspw > curspw) then
+            --         --remを減らす
+            --         g.remspw = curspw
+            --         render = true
+            --     else
+            --         --curspを近づける
+            --         g.curspw = math.min(curspw, g.curspw + math.max((curspw - g.curspw) * speed, 1))
+            --         render = true
+            --     end
+            -- else
+            --     if (g.remspw > curspw) then
+            --         --remを近づける
+            --         g.remspw = math.max(curspw, g.remspw - math.max((g.remspw - curspw) * speed, 1))
+            --         render = true
+            --     end
+            -- end
+            -- if (g.curstaw > curstaw) then
+            --     --減少
+            --     --curspを近づける
+            --     g.curstaw =  math.max(curstaw,g.curstaw - math.max((g.curstaw - curstaw) * speedslow, 0.10))
+            --     render = true
+            -- elseif (g.curstaw < curstaw) then
                 
-                --curspを近づける
-                g.curstaw =  math.min(curstaw,g.curstaw + math.max((curstaw - g.curstaw) * speedslow, 0.10))
-                render = true
-            end
-            if (g.curdurw > curdurw) then
-                --減少
-                --curspを近づける
-                g.curdurw = math.max(curdurw,g.curdurw - math.max((g.curdurw - curdurw) * speedslow, 0.10))
-                render = true
-            elseif (g.curdurw < curdurw) then
+            --     --curspを近づける
+            --     g.curstaw =  math.min(curstaw,g.curstaw + math.max((curstaw - g.curstaw) * speedslow, 0.10))
+            --     render = true
+            -- end
+            -- if (g.curdurw > curdurw) then
+            --     --減少
+            --     --curspを近づける
+            --     g.curdurw = math.max(curdurw,g.curdurw - math.max((g.curdurw - curdurw) * speedslow, 0.10))
+            --     render = true
+            -- elseif (g.curdurw < curdurw) then
                 
-                --curspを近づける
-                g.curdurw = math.min(curdurw,g.curdurw + math.max((curdurw - g.curdurw) * speedslow, 0.10))
-                render = true
-            end
+            --     --curspを近づける
+            --     g.curdurw = math.min(curdurw,g.curdurw + math.max((curdurw - g.curdurw) * speedslow, 0.10))
+            --     render = true
+            -- end
             
 
             if(g.spskill ~= nil)then
@@ -641,9 +769,25 @@ end
 function AOS_RENDER()
     EBI_try_catch{
         try = function()
+           if(g.settings.style==nil or g.settings.style==0)then
+                AOS_RENDER_STYLEA()
+           elseif( g.settings.style==1)then
+                AOS_RENDER_STYLEB()
+           end
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function AOS_RENDER_STYLEA()
+    EBI_try_catch{
+        try = function()
             local frame = ui.GetFrame(g.framename)
             local pic = frame:GetChild("pic")
             tolua.cast(pic, "ui::CPicture")
+            local touch = frame:CreateOrGetControl("picture", "touchbar", 500 - 20, 22, 40, 40)
+            local soulcrystal = frame:CreateOrGetControl("richtext", "soulcrystal", 500 - 30, 5, 40, 40)
             pic:FillClonePicture("00000000")
             pic:DrawBrush(500, 41 - 5, 500, 41 + 5, "spray_dia", "AA000000")
             pic:DrawBrush(500 - 5, 41, 500 + 5, 41, "spray_dia", "AA000000")
@@ -659,18 +803,19 @@ function AOS_RENDER()
         end
     }
 end
+
 function AOS_DRAW_HPBAR(frame,pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(400, stat.maxHP * 400 / 100000))
+    local maxw = math.max(100, math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp))
     local colw = stat.HP * maxw / stat.maxHP
-    local colsw = math.min(400, stat.shield * 400 / 100000)
+    local colsw = math.min(g.settings.maxlenhp, stat.shield * g.settings.maxlenhp / g.settings.maxhp)
    
     local curw = g.curhpw
     local fixhpw=curw
     local ox = 500 + 20 - 2
     local oy = 30 - 2
     if(g.fixhp)then
-        fixhpw= math.max(0, math.min(400, g.fixhp * 400 / 100000))
+        fixhpw= math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
     end
     if(stat.HP <= stat.maxHP*0.3)then
         local lowstr=string.format("AA%02X4444",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
@@ -717,7 +862,7 @@ function AOS_DRAW_HPBAR(frame,pic)
 end
 function AOS_DRAW_SPBAR(frame,pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(400, stat.maxSP * 400 / 10000))
+    local maxw = math.max(100, math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp))
     local curw = g.curspw
 
     local colw =  stat.SP * maxw / stat.maxSP
@@ -725,7 +870,7 @@ function AOS_DRAW_SPBAR(frame,pic)
     local ox = 500 - 20 + 2
     local oy = 30 - 2
     if(g.fixsp)then
-        fixspw= math.max(0, math.min(400, g.fixsp * 400 / 10000))
+        fixspw= math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
     end
     if(stat.SP <= stat.maxSP*0.3)then
         local lowstr=string.format("AA4444%02X",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
@@ -760,7 +905,7 @@ function AOS_DRAW_DURBAR(frame,pic)
     local durmin, durmax 
     durmin= g.durmin
     durmax= g.durmax
-    local maxw = math.max(100, math.min(400, durmax * 400 / 4000))
+    local maxw = math.max(100, math.min(g.settings.maxlendur, durmax * g.settings.maxlendur / g.settings.maxdur))
     local curw = g.curdurw
     local ox = 500 - 20 + 2
     local oy = 40 + 4
@@ -784,7 +929,7 @@ function AOS_DRAW_DURBAR(frame,pic)
 end
 function AOS_DRAW_STAMINABAR(frame,pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(400, stat.MaxStamina * 400 / 100000))
+    local maxw = math.max(100, math.min(g.settings.maxlenstamina, stat.MaxStamina * g.settings.maxlenstamina / g.settings.maxstamina))
     local curw = g.curstaw
     
     local ox = 500 + 20 - 2
@@ -908,6 +1053,181 @@ function AOS_GET_DIAMOND_VALUE()
     end
     return nil,nil
 end
+
+function AOS_RENDER_STYLEB()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+            local pic = frame:GetChild("pic")
+            tolua.cast(pic, "ui::CPicture")
+            pic:FillClonePicture("00000000")
+            pic:DrawBrush(40, 20+20, 0, 20+20, "spray_triangle", "AA000000")
+            pic:DrawBrush(0, 20+20, 0 , 20+20+20, "spray_triangle", "AA000000")
+            --pic:DrawBrush(50+20, 20+20, 50+20, 20+20, "spray_triangle", "AA000000")
+            local touch = frame:GetChild("touchbar")
+            local soulcrystal = frame:GetChild("soulcrystal")
+            touch:SetOffset(0,20)
+            soulcrystal:SetOffset(0,20)
+            AOS_DRAW_HPBAR_B(frame,pic)
+            AOS_DRAW_SPBAR_B(frame,pic)
+            AOS_DRAW_STAMINABAR_B(frame,pic)
+            AOS_DRAW_DURBAR_B(frame,pic)
+
+            pic:Invalidate()
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function AOS_DRAW_HPBAR_B(frame,pic)
+    local stat = info.GetStat(session.GetMyHandle());
+    local maxw = math.max(100, math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp))
+    local colw = stat.HP * maxw / stat.maxHP
+    local colsw = math.min(g.settings.maxlenhp, stat.shield * g.settings.maxlenhp / g.settings.maxhp)
+   
+    local curw = g.curhpw
+    local fixhpw=curw
+    local ox = 40+20-5+5+1
+    local oy = 50 -20-5-5
+    if(g.fixhp)then
+        fixhpw= math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
+    end
+    if(stat.HP <= stat.maxHP*0.3)then
+        local lowstr=string.format("AA%02X4444",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
+    else
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
+    end
+    if (g.remhpw ~= g.curhpw) then
+        if (colw > g.curhpw) then
+            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remhpw, oy + 5, "spray_large_s", "FF22FFFF")
+        else
+            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remhpw, oy + 5, "spray_large_s", "FFFF0000")
+        end
+    end
+    if g.fanatic then
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FFFFBB77")
+        pic:DrawBrush(ox - 5-2, oy + 5+2, ox - 5-2 + fixhpw, oy + 5+2, "spray_small_s", "FFDDAA44")
+    else
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FF22FF77")
+        pic:DrawBrush(ox - 5-2, oy +5+2, ox - 5-2 + fixhpw, oy + 5+2, "spray_small_s", "FF11CC55")
+    end
+    if(g.remshpw>0)then
+        if (g.remshpw ~= g.curshpw) then
+            if (colsw > g.curshpw) then
+                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FFFFFFFF")
+            else
+                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FF6666FF")
+            end
+        end
+    end
+    if(g.curshpw > 0)then
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.curshpw , oy + 5, "spray_large_s", "FFFFFFFF")
+        pic:DrawBrush(ox + 5-2, oy + 5+2, ox + 5-2 + g.curshpw , oy + 5+2, "spray_small_s", "FFCCCCCC")
+    end
+    DrawPolyLine(pic, {
+        {ox-1, oy},
+        {ox - 10-1, oy + 10},
+        {ox + maxw - 10, oy + 10},
+    }, "spray_1", "FF000000")
+    
+    local txt=frame:CreateOrGetControl("richtext","hpnum",ox+20,oy-10,50,16)
+    txt:EnableHitTest(0)
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.HP))
+end
+function AOS_DRAW_SPBAR_B(frame,pic)
+    local stat = info.GetStat(session.GetMyHandle());
+    local maxw = math.max(100, math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp))
+    local curw = g.curspw
+
+    local colw =  stat.SP * maxw / stat.maxSP
+    local fixspw=curw
+    local ox =40+20-5+5-15+1
+    local oy =50 -20-5-5+15
+    if(g.fixsp)then
+        fixspw= math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
+    end
+    if(stat.SP <= stat.maxSP*0.3)then
+        local lowstr=string.format("AA4444%02X",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
+ 
+    else
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
+    end
+    if (g.remspw ~= g.curspw) then
+        if (colw > g.curspw) then
+            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remspw, oy + 5, "spray_large_s", "FF22FF77")
+        
+        else
+            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remspw, oy + 5, "spray_large_s", "FFFF0000")
+        end
+    end
+    pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FF44CCFF")
+    pic:DrawBrush(ox - 7, oy + 7, ox - 7 + fixspw, oy + 7, "spray_small_s", "FF33AACC")
+    DrawPolyLine(pic, {
+        {ox-1, oy},
+        {ox - 10-1, oy + 10},
+        {ox + maxw - 10 , oy + 10},
+    }, "spray_1", "FF000000")
+
+    local txt=frame:CreateOrGetControl("richtext","spnum",ox+20,oy-10,50,16)
+    txt:EnableHitTest(0)
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.SP))
+
+end
+function AOS_DRAW_DURBAR_B(frame,pic)
+    local stat = info.GetStat(session.GetMyHandle());
+    local durmin, durmax 
+    durmin= g.durmin
+    durmax= g.durmax
+    local maxw = math.max(100, math.min(g.settings.maxlendur, durmax * g.settings.maxlendur / g.settings.maxdur))
+    local curw = g.curdurw
+    local ox =40+20-5+5-15+1-15
+    local oy = 50 -20-5-5+15+15
+    if(durmin <= durmax*0.3 and durmin>0)then
+    --if(durmin <= durmax*0.3)then
+        local lowstr=string.format("AA%02X44%02X",0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25),0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25))
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s",lowstr)
+    else
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
+    end
+    
+    pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FFFF88FF")
+    pic:DrawBrush(ox - 5 - 2 , oy + 7, ox - 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCC55CC")
+    DrawPolyLine(pic, {
+        {ox-1, oy},
+        {ox - 10-1, oy + 10},
+        {ox + maxw - 10 , oy + 10},
+    }, "spray_1", "FF000000")
+    
+   
+end
+function AOS_DRAW_STAMINABAR_B(frame,pic)
+    local stat = info.GetStat(session.GetMyHandle());
+    local maxw = math.max(100, math.min(g.settings.maxlenstamina, stat.MaxStamina * g.settings.maxlenstamina / g.settings.maxstamina))
+    local curw = g.curstaw
+    
+    local ox =40+15+5-15+1-15-15-10
+    local oy =50 -20-5-5+15+15+15
+    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
+    if(stat.Stamina <= stat.MaxStamina*0.3)then
+        local lowstr=string.format("AA%02X%02X44",0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25),0x44 + math.floor(0x44*math.abs(g.tick % 50-25)/25))
+        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", lowstr)
+    else
+        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
+    end
+    
+    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw + 1, oy + 5, "spray_large_s", "FFFFFF00")
+    pic:DrawBrush(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCCCC00")
+    DrawPolyLine(pic, {
+        {ox + 10 - 2, oy},
+        {ox - 10 + 10 - 2, oy + 10},
+        {ox + maxw - 10 + 10, oy + 10},
+    }, "spray_1", "FF000000")
+    
+end
+
 function AOS_TO_TIME_STRING(millisec)
     local sec=(millisec/1000)
     if(sec <= 60)then
@@ -922,15 +1242,17 @@ function AOS_TO_TIME_STRING(millisec)
     return tostring(math.ceil(sec/(60*60*24))).."d"
 end
 function AOS_LBTNDOWN(parent, ctrl)
-    local frame = parent:GetTopParentFrame();
-    
-    local x, y = GET_MOUSE_POS();
-    
-    g.x = x -- 드래그할 때, 클릭한 좌표를 기억한다.
-    g.y = y
-    
-    ui.EnableToolTip(0);
-    ctrl:RunUpdateScript("AOS_PROCESS_MOUSE");
+    if(not g.settings.lock)then
+        local frame = parent:GetTopParentFrame();
+        
+        local x, y = GET_MOUSE_POS();
+        
+        g.x = x -- 드래그할 때, 클릭한 좌표를 기억한다.
+        g.y = y
+        
+        ui.EnableToolTip(0);
+        ctrl:RunUpdateScript("AOS_PROCESS_MOUSE");
+    end
 end
 
 function AOS_LBTNUP(parent, ctrl)
@@ -940,7 +1262,27 @@ function AOS_LBTNUP(parent, ctrl)
     AOS_SAVE_SETTINGS()
 end
 function AOS_RBTNUP(parent, ctrl)
-    HEDADSUPDISPLAY_CAMP_BTN_CLICK()
+    if(keyboard.IsKeyPressed("LSHIFT")==1)then
+        local context = ui.CreateContextMenu("AOS", "", 0, 0, 170, 100);
+        ui.AddContextMenuItem(context, "STYLE_A", "AOS_STYLE(0)");
+        ui.AddContextMenuItem(context, "STYLE_B", "AOS_STYLE(1)");
+        ui.AddContextMenuItem(context, "LOCK/UNLOCK Position", "AOS_LOCKUNLOCK(1)");
+        ui.AddContextMenuItem(context, "Configuration", "ui.GetFrame('anotheroneofstatbarsconfig'):ShowWindow(1)");
+        ui.OpenContextMenu(context);
+    else
+        HEDADSUPDISPLAY_CAMP_BTN_CLICK()
+    end
+   
+    
+end
+function AOS_LOCKUNLOCK()
+    g.settings.lock=not g.settings.lock
+end
+function AOS_STYLE(style)
+    g.frame:SetOffset(40,40)
+    g.settings.style=style
+    g.settings.lock=false
+    AOS_SAVE_SETTINGS()
 end
 function AOS_PROCESS_MOUSE(ctrl)
     return EBI_try_catch{

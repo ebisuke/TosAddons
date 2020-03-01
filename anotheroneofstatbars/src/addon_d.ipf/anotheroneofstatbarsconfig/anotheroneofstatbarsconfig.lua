@@ -1,5 +1,5 @@
 --アドオン名（大文字）
-local addonName = "smallui"
+local addonName = "ANOTHERONEOFSTATBARS"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -25,66 +25,85 @@ function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
 
-SMALLUI_CONFIG_DEFS = {
+ANOTHERONEOFSTATBARS_CONFIG_DEFS = {
     {
         name = "Config",
         vname = "",
         type = "proxy",
         child = {
+     
             {
-                name = "resizeminimap",
-                vname = "Small Minimap",
-                type = "boolean",
-                default = true,
-            },
-            {
-                name = "minimapsizew",
-                vname = "Minimap Width",
+                name = "minlenhp",
+                vname = "Min length of HP",
                 type = "number",
-                default = 200,
+                default = 100,
             },
             {
-                name = "minimapsizew",
-                vname = "Minimap Width",
+                name = "maxlenhp",
+                vname = "Max length of HP",
                 type = "number",
-                default = 200,
+                default = 400,
             },
             {
-                name = "repositionbuttons",
-                vname = "Repositon And Resize Button Near Minimap",
-                type = "boolean",
-                default = true,
+                name = "maxhp",
+                vname = "Limit of HP",
+                type = "number",
+                default =100000,
             },
             {
-                name = "repositionbuttons",
-                vname = "Repositon Button Near Minimap",
-                type = "boolean",
-                default = true,
+                name = "minlensp",
+                vname = "Min length of SP",
+                type = "number",
+                default = 100,
             },
             {
-                name = "resizequestlist",
-                vname = "Small QuestList",
-                type = "boolean",
-                default = true,
+                name = "maxlensp",
+                vname = "Max length of SP",
+                type = "number",
+                default = 400,
             },
             {
-                name = "resizechat",
-                vname = "Reverse Positon of Chat Tab",
-                type = "boolean",
-                default = true,
+                name = "maxsp",
+                vname = "Limit of SP",
+                type = "number",
+                default =10000,
+            },
+            {
+                name = "minlenstamina",
+                vname = "Min length of STA",
+                type = "number",
+                default = 100,
+            },
+            {
+                name = "maxlenstamina",
+                vname = "Max length of STA",
+                type = "number",
+                default = 400,
+            },
+            {
+                name = "maxstamina",
+                vname = "Limit of STA",
+                type = "number",
+                default =100000,
             }
             ,
             {
-                name = "resizequickslot",
-                vname = "Resize Keyboard Quickslot",
-                type = "boolean",
-                default = true,
+                name = "minlendur",
+                vname = "Min length of Dur",
+                type = "number",
+                default = 100,
             },
             {
-                name = "quickslotsize",
-                vname = "Quickslot Size",
+                name = "maxlendur",
+                vname = "Max length of Dur",
                 type = "number",
-                default = 35,
+                default = 400,
+            },
+            {
+                name = "maxdur",
+                vname = "Limit of Dur",
+                type = "number",
+                default =4000,
             },
         }
     }
@@ -123,16 +142,16 @@ local function ERROUT(msg)
 
 end
 
-function SMALLUICONFIG_ON_INIT(addon, frame)
+function ANOTHERONEOFSTATBARSCONFIG_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-            frame = ui.GetFrame("smalluiconfig")
+            frame = ui.GetFrame("anotheroneofstatbarsconfig")
             g.addon = addon
             g.cframe = frame
-            acutil.slashCommand("/suic", SMALLUICONFIG_PROCESS_COMMAND);
+            acutil.slashCommand("/aosc", ANOTHERONEOFSTATBARSCONFIG_PROCESS_COMMAND);
             
             g.cframe:ShowWindow(0)
-            
+        
         end,
         catch = function(error)
             ERROUT(error)
@@ -140,32 +159,32 @@ function SMALLUICONFIG_ON_INIT(addon, frame)
     }
 end
 
-function SMALLUICONFIG_GENERATEDEFAULT(config, node)
+function ANOTHERONEOFSTATBARSCONFIG_GENERATEDEFAULT(config, node)
     if (node == nil) then
-        node = SMALLUI_CONFIG_DEFS
+        node = ANOTHERONEOFSTATBARS_CONFIG_DEFS
     end
     for k, v in ipairs(node) do
         if (v.default and config[v.name]==nil) then
             config[v.name] = v.default
         end
         if (v.child) then
-            SMALLUICONFIG_GENERATEDEFAULT(config, v.child)
+            ANOTHERONEOFSTATBARSCONFIG_GENERATEDEFAULT(config, v.child)
         end
     end
     
 end
-function SMALLUICONFIG_PROCESS_COMMAND(command)
+function ANOTHERONEOFSTATBARSCONFIG_PROCESS_COMMAND(command)
     
     g.cframe:ShowWindow(1)
 
 
 end
-function SMALLUICONFIG_CLOSE()
+function ANOTHERONEOFSTATBARSCONFIG_CLOSE()
     
     g.cframe:ShowWindow(0)
 
 end
-function SMALLUICONFIG_INIT()
+function ANOTHERONEOFSTATBARSCONFIG_INIT()
     local frame = g.cframe;
     frame:EnableMove(1)
     EBI_try_catch{
@@ -176,39 +195,35 @@ function SMALLUICONFIG_INIT()
             gbox:EnableScrollBar(1)
             local btnsave = frame:CreateOrGetControl("button", "btnsave", 30, 100, 70, 30)
             AUTO_CAST(btnsave)
-            btnsave:SetEventScript(ui.LBUTTONUP, "SMALLUICONFIG_SAVE_ONLCLICK")
+            btnsave:SetEventScript(ui.LBUTTONUP, "ANOTHERONEOFSTATBARSCONFIG_SAVE_ONLCLICK")
             btnsave:SetText("{ol}{s16}Apply")
-            local label = frame:CreateOrGetControl("richtext", "labelattention", 30, 140, 70, 30)
-            AUTO_CAST(label)
-            label:SetText("{ol}{s16}* Move the map or change the character {nl} to apply the settings.")
-            SMALLUICONFIG_INITGBOX(gbox, g.settings)
+            ANOTHERONEOFSTATBARSCONFIG_INITGBOX(gbox, g.settings)
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function SMALLUICONFIG_ON_OPEN()
-    SMALLUICONFIG_INIT()
+function ANOTHERONEOFSTATBARSCONFIG_ON_OPEN()
+    ANOTHERONEOFSTATBARSCONFIG_INIT()
 end
-function SMALLUICONFIG_SAVE_ONLCLICK()
+function ANOTHERONEOFSTATBARSCONFIG_SAVE_ONLCLICK()
     local frame = g.cframe;
     EBI_try_catch{
         try = function()
-            SMALLUICONFIG_SAVETOSTRUCTURE()
-            SMALLUI_SAVE_SETTINGS()
-            SMALLUI_3SEC()
-            CHAT_SYSTEM("[SU]SAVED")
+            ANOTHERONEOFSTATBARSCONFIG_SAVETOSTRUCTURE()
+            AOS_SAVE_SETTINGS()
+            CHAT_SYSTEM("[AOS]SAVED")
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function SMALLUICONFIG_INITGBOX(gbox, config, node, y)
+function ANOTHERONEOFSTATBARSCONFIG_INITGBOX(gbox, config, node, y)
     y = y or 0
     local h=30
-    node = node or SMALLUI_CONFIG_DEFS
+    node = node or ANOTHERONEOFSTATBARS_CONFIG_DEFS
     for k, v in ipairs(node) do
 
         if (v.type == "boolean") then
@@ -224,7 +239,7 @@ function SMALLUICONFIG_INITGBOX(gbox, config, node, y)
         elseif (v.type == "number") then
             local label = gbox:CreateOrGetControl("richtext", "label" .. v.name, 5,y + h, gbox:GetWidth() - 10, h)
             label:SetText("{ol}{s16}" .. v.vname)
-            local ctrl = gbox:CreateOrGetControl("numupdown", "num" .. v.name, 5 + label:GetWidth() + 10, y + h, 150, h)
+            local ctrl = gbox:CreateOrGetControl("numupdown", "num" .. v.name,math.max(200, 5 + label:GetWidth() + 10), y + h, 150, h)
             AUTO_CAST(ctrl)
             ctrl:SetFontName("white_20_ol");
             ctrl:ShowWindow(1);
@@ -233,15 +248,15 @@ function SMALLUICONFIG_INITGBOX(gbox, config, node, y)
         end
         y = y + h
         if (v.child) then
-            SMALLUICONFIG_INITGBOX(gbox, config, v.child, y)
+            ANOTHERONEOFSTATBARSCONFIG_INITGBOX(gbox, config, v.child, y)
         end
     end
 end
 
-function SMALLUICONFIG_SAVETOSTRUCTURE(gbox, config, node)
+function ANOTHERONEOFSTATBARSCONFIG_SAVETOSTRUCTURE(gbox, config, node)
     gbox=gbox or AUTO_CAST(g.cframe :GetChild("gbox"))
     config=config or g.settings
-    node = node or SMALLUI_CONFIG_DEFS
+    node = node or ANOTHERONEOFSTATBARS_CONFIG_DEFS
     for k, v in ipairs(node) do
         if (v.type == "boolean") then
             local ctrl = gbox:GetChild("chk" .. v.name)
@@ -259,7 +274,7 @@ function SMALLUICONFIG_SAVETOSTRUCTURE(gbox, config, node)
             config[v.name] = ctrl:GetNumber()
         end
         if (v.child) then
-            SMALLUICONFIG_SAVETOSTRUCTURE(gbox, config, v.child)
+            ANOTHERONEOFSTATBARSCONFIG_SAVETOSTRUCTURE(gbox, config, v.child)
         end
     end
 end

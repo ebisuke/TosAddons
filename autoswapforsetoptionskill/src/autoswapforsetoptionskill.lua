@@ -13,11 +13,12 @@ local function startswith(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
 end
 local acutil = require('acutil')
-g = {}
+local g = {}
 g.debug = true
 g.waitforend = nil
 g.totalcooldown = nil
 g.cooldown = nil
+g.icon=nil
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -354,6 +355,7 @@ function ASFSOS_DO_SKILL(clsid)
             if (g.skillinfo == nil) then
                 ReserveScript("quickslot.SwapWeapon()", 0.5)
                 g.waitforend = nil
+                CHAT_SYSTEM("ASFSOS_1")
             else
                 if (g.skillinfo:GetCurrentCoolDownTime() > 0) then
                     --failed
@@ -361,11 +363,14 @@ function ASFSOS_DO_SKILL(clsid)
                     g.totalcooldown = g.skillinfo:GetTotalCoolDownTime()
                     g.currentcooldown = g.skillinfo:GetCurrentCoolDownTime()
                     g.waitforend = nil
+                    CHAT_SYSTEM("ASFSOS_2")
                 else
                     g.totalcooldown = g.skillinfo:GetTotalCoolDownTime()
                     g.currentcooldown = g.skillinfo:GetCurrentCoolDownTime()
                     g.waitforend = clsid
-                    control.Skill(clsid)
+                    --control.Skill(clsid)
+                    ICON_USE_OLD(g.icon)
+                    CHAT_SYSTEM("ASFSOS_3")
                 end
             end
         end,
@@ -395,6 +400,7 @@ function ASFSOS_ICON_USE(object, reAction)
                         if (skillInfo == nil) then
                             --g.waitforend = valid.clsid
                             g.clsid = valid.clsid
+                            g.icon=icon;
                             ReserveScript("quickslot.SwapWeapon()", 0.25)
                             ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.75)
                         else

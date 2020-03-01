@@ -260,8 +260,8 @@
     "name": "Another One of Statbars",
     "file": "anotheroneofstatbars",
     "extension": "ipf",
-    "fileVersion": "v0.1.2",
-    "releaseTag": "anotheroneofstatbars-v0.1.2",
+    "fileVersion": "v0.1.3",
+    "releaseTag": "anotheroneofstatbars-v0.1.3",
     "unicode": "📖",
     "description": "ちょっと変わったステータスバーを追加します",
     "tags": [
@@ -298,8 +298,8 @@
     "name": "Small UI",
     "file": "smallui",
     "extension": "ipf",
-    "fileVersion": "v0.0.5",
-    "releaseTag": "smallui-v0.0.5",
+    "fileVersion": "v0.0.6",
+    "releaseTag": "smallui-v0.0.6",
     "unicode": "📖",
     "description": "小さいUIを提供します",
     "tags": [
