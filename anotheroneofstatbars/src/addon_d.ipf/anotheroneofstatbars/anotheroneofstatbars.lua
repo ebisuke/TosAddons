@@ -11,26 +11,26 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.version = 0
-g.settings =g.settings or {
+g.settings = g.settings or {
     x = 300,
     y = 300,
-    style=0,
-    maxlenhp=400,
-    maxlensp=400,
-    maxlenstamina=400,
-    maxlendur=400,
-    minlenhp=100,
-    minlensp=100,
-    minlenstamina=100,
-    minlendur=100,
-    maxhp=100000,
-    maxsp=1000,
-    maxstamina=100000,
-    maxdur=4000
+    style = 0,
+    maxlenhp = 400,
+    maxlensp = 400,
+    maxlenstamina = 400,
+    maxlendur = 400,
+    minlenhp = 100,
+    minlensp = 100,
+    minlenstamina = 100,
+    minlendur = 100,
+    maxhp = 100000,
+    maxsp = 1000,
+    maxstamina = 100000,
+    maxdur = 4000
 }
-g.configurepattern={
-
-}
+g.configurepattern = {
+    
+    }
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofstatbars"
@@ -52,11 +52,11 @@ g.curdurw = 0
 g.durmin = 0
 g.durmax = 0
 g.tick = 0
-g.fixsp=nil
-g.fixhp=nil
-g.fanatic=nil
+g.fixsp = nil
+g.fixhp = nil
+g.fanatic = nil
 
-g.buffs={}
+g.buffs = {}
 
 
 --ライブラリ読み込み
@@ -120,78 +120,77 @@ local function ERROUT(msg)
 end
 function AOS_DEFAULT_DIAMOND()
     return {
-        --shows buff duration(priority use)
-        buffs={
-            --S100001 = {buff = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
-        
-            ["S4271"]={
-                name="Korup"
+            --shows buff duration(priority use)
+            buffs = {
+                --S100001 = {buff = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
+                ["S4271"] = {
+                    name = "Korup"
+                },
+                ["S4318"] = {
+                    name = "Aqkrova"
+                },
+                ["S4348"] = {
+                    name = "Liris"
+                },
+                ["S2156"] = {
+                    name = "Mergaite"
+                },
+                ["S4287"] = {
+                    name = "Goduma"
+                },
+                ["S4270"] = {
+                    name = "Rykuma"
+                },
+                ["S4350"] = {
+                    name = "Proverbs"
+                },
+                ["S4289"] = {
+                    name = "Smugis"
+                },
+                ["S2154"] = {
+                    name = "Tiksline"
+                },
+                ["S4288"] = {
+                    name = "Gymas"
+                },
+                ["S2158"] = {
+                    name = "Gyvenimas"
+                },
+                ["S2157"] = {
+                    name = "Kraujas"
+                },
+                ["S4285"] = {
+                    name = "Apsauga"
+                },
+                ["S4286"] = {
+                    name = "Bendrinti"
+                },
+                ["S2153"] = {
+                    name = "Sumazinti"
+                },
+                nouse = true,
             },
-            ["S4318"]={
-                name="Aqkrova"
+            --shows skill cooldown(resessive use)
+            skills = {
+                S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
+                S100002 = {skill = "Velcoffer_Tiksline", clsid = 100002, prefix = "Set_tiksline", needs = 5},
+                S100003 = {skill = "Velcoffer_Mergaite", clsid = 100003, prefix = "Set_mergaite", needs = 5},
+                S100004 = {skill = "Velcoffer_Kraujas", clsid = 100004, prefix = "Set_kraujas", needs = 5},
+                S100005 = {skill = "Velcoffer_Gyvenimas", clsid = 100005, prefix = "Set_gyvenimas", needs = 5},
+                S100010 = {skill = "Savinose_Rykuma", clsid = 100010, prefix = "Set_rykuma", needs = 5},
+                S100011 = {skill = "Savinose_Korup", clsid = 100011, prefix = "Set_korup", needs = 5},
+                S100012 = {skill = "Savinose_Apsauga", clsid = 100012, prefix = "Set_apsauga", needs = 5},
+                S100013 = {skill = "Savinose_Bendrinti", clsid = 100013, prefix = "Set_bendrinti", needs = 5},
+                S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_goduma", needs = 5},
+                S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_gymas", needs = 5},
+                S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_smugis", needs = 5},
+                S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_aqkrova", needs = 5},
+                S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atagal", needs = 5},
+                S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_liris", needs = 5},
+                S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_proverbs", needs = 5},
+                nouse = false,
             },
-            ["S4348"]={
-                name="Liris"
-            },
-            ["S2156"]={
-                name="Mergaite"
-            },
-            ["S4287"]={
-                name="Goduma"
-            },
-            ["S4270"]={
-                name="Rykuma"
-            },
-            ["S4350"]={
-                name="Proverbs"
-            },
-            ["S4289"]={
-                name="Smugis"
-            },
-            ["S2154"]={
-                name="Tiksline"
-            },
-            ["S4288"]={
-                name="Gymas"
-            },
-            ["S2158"]={
-                name="Gyvenimas"
-            },
-            ["S2157"]={
-                name="Kraujas"
-            },
-            ["S4285"]={
-                name="Apsauga"
-            },
-            ["S4286"]={
-                name="Bendrinti"
-            },
-            ["S2153"]={
-                name="Sumazinti"
-            },
-            nouse=true,
-        },
-        --shows skill cooldown(resessive use)
-        skills={
-            S100001 = {skill = "Velcoffer_Sumazinti", clsid = 100001, prefix = "Set_sumazinti", needs = 5},
-            S100002 = {skill = "Velcoffer_Tiksline", clsid = 100002, prefix = "Set_tiksline", needs = 5},
-            S100003 = {skill = "Velcoffer_Mergaite", clsid = 100003, prefix = "Set_mergaite", needs = 5},
-            S100004 = {skill = "Velcoffer_Kraujas", clsid = 100004, prefix = "Set_kraujas", needs = 5},
-            S100005 = {skill = "Velcoffer_Gyvenimas", clsid = 100005, prefix = "Set_gyvenimas", needs = 5},
-            S100010 = {skill = "Savinose_Rykuma", clsid = 100010, prefix = "Set_rykuma", needs = 5},
-            S100011 = {skill = "Savinose_Korup", clsid = 100011, prefix = "Set_korup", needs = 5},
-            S100012 = {skill = "Savinose_Apsauga", clsid = 100012, prefix = "Set_apsauga", needs = 5},
-            S100013 = {skill = "Savinose_Bendrinti", clsid = 100013, prefix = "Set_bendrinti", needs = 5},
-            S100014 = {skill = "Varna_Goduma", clsid = 100014, prefix = "Set_goduma", needs = 5},
-            S100015 = {skill = "Varna_Gymas", clsid = 100015, prefix = "Set_gymas", needs = 5},
-            S100016 = {skill = "Varna_Smugis", clsid = 100016, prefix = "Set_smugis", needs = 5},
-            S100017 = {skill = "Varna_Aqkrova", clsid = 100017, prefix = "Set_aqkrova", needs = 5},
-            S100018 = {skill = "Varna_Atagal", clsid = 100018, prefix = "Set_atagal", needs = 5},
-            S100019 = {skill = "Varna_Liris", clsid = 100019, prefix = "Set_liris", needs = 5},
-            S100020 = {skill = "Varna_Proverbs", clsid = 100020, prefix = "Set_proverbs", needs = 5},
-            nouse=false,
-        },
-
+    
     }
 end
 function AOS_SAVE_SETTINGS()
@@ -203,23 +202,23 @@ function AOS_DEFAULT_SETTINGS()
     g.settings = {
         x = 300,
         y = 300,
-        style=0,
-        maxlenhp=1800,
-        maxlensp=1800,
-        maxlenstamina=400,
-        maxlendur=400,
-        minlenhp=100,
-        minlensp=100,
-        minlenstamina=100,
-        minlendur=100,
-        maxhp=100000,
-        maxsp=10000,
-        maxstamina=100000,
-        maxdur=4000,
-        lock=false,
-        diamond=AOS_DEFAULT_DIAMOND()
+        style = 0,
+        maxlenhp = 400,
+        maxlensp = 400,
+        maxlenstamina = 400,
+        maxlendur = 400,
+        minlenhp = 100,
+        minlensp = 100,
+        minlenstamina = 100,
+        minlendur = 100,
+        maxhp = 100000,
+        maxsp = 10000,
+        maxstamina = 100000,
+        maxdur = 4000,
+        lock = false,
+        diamond = AOS_DEFAULT_DIAMOND()
     }
-    ANOTHERONEOFSTATBARSCONFIG_GENERATEDEFAULT( g.settings)
+    ANOTHERONEOFSTATBARSCONFIG_GENERATEDEFAULT(g.settings)
 end
 function AOS_LOAD_SETTINGS()
     DBGOUT("LOAD_SETTING")
@@ -236,7 +235,7 @@ function AOS_LOAD_SETTINGS()
         
         end
     end
-
+    
     AOS_UPGRADE_SETTINGS()
     AOS_SAVE_SETTINGS()
 
@@ -245,9 +244,9 @@ end
 
 function AOS_UPGRADE_SETTINGS()
     local upgraded = false
-    if(g.settings.diamond==nil)then
-        g.settings.diamond=AOS_DEFAULT_DIAMOND()
-        upgraded=true
+    if (g.settings.diamond == nil) then
+        g.settings.diamond = AOS_DEFAULT_DIAMOND()
+        upgraded = true
     end
     return upgraded
 end
@@ -262,7 +261,7 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-
+            
             --addon:RegisterMsg('GAME_START_3SEC', 'CHALLENGEMODESTUFF_SHOW')
             --ccするたびに設定を読み込む
             addon:RegisterOpenOnlyMsg('STAT_UPDATE', 'AOS_HEADSUPDISPLAY_ON_MSG');
@@ -277,24 +276,19 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             addon:RegisterMsg('BUFF_UPDATE', 'AOS_BUFF_UPDATE');
             addon:RegisterMsg("SHOW_SOUL_CRISTAL", "AOS_SHOW_SOUL_CRISTAL");
             addon:RegisterMsg("UPDATE_SOUL_CRISTAL", "AOS_UPDATE_SOUL_CRISTAL");
-           
+            
             if not g.loaded then
                 
                 g.loaded = true
             end
-            AOS_LOAD_SETTINGS()
+            
             --  --コンテキストメニュー
             -- frame:SetEventScript(ui.RBUTTONDOWN, "AFKMUTE_TOGGLE")
             -- --ドラッグ
             -- frame:SetEventScript(ui.LBUTTONUP, "AFKMUTE_END_DRAG")
             --CHALLENGEMODESTUFF_SHOW(g.frame)
             DBGOUT("INIT")
-            --CHALLENGEMODESTUFF_INIT()
-            g.frame:ShowWindow(1)
-            frame:SetOffset(g.settings.x, g.settings.y)
-            
-            AOS_INIT()
-            AOS_TIMER_BEGIN()
+        --CHALLENGEMODESTUFF_INIT()
         end,
         catch = function(error)
             ERROUT(error)
@@ -310,85 +304,85 @@ function AOS_SHOW_SOUL_CRISTAL(frame, msg, argStr, argNum)
     local soulcrystal = frame:GetChild("soulcrystal")
     AUTO_CAST(soulcrystal)
     soulcrystal:ShowWindow(1)
-    soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}"..tostring(argNum).."/"..tostring(argNum))
+    soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}" .. tostring(argNum) .. "/" .. tostring(argNum))
 
 end
 function AOS_UPDATE_SOUL_CRISTAL(frame, msg, maxStr, curCount)
     local frame = ui.GetFrame(g.framename)
     local soulcrystal = frame:GetChild("soulcrystal")
-    local maxCount=tonumber(maxStr)
+    local maxCount = tonumber(maxStr)
     AUTO_CAST(soulcrystal)
     local count = frame:GetUserIValue('MAX_COUNT');
-	if count == 0 and 	maxCount  ~= 0 then
-		frame:SetUserValue('SOULCRYSTAL_MAX_COUNT', 	maxCount );
-	else
-		maxCount = frame:GetUserIValue('SOULCRYSTAL_MAX_COUNT');
-	end
-    local curnum=maxCount-curCount
+    if count == 0 and maxCount ~= 0 then
+        frame:SetUserValue('SOULCRYSTAL_MAX_COUNT', maxCount);
+    else
+        maxCount = frame:GetUserIValue('SOULCRYSTAL_MAX_COUNT');
+    end
+    local curnum = maxCount - curCount
     soulcrystal:ShowWindow(1)
-    soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}"..tostring(curnum).."/"..tostring(maxCount))
-    
+    soulcrystal:SetText("{img icon_item_soulCrystal 20 20}{/}{@st42}{ol}{#FFFFFF}" .. tostring(curnum) .. "/" .. tostring(maxCount))
+
 end
 function AOS_BUFF_UPDATE(frame, msg, argStr, argNum)
-
     
-    local fhp=false
-    local fsp=false
+    
+    local fhp = false
+    local fsp = false
     --アーケインエナジーを探す
     local stat = info.GetStat(session.GetMyHandle());
-    local clsid_arcane=1018
-    local clsid_healing=2001
-    local clsid_fanaticism=2104
+    local clsid_arcane = 1018
+    local clsid_healing = 2001
+    local clsid_fanaticism = 2104
     local handle = session.GetMyHandle();
     local buffcount = info.GetBuffCount(handle);
-    g.fanatic=nil
+    g.fanatic = nil
     for i = 0, buffcount - 1 do
         local buff = info.GetBuffIndexed(handle, i);
         local buffCls = GetClassByType("Buff", buff.buffID);
         
-        if(buff.buffID==clsid_arcane)then
-            if(g.fixsp==nil)then
+        if (buff.buffID == clsid_arcane) then
+            if (g.fixsp == nil) then
                 --SP固定
-                g.fixsp=stat.SP
+                g.fixsp = stat.SP
             end
             
-            fsp=true
+            fsp = true
         end
-        if(buff.buffID==clsid_healing)then
-            if g.fixhp==nil then
-                g.fixhp=stat.HP
+        if (buff.buffID == clsid_healing) then
+            if g.fixhp == nil then
+                g.fixhp = stat.HP
             end
-            fhp=true
+            fhp = true
         end
-        if(buff.buffID==clsid_fanaticism)then
-            g.fanatic=true
+        if (buff.buffID == clsid_fanaticism) then
+            g.fanatic = true
         end
-        if(not g.settings.diamond.buffs.nouse and g.settings.diamond.buffs["S"..tostring(buff.buffID)])then
-            if(msg=="BUFF_ADD")then
-
-                if(argNum==buff.buffID and not g.buffs[buff.buffID])then
-                    g.buffs[buff.buffID]={
-                        maxtime=buff.time,
+        if (not g.settings.diamond.buffs.nouse and g.settings.diamond.buffs["S" .. tostring(buff.buffID)]) then
+            if (msg == "BUFF_ADD") then
+                
+                if (argNum == buff.buffID and not g.buffs[buff.buffID]) then
+                    g.buffs[buff.buffID] = {
+                        maxtime = buff.time,
                     }
-                    DBGOUT("BUFFADD"..tostring(buff.buffID))
+                    DBGOUT("BUFFADD" .. tostring(buff.buffID))
                 end
             
-            elseif(argNum==buff.buffID and msg=="BUFF_REMOVE")then
-                if(g.buffs[buff.buffID])then
-                    g.buffs[buff.buffID]=nil
-                    DBGOUT("BUFFREMOVE"..tostring(buff.buffID))
+            elseif (argNum == buff.buffID and msg == "BUFF_REMOVE") then
+                if (g.buffs[buff.buffID]) then
+                    g.buffs[buff.buffID] = nil
+                    DBGOUT("BUFFREMOVE" .. tostring(buff.buffID))
                 end
             end
-            
+        
         end
     end
-    if(not fhp)then
-        g.fixhp=nil
+    if (not fhp) then
+        g.fixhp = nil
     end
-    if(not fsp)then
-        g.fixsp=nil
+    if (not fsp) then
+        g.fixsp = nil
     end
-
+    
     AOS_RENDER()
 end
 function AOS_INIT()
@@ -426,9 +420,9 @@ function AOS_INIT()
             local jobIcon = TryGetProp(jobCls, 'Icon');
             if jobIcon ~= nil then
                 touch:SetImage(jobIcon)
-                touch:SetTextTooltip("{ol}"..jobCls.Name.."{nl}To show camp menu,Press RBtn.{nl}To show AOS menu,Press LSHIFT + RBtn ");
+                touch:SetTextTooltip("{ol}" .. jobCls.Name .. "{nl}To show camp menu,Press RBtn.{nl}To show AOS menu,Press LSHIFT + RBtn ");
             end
-
+            
             g.remhpw = 0
             g.remspw = 0
             g.curhpw = 0
@@ -439,9 +433,9 @@ function AOS_INIT()
             g.curdurw = 0
             g.durmin = 0
             g.durmax = 0
-            g.tick=0
-            g.fanatic=nil
-            g.bufflist={}
+            g.tick = 0
+            g.fanatic = nil
+            g.bufflist = {}
             AOS_RENDER()
         end,
         catch = function(error)
@@ -452,7 +446,14 @@ end
 
 function AOS_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     local stat = info.GetStat(session.GetMyHandle());
-    if(msg=="STAT_UPDATE")then
+    if (msg == "GAME_START") then
+        g.frame:ShowWindow(1)
+        g.frame:SetOffset(g.settings.x, g.settings.y)
+        AOS_LOAD_SETTINGS()
+        AOS_INIT()
+        AOS_TIMER_BEGIN()
+    end
+    if (msg == "STAT_UPDATE") then
         AOS_RENDER()
     end
 end
@@ -477,7 +478,7 @@ function AOS_CALC_CURDUR()
             local obj = GetIES(equipItem:GetObject());
             local dur = obj.Dur;
             local max = obj.MaxDur;
-            if ((itemr == nil or mindur/maxdur > dur/max) and max > 0) then
+            if ((itemr == nil or mindur / maxdur > dur / max) and max > 0) then
                 mindur = dur
                 maxdur = max
                 
@@ -486,91 +487,91 @@ function AOS_CALC_CURDUR()
         end
     end
     if (itemr == nil) then
-        return 0,2000
+        return 0, 2000
     else
         if (maxdur < mindur) then
-            return mindur*2000/maxdur,  mindur*2000/maxdur
+            return mindur * 2000 / maxdur, mindur * 2000 / maxdur
         else
-            return mindur*2000/maxdur, 2000
+            return mindur * 2000 / maxdur, 2000
         end
     end
 end
-function AOS_CALC_POINT(actualval,minw,maxw,maxav)
+function AOS_CALC_POINT(actualval, minw, maxw, maxav)
     local valw = math.max(minw, math.min(maxw, actualval * maxw / maxav))
     return valw
 end
-function AOS_CALC_POINT_ANIMATED(widthval,remwidthval,actualval,actualmax,minw,maxw,maxav,speed)
+function AOS_CALC_POINT_ANIMATED(widthval, remwidthval, actualval, actualmax, minw, maxw, maxav, speed)
     
     local amax = math.min(maxw, actualmax * maxw / maxav)
     local valw
-    if(amax<minw)then
+    if (amax < minw) then
         valw = math.min(maxw, actualval * minw / amax)
-    elseif(actualmax>maxav)then
+    elseif (actualmax > maxav) then
         valw = math.min(maxw, actualval * maxw / actualmax)
-  
+    
     else
         valw = math.min(maxw, actualval * maxw / maxav)
-  
+    
     end
     
     if (widthval > valw) then
         --減少
-        if (remwidthval< valw) then
+        if (remwidthval < valw) then
             --remを増やす
-            remwidthval= valw
-            
+            remwidthval = valw
+        
         end
         --curhpを近づける
         widthval = math.max(valw, widthval - math.max((widthval - valw) * speed, 1))
-        
+    
     elseif (widthval < valw) then
-        if (remwidthval< valw) then
+        if (remwidthval < valw) then
             --remを近づける
-            remwidthval= remwidthval+ math.max((valw - remwidthval) * speed, 1)
-           
-        elseif (remwidthval> valw) then
+            remwidthval = remwidthval + math.max((valw - remwidthval) * speed, 1)
+        
+        elseif (remwidthval > valw) then
             --remを減らす
-            remwidthval= valw
-            
-           
+            remwidthval = valw
+        
+        
         else
             --curhpを近づける
             widthval = math.min(valw, widthval + math.max((valw - widthval) * speed, 1))
-            
+        
         end
     else
-        if (remwidthval> valw) then
+        if (remwidthval > valw) then
             --remを近づける
-            remwidthval= math.max(valw, remwidthval- math.max((remwidthval- valw) * speed, 1))
-            
+            remwidthval = math.max(valw, remwidthval - math.max((remwidthval - valw) * speed, 1))
+        
         
         end
     end
-    return widthval,remwidthval
+    return widthval, remwidthval
 end
-function AOS_CALC_POINT_SIMPLE_ANIMATED(widthval,actualval,actualmax,minw,maxw,maxav,speed)
-        
+function AOS_CALC_POINT_SIMPLE_ANIMATED(widthval, actualval, actualmax, minw, maxw, maxav, speed)
+    
     local amax = math.min(maxw, actualmax * maxw / maxav)
     local valw
-    if(amax<minw)then
+    if (amax < minw) then
         valw = math.min(maxw, actualval * minw / actualmax)
-    elseif(actualmax>maxav)then
+    elseif (actualmax > maxav) then
         valw = math.min(maxw, actualval * maxw / actualmax)
-  
+    
     else
         valw = math.min(maxw, actualval * maxw / maxav)
-  
+    
     end
     
     if (widthval > valw) then
         --減少
         --curspを近づける
-        widthval = math.max(valw,widthval - math.max((widthval - valw) * speed, 0.10))
-      
+        widthval = math.max(valw, widthval - math.max((widthval - valw) * speed, 0.10))
+    
     elseif (widthval < valw) then
         
         --curspを近づける
-        widthval= math.min(valw,widthval + math.max((valw - widthval) * speed, 0.10))
+        widthval = math.min(valw, widthval + math.max((valw - widthval) * speed, 0.10))
     
     end
     
@@ -586,7 +587,7 @@ function AOS_ON_TIMER(frame)
                 g.durmin = durmin
                 g.durmax = durmax
                 
-
+                
                 g.tick = 100
             end
             local render = false
@@ -594,14 +595,14 @@ function AOS_ON_TIMER(frame)
             
             
             local stat = info.GetStat(session.GetMyHandle());
-            local minwidth=0
-           
-            local maxmaxhp=g.settings.maxhp
-            local maxmaxsp=g.settings.maxsp
-            local maxmaxsta=g.settings.maxstamina
-            local maxmaxdur=g.settings.maxdur
-   
-
+            local minwidth = 0
+            
+            local maxmaxhp = g.settings.maxhp
+            local maxmaxsp = g.settings.maxsp
+            local maxmaxsta = g.settings.maxstamina
+            local maxmaxdur = g.settings.maxdur
+            
+            
             -- local maxhpw = AOS_CALC_POINT(stat.maxHP,minwidth,maxwidth,maxmaxhp)
             -- local maxshpw = AOS_CALC_POINT(stat.maxHP,minwidth,maxwidth,maxmaxhp)
             -- local maxspw =AOS_CALC_POINT(stat.maxSP,minwidth,maxwidth,maxmaxsp)
@@ -610,19 +611,17 @@ function AOS_ON_TIMER(frame)
             -- local curhpw = stat.HP * maxhpw / stat.maxHP
             -- local curshpw = math.min(g.settings.maxlen, stat.shield * maxshpw / stat.maxHP)
             -- local curspw = stat.SP * maxspw / stat.maxSP
-            
             -- local curstaw = stat.Stamina * maxstaw / stat.MaxStamina
             -- local curdurw = g.durmin * maxdurw / g.durmax
-            
             local speed = 0.3
             local speedslow = 0.05
             --HP
-            g.curhpw,g.remhpw=AOS_CALC_POINT_ANIMATED(g.curhpw,g.remhpw,stat.HP,stat.maxHP,minwidth,g.settings.maxlenhp,maxmaxhp,speed)
-            g.curshpw,g.remshpw=AOS_CALC_POINT_ANIMATED(g.curshpw,g.remshpw,stat.shield,stat.maxHP,minwidth,g.settings.maxlenhp,maxmaxhp,speed)
-            g.curspw,g.remspw=AOS_CALC_POINT_ANIMATED(g.curspw,g.remspw,stat.SP,stat.maxSP,minwidth,g.settings.maxlensp,maxmaxsp,speed)
-            g.curstaw=AOS_CALC_POINT_SIMPLE_ANIMATED(g.curstaw,stat.Stamina,stat.MaxStamina,minwidth,g.settings.maxlenstamina,maxmaxsta,speedslow)
-            g.curdurw=AOS_CALC_POINT_SIMPLE_ANIMATED(g.curdurw,g.durmin,g.durmax,minwidth,g.settings.maxlendur,maxmaxdur,speedslow)
-
+            g.curhpw, g.remhpw = AOS_CALC_POINT_ANIMATED(g.curhpw, g.remhpw, stat.HP, stat.maxHP, minwidth, g.settings.maxlenhp, maxmaxhp, speed)
+            g.curshpw, g.remshpw = AOS_CALC_POINT_ANIMATED(g.curshpw, g.remshpw, stat.shield, stat.maxHP, minwidth, g.settings.maxlenhp, maxmaxhp, speed)
+            g.curspw, g.remspw = AOS_CALC_POINT_ANIMATED(g.curspw, g.remspw, stat.SP, stat.maxSP, minwidth, g.settings.maxlensp, maxmaxsp, speed)
+            g.curstaw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curstaw, stat.Stamina, stat.MaxStamina, minwidth, g.settings.maxlenstamina, maxmaxsta, speedslow)
+            g.curdurw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curdurw, g.durmin, g.durmax, minwidth, g.settings.maxlendur, maxmaxdur, speedslow)
+            
             -- if (g.curhpw > curhpw) then
             --     --減少
             --     if (g.remhpw < curhpw) then
@@ -641,7 +640,6 @@ function AOS_ON_TIMER(frame)
             --     elseif (g.remhpw > curhpw) then
             --         --remを減らす
             --         g.remhpw = curhpw
-                    
             --         render = true
             --     else
             --         --curhpを近づける
@@ -652,7 +650,6 @@ function AOS_ON_TIMER(frame)
             --     if (g.remhpw > curhpw) then
             --         --remを近づける
             --         g.remhpw = math.max(curhpw, g.remhpw - math.max((g.remhpw - curhpw) * speed, 1))
-                    
             --         render = true
             --     end
             -- end
@@ -675,7 +672,6 @@ function AOS_ON_TIMER(frame)
             --     elseif (g.remshpw > curshpw) then
             --         --remを減らす
             --         g.remshpw = curshpw
-                    
             --         render = true
             --     else
             --         --curshpを近づける
@@ -686,11 +682,9 @@ function AOS_ON_TIMER(frame)
             --     if (g.remshpw > curshpw) then
             --         --remを近づける
             --         g.remshpw = math.max(curshpw, g.remshpw - math.max((g.remshpw - curshpw) * speed, 1))
-                    
             --         render = true
             --     end
             -- end
-
             -- --SP
             -- if (g.curspw > curspw) then
             --     --減少
@@ -729,7 +723,6 @@ function AOS_ON_TIMER(frame)
             --     g.curstaw =  math.max(curstaw,g.curstaw - math.max((g.curstaw - curstaw) * speedslow, 0.10))
             --     render = true
             -- elseif (g.curstaw < curstaw) then
-                
             --     --curspを近づける
             --     g.curstaw =  math.min(curstaw,g.curstaw + math.max((curstaw - g.curstaw) * speedslow, 0.10))
             --     render = true
@@ -740,26 +733,23 @@ function AOS_ON_TIMER(frame)
             --     g.curdurw = math.max(curdurw,g.curdurw - math.max((g.curdurw - curdurw) * speedslow, 0.10))
             --     render = true
             -- elseif (g.curdurw < curdurw) then
-                
             --     --curspを近づける
             --     g.curdurw = math.min(curdurw,g.curdurw + math.max((curdurw - g.curdurw) * speedslow, 0.10))
             --     render = true
             -- end
-            
-
-            if(g.spskill ~= nil)then
-                local skl=session.GetSkill(g.spskill);
-                if(skl==nil)then
-                    g.spskill=nil
+            if (g.spskill ~= nil) then
+                local skl = session.GetSkill(g.spskill);
+                if (skl == nil) then
+                    g.spskill = nil
                 else
-                    if(skl:GetCurrentCoolDownTime()>0)then
-                        render=true
+                    if (skl:GetCurrentCoolDownTime() > 0) then
+                        render = true
                     end
-                end                    
+                end
             end
-           
-            AOS_RENDER()
             
+            AOS_RENDER()
+        
         end,
         catch = function(error)
             ERROUT(error)
@@ -769,11 +759,15 @@ end
 function AOS_RENDER()
     EBI_try_catch{
         try = function()
-           if(g.settings.style==nil or g.settings.style==0)then
-                AOS_RENDER_STYLEA()
-           elseif( g.settings.style==1)then
-                AOS_RENDER_STYLEB()
-           end
+            local frame = ui.GetFrame(g.framename)
+            local pic = frame:GetChild("pic")
+            if (pic) then
+                if (g.settings.style == nil or g.settings.style == 0) then
+                    AOS_RENDER_STYLEA()
+                elseif (g.settings.style == 1) then
+                    AOS_RENDER_STYLEB()
+                end
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -791,11 +785,11 @@ function AOS_RENDER_STYLEA()
             pic:FillClonePicture("00000000")
             pic:DrawBrush(500, 41 - 5, 500, 41 + 5, "spray_dia", "AA000000")
             pic:DrawBrush(500 - 5, 41, 500 + 5, 41, "spray_dia", "AA000000")
-            AOS_DRAW_HPBAR(frame,pic)
-            AOS_DRAW_SPBAR(frame,pic)
-            AOS_DRAW_STAMINABAR(frame,pic)
-            AOS_DRAW_DURBAR(frame,pic)
-            AOS_DRAW_SPECIALSKILLBAR(frame,pic)
+            AOS_DRAW_HPBAR(frame, pic)
+            AOS_DRAW_SPBAR(frame, pic)
+            AOS_DRAW_STAMINABAR(frame, pic)
+            AOS_DRAW_DURBAR(frame, pic)
+            AOS_DRAW_SPECIALSKILLBAR(frame, pic)
             pic:Invalidate()
         end,
         catch = function(error)
@@ -804,21 +798,21 @@ function AOS_RENDER_STYLEA()
     }
 end
 
-function AOS_DRAW_HPBAR(frame,pic)
+function AOS_DRAW_HPBAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp))
     local colw = stat.HP * maxw / stat.maxHP
     local colsw = math.min(g.settings.maxlenhp, stat.shield * g.settings.maxlenhp / g.settings.maxhp)
-   
+    
     local curw = g.curhpw
-    local fixhpw=curw
+    local fixhpw = curw
     local ox = 500 + 20 - 2
     local oy = 30 - 2
-    if(g.fixhp)then
-        fixhpw= math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
+    if (g.fixhp) then
+        fixhpw = math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
     end
-    if(stat.HP <= stat.maxHP*0.3)then
-        local lowstr=string.format("AA%02X4444",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
+    if (stat.HP <= stat.maxHP * 0.3) then
+        local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "spray_large_bs", lowstr)
     else
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "spray_large_bs", "AA444444")
@@ -837,7 +831,7 @@ function AOS_DRAW_HPBAR(frame,pic)
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FF22FF77")
         pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FF11CC55")
     end
-    if(g.remshpw>0)then
+    if (g.remshpw > 0) then
         if (g.remshpw ~= g.curshpw) then
             if (colsw > g.curshpw) then
                 pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_bs", "FFFFFFFF")
@@ -846,9 +840,9 @@ function AOS_DRAW_HPBAR(frame,pic)
             end
         end
     end
-    if(g.curshpw > 0)then
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.curshpw , oy + 5, "spray_large_bs", "FFFFFFFF")
-        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + g.curshpw , oy + 7, "spray_small_bs", "FFCCCCCC")
+    if (g.curshpw > 0) then
+        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.curshpw, oy + 5, "spray_large_bs", "FFFFFFFF")
+        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + g.curshpw, oy + 7, "spray_small_bs", "FFCCCCCC")
     end
     DrawPolyLine(pic, {
         {ox, oy},
@@ -856,26 +850,26 @@ function AOS_DRAW_HPBAR(frame,pic)
         {ox + maxw + 10, oy + 10},
     }, "spray_1", "FF000000")
     
-    local txt=frame:CreateOrGetControl("richtext","hpnum",ox+20,oy-10,50,16)
+    local txt = frame:CreateOrGetControl("richtext", "hpnum", ox + 20, oy - 10, 50, 16)
     txt:EnableHitTest(0)
-    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.HP))
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}" .. string.format("%6d", stat.HP))
 end
-function AOS_DRAW_SPBAR(frame,pic)
+function AOS_DRAW_SPBAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp))
     local curw = g.curspw
-
-    local colw =  stat.SP * maxw / stat.maxSP
-    local fixspw=curw
+    
+    local colw = stat.SP * maxw / stat.maxSP
+    local fixspw = curw
     local ox = 500 - 20 + 2
     local oy = 30 - 2
-    if(g.fixsp)then
-        fixspw= math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
+    if (g.fixsp) then
+        fixspw = math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
     end
-    if(stat.SP <= stat.maxSP*0.3)then
-        local lowstr=string.format("AA4444%02X",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
+    if (stat.SP <= stat.maxSP * 0.3) then
+        local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_s", lowstr)
- 
+    
     else
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_s", "AA444444")
     end
@@ -892,42 +886,42 @@ function AOS_DRAW_SPBAR(frame,pic)
     DrawPolyLine(pic, {
         {ox, oy},
         {ox - 10, oy + 10},
-        {ox - maxw - 10 , oy + 10},
+        {ox - maxw - 10, oy + 10},
     }, "spray_1", "FF000000")
-
-    local txt=frame:CreateOrGetControl("richtext","spnum",ox-20-50,oy-10,50,16)
+    
+    local txt = frame:CreateOrGetControl("richtext", "spnum", ox - 20 - 50, oy - 10, 50, 16)
     txt:EnableHitTest(0)
-    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.SP))
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}" .. string.format("%6d", stat.SP))
 
 end
-function AOS_DRAW_DURBAR(frame,pic)
+function AOS_DRAW_DURBAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local durmin, durmax 
-    durmin= g.durmin
-    durmax= g.durmax
+    local durmin, durmax
+    durmin = g.durmin
+    durmax = g.durmax
     local maxw = math.max(100, math.min(g.settings.maxlendur, durmax * g.settings.maxlendur / g.settings.maxdur))
     local curw = g.curdurw
     local ox = 500 - 20 + 2
     local oy = 40 + 4
-    if(durmin <= durmax*0.3 and durmin>0)then
-    --if(durmin <= durmax*0.3)then
-        local lowstr=string.format("AA%02X44%02X",0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25),0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs",lowstr)
+    if (durmin <= durmax * 0.3 and durmin > 0) then
+        --if(durmin <= durmax*0.3)then
+        local lowstr = string.format("AA%02X44%02X", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25))
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs", lowstr)
     else
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs", "AA444444")
     end
     
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_bs", "FFFF88FF")
-    pic:DrawBrush(ox - 5 + 2 , oy + 7, ox - 5 + 2 - curw + 1 - 1, oy + 7, "spray_small_bs", "FFCC55CC")
+    pic:DrawBrush(ox - 5 + 2, oy + 7, ox - 5 + 2 - curw + 1 - 1, oy + 7, "spray_small_bs", "FFCC55CC")
     DrawPolyLine(pic, {
         {ox - 10, oy},
         {ox + 0, oy + 10},
         {ox - maxw + 0, oy + 0 + 10},
     }, "spray_1", "FF000000")
-    
-   
+
+
 end
-function AOS_DRAW_STAMINABAR(frame,pic)
+function AOS_DRAW_STAMINABAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(g.settings.maxlenstamina, stat.MaxStamina * g.settings.maxlenstamina / g.settings.maxstamina))
     local curw = g.curstaw
@@ -935,8 +929,8 @@ function AOS_DRAW_STAMINABAR(frame,pic)
     local ox = 500 + 20 - 2
     local oy = 40 + 4
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
-    if(stat.Stamina <= stat.MaxStamina*0.3)then
-        local lowstr=string.format("AA%02X%02X44",0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25),0x44 + math.floor(0x44*math.abs(g.tick % 50-25)/25))
+    if (stat.Stamina <= stat.MaxStamina * 0.3) then
+        local lowstr = string.format("AA%02X%02X44", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x44 * math.abs(g.tick % 50 - 25) / 25))
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", lowstr)
     else
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
@@ -949,109 +943,109 @@ function AOS_DRAW_STAMINABAR(frame,pic)
         {ox - 10 + 10 - 2, oy + 10},
         {ox + maxw - 10 + 10, oy + 10},
     }, "spray_1", "FF000000")
-    
+
 end
-function AOS_DRAW_SPECIALSKILLBAR(frame,pic)
-    local curtime,maxtime=AOS_GET_DIAMOND_VALUE()
-   
-    local ox=500
-    local oy=41
-    local off=25
-    local color="FF00FFFFFF"
-    local spray="spray_2"
-    if(g.settings.diamond.shownumber)then
-        local gbox=frame:CreateOrGetControl("groupbox","gboxsklnumber",ox-off,oy-off,off*2,off*2)
+function AOS_DRAW_SPECIALSKILLBAR(frame, pic)
+    local curtime, maxtime = AOS_GET_DIAMOND_VALUE()
+    
+    local ox = 500
+    local oy = 41
+    local off = 25
+    local color = "FF00FFFFFF"
+    local spray = "spray_2"
+    if (g.settings.diamond.shownumber) then
+        local gbox = frame:CreateOrGetControl("groupbox", "gboxsklnumber", ox - off, oy - off, off * 2, off * 2)
         AUTO_CAST(gbox)
         gbox:EnableHitTest(0)
-        local txt=gbox:CreateOrGetControl("richtext","txtsklnumber",0,0,0,0)
+        local txt = gbox:CreateOrGetControl("richtext", "txtsklnumber", 0, 0, 0, 0)
         AUTO_CAST(txt)
-        txt:SetGravity(ui.CENTER_HORZ,ui.CENTER_VERT)
+        txt:SetGravity(ui.CENTER_HORZ, ui.CENTER_VERT)
         local touch = frame:GetChild("touchbar")
-        if(curtime==nil)then
+        if (curtime == nil) then
             touch:SetColorTone("FFFFFFFF")
             txt:SetText("")
         else
             touch:SetColorTone("44FFFFFF")
-            txt:SetText("{@st43}{ol}{b}{s24}{#FFFFFF}"..AOS_TO_TIME_STRING(curtime))
+            txt:SetText("{@st43}{ol}{b}{s24}{#FFFFFF}" .. AOS_TO_TIME_STRING(curtime))
         end
         txt:EnableHitTest(0)
     end
-    if(curtime==nil)then
+    if (curtime == nil) then
         return
     end
-    local skillpercent= curtime*100/maxtime
-    if(skillpercent>=75)then
-        local r=(skillpercent-75)/25.0
-        DrawPolyLine(pic,{
-            {ox,oy-off},
-            {ox-off,oy},
-            {ox,oy+off},
-            {ox+off,oy},
-            {ox+off-off*r,oy-off*r}},
-            spray,
-            color
-        )
-    elseif (skillpercent>=50)then
-        local r=(skillpercent-50)/25.0
-        DrawPolyLine(pic,{
-            {ox,oy-off},
-            {ox-off,oy},
-            {ox,oy+off},
-            {ox+off*r,oy+off-off*r}},
-            spray,
-            color
-        )
-    elseif(skillpercent>=25)then
-        local r=(skillpercent-25)/25.0
-        DrawPolyLine(pic,{
-            {ox,oy-off},
-            {ox-off,oy},
-            {ox-off+off*r,oy+off*r}},
-            spray,
-            color
-        )
-    elseif(skillpercent>0)then
-        local r=(skillpercent-0)/25.0
-        DrawPolyLine(pic,{
-            {ox,oy-off},
-            {ox-off*r,oy-off+off*r}},
-            spray,
-            color
-        )
+    local skillpercent = curtime * 100 / maxtime
+    if (skillpercent >= 75) then
+        local r = (skillpercent - 75) / 25.0
+        DrawPolyLine(pic, {
+            {ox, oy - off},
+            {ox - off, oy},
+            {ox, oy + off},
+            {ox + off, oy},
+            {ox + off - off * r, oy - off * r}},
+        spray,
+        color
+    )
+    elseif (skillpercent >= 50) then
+        local r = (skillpercent - 50) / 25.0
+        DrawPolyLine(pic, {
+            {ox, oy - off},
+            {ox - off, oy},
+            {ox, oy + off},
+            {ox + off * r, oy + off - off * r}},
+        spray,
+        color
+    )
+    elseif (skillpercent >= 25) then
+        local r = (skillpercent - 25) / 25.0
+        DrawPolyLine(pic, {
+            {ox, oy - off},
+            {ox - off, oy},
+            {ox - off + off * r, oy + off * r}},
+        spray,
+        color
+    )
+    elseif (skillpercent > 0) then
+        local r = (skillpercent - 0) / 25.0
+        DrawPolyLine(pic, {
+            {ox, oy - off},
+            {ox - off * r, oy - off + off * r}},
+        spray,
+        color
+    )
     end
 end
 function AOS_GET_DIAMOND_VALUE()
     --find buff
-    if(not g.settings.diamond.buffs.nouse)then
+    if (not g.settings.diamond.buffs.nouse) then
         local handle = session.GetMyHandle();
         local buffcount = info.GetBuffCount(handle);
         
         for i = 0, buffcount - 1 do
             local buff = info.GetBuffIndexed(handle, i);
-            local recbuf=g.buffs[buff.buffID]
-            if(recbuf)then
+            local recbuf = g.buffs[buff.buffID]
+            if (recbuf) then
                 --バフ時間を返す
-                return buff.time,recbuf.maxtime
+                return buff.time, recbuf.maxtime
             end
         end
     end
-    if( not g.settings.diamond.skills.nouse)then
+    if (not g.settings.diamond.skills.nouse) then
         --find skill
-        for k,v in pairs(g.settings.diamond.skills) do
-    
-            if(k~="nouse" and v)then
+        for k, v in pairs(g.settings.diamond.skills) do
+            
+            if (k ~= "nouse" and v) then
                 local skillInfo = session.GetSkill(tonumber(k:sub(2)));
-                if(skillInfo)then
-                    if(skillInfo:GetCurrentCoolDownTime()>0)then
-                        return skillInfo:GetCurrentCoolDownTime(),skillInfo:GetTotalCoolDownTime()
+                if (skillInfo) then
+                    if (skillInfo:GetCurrentCoolDownTime() > 0) then
+                        return skillInfo:GetCurrentCoolDownTime(), skillInfo:GetTotalCoolDownTime()
                     end
                 end
             end
         
-            
+        
         end
     end
-    return nil,nil
+    return nil, nil
 end
 
 function AOS_RENDER_STYLEB()
@@ -1061,18 +1055,18 @@ function AOS_RENDER_STYLEB()
             local pic = frame:GetChild("pic")
             tolua.cast(pic, "ui::CPicture")
             pic:FillClonePicture("00000000")
-            pic:DrawBrush(40, 20+20, 0, 20+20, "spray_triangle", "AA000000")
-            pic:DrawBrush(0, 20+20, 0 , 20+20+20, "spray_triangle", "AA000000")
+            pic:DrawBrush(40, 20 + 20, 0, 20 + 20, "spray_triangle", "AA000000")
+            pic:DrawBrush(0, 20 + 20, 0, 20 + 20 + 20, "spray_triangle", "AA000000")
             --pic:DrawBrush(50+20, 20+20, 50+20, 20+20, "spray_triangle", "AA000000")
             local touch = frame:GetChild("touchbar")
             local soulcrystal = frame:GetChild("soulcrystal")
-            touch:SetOffset(0,20)
-            soulcrystal:SetOffset(0,20)
-            AOS_DRAW_HPBAR_B(frame,pic)
-            AOS_DRAW_SPBAR_B(frame,pic)
-            AOS_DRAW_STAMINABAR_B(frame,pic)
-            AOS_DRAW_DURBAR_B(frame,pic)
-
+            touch:SetOffset(0, 20)
+            soulcrystal:SetOffset(0, 20)
+            AOS_DRAW_HPBAR_B(frame, pic)
+            AOS_DRAW_SPBAR_B(frame, pic)
+            AOS_DRAW_STAMINABAR_B(frame, pic)
+            AOS_DRAW_DURBAR_B(frame, pic)
+            
             pic:Invalidate()
         end,
         catch = function(error)
@@ -1080,21 +1074,21 @@ function AOS_RENDER_STYLEB()
         end
     }
 end
-function AOS_DRAW_HPBAR_B(frame,pic)
+function AOS_DRAW_HPBAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp))
     local colw = stat.HP * maxw / stat.maxHP
     local colsw = math.min(g.settings.maxlenhp, stat.shield * g.settings.maxlenhp / g.settings.maxhp)
-   
+    
     local curw = g.curhpw
-    local fixhpw=curw
-    local ox = 40+20-5+5+1
-    local oy = 50 -20-5-5
-    if(g.fixhp)then
-        fixhpw= math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
+    local fixhpw = curw
+    local ox = 40 + 20 - 5 + 5 + 1
+    local oy = 50 - 20 - 5 - 5
+    if (g.fixhp) then
+        fixhpw = math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
     end
-    if(stat.HP <= stat.maxHP*0.3)then
-        local lowstr=string.format("AA%02X4444",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
+    if (stat.HP <= stat.maxHP * 0.3) then
+        local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
     else
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
@@ -1108,12 +1102,12 @@ function AOS_DRAW_HPBAR_B(frame,pic)
     end
     if g.fanatic then
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FFFFBB77")
-        pic:DrawBrush(ox - 5-2, oy + 5+2, ox - 5-2 + fixhpw, oy + 5+2, "spray_small_s", "FFDDAA44")
+        pic:DrawBrush(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + fixhpw, oy + 5 + 2, "spray_small_s", "FFDDAA44")
     else
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FF22FF77")
-        pic:DrawBrush(ox - 5-2, oy +5+2, ox - 5-2 + fixhpw, oy + 5+2, "spray_small_s", "FF11CC55")
+        pic:DrawBrush(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + fixhpw, oy + 5 + 2, "spray_small_s", "FF11CC55")
     end
-    if(g.remshpw>0)then
+    if (g.remshpw > 0) then
         if (g.remshpw ~= g.curshpw) then
             if (colsw > g.curshpw) then
                 pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FFFFFFFF")
@@ -1122,36 +1116,36 @@ function AOS_DRAW_HPBAR_B(frame,pic)
             end
         end
     end
-    if(g.curshpw > 0)then
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.curshpw , oy + 5, "spray_large_s", "FFFFFFFF")
-        pic:DrawBrush(ox + 5-2, oy + 5+2, ox + 5-2 + g.curshpw , oy + 5+2, "spray_small_s", "FFCCCCCC")
+    if (g.curshpw > 0) then
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.curshpw, oy + 5, "spray_large_s", "FFFFFFFF")
+        pic:DrawBrush(ox + 5 - 2, oy + 5 + 2, ox + 5 - 2 + g.curshpw, oy + 5 + 2, "spray_small_s", "FFCCCCCC")
     end
     DrawPolyLine(pic, {
-        {ox-1, oy},
-        {ox - 10-1, oy + 10},
+        {ox - 1, oy},
+        {ox - 10 - 1, oy + 10},
         {ox + maxw - 10, oy + 10},
     }, "spray_1", "FF000000")
     
-    local txt=frame:CreateOrGetControl("richtext","hpnum",ox+20,oy-10,50,16)
+    local txt = frame:CreateOrGetControl("richtext", "hpnum", ox + 20, oy - 10, 50, 16)
     txt:EnableHitTest(0)
-    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.HP))
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}" .. string.format("%6d", stat.HP))
 end
-function AOS_DRAW_SPBAR_B(frame,pic)
+function AOS_DRAW_SPBAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp))
     local curw = g.curspw
-
-    local colw =  stat.SP * maxw / stat.maxSP
-    local fixspw=curw
-    local ox =40+20-5+5-15+1
-    local oy =50 -20-5-5+15
-    if(g.fixsp)then
-        fixspw= math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
+    
+    local colw = stat.SP * maxw / stat.maxSP
+    local fixspw = curw
+    local ox = 40 + 20 - 5 + 5 - 15 + 1
+    local oy = 50 - 20 - 5 - 5 + 15
+    if (g.fixsp) then
+        fixspw = math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
     end
-    if(stat.SP <= stat.maxSP*0.3)then
-        local lowstr=string.format("AA4444%02X",0x44 + math.floor(0xBB*math.abs(g.tick % 50-25)/25))
+    if (stat.SP <= stat.maxSP * 0.3) then
+        local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
- 
+    
     else
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
     end
@@ -1166,53 +1160,53 @@ function AOS_DRAW_SPBAR_B(frame,pic)
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FF44CCFF")
     pic:DrawBrush(ox - 7, oy + 7, ox - 7 + fixspw, oy + 7, "spray_small_s", "FF33AACC")
     DrawPolyLine(pic, {
-        {ox-1, oy},
-        {ox - 10-1, oy + 10},
-        {ox + maxw - 10 , oy + 10},
+        {ox - 1, oy},
+        {ox - 10 - 1, oy + 10},
+        {ox + maxw - 10, oy + 10},
     }, "spray_1", "FF000000")
-
-    local txt=frame:CreateOrGetControl("richtext","spnum",ox+20,oy-10,50,16)
+    
+    local txt = frame:CreateOrGetControl("richtext", "spnum", ox + 20, oy - 10, 50, 16)
     txt:EnableHitTest(0)
-    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}"..string.format("%6d",stat.SP))
+    txt:SetText("{@st43}{s16}{ol}{#FFFFFF}" .. string.format("%6d", stat.SP))
 
 end
-function AOS_DRAW_DURBAR_B(frame,pic)
+function AOS_DRAW_DURBAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local durmin, durmax 
-    durmin= g.durmin
-    durmax= g.durmax
+    local durmin, durmax
+    durmin = g.durmin
+    durmax = g.durmax
     local maxw = math.max(100, math.min(g.settings.maxlendur, durmax * g.settings.maxlendur / g.settings.maxdur))
     local curw = g.curdurw
-    local ox =40+20-5+5-15+1-15
-    local oy = 50 -20-5-5+15+15
-    if(durmin <= durmax*0.3 and durmin>0)then
-    --if(durmin <= durmax*0.3)then
-        local lowstr=string.format("AA%02X44%02X",0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25),0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s",lowstr)
+    local ox = 40 + 20 - 5 + 5 - 15 + 1 - 15
+    local oy = 50 - 20 - 5 - 5 + 15 + 15
+    if (durmin <= durmax * 0.3 and durmin > 0) then
+        --if(durmin <= durmax*0.3)then
+        local lowstr = string.format("AA%02X44%02X", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25))
+        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
     else
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
     end
     
     pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FFFF88FF")
-    pic:DrawBrush(ox - 5 - 2 , oy + 7, ox - 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCC55CC")
+    pic:DrawBrush(ox - 5 - 2, oy + 7, ox - 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCC55CC")
     DrawPolyLine(pic, {
-        {ox-1, oy},
-        {ox - 10-1, oy + 10},
-        {ox + maxw - 10 , oy + 10},
+        {ox - 1, oy},
+        {ox - 10 - 1, oy + 10},
+        {ox + maxw - 10, oy + 10},
     }, "spray_1", "FF000000")
-    
-   
+
+
 end
-function AOS_DRAW_STAMINABAR_B(frame,pic)
+function AOS_DRAW_STAMINABAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
     local maxw = math.max(100, math.min(g.settings.maxlenstamina, stat.MaxStamina * g.settings.maxlenstamina / g.settings.maxstamina))
     local curw = g.curstaw
     
-    local ox =40+15+5-15+1-15-15-10
-    local oy =50 -20-5-5+15+15+15
+    local ox = 40 + 15 + 5 - 15 + 1 - 15 - 15 - 10
+    local oy = 50 - 20 - 5 - 5 + 15 + 15 + 15
     pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
-    if(stat.Stamina <= stat.MaxStamina*0.3)then
-        local lowstr=string.format("AA%02X%02X44",0x44 + math.floor(0x99*math.abs(g.tick % 50-25)/25),0x44 + math.floor(0x44*math.abs(g.tick % 50-25)/25))
+    if (stat.Stamina <= stat.MaxStamina * 0.3) then
+        local lowstr = string.format("AA%02X%02X44", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x44 * math.abs(g.tick % 50 - 25) / 25))
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", lowstr)
     else
         pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
@@ -1225,24 +1219,24 @@ function AOS_DRAW_STAMINABAR_B(frame,pic)
         {ox - 10 + 10 - 2, oy + 10},
         {ox + maxw - 10 + 10, oy + 10},
     }, "spray_1", "FF000000")
-    
+
 end
 
 function AOS_TO_TIME_STRING(millisec)
-    local sec=(millisec/1000)
-    if(sec <= 60)then
+    local sec = (millisec / 1000)
+    if (sec <= 60) then
         return tostring(math.ceil(sec))
     end
-    if(sec <= 60*60)then
-        return tostring(math.ceil(sec/60)).."m"
+    if (sec <= 60 * 60) then
+        return tostring(math.ceil(sec / 60)) .. "m"
     end
-    if(sec <= 60*60*24)then
-        return tostring(math.ceil(sec/(60*60))).."h"
+    if (sec <= 60 * 60 * 24) then
+        return tostring(math.ceil(sec / (60 * 60))) .. "h"
     end
-    return tostring(math.ceil(sec/(60*60*24))).."d"
+    return tostring(math.ceil(sec / (60 * 60 * 24))) .. "d"
 end
 function AOS_LBTNDOWN(parent, ctrl)
-    if(not g.settings.lock)then
+    if (not g.settings.lock) then
         local frame = parent:GetTopParentFrame();
         
         local x, y = GET_MOUSE_POS();
@@ -1262,7 +1256,7 @@ function AOS_LBTNUP(parent, ctrl)
     AOS_SAVE_SETTINGS()
 end
 function AOS_RBTNUP(parent, ctrl)
-    if(keyboard.IsKeyPressed("LSHIFT")==1)then
+    if (keyboard.IsKeyPressed("LSHIFT") == 1) then
         local context = ui.CreateContextMenu("AOS", "", 0, 0, 170, 100);
         ui.AddContextMenuItem(context, "STYLE_A", "AOS_STYLE(0)");
         ui.AddContextMenuItem(context, "STYLE_B", "AOS_STYLE(1)");
@@ -1272,16 +1266,16 @@ function AOS_RBTNUP(parent, ctrl)
     else
         HEDADSUPDISPLAY_CAMP_BTN_CLICK()
     end
-   
-    
+
+
 end
 function AOS_LOCKUNLOCK()
-    g.settings.lock=not g.settings.lock
+    g.settings.lock = not g.settings.lock
 end
 function AOS_STYLE(style)
-    g.frame:SetOffset(40,40)
-    g.settings.style=style
-    g.settings.lock=false
+    g.frame:SetOffset(40, 40)
+    g.settings.style = style
+    g.settings.lock = false
     AOS_SAVE_SETTINGS()
 end
 function AOS_PROCESS_MOUSE(ctrl)
@@ -1315,10 +1309,10 @@ function AOS_PROCESS_MOUSE(ctrl)
             end
             g.x = mx
             g.y = my
-           
-          
-            cx = math.max(-frame:GetWidth()/2, math.min(cx, curWidth - 30))
-            cy = math.max(-frame:GetHeight()/2, math.min(cy, curHeight - 30))
+            
+            
+            cx = math.max(-frame:GetWidth() / 2, math.min(cx, curWidth - 30))
+            cy = math.max(-frame:GetHeight() / 2, math.min(cy, curHeight - 30))
             g.settings.x = cx;
             g.settings.y = cy;
             AOS_SAVE_SETTINGS()
