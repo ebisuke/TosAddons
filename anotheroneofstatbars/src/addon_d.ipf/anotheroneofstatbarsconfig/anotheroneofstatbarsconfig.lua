@@ -31,7 +31,12 @@ ANOTHERONEOFSTATBARS_CONFIG_DEFS = {
         vname = "",
         type = "proxy",
         child = {
-     
+            {
+                name = "layerlevel",
+                vname = "Layer Level",
+                type = "number",
+                default = 90,
+            },
             {
                 name = "minlenhp",
                 vname = "Min length of HP",
@@ -213,6 +218,8 @@ function ANOTHERONEOFSTATBARSCONFIG_SAVE_ONLCLICK()
         try = function()
             ANOTHERONEOFSTATBARSCONFIG_SAVETOSTRUCTURE()
             AOS_SAVE_SETTINGS()
+            AOS_INIT()
+            AOS_TIMER_BEGIN()
             CHAT_SYSTEM("[AOS]SAVED")
         end,
         catch = function(error)
@@ -244,7 +251,7 @@ function ANOTHERONEOFSTATBARSCONFIG_INITGBOX(gbox, config, node, y)
             ctrl:SetFontName("white_20_ol");
             ctrl:ShowWindow(1);
             ctrl:MakeButtons("btn_numdown", "btn_numup", "editbox_s");
-            ctrl:SetNumberValue(config[v.name])
+            ctrl:SetNumberValue(config[v.name] or v.default)
         end
         y = y + h
         if (v.child) then
