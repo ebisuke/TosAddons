@@ -132,7 +132,7 @@ function SMALLUICONFIG_ON_INIT(addon, frame)
             acutil.slashCommand("/suic", SMALLUICONFIG_PROCESS_COMMAND);
             
             g.cframe:ShowWindow(0)
-            
+        
         end,
         catch = function(error)
             ERROUT(error)

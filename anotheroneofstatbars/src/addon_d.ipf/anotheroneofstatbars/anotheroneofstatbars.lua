@@ -216,6 +216,7 @@ function AOS_DEFAULT_SETTINGS()
         maxstamina = 100000,
         maxdur = 4000,
         lock = false,
+        layerlevel=90,
         diamond = AOS_DEFAULT_DIAMOND()
     }
     ANOTHERONEOFSTATBARSCONFIG_GENERATEDEFAULT(g.settings)
@@ -392,6 +393,7 @@ function AOS_INIT()
             local frame = ui.GetFrame(g.framename)
             frame:RemoveAllChild()
             frame:Resize(1920, 300)
+            frame:SetLayerLevel(g.settings.layerlevel or 90)
             local pic = frame:CreateOrGetControl("picture", "pic", 0, 0, frame:GetWidth(), frame:GetHeight())
             local touch = frame:CreateOrGetControl("picture", "touchbar", 500 - 20, 22, 40, 40)
             local soulcrystal = frame:CreateOrGetControl("richtext", "soulcrystal", 500 - 30, 5, 40, 40)
@@ -1061,7 +1063,7 @@ function AOS_RENDER_STYLEB()
             local touch = frame:GetChild("touchbar")
             local soulcrystal = frame:GetChild("soulcrystal")
             touch:SetOffset(0, 20)
-            soulcrystal:SetOffset(0, 20)
+            soulcrystal:SetOffset(0, 0)
             AOS_DRAW_HPBAR_B(frame, pic)
             AOS_DRAW_SPBAR_B(frame, pic)
             AOS_DRAW_STAMINABAR_B(frame, pic)
@@ -1110,15 +1112,15 @@ function AOS_DRAW_HPBAR_B(frame, pic)
     if (g.remshpw > 0) then
         if (g.remshpw ~= g.curshpw) then
             if (colsw > g.curshpw) then
-                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FFFFFFFF")
+                pic:DrawBrush(ox - 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FFFFFFFF")
             else
-                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FF6666FF")
+                pic:DrawBrush(ox - 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FF6666FF")
             end
         end
     end
     if (g.curshpw > 0) then
         pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.curshpw, oy + 5, "spray_large_s", "FFFFFFFF")
-        pic:DrawBrush(ox + 5 - 2, oy + 5 + 2, ox + 5 - 2 + g.curshpw, oy + 5 + 2, "spray_small_s", "FFCCCCCC")
+        pic:DrawBrush(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + g.curshpw, oy + 5 + 2, "spray_small_s", "FFCCCCCC")
     end
     DrawPolyLine(pic, {
         {ox - 1, oy},
