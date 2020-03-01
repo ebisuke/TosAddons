@@ -450,9 +450,10 @@ function AOS_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     local stat = info.GetStat(session.GetMyHandle());
     if (msg == "GAME_START") then
         g.frame:ShowWindow(1)
-        g.frame:SetOffset(g.settings.x, g.settings.y)
         AOS_LOAD_SETTINGS()
         AOS_INIT()
+        g.frame:SetOffset(g.settings.x, g.settings.y)
+       
         AOS_TIMER_BEGIN()
     end
     if (msg == "STAT_UPDATE") then
