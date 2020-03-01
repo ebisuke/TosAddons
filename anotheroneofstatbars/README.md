@@ -24,6 +24,7 @@
 画面中央上か下に配置するようデザインしています。  
 バーは最大値に応じて結構長く伸びます。  (HPは100000、SPは10000まで伸びます) MHのオマージュです。  
 
+幅やスタイルなどの設定はアイコンをLSHIFT+RCLICKで行えます。  
 
 元のステータスバーは  
 weizlogy氏のCompact Heads Up Display 及び MizukiBelhi氏のExtendedUI をご使用いただいて片づけておくと便利です。  
