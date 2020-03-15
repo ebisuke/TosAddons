@@ -76,6 +76,10 @@ local function is_stack_new_item(class_id)
 end
 function ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame, msg, argStr, argNum, tab_index)  
     ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD(frame, msg, argStr, argNum, tab_index)  
+    if tab_index == nil then
+        tab_index = current_tab_index
+    end
+	
     current_tab_index=tab_index
 end
 local function _CHECK_ACCOUNT_WAREHOUSE_SLOT_COUNT_TO_PUT(insertItem)    
