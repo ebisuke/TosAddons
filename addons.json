@@ -222,8 +222,8 @@
     "name": "Remove Warning For Time Limited Item",
     "file": "removewarningfortimelimiteditem",
     "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "rwftli-v0.0.1",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "rwftli-v0.0.2",
     "unicode": "📖",
     "description": "期間のあるアイテムを倉庫に入れるときの警告を削除します",
     "tags": [
