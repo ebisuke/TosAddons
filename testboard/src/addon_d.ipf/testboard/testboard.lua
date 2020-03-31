@@ -214,110 +214,19 @@ function TESTBOARD_ON_TIMER(frame)
         end
     }
 end
-function TESTBOARD_WEBB()
-    EBI_try_catch{
-        try = function()
-            local frame = ui.GetFrame(g.framename)
-            local web = frame:CreateOrGetControl("browser", "web", 0, 80, frame:GetWidth(), frame:GetHeight() - 80)
-            
-            web:SetUrlinfo("https://www.google.com");
-            web:SetForActiveX(true);
-            web:ShowBrowser(true);
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
-function TESTBOARD_HEXTOSTRING(hex)
-    return string.char(hex % 0x100) .. string.char(hex / 0x100 % 0x100) .. string.char(hex / 0x10000 % 0x100) .. string.char(hex / 0x1000000 % 0x100)
-end
+
 function TESTBOARD_TEST()
     
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            local ss = ""
-        --MarketSearch(1, 0, "ナ", "", {}, {}, 10);
-        --MarketRecipeSearch(1,nil,10)
-        -- local targetinfo = info.GetTargetInfo( session.GetMyHandle() );
-        -- local p=tolua.cast(targetinfo,"MINMAP_MATCH")
-        -- p.worldPoint.x=0x008c5260
-        -- local hoge={0x008c5260}
-        -- local fd=io.open("c:\\temp\\hoge.txt","w")
-        -- EnumWindows = alien.user32.EnumWindows
-        -- print("A:"..tostring(EnumWindows))
-        -- --print("C:"..tostring(ptr3.minimapPoint))
-        -- fd:close()
+            frame:RemoveChild("testweb")
+            local p=frame:CreateOrGetControl("webpicture","testweb",0,0,100,100)
+            AUTO_CAST(p)
+            p:SetUrlInfo("https://hldc.co.jp/blog/wp-content/uploads/2017/08/img_graphs.png")
         end,
         catch = function(error)
             ERROUT("FAIL:" .. tostring(error))
         end
     }
 end
-function TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN(icon)
-    
-    local totalTime = 20000;
-    local curTime = 0;
-    EBI_try_catch{
-        try = function()
-            
-            local iconInfo = icon:GetInfo();
-            if(g.buffs[ iconInfo.type]~=nil)then
-                totalTime=g.buffs[ iconInfo.type].time or 0
-            end
-            local buff = info.GetBuff(session.GetMyHandle(), iconInfo.type);
-            if buff ~= nil then
-              
-                curTime=buff.time;
-                local n=127+math.min(128,math.max(0,curTime*128/totalTime))
-            end
-          
-        end,
-        catch = function(error)
-            --TESTBOARD_ERROUT("FAIL:" .. tostring(error))
-        end
-    }
- 
-    return curTime, totalTime;
-end
-function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
-    EBI_try_catch{
-        try = function()
-            local handle = session.GetMyHandle();
-            if msg == "BUFF_ADD" then
-                local buff = info.GetBuff(session.GetMyHandle(), argNum);
-                g.buffs[argNum]={time=buff.time}
-                for i = 0, 2 do
-
-                    for k=0,#s_buff_ui.slotlist[i]-1 do
-                        local slot=s_buff_ui.slotlist[i][k]
-                        if slot:IsVisible() ~= 0 then
-                            local icon = slot:GetIcon();
-                            icon:SetOnCoolTimeUpdateScp('TESTBOARD_ICON_UPDATE_BUFF_PSEUDOCOOLDOWN');
-                           
-                            -- icon:ClearText();
-                            slot:SetIcon(icon)
-                            slot:EnableDrag(0)
-                            slot:EnableDrop(0)
-                            slot:SetSkinName("ebi_cool")
-
-                            icon:Invalidate()
-                        end
-                    end
-                end
-            
-            elseif msg == "BUFF_REMOVE" then
-                g.buffs[argNum]=nil
-            elseif msg == "BUFF_UPDATE" then
-                local buff = info.GetBuff(session.GetMyHandle(),argNum);
-                g.buffs[argNum]=g.buffs[argNum] or {}
-                g.buffs[argNum].time=buff.time
-            end
-        end,
-        catch = function(error)
-            ERROUT("FAIL:" .. tostring(error))
-        end
-    }
-end
-

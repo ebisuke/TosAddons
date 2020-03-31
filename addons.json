@@ -1,222 +1,217 @@
 [
-    
   {
-    "name" : "Developer Console Ex",
-    "file" : "developerconsole",
-    "extension" : "ipf",
-    "fileVersion" : "v2.0.0",
-    "releaseTag" : "developerconsole-v2.0.0",
-    "unicode" : "📖",
-    "description" : "DeveloperConsoleの私的改造版です。",
-    "tags" : [
+    "name": "Developer Console Ex",
+    "file": "developerconsole",
+    "extension": "ipf",
+    "fileVersion": "v2.0.0",
+    "releaseTag": "developerconsole-v2.0.0",
+    "unicode": "📖",
+    "description": "DeveloperConsoleの私的改造版です。",
+    "tags": [
       "development",
       "developerconsole"
     ]
   },
   {
-    "name" : "AutoItemManage",
-    "file" : "autoitemmanage",
-    "extension" : "ipf",
-    "fileVersion" : "v0.2.0",
-    "releaseTag" : "autoitemmanage_v0.2.0",
-    "unicode" : "📖",
-    "description" : "倉庫から自動でアイテムを補充します。",
-    "tags" : [
+    "name": "AutoItemManage",
+    "file": "autoitemmanage",
+    "extension": "ipf",
+    "fileVersion": "v0.2.0",
+    "releaseTag": "autoitemmanage_v0.2.0",
+    "unicode": "📖",
+    "description": "倉庫から自動でアイテムを補充します。",
+    "tags": [
       "autoitemmanage"
     ]
   },
   {
-    "name" : "AdvancedNumberDialog",
-    "file" : "advancednumberdialog",
-    "extension" : "ipf",
-    "fileVersion" : "v1.0.4",
-    "releaseTag" : "advancednumberdialog-v1.0.4",
-    "unicode" : "📖",
-    "description" : "数値入力ダイアログを改造します。",
-    "tags" : [
+    "name": "AdvancedNumberDialog",
+    "file": "advancednumberdialog",
+    "extension": "ipf",
+    "fileVersion": "v1.0.4",
+    "releaseTag": "advancednumberdialog-v1.0.4",
+    "unicode": "📖",
+    "description": "数値入力ダイアログを改造します。",
+    "tags": [
       "advancednumberdialog",
       "dialog",
       "number"
     ]
   },
   {
-    "name" : "Market Favorite",
-    "file" : "marketfavorite",
-    "extension" : "ipf",
-    "fileVersion" : "v1.1.0",
-    "releaseTag" : "marketfavorite-v1.1.0",
-    "unicode" : "📖",
-    "description" : "マーケットでお気に入り登録したアイテムを簡単に検索できるアドオンです",
-    "tags" : [
+    "name": "Market Favorite",
+    "file": "marketfavorite",
+    "extension": "ipf",
+    "fileVersion": "v1.1.0",
+    "releaseTag": "marketfavorite-v1.1.0",
+    "unicode": "📖",
+    "description": "マーケットでお気に入り登録したアイテムを簡単に検索できるアドオンです",
+    "tags": [
       "market"
     ]
-
   },
   {
-    "name" : "Continuous Reinforce",
-    "file" : "continuousreinforce",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.4",
-    "releaseTag" : "continuousreinforce-v0.0.4",
-    "unicode" : "📖",
-    "description" : "連続で金床強化できるようにするアドオンです",
-    "tags" : [
+    "name": "Continuous Reinforce",
+    "file": "continuousreinforce",
+    "extension": "ipf",
+    "fileVersion": "v0.0.4",
+    "releaseTag": "continuousreinforce-v0.0.4",
+    "unicode": "📖",
+    "description": "連続で金床強化できるようにするアドオンです",
+    "tags": [
       "reinforce"
     ]
   },
   {
-    "name" : "PostboxGetItem Fixer",
-    "file" : "postboxgetitemfixer",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "postboxgetitemfixer-v0.0.1",
-    "unicode" : "📖",
-    "description" : "メッセージボックスでアイテムを受け取る際のキャラ順を正しくします。アドオンを有効にするには一度なんらかのキャラでゲーム開始する必要があります。これはToS起動毎に行う必要があります。",
-    "tags" : [
+    "name": "PostboxGetItem Fixer",
+    "file": "postboxgetitemfixer",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "postboxgetitemfixer-v0.0.1",
+    "unicode": "📖",
+    "description": "メッセージボックスでアイテムを受け取る際のキャラ順を正しくします。アドオンを有効にするには一度なんらかのキャラでゲーム開始する必要があります。これはToS起動毎に行う必要があります。",
+    "tags": [
       "barrack",
       "postbox"
     ]
   },
   {
-    "name" : "Enhanced TargetLock",
-    "file" : "enhancedtargetlock",
-    "extension" : "ipf",
-    "fileVersion" : "v0.2.0",
-    "releaseTag" : "enhancedtargetlock-v0.2.0",
-    "unicode" : "📖",
-    "description" : "ボスへのタゲがそれてしまい、再ターゲットが困難な時に支援するアドオンです。",
-    "tags" : [
+    "name": "Enhanced TargetLock",
+    "file": "enhancedtargetlock",
+    "extension": "ipf",
+    "fileVersion": "v0.2.0",
+    "releaseTag": "enhancedtargetlock-v0.2.0",
+    "unicode": "📖",
+    "description": "ボスへのタゲがそれてしまい、再ターゲットが困難な時に支援するアドオンです。",
+    "tags": [
       "target",
       "boss"
     ]
   },
   {
-    "name" : "JumpCanceller",
-    "file" : "jumpcanceller",
-    "extension" : "ipf",
-    "fileVersion" : "v1.0.1",
-    "releaseTag" : "jumpcanceller-v1.0.1",
-    "unicode" : "📖",
-    "description" : "ニーリングショット・バズーカ状態をジャンプで解除できるようにします",
-    "tags" : [
+    "name": "JumpCanceller",
+    "file": "jumpcanceller",
+    "extension": "ipf",
+    "fileVersion": "v1.0.1",
+    "releaseTag": "jumpcanceller-v1.0.1",
+    "unicode": "📖",
+    "description": "ニーリングショット・バズーカ状態をジャンプで解除できるようにします",
+    "tags": [
       "kneelingshot",
       "bazooka"
     ]
   },
   {
-    "name" : "NPCShoppingHelperTool",
-    "file" : "shophelpertool",
-    "extension" : "ipf",
-    "fileVersion" : "v1.1.0",
-    "releaseTag" : "shophelpertool-v1.1.0",
-    "unicode" : "📖",
-    "description" : "左クリックで商品をまとめ買いできるアドオンです。",
-    "tags" : [
+    "name": "NPCShoppingHelperTool",
+    "file": "shophelpertool",
+    "extension": "ipf",
+    "fileVersion": "v1.1.0",
+    "releaseTag": "shophelpertool-v1.1.0",
+    "unicode": "📖",
+    "description": "左クリックで商品をまとめ買いできるアドオンです。",
+    "tags": [
       "shop"
     ]
   },
   {
-    "name" : "Pseudo Forecast",
-    "file" : "pseudoforecast",
-    "extension" : "ipf",
-    "fileVersion" : "v0.3.0",
-    "releaseTag" : "pseudoforecast-v0.3.0",
-    "unicode" : "📖",
-    "description" : "Forecastを疑似体験できる",
-    "tags" : [
+    "name": "Pseudo Forecast",
+    "file": "pseudoforecast",
+    "extension": "ipf",
+    "fileVersion": "v0.3.0",
+    "releaseTag": "pseudoforecast-v0.3.0",
+    "unicode": "📖",
+    "description": "Forecastを疑似体験できる",
+    "tags": [
       "forecast"
     ]
   },
   {
-    "name" : "Account Warehouse Wardrobe",
-    "file" : "awwardrobe",
-    "extension" : "ipf",
-    "fileVersion" : "v0.3.4",
-    "releaseTag" : "awwardrobe-v0.3.4",
-    "unicode" : "📖",
-    "description" : "チーム倉庫内にある装備を他のキャラクターに渡す支援をします",
-    "tags" : [
+    "name": "Account Warehouse Wardrobe",
+    "file": "awwardrobe",
+    "extension": "ipf",
+    "fileVersion": "v0.3.4",
+    "releaseTag": "awwardrobe-v0.3.4",
+    "unicode": "📖",
+    "description": "チーム倉庫内にある装備を他のキャラクターに渡す支援をします",
+    "tags": [
       "warehouse",
       "accountwarehouse",
       "equipment"
     ]
   },
   {
-    "name" : "Barrack ItemList Fastload",
-    "file" : "barrackitemlist",
-    "extension" : "ipf",
-    "fileVersion" : "v3.3.0",
-    "releaseTag" : "barrackitemlist-v3.3.0",
-    "unicode" : "📖",
-    "description" : "Faster loading of BarrackItemList. BarrackItemListのロード処理を高速化しました。",
-    "tags" : [
+    "name": "Barrack ItemList Fastload",
+    "file": "barrackitemlist",
+    "extension": "ipf",
+    "fileVersion": "v3.3.0",
+    "releaseTag": "barrackitemlist-v3.3.0",
+    "unicode": "📖",
+    "description": "Faster loading of BarrackItemList. BarrackItemListのロード処理を高速化しました。",
+    "tags": [
       "warehouse",
       "item"
     ]
   },
   {
-    "name" : "Minecrafter's MagnumOpus",
-    "file" : "mcmagnumopus",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "mcmagnumopus-v0.0.2",
-    "unicode" : "📖",
-    "description" : "某箱庭ゲームのような操作性でマグナムオーパスできるようにします。",
-    "tags" : [
+    "name": "Minecrafter's MagnumOpus",
+    "file": "mcmagnumopus",
+    "extension": "ipf",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "mcmagnumopus-v0.0.2",
+    "unicode": "📖",
+    "description": "某箱庭ゲームのような操作性でマグナムオーパスできるようにします。",
+    "tags": [
       "magnumopus"
     ]
   },
   {
-    "name" : "Unbuff2 reloaded",
-    "file" : "unbuff",
-    "extension" : "ipf",
-    "fileVersion" : "v2.1.1",
-    "releaseTag" : "unbuff-v2.1.1",
-    "unicode" : "📖",
-    "description" : "Supported Re:build.",
-    "tags" : [
+    "name": "Unbuff2 reloaded",
+    "file": "unbuff",
+    "extension": "ipf",
+    "fileVersion": "v2.1.1",
+    "releaseTag": "unbuff-v2.1.1",
+    "unicode": "📖",
+    "description": "Supported Re:build.",
+    "tags": [
       "unbuff"
     ]
   },
   {
-    "name" : "Legend ExpPotion Gauge",
-    "file" : "legexppotiongauge",
-    "extension" : "ipf",
-    "fileVersion" : "v0.2.1",
-    "releaseTag" : "legexppotiongauge-v0.2.1",
-    "unicode" : "📖",
-    "description" : "レジェンド経験値ポーション（ファモカの試薬瓶）の経験値量を常時可視化します。",
-    "tags" : [
+    "name": "Legend ExpPotion Gauge",
+    "file": "legexppotiongauge",
+    "extension": "ipf",
+    "fileVersion": "v0.2.1",
+    "releaseTag": "legexppotiongauge-v0.2.1",
+    "unicode": "📖",
+    "description": "レジェンド経験値ポーション（ファモカの試薬瓶）の経験値量を常時可視化します。",
+    "tags": [
       "legend",
       "exppotion"
     ]
-
   },
   {
-    "name" : "CampChef",
-    "file" : "campchef",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.2",
-    "releaseTag" : "campchef-v0.0.2",
-    "unicode" : "📖",
-    "description" : "キッチンの調理及び材料調達を簡単にします。",
-    "tags" : [
+    "name": "CampChef",
+    "file": "campchef",
+    "extension": "ipf",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "campchef-v0.0.2",
+    "unicode": "📖",
+    "description": "キッチンの調理及び材料調達を簡単にします。",
+    "tags": [
       "squire",
       "camp",
       "kitchen"
-      
     ]
-
   },
   {
-    "name" : "Afkmute",
-    "file" : "afkmute",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.6",
-    "releaseTag" : "afkmute-v0.0.6",
-    "unicode" : "📖",
-    "description" : "一時的に音を消したいときに",
-    "tags" : [
+    "name": "Afkmute",
+    "file": "afkmute",
+    "extension": "ipf",
+    "fileVersion": "v0.0.6",
+    "releaseTag": "afkmute-v0.0.6",
+    "unicode": "📖",
+    "description": "一時的に音を消したいときに",
+    "tags": [
       "sound",
       "music",
       "mute",
@@ -224,137 +219,142 @@
     ]
   },
   {
-    "name" : "Remove Warning For Time Limited Item",
-    "file" : "removewarningfortimelimiteditem",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "rwftli-v0.0.1",
-    "unicode" : "📖",
-    "description" : "期間のあるアイテムを倉庫に入れるときの警告を削除します",
-    "tags" : [
+    "name": "Remove Warning For Time Limited Item",
+    "file": "removewarningfortimelimiteditem",
+    "extension": "ipf",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "rwftli-v0.0.2",
+    "unicode": "📖",
+    "description": "期間のあるアイテムを倉庫に入れるときの警告を削除します",
+    "tags": [
       "warehouse",
       "accountwarehouse"
     ]
-  }
-  ,
+  },
   {
-    "name" : "AutoSwap For SetOptionSkill",
-    "file" : "autoswapforsetoptionskill",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.10",
-    "releaseTag" : "autoswapforsetoptionskill-v0.0.10",
-    "unicode" : "📖",
-    "description" : "セット装備スキルを装備スワップで使用可能にします",
-    "tags" : [
+    "name": "AutoSwap For SetOptionSkill",
+    "file": "autoswapforsetoptionskill",
+    "extension": "ipf",
+    "fileVersion": "v0.0.10",
+    "releaseTag": "autoswapforsetoptionskill-v0.0.10",
+    "unicode": "📖",
+    "description": "セット装備スキルを装備スワップで使用可能にします",
+    "tags": [
       "setoption",
       "skill"
     ]
   },
   {
-    "name" : "Remove Warning For Book",
-    "file" : "removewarningforbook",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "rwfb-v0.0.1",
-    "unicode" : "📖",
-    "description" : "カードブックを読むときの警告を削除します",
-    "tags" : [
+    "name": "Remove Warning For Book",
+    "file": "removewarningforbook",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "rwfb-v0.0.1",
+    "unicode": "📖",
+    "description": "カードブックを読むときの警告を削除します",
+    "tags": [
       "cardbook"
     ]
   },
   {
-    "name" : "Another One of Statbars",
-    "file" : "anotheroneofstatbars",
-    "extension" : "ipf",
-    "fileVersion" : "v0.1.1",
-    "releaseTag" : "anotheroneofstatbars-v0.1.1",
-    "unicode" : "📖",
-    "description" : "ちょっと変わったステータスバーを追加します",
-    "tags" : [
+    "name": "Another One of Statbars",
+    "file": "anotheroneofstatbars",
+    "extension": "ipf",
+    "fileVersion": "v0.1.5",
+    "releaseTag": "anotheroneofstatbars-v0.1.5",
+    "unicode": "📖",
+    "description": "ちょっと変わったステータスバーを追加します",
+    "tags": [
       "statbar"
     ]
   },
   {
-    "name" : "Another One of Inventory",
-    "file" : "anotheroneofinventory",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.5",
-    "releaseTag" : "anotheroneofinventory-v0.0.5",
-    "unicode" : "📖",
-    "description" : "もう一つのインベントリ画面を提供します。おまけ機能として、キーボード操作限定でクイックスロットを拡張します。",
-    "tags" : [
+    "name": "Another One of Inventory",
+    "file": "anotheroneofinventory",
+    "extension": "ipf",
+    "fileVersion": "v0.0.5",
+    "releaseTag": "anotheroneofinventory-v0.0.5",
+    "unicode": "📖",
+    "description": "もう一つのインベントリ画面を提供します。おまけ機能として、キーボード操作限定でクイックスロットを拡張します。",
+    "tags": [
       "inventory",
       "quickslot"
     ]
   },
   {
-    "name" : "Cube Opener",
-    "file" : "cubeopener",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.8",
-    "releaseTag" : "cubeopener-v0.0.8",
-    "unicode" : "📖",
-    "description" : "キューブを楽に開きます",
-    "tags" : [
+    "name": "Cube Opener",
+    "file": "cubeopener",
+    "extension": "ipf",
+    "fileVersion": "v0.0.8",
+    "releaseTag": "cubeopener-v0.0.8",
+    "unicode": "📖",
+    "description": "キューブを楽に開きます",
+    "tags": [
       "inventory",
       "cube"
     ]
-  }
-  ,
-  
+  },
   {
-    "name" : "Small UI",
-    "file" : "smallui",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.3",
-    "releaseTag" : "smallui-v0.0.3",
-    "unicode" : "📖",
-    "description" : "小さいUIを提供します",
-    "tags" : [
+    "name": "Small UI",
+    "file": "smallui",
+    "extension": "ipf",
+    "fileVersion": "v0.0.6",
+    "releaseTag": "smallui-v0.0.6",
+    "unicode": "📖",
+    "description": "小さいUIを提供します",
+    "tags": [
       "ui",
       "small"
     ]
-  }
-  ,
-  
+  },
   {
-    "name" : "Buff Remain Visualizer",
-    "file" : "buffremainvisualizer",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.4",
-    "releaseTag" : "buffremainvisualizer-v0.0.4",
-    "unicode" : "📖",
-    "description" : "バフの残り時間を可視化します 今のところプレイヤーのみの適用です  ",
-    "tags" : [
+    "name": "Buff Remain Visualizer",
+    "file": "buffremainvisualizer",
+    "extension": "ipf",
+    "fileVersion": "v0.0.4",
+    "releaseTag": "buffremainvisualizer-v0.0.4",
+    "unicode": "📖",
+    "description": "バフの残り時間を可視化します 今のところプレイヤーのみの適用です  ",
+    "tags": [
       "buff"
     ]
-  }
-  ,
+  },
   {
-    "name" : "Pseudo Forecast For ITOS",
-    "file" : "pseudoforecastitos",
-    "extension" : "ipf",
-    "fileVersion" : "v0.4.0",
-    "releaseTag" : "pseudoforecastitos-v0.4.0",
-    "unicode" : "📖",
-    "description" : "Forecastを疑似体験できる ITOS用",
-    "tags" : [
+    "name": "Pseudo Forecast For ITOS",
+    "file": "pseudoforecastitos",
+    "extension": "ipf",
+    "fileVersion": "v0.4.0",
+    "releaseTag": "pseudoforecastitos-v0.4.0",
+    "unicode": "📖",
+    "description": "Forecastを疑似体験できる ITOS用",
+    "tags": [
       "forecast"
     ]
-  }
-  ,
+  },
   {
-    "name" : "Mini Expbar",
-    "file" : "miniexpbar",
-    "extension" : "ipf",
-    "fileVersion" : "v0.0.1",
-    "releaseTag" : "miniexpbar-v0.0.1",
-    "unicode" : "📖",
-    "description" : "小さい経験値バーです",
-    "tags" : [
+    "name": "Mini Expbar",
+    "file": "miniexpbar",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "miniexpbar-v0.0.1",
+    "unicode": "📖",
+    "description": "小さい経験値バーです",
+    "tags": [
       "gauge",
       "expbar"
     ]
+  },
+  {
+    "name": "Stat View Ex R",
+    "file": "statview_ex_r",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "statview_ex_r-v0.0.1",
+    "unicode": "⛄",
+    "description": "This is a modified version of Torahamu's modified version of Excrulon's statviewer addon.  Excrulonさんのstatviewerアドオンを改造したTorahamuさんのstatviewer_exを改造しました。[v2.0.0  ReBuild Patch]",
+    "tags": [
+      "ui",
+      "status"
+    ]
   }
-
 ]

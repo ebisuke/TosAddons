@@ -2,6 +2,9 @@
 小さいUIを提供します。(クイックスロットは現状キーボードのみ)  
 Small is beautiful.  
 ![screenshot_20200213_00005](https://user-images.githubusercontent.com/50558182/74440328-2844d900-4eb1-11ea-900d-01e29b78a22c.jpg)
+
+`/suic`とチャットで入力することで設定画面を表示できます。
+To configure, please enter `/suic` in chat window.
 ## 概要
 ### マップ
 * 横幅が小さくなり、正方形になります
@@ -18,6 +21,12 @@ Small is beautiful.
 ### チャット(左下の)
 * タブ バーが下に移動します
 # リリースノート
+## v0.0.6
+* バグ修正
+## v0.0.5
+* ミニマップ縮小解除時にOBDEの位置が正しくなかったのを修正
+## v0.0.4
+* 一部カスタマイズ機能追加
 ## v0.0.3
 * ObjectDetectorがずれるのを修正（当該アドオンのみのピンポイント対応）
 ## v0.0.2
