@@ -8,7 +8,7 @@ g.deletecharacid=nil
 -- setfenv is gone since Lua 5.2
 -- copied from https://leafo.net/guides/setfenv-in-lua52-and-above.html
 if not setfenv then
-    function setfenv(fn, env)
+    local setfenv = function(fn, env)
         local i = 1
         while true do
           local name = debug.getupvalue(fn, i)
