@@ -830,7 +830,14 @@ function AOI_INV_REFRESH()
                         local useLv = TryGetProp(itemCls, "UseLv") or 1;
                         local rarity = TryGetProp(itemCls, "ItemGrade");
                         local itemLv = TryGetProp(itemCls, "ItemLv") or 1;
-                        local gemLv = itemObj.ItemExp or 0
+                        local gemLv = 0
+                        EBI_try_catch{
+                            try=function()
+                                gemLv=itemObj.ItemExp or 0
+                            end,
+                            catch=function(e)
+                            end
+                        }
                         g.invitems[#g.invitems + 1] = {
                             item = invItem,
                             name = string.lower(dictionary.ReplaceDicIDInCompStr(itemCls.Name)),
