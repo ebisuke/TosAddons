@@ -18,7 +18,6 @@ g.debug = true
 g.waitforend = nil
 g.totalcooldown = nil
 g.cooldown = nil
-g.icon=nil
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -123,10 +122,8 @@ function ASFSOS_GETVALID()
                 end
             end
             if (setprefix == nil) then
-                CHAT_SYSTEM("ASFSOS_NO_LEGEND")
                 return nil
             end
-            CHAT_SYSTEM("ASFSOS_LEGEND_"..setprefix)
             local setcount = 5
             -- local setcount = 0
             -- for i = 0, cnt - 1 do
@@ -171,16 +168,15 @@ function ASFSOS_GETVALID()
             for sclsid, data in pairs(triggerlist) do
                 if (data.prefix == setprefix) then
                     if (data.needs > setcount) then
-                        CHAT_SYSTEM("ASFSOS_B_FAIL1")
+                        
                         return nil
                     else
-                        CHAT_SYSTEM("ASFSOS_B_SUCCESS")
+                        
                         return triggerlist[sclsid]
                     end
                 end
             end
             --OK
-            CHAT_SYSTEM("ASFSOS_B_FAIL2")
             return nil
         end,
         catch = function(error)
@@ -358,7 +354,6 @@ function ASFSOS_DO_SKILL(clsid)
             if (g.skillinfo == nil) then
                 ReserveScript("quickslot.SwapWeapon()", 0.5)
                 g.waitforend = nil
-                CHAT_SYSTEM("ASFSOS_1")
             else
                 if (g.skillinfo:GetCurrentCoolDownTime() > 0) then
                     --failed
@@ -366,14 +361,11 @@ function ASFSOS_DO_SKILL(clsid)
                     g.totalcooldown = g.skillinfo:GetTotalCoolDownTime()
                     g.currentcooldown = g.skillinfo:GetCurrentCoolDownTime()
                     g.waitforend = nil
-                    CHAT_SYSTEM("ASFSOS_2")
                 else
                     g.totalcooldown = g.skillinfo:GetTotalCoolDownTime()
                     g.currentcooldown = g.skillinfo:GetCurrentCoolDownTime()
                     g.waitforend = clsid
-                    --control.Skill(clsid)
-                    ICON_USE_OLD(g.icon)
-                    CHAT_SYSTEM("ASFSOS_3")
+                    control.Skill(clsid)
                 end
             end
         end,
@@ -403,13 +395,10 @@ function ASFSOS_ICON_USE(object, reAction)
                         if (skillInfo == nil) then
                             --g.waitforend = valid.clsid
                             g.clsid = valid.clsid
-                            g.icon=icon;
                             ReserveScript("quickslot.SwapWeapon()", 0.25)
                             ReserveScript(string.format("ASFSOS_DO_SKILL(%d);", valid.clsid), 0.75)
-                            CHAT_SYSTEM("ASFSOS_A_1")
                         else
                             control.Skill(valid.clsid)
-                            CHAT_SYSTEM("ASFSOS_A_2")
                         end
                         return true
                     end

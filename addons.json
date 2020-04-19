@@ -143,8 +143,8 @@
     "name": "Barrack ItemList Fastload",
     "file": "barrackitemlist",
     "extension": "ipf",
-    "fileVersion": "v3.3.0",
-    "releaseTag": "barrackitemlist-v3.3.0",
+    "fileVersion": "v3.4.1",
+    "releaseTag": "barrackitemlist-v3.4.1",
     "unicode": "📖",
     "description": "Faster loading of BarrackItemList. BarrackItemListのロード処理を高速化しました。",
     "tags": [
@@ -311,8 +311,8 @@
     "name": "Buff Remain Visualizer",
     "file": "buffremainvisualizer",
     "extension": "ipf",
-    "fileVersion": "v0.0.4",
-    "releaseTag": "buffremainvisualizer-v0.0.4",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "buffremainvisualizer-v0.1.0",
     "unicode": "📖",
     "description": "バフの残り時間を可視化します 今のところプレイヤーのみの適用です  ",
     "tags": [
