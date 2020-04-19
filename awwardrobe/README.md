@@ -1,5 +1,10 @@
 # Account Warehouse Wardrobe
 チーム倉庫内にある装備を他のキャラクターに渡す支援をします。  
+__現在EP12に対応中です。__
+__当面の間はXinxs様の修正版をご利用ください。__
+[awwardrobe--v0.3.4-ep12.ipf.zip](https://github.com/ebisuke/TosAddons/files/4498686/awwardrobe--v0.3.4-ep12.ipf.zip)
+
+
 ## 使い方
 チーム倉庫を開くと画面上部にリスト・ボタン類が配置されます。  
 それぞれ以下の意味があります。
