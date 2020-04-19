@@ -900,7 +900,7 @@ function AUTOITEMMANAGE_CHANGENUMBER(argnum)
             slo:SetNumberMode(1)
             slo:SetEnableEditTag(1);
             slo:SetMinNumber(1)
-            slo:SetMaxNumber(32767)
+            slo:SetMaxNumber(99999)
             slo:SetSkinName("None")
             slo:SetFontName('green_20_ol')
             slo:SetGravity(ui.RIGHT, ui.TOP);
