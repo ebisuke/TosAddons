@@ -22,3 +22,4 @@ housingsimulator/tool/HousingRenderer/Logs/*
 housingsimulator/tool/HousingRenderer/Library/*
 /buffremainvisualizer/tool/buffskingen/venv/
 /buffremainvisualizer/tool/buffskingen/venv/
+.vscode/settings.json

@@ -1,6 +1,7 @@
 {
     "Lua.diagnostics.globals": [
-        "hookedFunctionStr"
+        "hookedFunctionStr",
+        "g_invenTypeStrList"
     ],
     "git.ignoreLimitWarning": true
 }
