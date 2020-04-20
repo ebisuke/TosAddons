@@ -20,7 +20,7 @@
 	 TREE_SLOT_DROPSOUND="icon_get_down" 
 	 TREE_SLOT_DROPSCRIPT="PUT_ACCOUNT_ITEM_TO_WAREHOUSE" 
 	 TREE_SLOT_POPSCRIPT="YAI_INVENTORY_OP_POP" TREE_SEARCH_BLINK_COLOR="FF003300" SHIHOUETTE_IMGNAME_MALE="inventory_M" SHIHOUETTE_IMGNAME_FEMALE="inventory_F" WEAPONSWAP_UP_IMAGE="weapon_swap_pageup" WEAPONSWAP_DOWN_IMAGE="weapon_swap_pagedown" EXP_ORB_EFFECT_SIZE="2.0" DISPEL_EFFECT_SIZE="2.0" EQUIPSLOT_PIC_MAGIC="invenslot_pic_magic" EQUIPSLOT_PIC_RARE="invenslot_pic_rare" EQUIPSLOT_PIC_UNIQUE="invenslot_pic_unique" EQUIPSLOT_PIC_LEGEND="invenslot_pic_legend" WEIGHT_PIC_WIDTH="622" TOGGLE_ITEM_EFFECT_SIZE="2.0" TREE_SLOT_TEXT_FONT="{s16}{ol}{b}" EFFECT_DRAW_OFFSET="80"/>
-	<option closebutton="false"/>
+	<option closebutton="false" hideable="false"/>
 	
 	<controls>
 		<!-- <groupbox name="bg3" rect="0 0 510 1000" margin="0 30 0 0" layout_gravity="center top" draw="true" resizebyparent="false" resizebyresolution="true" scrollbar="false" skin="test_frame_low"/>

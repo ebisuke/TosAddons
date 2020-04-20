@@ -218,7 +218,6 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
                 g.loaded = true
             end
             
-            acutil.setupHook(AOI_UPDATE_INVENTORY_EXP_ORB, "UPDATE_INVENTORY_EXP_ORB")
             acutil.setupHook(AOI_UPDATE_INVENTORY_TOGGLE_ITEM, "TOGGLE_ITEM_SLOT_INVEN_ON_MSG")
             acutil.setupHook(AOI_INVENTORY_UPDATE_ICONS,"INVENTORY_UPDATE_ICONS")
             addon:RegisterMsg('INV_ITEM_ADD', 'AOI_INVENTORY_ON_MSG');
@@ -303,52 +302,7 @@ function AOI_UPDATE_INVENTORY_TOGGLE_ITEM(frame)
     end
     return ret
 end
-function AOI_UPDATE_INVENTORY_EXP_ORB(frame, ctrl, num, str, time)
-    local ret = UPDATE_INVENTORY_EXP_ORB_OLD(frame, ctrl, num, str, time)
-    frame = ui.GetFrame(g.framename)
-    if (not AOI_ISINITIALIZED()) then
-        return
-    end
-    if ui.GetFrame("anotheroneofinventory"):IsVisible() == 0 or not g.initialized then
-        return ret;
-    end
-    local invenframe = ui.GetFrame("inventory")
 
-    
-    local itemGuid = invenframe:GetUserValue("EXP_ORB_EFFECT");
-    if itemGuid == "None" then
-        return ret;
-    end
-    
-    local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
-    AUTO_CAST(slt)
-    local gboxslot = GET_CHILD_RECURSIVELY(frame, "aoi_gboxslt")
-    AUTO_CAST(gboxslot)
-    if slt:GetHeight() == 0 then
-        return ret;
-    end
-    local iesid = nil
-    local slot
-    for i = 0, slt:GetSlotCount() - 1 do
-        slot = slt:GetSlotByIndex(i)
-        if slot ~= nil and slot:IsVisible() == 1 then
-            iesid = slt:GetIcon():GetInfo():GetIESID()
-            break
-        end
-    end
-    if (not iesid) then
-        return ret
-    end
-    
-    local offset = invenframe:GetUserConfig("EFFECT_DRAW_OFFSET");
-    if slot:GetDrawY() <= gboxslot:GetDrawY() or gboxslot:GetDrawY() + gboxslot:GetHeight() - offset <= slot:GetDrawY() then
-        return ret;
-    end
-    if slot:IsVisibleRecursively() == true then
-        slot:PlayUIEffect("I_sys_item_slot", 2.2, "Inventory_Exp_ORB", true);
-    end
-    return ret
-end
 function AOI_INVENTORY_UPDATE_ICONS(frame)
     INVENTORY_UPDATE_ICONS_OLD(frame)
     if (not AOI_ISINITIALIZED()) then
