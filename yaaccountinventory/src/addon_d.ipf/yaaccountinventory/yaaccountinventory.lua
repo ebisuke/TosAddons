@@ -186,6 +186,21 @@ function YAI_ACCOUNTWAREHOUSE_CLOSE(frame)
     INVENTORY_SET_CUSTOM_RBTNDOWN("None")
     SET_INV_LBTN_FUNC(ui.GetFrame("inventory"), "None");
 end
+function YAI_COUNT()
+    local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+    local guidlist = itemList:GetSortedGuidList();
+    local cnt = itemList:Count();
+    local rcnt=0
+    for i = 0, cnt - 1 do
+        local guid = guidlist:Get(i);
+        local invItem = itemList:GetItemByGuid(guid)
+        local invItem_obj = GetIES(invItem:GetObject());
+        if invItem_obj.ClassName ~= MONEY_NAME then
+            rcnt=rcnt+1
+        end
+    end
+    return rcnt
+end
 -- return bool, index
 function YAI_get_exist_item_index(insertItem)
     local ret1 = false
@@ -220,7 +235,7 @@ function YAI_get_valid_index()
     local sortedCnt = sortedGuidList:Count();
     local account = session.barrack.GetMyAccount();
     local slotCount = account:GetAccountWarehouseSlotCount();
-    local start_index = 1
+    local start_index = 0
     local last_index = YAI_SLOT_LIMIT_FIRSTTAB() - 1
     local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
     local itemCnt = 0;
@@ -243,39 +258,31 @@ function YAI_get_valid_index()
         local obj = GetIES(invItem:GetObject());
         
         if obj.ClassName ~= MONEY_NAME then
-            while __set[inc] ~= nil and inc < sortedCnt do
-                inc = inc + 1
-            end
-            if (sortedCnt <= inc) then
-                break
-            end
-            __set[inc] = {item = invItem, obj = obj, mode = 1}
-            inc = inc + 1
+            __set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
+
         
         else
-            __set[inc] = {item = invItem, obj = obj, mode = 1}
-            inc = inc + 1
+            __set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
         end
     end
-    
-    local i = slotCount
-    
-    while i < g.countpertab do
-        
-        
-        __set[i] = {mode = 1}
-        
-        i = i + 1
+    local first=0
+    for i=0,g.countpertab do
+        if(__set[i]~=nil)then
+            first=first+1
+
+        end
     end
-    
+    if(first>=slotCount)then
+        for i=0,g.countpertab do
+            __set[i] ={mode=1}
+        end
+    end
     local index = start_index
     
-    for k, v in pairs(__set) do
-        if __set[index] == nil then
+    for k=start_index,last_index+1 do
+        index = k
+        if __set[k] == nil then
             break
-        else
-            index = index + 1
-        
         end
     end
     
@@ -548,9 +555,19 @@ end
 
 
 function YAI_CHECKITEM(invItem,silent)
+    local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+    local guidList = itemList:GetGuidList();
+    local sortedGuidList = itemList:GetSortedGuidList();    
+    local sortedCnt = sortedGuidList:Count();  
     local frame = ui.GetFrame("accountwarehouse")
     local obj = GetIES(invItem:GetObject())
-    
+    if YAI_SLOT_LIMIT_FIRSTTAB() <= sortedCnt then
+        if(not silent)then
+            ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
+        end
+        return false;
+
+    end
     if true == invItem.isLockState then
         if(not silent)then
             ui.SysMsg(ClMsg("MaterialItemIsLock"));
@@ -1013,6 +1030,7 @@ function YAI_ON_MSG(frame, msg, argStr, argNum)
 end
 function YAI_ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame, msg, argStr, argNum, tab_index)
     --disabled function for lightweight
+    ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD(frame, msg, argStr, argNum, tab_index)
     if (ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OVERRIDE ~= nil) then
         ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OVERRIDE(frame, msg, argStr, argNum, tab_index)
     end
@@ -1274,7 +1292,7 @@ function YAI_UPDATE_STATUS(inc)
     local isShowMap = {};
     local sortedCnt = sortedGuidList:Count();
     
-    local invItemCount = sortedCnt;
+    local invItemCount = YAI_COUNT();
     --スロット残数を表示
     local itemcnt = GET_CHILD_RECURSIVELY(awframe, "itemcnt");
     itemcnt:SetFormat("{@st42}%s/%s")
