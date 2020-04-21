@@ -17,7 +17,7 @@ g.settings = g.settings or {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "yaaccountinventory"
-g.debug = false
+g.debug = true
 g.w = 650
 g.h = 570
 g.maxtabs = g.maxtabs or 1
@@ -173,6 +173,13 @@ function YAI_INIT(frame)
         try = function()
             frame = ui.GetFrame(g.framename)
             frame:ShowWindow(1)
+            if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
+                g.maxtabs = 5
+               
+            else
+                g.maxtabs = 1
+               
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -262,12 +269,12 @@ function YAI_get_valid_index()
 
         
         else
-            __set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
+            --__set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
         end
     end
     local first=0
-    for i=0,g.countpertab do
-        if(__set[i]~=nil)then
+    for i=0,g.countpertab-1 do
+        if(__set[i]~=nil and __set[i].mode==1)then
             first=first+1
 
         end
@@ -316,13 +323,7 @@ function YAI_callback_get_account_warehouse_title(code, ret_json)
                 end
             end
             DBGOUT("maxtabs")
-            if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
-                g.maxtabs = 5
-                DBGOUT("premium" .. tostring(count))
-            else
-                g.maxtabs = 1
-                DBGOUT("ippan")
-            end
+            
             YAI_UPDATE_STATUS()
         end,
         catch = function(error)
@@ -561,7 +562,7 @@ function YAI_CHECKITEM(invItem,silent)
     local sortedCnt = sortedGuidList:Count();  
     local frame = ui.GetFrame("accountwarehouse")
     local obj = GetIES(invItem:GetObject())
-    if YAI_SLOT_LIMIT_FIRSTTAB() <= sortedCnt then
+    if YAI_SLOT_LIMIT_FIRSTTAB() <= YAI_COUNT() then
         if(not silent)then
             ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
         end
