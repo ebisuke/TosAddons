@@ -17,7 +17,7 @@ g.settings = g.settings or {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "yaaccountinventory"
-g.debug = true
+g.debug = false
 g.w = 650
 g.h = 570
 g.maxtabs = g.maxtabs or 1
@@ -145,6 +145,7 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_IN", "YAI_ON_MSG");
             addon:RegisterMsg("OPEN_DLG_ACCOUNTWAREHOUSE", "YAI_ON_OPEN_ACCOUNTWAREHOUSE");
             addon:RegisterMsg("FPS_UPDATE", "YAI_SHOW");
+            addon:RegisterMsg("GAME_START_3SEC", "YAI_3SEC");
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_OPEN, "ACCOUNTWAREHOUSE_OPEN")
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_CLOSE, "ACCOUNTWAREHOUSE_CLOSE")
             acutil.setupHook(YAI_ACCOUNT_WAREHOUSE_MAKE_TAB, "ACCOUNT_WAREHOUSE_MAKE_TAB")
@@ -163,6 +164,15 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
 end
 function YAI_SHOW()
     ui.GetFrame(g.framename):ShowWindow(1)
+end
+function YAI_3SEC()
+    if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
+        g.maxtabs = 5
+       
+    else
+        g.maxtabs = 1
+       
+    end
 end
 function YAI_ON_TIMER()
 
@@ -323,7 +333,13 @@ function YAI_callback_get_account_warehouse_title(code, ret_json)
                 end
             end
             DBGOUT("maxtabs")
-            
+            if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
+                g.maxtabs = 5
+               
+            else
+                g.maxtabs = 1
+               
+            end
             YAI_UPDATE_STATUS()
         end,
         catch = function(error)
