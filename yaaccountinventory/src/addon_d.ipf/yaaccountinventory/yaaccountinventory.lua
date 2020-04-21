@@ -145,6 +145,7 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_IN", "YAI_ON_MSG");
             addon:RegisterMsg("OPEN_DLG_ACCOUNTWAREHOUSE", "YAI_ON_OPEN_ACCOUNTWAREHOUSE");
             addon:RegisterMsg("FPS_UPDATE", "YAI_SHOW");
+            addon:RegisterMsg("GAME_START_3SEC", "YAI_3SEC");
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_OPEN, "ACCOUNTWAREHOUSE_OPEN")
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_CLOSE, "ACCOUNTWAREHOUSE_CLOSE")
             acutil.setupHook(YAI_ACCOUNT_WAREHOUSE_MAKE_TAB, "ACCOUNT_WAREHOUSE_MAKE_TAB")
@@ -164,6 +165,15 @@ end
 function YAI_SHOW()
     ui.GetFrame(g.framename):ShowWindow(1)
 end
+function YAI_3SEC()
+    if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
+        g.maxtabs = 5
+       
+    else
+        g.maxtabs = 1
+       
+    end
+end
 function YAI_ON_TIMER()
 
 end
@@ -173,6 +183,13 @@ function YAI_INIT(frame)
         try = function()
             frame = ui.GetFrame(g.framename)
             frame:ShowWindow(1)
+            if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
+                g.maxtabs = 5
+               
+            else
+                g.maxtabs = 1
+               
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -262,12 +279,12 @@ function YAI_get_valid_index()
 
         
         else
-            __set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
+            --__set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
         end
     end
     local first=0
-    for i=0,g.countpertab do
-        if(__set[i]~=nil)then
+    for i=0,g.countpertab-1 do
+        if(__set[i]~=nil and __set[i].mode==1)then
             first=first+1
 
         end
@@ -318,10 +335,10 @@ function YAI_callback_get_account_warehouse_title(code, ret_json)
             DBGOUT("maxtabs")
             if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
                 g.maxtabs = 5
-                DBGOUT("premium" .. tostring(count))
+               
             else
                 g.maxtabs = 1
-                DBGOUT("ippan")
+               
             end
             YAI_UPDATE_STATUS()
         end,
@@ -561,7 +578,7 @@ function YAI_CHECKITEM(invItem,silent)
     local sortedCnt = sortedGuidList:Count();  
     local frame = ui.GetFrame("accountwarehouse")
     local obj = GetIES(invItem:GetObject())
-    if YAI_SLOT_LIMIT_FIRSTTAB() <= sortedCnt then
+    if YAI_SLOT_LIMIT_FIRSTTAB() <= YAI_COUNT() then
         if(not silent)then
             ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
         end
