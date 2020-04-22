@@ -300,10 +300,6 @@ function YAI_get_valid_index()
     for i = 0, cnt - 1 do
         local guid = guidList:Get(i);
         local invItem = itemList:GetItemByGuid(guid);
-        local obj = GetIES(invItem:GetObject());
-        if obj.ClassName ~= MONEY_NAME and invItem.invIndex < g.countpertab then
-            itemCnt = itemCnt + 1;
-        end
     end
     local __set = {}
     local inc = 0
