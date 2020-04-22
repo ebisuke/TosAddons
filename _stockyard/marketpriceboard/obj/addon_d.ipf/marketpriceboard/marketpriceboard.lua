@@ -1165,29 +1165,6 @@ _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 
--- setfenv is gone since Lua 5.2
--- copied from https://leafo.net/guides/setfenv-in-lua52-and-above.html
-local setfenv = _G['setfenv']
-if not setfenv then
-    setfenv = function(fn, env)
-        local i = 1
-        while true do
-          local name = debug.getupvalue(fn, i)
-          if name == "_ENV" then
-            debug.upvaluejoin(fn, i, (function()
-              return env
-            end), 1)
-            break
-          elseif not name then
-            break
-          end
-      
-          i = i + 1
-        end
-        return fn
-      end
-end
-
 --設定ファイル保存先
 --nil=ALPHA1
 --1=ALPHA1-2
