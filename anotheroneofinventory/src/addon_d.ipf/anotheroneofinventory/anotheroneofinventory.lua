@@ -522,7 +522,7 @@ end
 function AOI_INVENTORY_ON_MSG(frame, msg, argStr, argNum)
     EBI_try_catch{
         try = function()
-            if (g.initialized == false) then
+            if (g.initialized ~= true) then
                 return
             end
             DBGOUT(msg)
@@ -1051,6 +1051,9 @@ end
 function AOI_ON_TIMER()
     EBI_try_catch{
         try = function()
+            if(g.initialized==false)then
+                return
+            end
             if (g.invrefresh) then
                 if (g.invrefreshcooldown > 0) then
                     g.invrefreshcooldown = g.invrefreshcooldown - 1
