@@ -347,7 +347,7 @@ function AWWARDROBE_ON_INIT(addon, frame)
             --addon:RegisterMsg('OPEN_DLG_WAREHOUSE', 'AWWARDROBE_ON_OPEN_WAREHOUSE')
             addon:RegisterMsg('OPEN_CAMP_UI', 'AWWARDROBE_ON_OPEN_CAMP_UI')
             addon:RegisterMsg('GAME_START_3SEC', 'AWWARDROBE_RESERVE_INIT')
-            
+            addon:RegisterMsg('GAME_START', 'AWWARDROBE_GAMESTART')
             frame:ShowWindow(1)
             AWWARDROBE_INITIALIZE_FRAME()
             frame:ShowWindow(0)
@@ -358,6 +358,9 @@ function AWWARDROBE_ON_INIT(addon, frame)
             AWWARDROBE_ERROUT(error)
         end
     }
+end
+function AWWARDROBE_GAMESTART()
+    LS=LIBSTORAGEHELPER
 end
 function AWWARDROBE_TOGGLE_FRAME()
     if g.frame:IsVisible() == 0 then
