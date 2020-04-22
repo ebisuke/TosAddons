@@ -52,7 +52,7 @@ function p.get_exist_item_index(itemObj)
     local ret2 = -1
     
     if geItemTable.IsStack(itemObj.ClassID) == 1 then
-        local itemList = session.GetEtcItemList(p.target));    
+        local itemList = session.GetEtcItemList(p.target);    
         local sortedGuidList = itemList:GetGuidList();    
         local sortedCnt = sortedGuidList:Count();
         
