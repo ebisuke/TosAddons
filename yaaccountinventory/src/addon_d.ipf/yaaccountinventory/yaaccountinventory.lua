@@ -186,7 +186,7 @@ function YAI_3SEC()
     end
 end
 function YAI_ON_TIMER()
-
+ 
 end
 
 function YAI_INIT(frame)
@@ -213,6 +213,7 @@ function YAI_ACCOUNTWAREHOUSE_CLOSE(frame)
     ACCOUNTWAREHOUSE_CLOSE_OLD(frame)
     INVENTORY_SET_CUSTOM_RBTNDOWN("None")
     SET_INV_LBTN_FUNC(ui.GetFrame("inventory"), "None");
+
 end
 function YAI_COUNT()
     local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
@@ -607,7 +608,9 @@ function YAI_EXEC_ACCOUNT_WAREHOUSE_INV_RBTN(awframe, numberString, inputFrame)
     
     local invItem = GET_PC_ITEM_BY_GUID(itemID);
     item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), numberString, awframe:GetUserIValue("HANDLE"), idx)
+
 end
+
 function YAI_ACCOUNT_WAREHOUSE_INV_RBTN(itemObj, slot)
     EBI_try_catch{
         try = function()
@@ -616,6 +619,11 @@ function YAI_ACCOUNT_WAREHOUSE_INV_RBTN(itemObj, slot)
             local iconInfo = icon:GetInfo();
             local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
             local obj = GetIES(invItem:GetObject())
+            if (keyboard.IsKeyPressed("LALT") == 1) then
+                INV_ITEM_LOCK_LBTN_CLICK( ui.GetFrame("inventory"),invItem,slot)
+                ReserveScript('imcAddOn.BroadMsg("ITEM_PROP_UPDATE","'..iconInfo:GetIESID()..'")',0.5);
+                return
+            end
             if (not YAI_CHECKITEM(invItem)) then
                 return
             end
@@ -627,7 +635,7 @@ function YAI_ACCOUNT_WAREHOUSE_INV_RBTN(itemObj, slot)
             end
             if (idx ~= nil) then
                 
-                
+               
                 if (keyboard.IsKeyPressed("LSHIFT") == 1) then
                     INPUT_NUMBER_BOX(awframe, ScpArgMsg("InputCount"), "YAI_EXEC_ACCOUNT_WAREHOUSE_INV_RBTN", invItem.count, 1, invItem.count, idx, tostring(invItem:GetIESID()));
                 else
@@ -710,7 +718,8 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             local w = g.w
             local h = g.h
             overlap:Resize(w, h)
-            overlap:SetLayerLevel(100)
+            frame:SetLayerLevel(94)
+            overlap:SetLayerLevel(95)
             local gbox = overlap:GetChild("inventoryGbox")
             AUTO_CAST(gbox)
             local gbox2 = overlap:GetChildRecursively("inventoryitemGbox")
@@ -1189,10 +1198,11 @@ function YAI_UPDATE_TARGETED(itemguid)
             local slotset = frame:GetChildRecursively(slotsetname)
             AUTO_CAST(slotset)
             local slot = GET_SLOT_BY_ITEMID(slotset, itemguid);
-            
-            slot:ClearIcon()
-            slot:SetSkinName("None")
-            YAI_DRAW_ITEM(invItem, slot)
+            if(slot~=nil)then
+                slot:ClearIcon()
+                slot:SetSkinName("None")
+                YAI_DRAW_ITEM(invItem, slot)
+            end
         end,
         catch = function(error)
             ERROUT(error)
@@ -1373,7 +1383,7 @@ function YAI_INSERT_ITEM_TO_TREE(frame, tree, invItem, itemCls, baseidcls, typeS
         else
             CLEAR_ICON_REMAIN_LIFETIME(slot, icon);
         end
-    
+        
     end
     --INV_ICON_SETINFO(frame, slot, invItem, nil, nil, nil);
     _DRAW_ITEM(invItem, slot, nil)
