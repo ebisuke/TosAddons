@@ -361,8 +361,8 @@
     "name": "Yet Another Account Inventory",
     "file": "yaaccountinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.3",
-    "releaseTag": "yaaccountinventory-v0.0.3",
+    "fileVersion": "v0.0.4",
+    "releaseTag": "yaaccountinventory-v0.0.4",
     "unicode": "📖",
     "description": "(テストバージョン)（トークン必須）チーム倉庫を魔改造します",
     "tags": [
