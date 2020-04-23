@@ -248,8 +248,8 @@
     "name": "Remove Warning For Book",
     "file": "removewarningforbook",
     "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "rwfb-v0.0.1",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "rwfb-v0.0.2",
     "unicode": "📖",
     "description": "カードブックを読むときの警告を削除します",
     "tags": [
