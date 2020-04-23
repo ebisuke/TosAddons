@@ -66,12 +66,6 @@ SMALLUI_CONFIG_DEFS = {
                 vname = "Small QuestList",
                 type = "boolean",
                 default = true,
-            },
-            {
-                name = "resizechat",
-                vname = "Reverse Positon of Chat Tab",
-                type = "boolean",
-                default = true,
             }
             ,
             {

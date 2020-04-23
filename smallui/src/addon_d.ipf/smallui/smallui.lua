@@ -79,6 +79,7 @@ function SMALLUI_ON_INIT(addon, frame)
             g.addon = addon
             g.frame = frame
             --acutil:setupHook("QUICKSLOT_MAKE_GAUGE", SMALLUI_QUICKSLOT_MAKE_GAUGE)
+            addon:RegisterMsg('GAME_START', 'SMALLUI_GAME_START');
             addon:RegisterMsg('GAME_START_3SEC', 'SMALLUI_3SEC');
             addon:RegisterMsg('FPS_UPDATE', 'SMALLUI_EVERY');
             local addontimer = frame:GetChild("addontimer")
@@ -128,13 +129,31 @@ function  SMALLUI_UPGRADE_SETTINGS()
     return upgraded
 end
 
+function SMALLUI_GAME_START()
+    EBI_try_catch{
+        try = function()
+            
+        SMALLUI_LOAD_SETTINGS()
+        SMALLUICONFIG_INIT()
+        SMALLUI_APPLY()
+        
+    end,
+    catch = function(error)
+        ERROUT(error)
+    end
+    }
+end
 function SMALLUI_3SEC()
+    
+    SMALLUI_APPLY()
+end
+
+function SMALLUI_APPLY()
     EBI_try_catch{
         try = function()
             
             --SMALLUI_REPLACE("quickslotnexpbar")
-            SMALLUI_LOAD_SETTINGS()
-            SMALLUICONFIG_INIT()
+            
             if(g.settings.resizeminimap)then
                 SMALLUI_SMALLIFY_MINIMAP()
             end
@@ -144,9 +163,9 @@ function SMALLUI_3SEC()
             if(g.settings.resizequickslot)then
                 SMALLUI_SMALLIFY_QUICKSLOT()
             end
-            if(g.settings.resizechat)then
-                SMALLUI_SMALLIFY_CHATFRAME()
-            end
+            -- if(g.settings.resizechat)then
+            --     SMALLUI_SMALLIFY_CHATFRAME()
+            -- end
 
         end,
         catch = function(error)
@@ -311,24 +330,31 @@ function SMALLUI_SMALLIFY_MINIMAP()
 end
 function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     local frame
+    local bp=190
+    local sz=30
+    local ps=bp
     frame = ui.GetFrame("openingameshopbtn")
-    frame:SetMargin(0, 160, 0, 0)
+    frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
+    ps=ps+sz
     frame = ui.GetFrame("minimizedalarm")
-    frame:SetMargin(0, 190, 0, 0)
+    frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BANNER(frame)
+    ps=ps+sz
     frame = ui.GetFrame("minimized_tp_button")
-    frame:SetMargin(0, 220, 0, 0)
+    frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
-    
+    ps=ps+sz
     frame = ui.GetFrame("minimized_guild_housing")
-    frame:SetMargin(0, 220, 0, 0)
+    frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
+    ps=ps+sz
     frame = ui.GetFrame("minimizedeventbanner")
-    frame:SetMargin(0, 250,0 , 0)
+    frame:SetMargin(0, ps,0 , 0)
     SMALLUI_DO_SMALL_BANNER(frame)
+    ps=ps+sz
     frame = ui.GetFrame("minimized_godprotection_button")
-    frame:SetMargin(0, 270,0, 0)
+    frame:SetMargin(0, ps,0, 0)
     --SMALLUI_DO_SMALL_BUTTON(frame)
 
 end
@@ -407,30 +433,30 @@ function SMALLUI_ON_TIMER()
 end
 function SMALLUI_EVERY()
     ui.GetFrame(g.framename):ShowWindow(1)
-    if(g.settings.resizechat)then
+    -- if(g.settings.resizechat)then
 
-        SMALLUI_SMALLIFY_CHATFRAME()
-    end
+    --     SMALLUI_SMALLIFY_CHATFRAME()
+    -- end
 end
-function SMALLUI_SMALLIFY_CHATFRAME()
-    local frame = ui.GetFrame("chatframe")
-    local gbox = frame:GetChild("tabgbox")
-    AUTO_CAST(gbox)
-    gbox:SetGravity(ui.LEFT, ui.BOTTOM)
-    for i = 0, frame:GetChildCount() - 1 do
-        local obj = frame:GetChildByIndex(i)
-        if (obj:GetName():match("^chatgbox_")) then
-            local gbox = obj
+-- function SMALLUI_SMALLIFY_CHATFRAME()
+--     local frame = ui.GetFrame("chatframe")
+--     local gbox = frame:GetChild("tabgbox")
+--     AUTO_CAST(gbox)
+--     gbox:SetGravity(ui.LEFT, ui.BOTTOM)
+--     for i = 0, frame:GetChildCount() - 1 do
+--         local obj = frame:GetChildByIndex(i)
+--         if (obj:GetName():match("^chatgbox_")) then
+--             local gbox = obj
             
-            AUTO_CAST(gbox)
-            local gboxleftmargin = frame:GetUserConfig("GBOX_LEFT_MARGIN")
-            local gboxrightmargin = frame:GetUserConfig("GBOX_RIGHT_MARGIN")
-            local gboxtopmargin = frame:GetUserConfig("GBOX_TOP_MARGIN")
-            local gboxbottommargin = frame:GetUserConfig("GBOX_BOTTOM_MARGIN")
-            gbox:SetOffset(0, gboxtopmargin - 10)
-            gbox:Resize(frame:GetWidth(), frame:GetHeight() - 60)
-            gbox:InvalidateScrollBar()
+--             AUTO_CAST(gbox)
+--             local gboxleftmargin = frame:GetUserConfig("GBOX_LEFT_MARGIN")
+--             local gboxrightmargin = frame:GetUserConfig("GBOX_RIGHT_MARGIN")
+--             local gboxtopmargin = frame:GetUserConfig("GBOX_TOP_MARGIN")
+--             local gboxbottommargin = frame:GetUserConfig("GBOX_BOTTOM_MARGIN")
+--             gbox:SetOffset(0, gboxtopmargin - 10)
+--             gbox:Resize(frame:GetWidth(), frame:GetHeight() - 60)
+--             gbox:InvalidateScrollBar()
         
-        end
-    end
-end
+--         end
+--     end
+-- end
