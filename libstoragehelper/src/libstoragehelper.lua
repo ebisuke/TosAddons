@@ -46,7 +46,9 @@ local p={
     debug=false,
     target=IT_ACCOUNT_WAREHOUSE,
 }
-
+function p.init()
+    packet.RequestItemList(p.target);
+end
 function p.get_exist_item_index(itemObj)
     local ret1 = false
     local ret2 = -1
@@ -113,29 +115,30 @@ function p.get_valid_index()
     for i=0,slotCount do
         if(__set[i]~=nil)then
             first=first+1
-
         end
     end
-     -- -1 is preventaion tos bug
-    DBGOUT(string.format("prevent %d/%d",first,slotCount-1))
-    if(first>=(slotCount-1))then
-        
-        for i=0,p.getcountpertab() do
-            __set[i] ={mode=1}
-        end
-    end
-    --prevent tos bug
-    for i=1,p.gettabcount() do
-        local count=0
-        for j=p.getcountpertab()*i,p.getcountpertab()*(i+1) do
-            if(__set[j]~=nil and __set[j].mode==1)then
-                count=count+1
-    
+    if(p.target==IT_ACCOUNT_WAREHOUSE)then
+        -- -1 is preventaion tos bug
+        DBGOUT(string.format("prevent %d/%d",first,slotCount-1))
+        if(first>=(slotCount-1))then
+            
+            for i=0,p.getcountpertab() do
+                __set[i] ={mode=1}
             end
         end
-        if(count>=(p.getcountpertab()-1))then
+        --prevent tos bug
+        for i=1,p.gettabcount() do
+            local count=0
             for j=p.getcountpertab()*i,p.getcountpertab()*(i+1) do
-                __set[j] ={mode=1}
+                if(__set[j]~=nil and __set[j].mode==1)then
+                    count=count+1
+        
+                end
+            end
+            if(count>=(p.getcountpertab()-1))then
+                for j=p.getcountpertab()*i,p.getcountpertab()*(i+1) do
+                    __set[j] ={mode=1}
+                end
             end
         end
     end
@@ -169,19 +172,44 @@ end
 function p.getcountpertab()
     return 70
 end
+function p.getitemiter()
+    local itemList=session.GetEtcItemList(p.target)
+    local guidList = itemList:GetGuidList();
+    local cnt = guidList:Count();
+    local pos=0
+    return  function()
+            if(pos>=cnt)then
+                return nil
+            end
+            local guid = guidList:Get(pos);
+            pos=pos+1
+            local invItem = itemList:GetItemByGuid(guid);
+            local obj = GetIES(invItem:GetObject());
+            return guid,invItem,obj
+    end
+end
+function p.getinvitem(iesid)
+  
+    return  session.GetEtcItemByGuid(p.target, iesid)
+ 
+end
+
 --- gets storage size.
 --- reduced one for each tab from the actual for preventation tos bug.
 function p.storagesize()
-    local account = session.barrack.GetMyAccount();
-    local slotCount = account:GetAccountWarehouseSlotCount();
-    
-    return (slotCount-1) + (p.gettabcount() - 1) * (p.getcountpertab()-1)
+    if(p.target==IT_ACCOUNT_WAREHOUSE)then
+        local account = session.barrack.GetMyAccount();
+        local slotCount = account:GetAccountWarehouseSlotCount();
+        
+        return (slotCount-1) + (p.gettabcount() - 1) * (p.getcountpertab()-1)
+    elseif(p.target==IT_WAREHOUSE)then
+        local etc = GetMyEtcObject();
+        return etc.MaxWarehouseCount;
+    end
 end
 --- gets storage size.
 --- reduced one for each tab from the actual for preventation tos bug.
-function p.storageremain()
-
-    
+function p.storageremain() 
     return p.storagesize()-p.count()
 end
 function p.checkvalid(iesid,silent)
@@ -228,6 +256,23 @@ end
 function p.aw()
     return ui.GetFrame("accountwarehouse")
 end
+function p.w()
+    if(ui.GetFrame("warehouse"):IsVisible()==1)then
+        return ui.GetFrame("warehouse")
+    elseif (ui.GetFrame("camp_ui"):IsVisible()==1)then
+        return  ui.GetFrame("camp_ui")
+    end
+    return nil
+end
+function p.frame()
+    if(p.target==IT_ACCOUNT_WAREHOUSE)then
+
+        return p.aw()
+    elseif(p.target==IT_WAREHOUSE)then
+        return p.w()
+    end
+end
+
 -- put item
 -- if count is nil,will use totalcount
 -- return if succeeded true ,else false 
@@ -244,7 +289,7 @@ function p.putitem(iesid,count,slient)
     end
     if(idx)then
 
-        item.PutItemToWarehouse(p.target, invItem:GetIESID(), tostring(math.min(count or invItem.count,invItem.count)), p.aw():GetUserIValue("HANDLE"), idx)
+        item.PutItemToWarehouse(p.target, invItem:GetIESID(), tostring(math.min(count or invItem.count,invItem.count)), p.frame():GetUserIValue("HANDLE"), idx)
         return true
     end
 
@@ -276,20 +321,34 @@ end
 -- }
 -- if count is nil,will use totalcount
 -- return if succeeded true ,else false 
--- if you will task from persona warehouse ,list length must be 1 and make sure sufficient silver.
-function p.getitems(itemlist)
+-- if you will task from personal warehouse ,list length must be 1 and make sure sufficient silver.
+function p.takeitems(itemlist)
     session.ResetItemList();
-    local awframe = p.aw();
+    local frame = p.frame();
     for _,v in ipairs(itemlist) do
         local invItem = session.GetEtcItemByGuid(p.target, v.iesid);
         local cnt = math.min(v.count or invItem.count,invItem.count)
-        
-        cnt = invItem.count
+    
     
         DBGOUT("TAKE")
         session.AddItemID( v.iesid, cnt);
     end
-    item.TakeItemFromWarehouse_List(p.target, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
+    item.TakeItemFromWarehouse_List(p.target, session.GetItemIDList(), frame:GetUserIValue("HANDLE"));
+end
+-- return bool,
+-- get item for personal warehouse
+-- if count is nil,will use totalcount
+-- return if succeeded true ,else false 
+function p.takeitem(iesid,count)
+
+    local frame = p.frame();
+
+    local invItem = session.GetEtcItemByGuid(p.target, iesid);
+    local cnt = math.min(count or invItem.count,invItem.count)
+
+    DBGOUT("TAKE")
+    
+    item.TakeItemFromWarehouse(p.target, iesid, cnt, frame:GetUserIValue("HANDLE"));
 end
 --gets account money
 --return amount of silver as string
@@ -329,5 +388,9 @@ function p.items()
     end
 end
 
+LIBSTORAGEHELPERV1_1=p
 
-LIBSTORAGEHELPER=p
+LIBSTORAGEHELPER=
+    LIBSTORAGEHELPER or 
+    LIBSTORAGEHELPERV1_0 or 
+    LIBSTORAGEHELPERV1_1
