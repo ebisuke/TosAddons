@@ -1039,7 +1039,7 @@ function AWWARDROBE_WEAR_MATCHED(frame, tbl)
             end
             AWWARDROBE_INTERLOCK(true)
             --真っ先に引き出す
-            LS.getitems(items)
+            LS.takeitems(items)
             
 
             --ここから先の処理はディレイを入れる
