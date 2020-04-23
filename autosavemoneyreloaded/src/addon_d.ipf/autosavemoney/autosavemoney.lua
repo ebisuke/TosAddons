@@ -510,7 +510,7 @@ function AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(frame)
 				if isPutItem(itemObj.ClassID,"T") then
 					ReserveScript( string.format("_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(\"%s\",%d,\"%s\")",  invItem:GetIESID(), invItem.count,itemObj.Name) , delayCount*1.0)
 					delayCount = delayCount + 1
-					ReserveScript( string.format("AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_CHECK(%d,%d,\"%s\",\"%s\",\"%s\")",  itemObj.ClassID, invItem.count, itemObj.Name, itemObj.Icon, "T") , delayCount*1.0+1)
+					ReserveScript( string.format("AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_CHECK(\"%s\",%d,\"%s\",\"%s\",\"%s\")",  invItem:GetIESID(), invItem.count, itemObj.Name, itemObj.Icon, "T") , delayCount*1.0+1)
 				end
 			end
 		end, false)
