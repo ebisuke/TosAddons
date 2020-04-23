@@ -26,7 +26,7 @@ g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 g.isediting=false
 g.editkeydown=false
 --GAMESTARTでも取っておくこと
-local LS=LIBSTORAGEHELPERV1_1
+local LS=LIBSTORAGEHELPERV1_2
 --ライブラリ読み込み
 CHAT_SYSTEM("[AIM]loaded")
 local acutil  = require('acutil')
@@ -335,7 +335,7 @@ function AUTOITEMMANAGE_RESERVE_INIT(frame)
 
 end
 function AUTOITEMMANAGE_GAME_START()
-    LS=LIBSTORAGEHELPERV1_1
+    LS=LIBSTORAGEHELPERV1_2
 end
 function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
         --if (not g.foundasm) then
@@ -549,8 +549,10 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                                 end
                             end
                         end
-                    
-                    
+                        --limit
+                        if(#takeitems>=50)then
+                            break
+                        end
                     end
                 end
                 if (count > 0) then

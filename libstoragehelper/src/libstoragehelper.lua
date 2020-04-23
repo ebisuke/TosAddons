@@ -85,7 +85,7 @@ function p.get_valid_index()
     local itemCnt = 0;
     local guidList = itemList:GetGuidList();
     local cnt = guidList:Count();
-    local offset=offset or 0
+    local offset=0
     for i = 0, cnt - 1 do
         local guid = guidList:Get(i);
         local invItem = itemList:GetItemByGuid(guid);
@@ -103,10 +103,16 @@ function p.get_valid_index()
         local obj = GetIES(invItem:GetObject());
         
         if obj.ClassName ~= MONEY_NAME then
+            if(  __set[invItem.invIndex])then
+                DBGOUT("duplicate "..tostring(invItem.invIndex))
+            end
             __set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
 
         
         else
+            
+            DBGOUT("money "..tostring(invItem.invIndex))
+            
             --__set[invItem.invIndex] = {item = invItem, obj = obj, mode = 2}
             money_offset=1
         end
@@ -122,21 +128,22 @@ function p.get_valid_index()
         DBGOUT(string.format("prevent %d/%d",first,slotCount-1))
         if(first>=(slotCount-1))then
             
-            for i=0,p.getcountpertab() do
+            for i=0,p.getcountpertab()-1 do
                 __set[i] ={mode=1}
             end
         end
         --prevent tos bug
         for i=1,p.gettabcount() do
             local count=0
-            for j=p.getcountpertab()*i,p.getcountpertab()*(i+1) do
-                if(__set[j]~=nil and __set[j].mode==1)then
+            for j=p.getcountpertab()*i,p.getcountpertab()*(i+1)-1 do
+                if(__set[j]~=nil)then
                     count=count+1
         
                 end
             end
+            DBGOUT(string.format("tab %d items %d/%d",i,count,(p.getcountpertab()-1)))
             if(count>=(p.getcountpertab()-1))then
-                for j=p.getcountpertab()*i,p.getcountpertab()*(i+1) do
+                for j=p.getcountpertab()*i,p.getcountpertab()*(i+1)-1 do
                     __set[j] ={mode=1}
                 end
             end
@@ -388,9 +395,11 @@ function p.items()
     end
 end
 
-LIBSTORAGEHELPERV1_1=p
+LIBSTORAGEHELPERV1_2=p
 
 LIBSTORAGEHELPER=
     LIBSTORAGEHELPER or 
     LIBSTORAGEHELPERV1_0 or 
-    LIBSTORAGEHELPERV1_1
+    LIBSTORAGEHELPERV1_1 or
+    LIBSTORAGEHELPERV1_2
+    
