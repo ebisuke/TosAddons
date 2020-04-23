@@ -493,7 +493,7 @@ function _AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(iesID,count,name)
 	-- local frame = ui.GetFrame("accountwarehouse")
 	-- item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, iesID, count, frame:GetUserIValue("HANDLE"), WHindex);
 	LS.target=IT_ACCOUNT_WAREHOUSE
-	LS.putitem(iesID,count)
+	LS.putitem(iesID,count,true)
 end
 
 function AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(frame)
@@ -526,10 +526,10 @@ function AUTOSAVEMONEY_COMPLETETXT()
 end
 
 function _AUTOSAVEMONEY_ITEM_TO_CHRWAREHOUSE(iesID,count,name)
-	local frame2 = ui.GetFrame("warehouse")
 	--item.PutItemToWarehouse(IT_WAREHOUSE, iesID, count, frame2:GetUserIValue("HANDLE"));
 	LS.target=IT_WAREHOUSE
-	LS.putitem(iesID,count)
+	
+	LS.putitem(iesID,count,true)
 end
 
 function AUTOSAVEMONEY_ITEM_TO_CHRWAREHOUSE(frame)

@@ -227,7 +227,7 @@ function p.checkvalid(iesid,silent)
         if(not silent)then
             ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
         end
-        return false;
+        return;
 
     end
     if true == invItem.isLockState then
@@ -244,13 +244,14 @@ function p.checkvalid(iesid,silent)
         end
         return;
     end
-    
-    local enableTeamTrade = TryGetProp(itemCls, "TeamTrade");
-    if enableTeamTrade ~= nil and enableTeamTrade == "NO" then
-        if(not silent)then
-            ui.SysMsg(ClMsg("ItemIsNotTradable"));
+    if(p.target==IT_ACCOUNT_WAREHOUSE)then
+        local enableTeamTrade = TryGetProp(itemCls, "TeamTrade");
+        if enableTeamTrade ~= nil and enableTeamTrade == "NO" then
+            if(not silent)then
+                ui.SysMsg(ClMsg("ItemIsNotTradable"));
+            end
+            return;
         end
-        return;
     end
     return true
 end
@@ -284,23 +285,42 @@ end
 -- if count is nil,will use totalcount
 -- return if succeeded true ,else false 
 function p.putitem(iesid,count,slient)
-    if(not p.checkvalid(iesid,slient))then
-        return false
-    end
-    local invItem,invObj=p.itemandobj(iesid)
-    local ret, idx = p.get_exist_item_index(invObj)
-    
-    if (ret == false) then
 
-        idx = p.get_valid_index()
-    end
-    if(idx)then
+    return EBI_try_catch{
+        try=function()
+            if(not p.checkvalid(iesid,slient))then
 
-        item.PutItemToWarehouse(p.target, invItem:GetIESID(), tostring(math.min(count or invItem.count,invItem.count)), p.frame():GetUserIValue("HANDLE"), idx)
-        return true
-    end
-
-    return false
+                return false
+            end
+        
+            local invItem,invObj=p.itemandobj(iesid)
+            if(p.target==IT_ACCOUNT_WAREHOUSE)then
+            
+        
+                local ret, idx = p.get_exist_item_index(invObj)
+            
+                if (ret == false) then
+        
+                    idx = p.get_valid_index()
+                end
+                if(idx)then
+                    item.PutItemToWarehouse(p.target, iesid, tostring(math.min(count or invItem.count,invItem.count)), p.frame():GetUserIValue("HANDLE"), idx)
+                    return true
+                end
+            elseif(p.target==IT_WAREHOUSE)then
+        
+                item.PutItemToWarehouse(p.target, iesid, tostring(math.min(count or invItem.count,invItem.count)), p.frame():GetUserIValue("HANDLE"))
+                return true
+            end
+        
+        
+            return false
+        end,
+        catch=function(e)
+            ERROUT(e)
+        end
+    }
+ 
 end
 -- current item count
 function p.count()
@@ -311,9 +331,11 @@ function p.count()
     for i = 0, cnt - 1 do
         local guid = guidlist:Get(i);
         local invItem = itemList:GetItemByGuid(guid)
-        local invItem_obj = GetIES(invItem:GetObject());
-        if invItem_obj.ClassName ~= MONEY_NAME then
-            rcnt=rcnt+1
+        if(invItem~=nil)then
+            local invItem_obj = GetIES(invItem:GetObject());
+            if invItem_obj.ClassName ~= MONEY_NAME then
+                rcnt=rcnt+1
+            end
         end
     end
     return rcnt
