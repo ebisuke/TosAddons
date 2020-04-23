@@ -17,7 +17,14 @@ function BEFORE_APPLIED_NON_EQUIP_ITEM_OPEN(invItem)
 	if itemobj == nil then
 		return;
 	end
-	invFrame:SetUserValue("INVITEM_GUID", invItem:GetIESID());
+	
+	if SYSMENU_INVENTORY_WEIGHT_NOTICE == nil then
+		--older one
+		invFrame:SetUserValue("INVITEM_GUID", invItem:GetIESID());
+	else
+		--newer
+		invFrame:SetUserValue("REQ_USE_ITEM_GUID", invItem:GetIESID());
+	end
 	
     if itemobj.Script == 'SCR_SUMMON_MONSTER_FROM_CARDBOOK' then
         REQUEST_SUMMON_BOSS_TX()
