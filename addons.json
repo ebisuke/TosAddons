@@ -361,8 +361,8 @@
     "name": "Yet Another Account Inventory",
     "file": "yaaccountinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.4",
-    "releaseTag": "yaaccountinventory-v0.0.4",
+    "fileVersion": "v0.0.5",
+    "releaseTag": "yaaccountinventory-v0.0.5",
     "unicode": "📖",
     "description": "チーム倉庫を魔改造します",
     "tags": [
@@ -370,5 +370,18 @@
       "inventory"
     ]
   }
-
+  ,
+  {
+    "name": "AutoSave Money Reloaded",
+    "file": "autosavemoneyreloaded",
+    "extension": "ipf",
+    "fileVersion": "v2.0.0",
+    "releaseTag": "autosavemoneyreloaded-v2.0.0",
+    "unicode": "📖",
+    "description": "キャラ倉庫・チーム倉庫を開いたときに、指定した金額の出し入れと、アイテム入庫をします。設定は倉庫ウィンドウの上の方にボタンができます。",
+    "tags": [
+      "storage",
+      "warehouse"
+    ]
+  }
 ]

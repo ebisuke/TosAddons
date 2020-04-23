@@ -296,7 +296,7 @@ function YAI_get_valid_index()
     local itemCnt = 0;
     local guidList = itemList:GetGuidList();
     local cnt = guidList:Count();
-    local offset=offset or 0
+    local offset=0
     for i = 0, cnt - 1 do
         local guid = guidList:Get(i);
         local invItem = itemList:GetItemByGuid(guid);
@@ -336,14 +336,14 @@ function YAI_get_valid_index()
     --prevent tos bug
     for i=1,g.maxtabs do
         local count=0
-        for j=g.countpertab*i,g.countpertab*(i+1) do
+        for j=g.countpertab*i,g.countpertab*(i+1)-1 do
             if(__set[j]~=nil and __set[j].mode==1)then
                 count=count+1
     
             end
         end
         if(count>=(g.countpertab-1))then
-            for j=g.countpertab*i,g.countpertab*(i+1) do
+            for j=g.countpertab*i,g.countpertab*(i+1)-1 do
                 __set[j] ={mode=1}
             end
         end
