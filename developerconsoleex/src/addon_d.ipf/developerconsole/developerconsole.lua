@@ -326,10 +326,18 @@ function DEVELOPERCONSOLE_ON_RESIZE()
     DEVELOPERCONSOLE_RESIZE()
     DEVELOPERCONSOLE_SAVE_OFFSET()
 end
+function DEVELOPERCONSOLE_TOGGLEINSPECTOR()
+    if(keyboard.IsKeyPressed("LSHIFT")==1)then
+        local frame=   ui.GetFrame('developerconsoleinspector')
+        frame:Resize(500,800) 
+        frame:SetOffset(0,0)
+    end
+    ui.ToggleFrame('developerconsoleinspector')
+end
 function DEVELOPERCONSOLE_CONTEXT()
     local frame = ui.GetFrame("developerconsole");
     local context = ui.CreateContextMenu("Context", "", 0, 0, 300, 100)
-    ui.AddContextMenuItem(context, "Toggle Inspector", "ui.ToggleFrame('developerconsoleinspector')")
+    ui.AddContextMenuItem(context, "Toggle Inspector", "DEVELOPERCONSOLE_TOGGLEINSPECTOR()")
     ui.AddContextMenuItem(context, "Clear Console", "CLEAR_CONSOLE()")
     if (DEVELOPERCONSOLE_SETTINGS.intellisense) then
         ui.AddContextMenuItem(context, "Disable AutoCompletion", "DEVELOPERCONSOLE_TOGGLEENABLE_INTELLISENSE()")
