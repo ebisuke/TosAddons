@@ -364,7 +364,7 @@
     "fileVersion": "v0.0.4",
     "releaseTag": "yaaccountinventory-v0.0.4",
     "unicode": "📖",
-    "description": "(テストバージョン)（トークン必須）チーム倉庫を魔改造します",
+    "description": "チーム倉庫を魔改造します",
     "tags": [
       "storage",
       "inventory"
