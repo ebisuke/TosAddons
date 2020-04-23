@@ -870,6 +870,7 @@ function AOI_INV_REFRESH()
 end
 function AOI_INV_REFRESHENER()
     local frame = ui.GetFrame("anotheroneofinventory")
+    session.BuildInvItemSortedList()
     local sortedList = session.GetInvItemSortedList();
     local invItemCount = #g.invitems
     local slotidx = g.invrefresheridx or 0
