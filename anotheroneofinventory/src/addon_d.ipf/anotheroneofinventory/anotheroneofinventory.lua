@@ -794,6 +794,7 @@ function AOI_INV_REFRESH()
                         }
                         g.invitems[#g.invitems + 1] = {
                             item = invItem,
+                            iesid=invItem:GetIESID(),
                             name = string.lower(dictionary.ReplaceDicIDInCompStr(itemCls.Name)),
                             amount = invItem.count,
                             level = math.max(useLv, itemLv, gemLv or 1),
@@ -870,7 +871,7 @@ function AOI_INV_REFRESH()
 end
 function AOI_INV_REFRESHENER()
     local frame = ui.GetFrame("anotheroneofinventory")
-    session.BuildInvItemSortedList()
+    --session.BuildInvItemSortedList()
     local sortedList = session.GetInvItemSortedList();
     local invItemCount = #g.invitems
     local slotidx = g.invrefresheridx or 0
@@ -889,23 +890,28 @@ function AOI_INV_REFRESHENER()
             cancel = true
             break
         end
-        
-        local itemCls = GetIES(invItem:GetObject())
-        
-        
-        if (itemCls ~= nil) then
-            AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
-            slotidx = slotidx + 1
-            g.invrefresheridx = slotidx
-            g.invrefreshercount = g.invrefreshercount + 1
-            limit = limit - 1
-        
+        if(session.GetInvItemByGuid( g.invitems[i].iesid)==nil)then
+            --ignore
+        else
+
+            
+            local itemCls = GetIES(invItem:GetObject())
+            
+            
+            if (itemCls ~= nil) then
+                AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
+                slotidx = slotidx + 1
+                g.invrefresheridx = slotidx
+                g.invrefreshercount = g.invrefreshercount + 1
+                limit = limit - 1
+            
+            end
         end
-        
         g.invrefresher = i+1
         if (limit == 0) then
             break
         end
+    
     end
     if (g.invrefresher >= (invItemCount) or cancel) then
         g.invrefresh = false
