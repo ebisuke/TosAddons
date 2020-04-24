@@ -16,8 +16,8 @@
     "name": "AutoItemManage",
     "file": "autoitemmanage",
     "extension": "ipf",
-    "fileVersion": "v0.3.2",
-    "releaseTag": "autoitemmanage-v0.3.2",
+    "fileVersion": "v0.3.3",
+    "releaseTag": "autoitemmanage-v0.3.3",
     "unicode": "📖",
     "description": "倉庫から自動でアイテムを補充します。",
     "tags": [
@@ -272,10 +272,10 @@
     "name": "Another One of Inventory",
     "file": "anotheroneofinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.10",
-    "releaseTag": "anotheroneofinventory-v0.0.10",
+    "fileVersion": "v0.0.11",
+    "releaseTag": "anotheroneofinventory-v0.0.11",
     "unicode": "📖",
-    "description": "もう一つのインベントリ画面を提供します。おまけ機能として、キーボード操作限定でクイックスロットを拡張します。",
+    "description": "もう一つのインベントリ画面を提供します。",
     "tags": [
       "inventory",
       "quickslot"
@@ -361,8 +361,8 @@
     "name": "Yet Another Account Inventory",
     "file": "yaaccountinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.5",
-    "releaseTag": "yaaccountinventory-v0.0.5",
+    "fileVersion": "v0.0.6",
+    "releaseTag": "yaaccountinventory-v0.0.6",
     "unicode": "📖",
     "description": "チーム倉庫を魔改造します",
     "tags": [

@@ -186,7 +186,9 @@ function YAI_3SEC()
     end
 end
 function YAI_ON_TIMER()
- 
+    if(ui.GetFrame("accountwarehouse"):IsVisible()==1)then
+        YAI_ACTIVATE_MOUSEBUTTON()
+    end
 end
 
 function YAI_INIT(frame)
@@ -207,13 +209,24 @@ function YAI_INIT(frame)
         end
     }
 end
+function YAI_ACTIVATE_MOUSEBUTTON()
+    if(ui.GetFrame("accountwarehouse"):IsVisible()==1)then
+        local invframe = ui.GetFrame("inventory")
+        INVENTORY_SET_CUSTOM_RBTNDOWN("YAI_ACCOUNT_WAREHOUSE_INV_RBTN")
+        SET_INV_LBTN_FUNC(invframe, "YAI_ACCOUNT_WAREHOUSE_INV_LBTN")
+    end
+end
+function YAI_DEACTIVATE_MOUSEBUTTON()
+    INVENTORY_SET_CUSTOM_RBTNDOWN("None")
+    SET_INV_LBTN_FUNC(ui.GetFrame("inventory"), "None");
+end
+
 function YAI_ACCOUNTWAREHOUSE_CLOSE(frame)
     local overlap = ui.GetFrame("yaireplacement")
     overlap:ShowWindow(0)
     ACCOUNTWAREHOUSE_CLOSE_OLD(frame)
-    INVENTORY_SET_CUSTOM_RBTNDOWN("None")
-    SET_INV_LBTN_FUNC(ui.GetFrame("inventory"), "None");
 
+    YAI_DEACTIVATE_MOUSEBUTTON()
 end
 function YAI_COUNT()
     local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
@@ -230,36 +243,7 @@ function YAI_COUNT()
     end
     return rcnt
 end
--- return bool, index
--- function YAI_get_exist_item_index(insertItem)
---     local ret1 = false
---     local ret2 = -1
-    
---     if geItemTable.IsStack(insertItem.ClassID) == 1 then
---         local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
---         local guidlist = itemList:GetSortedGuidList();
---         local cnt = itemList:Count();
---         local sortedGuidList = itemList:GetSortedGuidList();    
---         local sortedCnt = sortedGuidList:Count();
-        
---         local account = session.barrack.GetMyAccount();
---         local slotCount = account:GetAccountWarehouseSlotCount();
---         for i = 0, sortedCnt - 1 do
---             local guid = guidlist:Get(i);
---             local invItem = itemList:GetItemByGuid(guid)
---             local invItem_obj = GetIES(invItem:GetObject());
---             if insertItem.ClassID == invItem_obj.ClassID then
 
---                 ret1 = true
---                 ret2 = invItem.invIndex
---                 break
---             end
---         end
---         return ret1, ret2
---     else
---         return false, -1
---     end
--- end
 function YAI_get_exist_item_index(insertItem)
     local ret1 = false
     local ret2 = -1
@@ -336,7 +320,7 @@ function YAI_get_valid_index()
     --prevent tos bug
     for i=1,g.maxtabs do
         local count=0
-        for j=g.countpertab*i,g.countpertab*(i+1)-1 do
+        for j=g.countpertab*i,g.countpertab*(i+1)-1  do
             if(__set[j]~=nil and __set[j].mode==1)then
                 count=count+1
     
@@ -411,9 +395,7 @@ function YAI_ACCOUNTWAREHOUSE_OPEN(frame)
         try = function()
             local invframe = ui.GetFrame("inventory")
             ACCOUNTWAREHOUSE_OPEN_OLD(frame)
-            
-            INVENTORY_SET_CUSTOM_RBTNDOWN("YAI_ACCOUNT_WAREHOUSE_INV_RBTN")
-            SET_INV_LBTN_FUNC(invframe, "YAI_ACCOUNT_WAREHOUSE_INV_LBTN")
+            YAI_ACTIVATE_MOUSEBUTTON()
         end,
         catch = function(error)
             ERROUT(error)
@@ -614,6 +596,10 @@ function YAI_ACCOUNT_WAREHOUSE_INV_RBTN(itemObj, slot)
             local icon = slot:GetIcon();
             local iconInfo = icon:GetInfo();
             local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
+            if nil == invItem then
+                return;
+            end
+            
             local obj = GetIES(invItem:GetObject())
             if (keyboard.IsKeyPressed("LALT") == 1) then
                 INV_ITEM_LOCK_LBTN_CLICK( ui.GetFrame("inventory"),invItem,slot)
