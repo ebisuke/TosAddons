@@ -116,6 +116,7 @@ end
 function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 	if(not IsJpn())then
 		g.settings = {
+		
 			[1]  = {name="Common";			teamflg=true;	privateflg=false;	date =0;		com ="Configs";		};
 			[2]  = {name="CommonItem";		teamflg=true;	privateflg=false;	date =0;		com ="Storage options";		};	--中止
 			[3]  = {name="Automode";		teamflg=false;	privateflg=false;	date =0;		com ="Deposit";		};
@@ -263,7 +264,7 @@ function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 
 		};
 	end
-	
+	g.settings.speed=1.0
 	AUTOSAVEMONEY_PRIVATESAVE()
 	CHAT_SYSTEM(L_("It is the first time the add-on [autosave money] is activated, or updated {nl} Default settings loaded."))
 end

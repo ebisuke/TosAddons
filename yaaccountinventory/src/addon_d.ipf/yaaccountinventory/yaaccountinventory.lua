@@ -1103,20 +1103,20 @@ function YAI_ON_MSG(frame, msg, argStr, argNum)
     if msg == 'ACCOUNT_WAREHOUSE_ITEM_LIST' then
         YAI_UPDATE()
     elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_IN' then
-        elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_ADD' then
+    elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_ADD' then
         DebounceScript("YAI_UPDATE", 1, 0, 0)
         YAI_UPDATE_STATUS(1)
         --YAI_ADD_TARGETED(argStr)
-        elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_REMOVE' then
-            
-            YAI_REMOVE_TARGETED(argStr)
-            DebounceScript("YAI_UPDATE", 3.0, 0)
-            YAI_UPDATE_STATUS(-1)
-        elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_CHANGE_COUNT' then
-            YAI_UPDATE_TARGETED(argStr)
-            DebounceScript("YAI_UPDATE", 3, 0, 0)
-        else
-            YAI_UPDATE()
+    elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_REMOVE' then
+        
+        YAI_REMOVE_TARGETED(argStr)
+        DebounceScript("YAI_UPDATE", 3.0, 0)
+        YAI_UPDATE_STATUS(-1)
+    elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_CHANGE_COUNT' then
+        YAI_UPDATE_TARGETED(argStr)
+        DebounceScript("YAI_UPDATE", 3, 0, 0)
+    else
+        YAI_UPDATE()
     end
 
 end
