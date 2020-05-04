@@ -375,8 +375,8 @@
     "name": "AutoSave Money Reloaded",
     "file": "autosavemoneyreloaded",
     "extension": "ipf",
-    "fileVersion": "v2.0.0",
-    "releaseTag": "autosavemoneyreloaded-v2.0.0",
+    "fileVersion": "v2.1.0",
+    "releaseTag": "autosavemoneyreloaded-v2.1.0",
     "unicode": "📖",
     "description": "キャラ倉庫・チーム倉庫を開いたときに、指定した金額の出し入れと、アイテム入庫をします。設定は倉庫ウィンドウの上の方にボタンができます。",
     "tags": [

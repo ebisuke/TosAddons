@@ -63,7 +63,12 @@ function AUTOSAVEMONEY_COMMONSAVE()
 	acutil.saveJSON(g.settingsFileLocCommon, g.settingsCommon)
 
 end
+-- 共通セーブ
+function AUTOSAVEMONEY_ADDITIONALSAVE()
+	g.settingsFileLocAddit = string.format("../addons/%s/%s.json", addonNameLower, "additionalsetting")
+	acutil.saveJSON(g.settingsFileLocAddit, g.settingsAddit)
 
+end
 -- エラーチェック
 -- function AUTOSAVEMONEY_PRIVATE_ERRORCHECK()
 	-- local checkTable = g.settings[70].name				g.settingsの初期テーブルの最終行を入れる
@@ -106,6 +111,26 @@ function AUTOSAVEMONEY_COMMONLOAD()
 	else
 		g.settingsCommon = t
 	end
+
+
+	--if pcall(AUTOSAVEMONEY_COMMON_ERRORCHECK) == false then
+	--	AUTOSAVEMONEY_FIRSTLOAD_COMMONSETTINGS()
+	--end
+end
+
+-- 共通(追加)ロード
+function AUTOSAVEMONEY_ADDITIONALLOAD()
+	g.settingsFileLocAddit	= string.format("../addons/%s/%s.json", addonNameLower, "additionalsetting")
+	g.settingsAddit=g.settingsAddit or {}
+	local t, err = acutil.loadJSON(g.settingsFileLocAddit, g.settingsAddit)
+
+	if (err) then
+		g.settingsAddit={}
+
+	end
+	-- versionup 
+	g.settingsAddit.speed=g.settingsAddit.speed or 1.0
+
 	--if pcall(AUTOSAVEMONEY_COMMON_ERRORCHECK) == false then
 	--	AUTOSAVEMONEY_FIRSTLOAD_COMMONSETTINGS()
 	--end
@@ -116,7 +141,7 @@ end
 function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 	if(not IsJpn())then
 		g.settings = {
-		
+			
 			[1]  = {name="Common";			teamflg=true;	privateflg=false;	date =0;		com ="Configs";		};
 			[2]  = {name="CommonItem";		teamflg=true;	privateflg=false;	date =0;		com ="Storage options";		};	--中止
 			[3]  = {name="Automode";		teamflg=false;	privateflg=false;	date =0;		com ="Deposit";		};
@@ -156,7 +181,7 @@ function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 			[37] = {name="Berinium";		teamflg=false;	privateflg=false;	date =649010;	com ="Ferinium";		};
 			[38] = {name="Vertremin";		teamflg=false;	privateflg=false;	date =649027;	com ="Pheltremin";	};
 			[39] = {name="Porchium";		teamflg=false;	privateflg=false;	date =649011;	com ="Portium";		};
-			[40] = {name="ECard";			teamflg=false;	privateflg=false;	date =645631;	com ="Enhance Card";	};
+			[40] = {name="ECard";			teamflg=false;	privateflg=false;	date =646071;	com ="Enhance Card:100";	};
 			[41] = {name="TomePage";		teamflg=false;	privateflg=false;	date =2010001;	com ="M. Tome Page";	};
 			[42] = {name="Pamoka";			teamflg=false;	privateflg=false;	date =699012;	com ="Full Pamoka";	};
 			[43] = {name="Awak400";			teamflg=false;	privateflg=false;	date =647023;	com ="Awak Abrasive 400";	};
@@ -230,7 +255,7 @@ function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 			[37] = {name="Berinium";		teamflg=false;	privateflg=false;	date =649010;	com ="ベリニウム";		};
 			[38] = {name="Vertremin";		teamflg=false;	privateflg=false;	date =649027;	com ="ベルトレミン";	};
 			[39] = {name="Porchium";		teamflg=false;	privateflg=false;	date =649011;	com ="ポルチウム";		};
-			[40] = {name="ECard";			teamflg=false;	privateflg=false;	date =645631;	com ="強化用ｶｰﾄﾞLV1";	};
+			[40] = {name="ECard";			teamflg=false;	privateflg=false;	date =646071;	com ="強化用カード：100";	};
 			[41] = {name="TomePage";		teamflg=false;	privateflg=false;	date =2010001;	com ="神秘の書のﾍﾟｰｼﾞ";	};
 			[42] = {name="Pamoka";			teamflg=false;	privateflg=false;	date =699012;	com ="充填済ﾌｧﾓｶ";	};
 			[43] = {name="Awak400";			teamflg=false;	privateflg=false;	date =647023;	com ="Lv400覚醒研磨剤";	};
@@ -240,7 +265,7 @@ function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 			[47] = {name="Sandra1";			teamflg=false;	privateflg=false;	date =490271;	com ="不思議なルーペ";	};
 			[48] = {name="Sandra2";			teamflg=false;	privateflg=false;	date =490272;	com ="職人のルーペ";		};
 			[49] = {name="Sandra3";			teamflg=false;	privateflg=false;	date =494171;	com ="ｻﾝﾄﾞﾗ微細鑑定ﾙｰﾍﾟ";	};
-			[50] = {name="Sandra4";			teamflg=false;	privateflg=false;	date =494105;	com ="ｻﾝﾄﾞﾗ鑑定ﾙｰﾍ";	};
+			[50] = {name="Sandra4";			teamflg=false;	privateflg=false;	date =494105;	com ="ｻﾝﾄﾞﾗ鑑定ﾙｰﾍﾟ";	};
 			[51] = {name="Free1";			teamflg=false;	privateflg=false;	date =0;		com ="フリー 1 ";};
 			[52] = {name="Free2";			teamflg=false;	privateflg=false;	date =0;		com ="フリー 2 ";};
 			[53] = {name="Free3";			teamflg=false;	privateflg=false;	date =0;		com ="フリー 3 ";};
@@ -264,7 +289,6 @@ function AUTOSAVEMONEY_FIRSTLOAD_SETTINGS()
 
 		};
 	end
-	g.settings.speed=1.0
 	AUTOSAVEMONEY_PRIVATESAVE()
 	CHAT_SYSTEM(L_("It is the first time the add-on [autosave money] is activated, or updated {nl} Default settings loaded."))
 end
@@ -283,7 +307,8 @@ function AUTOSAVEMONEY_ON_INIT(addon, frame)
 	--ロード：個別
 		ReserveScript("AUTOSAVEMONEY_PRIVATELOAD()", 3);
 		ReserveScript("AUTOSAVEMONEY_COMMONLOAD()" , 3.5);
-		ReserveScript("AUTOSAVEMONEY_ADDITEMTABLE()" , 4);
+		ReserveScript("AUTOSAVEMONEY_ADDITIONALLOAD()" ,4);
+		ReserveScript("AUTOSAVEMONEY_ADDITEMTABLE()" , 4.5);
 		addon:RegisterMsg("GAME_START","AUTOSAVEMONEY_GAME_START")
 	--ボタン作成
 		local rtCtrl = {
@@ -509,13 +534,13 @@ function AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(frame)
 			if invItem ~= nil then
 				local itemObj = GetIES(invItem:GetObject())
 				if isPutItem(itemObj.ClassID,"T") then
-					ReserveScript( string.format("_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(\"%s\",%d,\"%s\")",  invItem:GetIESID(), invItem.count,itemObj.Name) , delayCount*1.0)
+					ReserveScript( string.format("_AUTOSAVEMONEY_ITEM_TO_WAREHOUSE(\"%s\",%d,\"%s\")",  invItem:GetIESID(), invItem.count,itemObj.Name) , delayCount*g.settingsAddit.speed)
 					delayCount = delayCount + 1
-					ReserveScript( string.format("AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_CHECK(\"%s\",%d,\"%s\",\"%s\",\"%s\")",  invItem:GetIESID(), invItem.count, itemObj.Name, itemObj.Icon, "T") , delayCount*1.0+1)
+					ReserveScript( string.format("AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_CHECK(\"%s\",%d,\"%s\",\"%s\",\"%s\")",  invItem:GetIESID(), invItem.count, itemObj.Name, itemObj.Icon, "T") , delayCount*g.settingsAddit.speed+1)
 				end
 			end
 		end, false)
-	ReserveScript(string.format("AUTOSAVEMONEY_COMPLETETXT()") , (delayCount*1.0+2))
+	ReserveScript(string.format("AUTOSAVEMONEY_COMPLETETXT()") , (delayCount*g.settingsAddit.speed+2))
 end
 
 function AUTOSAVEMONEY_COMPLETETXT()
@@ -540,9 +565,9 @@ function AUTOSAVEMONEY_ITEM_TO_CHRWAREHOUSE(frame)
 			if invItem ~= nil then
 				local itemObj = GetIES(invItem:GetObject())
 				if isPutItem(itemObj.ClassID,"P") then
-					ReserveScript( string.format("_AUTOSAVEMONEY_ITEM_TO_CHRWAREHOUSE(\"%s\",%d,\"%s\")",  invItem:GetIESID(), invItem.count,itemObj.Name) , delayCount*0.3)
+					ReserveScript( string.format("_AUTOSAVEMONEY_ITEM_TO_CHRWAREHOUSE(\"%s\",%d,\"%s\")",  invItem:GetIESID(), invItem.count,itemObj.Name) , delayCount*g.settingsAddit.speed)
 					delayCount = delayCount + 1
-					ReserveScript( string.format("AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_CHECK(\"%s\",%d,\"%s\",\"%s\",\"%s\")", invItem:GetIESID(), invItem.count, itemObj.Name, itemObj.Icon, "P") , delayCount*0.6)
+					ReserveScript( string.format("AUTOSAVEMONEY_ITEM_TO_WAREHOUSE_CHECK(\"%s\",%d,\"%s\",\"%s\",\"%s\")", invItem:GetIESID(), invItem.count, itemObj.Name, itemObj.Icon, "P") , delayCount*g.settingsAddit.speed+1)
 				end
 			end
 		end, false)
@@ -908,9 +933,21 @@ function AUTOSAVEMONEY_OPEN_SETTING_FRAME(frame)
 	obj_picture:SetImage("medeina_emotion02");
 
 	local title = GET_CHILD(bg_gbox, "title", "ui::CRichText");
-	title:SetText("{@st68b}{s18}addon : Autosave Money Reloaded ver.: 2.0.0 Settings {/}{/}");
+	title:SetText("{@st68b}{s18}addon : Autosave Money Reloaded ver.: 2.1.0 Settings {/}{/}");
 	asmmenu_gbox:ShowWindow(1);
 
+	--搬入速度
+	local flowLTWH = {l=25,t=80,w=100}
+	local create_CTRL = frame:CreateOrGetControl("button","ASM_INTERVAL_BTN",flowLTWH.l,flowLTWH.t,flowLTWH.w,30)
+	tolua.cast(create_CTRL, "ui::CButton")
+	create_CTRL:SetText("{@st43}{s16}" ..L_("Interval"))
+
+	create_CTRL = frame:CreateOrGetControl("edit","ASM_INTERVAL",flowLTWH.l+flowLTWH.w+20,flowLTWH.t,flowLTWH.w,30)
+	tolua.cast(create_CTRL, "ui::CEditControl")
+	create_CTRL:SetText(tostring(g.settingsAddit.speed))
+	create_CTRL:SetTextAlign("center", "center")
+	create_CTRL:SetSkinName("systemmenu_vertical")
+	create_CTRL:SetFontName("white_16_ol")
 end	
 
 -- 共通設定のトグルチェック --------------------------------------------------------------------
@@ -1108,6 +1145,8 @@ end
 --保存設定 -------------------------------------------------------------------------
 function ASM_SETTING_SAVE(frame)
 
+	g.settingsAddit.speed=math.min(10.0,math.max(0.0,tonumber(ui.GetFrame("autosavemoney"):GetChild("ASM_INTERVAL"):GetText()) or 1.0))
+
 	--共通
 	if GET_CHILD(frame, "ASM_".. g.settings[1].name .."_CHKT"):IsChecked() == 1 then
 		g.settings[1].teamflg = true
@@ -1186,8 +1225,12 @@ function ASM_SETTING_SAVE(frame)
 		AUTOSAVEMONEY_PRIVATELOAD()
 		ui.MsgBox(L_("AutosaveMoney:[Character] setting saved"))
 		CHAT_SYSTEM(L_("AutosaveMoney:[Character] setting saved"))
+		
+
 
 	end
-
+	--共通設定があるので、共通も保存
+	AUTOSAVEMONEY_ADDITIONALSAVE()
+	AUTOSAVEMONEY_ADDITIONALLOAD()
 	AUTOSAVEMONEY_CLOSE_SETTING_FRAME()
 end
