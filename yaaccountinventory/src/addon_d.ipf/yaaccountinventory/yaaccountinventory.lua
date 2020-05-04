@@ -12,7 +12,9 @@ local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 local json = require "json_imc"
 
-g.version = 0
+
+
+g.version = 1
 g.settings = g.settings or {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
@@ -26,28 +28,41 @@ g.limit=50
 g.tree = g.tree or {}
 
 g.automata=nil
-g.filters = {
-        
-        --{name = "Fav", text = "★", tooltip = "Favorites", imagename = "aoi_favorites", original = nil},
-        {name = "All", text = "All", tooltip = "All", imagename = "aoi_all", original = "All"},
-        {name = "Equ", text = "Equ", tooltip = "Equip", imagename = "aoi_equip", original = "Equip"},
-        {name = "Spl", text = "Spl", tooltip = "Consume Item", imagename = "aoi_consume", original = "Consume"},
-        {name = "Rcp", text = "Rcp", tooltip = "Recipe", imagename = "aoi_recipe", original = "Recipe"},
-        {name = "Crd", text = "Crd", tooltip = "Card", imagename = "aoi_card", original = "Card"},
-        {name = "Etc", text = "Etc", tooltip = "Etc", imagename = "aoi_etc", original = "Etc"},
-        {name = "Ing", text = "Ing", tooltip = "Material", imagename = "aoi_ingredients", original = nil},
-        {name = "Que", text = "Que", tooltip = "Quest Item", imagename = "aoi_quest", original = nil},
-        {name = "Gem", text = "Gem", tooltip = "Gem", imagename = "aoi_gem", original = "Gem"},
-        {name = "Prm", text = "Prm", tooltip = "Premium", imagename = "aoi_premium", original = "Premium"},
-        {name = "Lim", text = "Lim", tooltip = "Time Limited", imagename = "aoi_timelimited", original = nil},
-        {name = "Fnd", text = "Fnd", tooltip = "Find", imagename = "aoi_find", original = nil},
+local function IsJpn()
+	if (option.GetCurrentCountry() == "Japanese") then
+        return true
+    else
+        return false
+    end
+end
+local function L_(str)
+	if(g.notrans)then
+		return str
+	end
+	if(IsJpn() and YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str])then
+		return YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str].jpn
+	elseif (YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str] and YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str].eng)then
+		return YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str].eng
+	else
+		return str
+	end		
+end
+
+--定数
+local c={}
+
+c.action={
+
+    {name="DWCOUNT",text="n個搬入出",needvalue=true,func=nil},
+    {name="DWSTACK",text="スタックごと搬入出",needvalue=false,func=nil},
+    {name="DWCLSID",text="同一CLSIDを搬入出",needvalue=false,func=nil},
+    {name="DWCATEGORY",text="同一カテゴリを搬入出",needvalue=false,func=nil},
+    {name="DWDIALOG",text="個数ダイアログ表示搬入出",needvalue=false,func=nil},
+    {name="LOCK",text="ロック/アンロック",needvalue=false,func=nil},
 }
 
-g.filterbyname = {}
-g.settings.filter = "All"
-for _, v in ipairs(g.filters) do
-    g.filterbyname[v.name] = v
-end
+g.constants=c
+
 --ライブラリ読み込み
 CHAT_SYSTEM("[YAI]loaded")
 local acutil = require('acutil')
@@ -61,7 +76,15 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
+local function YAI_FINDACTION(name)
+    for k,v in ipairs(c.action) do
+        if(v.name==name)then
+            return v
 
+        end
+    end
+    return nil
+end
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -203,6 +226,7 @@ function YAI_INIT(frame)
                 g.maxtabs = 1
                
             end
+            YAI_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
@@ -228,6 +252,91 @@ function YAI_ACCOUNTWAREHOUSE_CLOSE(frame)
 
     YAI_DEACTIVATE_MOUSEBUTTON()
 end
+function YAI_DEFAULTSETTINGS()
+    return {
+        version=g.version,
+        --有効/無効
+        enable = false,
+        --フレーム表示場所
+        position = {
+            x = 436,
+            y = 171
+        },
+        speed=0.8,
+        stacklimit=50,
+        enabledrag=false,
+        keybinds={
+            {trigger="L",modifiers={},action="DWCOUNT",value=10},
+            {trigger="L",modifiers={"LSHIFT"},action="DWSTACK",value=0},
+            {trigger="L",modifiers={"LCTRL"},action="DWSTACK",value=0},
+            {trigger="L",modifiers={"LCTRL","LALT"},action="DWCATEGORY",value=0},
+            {trigger="R",modifiers={},action="DWCOUNT",value=1},
+            {trigger="R",modifiers={"LSHIFT"},action="DWDIALOG",value=0},
+            {trigger="R",modifiers={"LALT"},action="LOCK",value=0},
+        }
+    }
+end
+function YAI_DEFAULTPERSONALSETTINGS()
+    return {
+        version=g.version
+    }
+end
+function YAI_SAVE_SETTINGS()
+    DBGOUT("SAVE_SETTINGS")
+    AUTOITEMMANAGE_SAVETOSTRUCTURE()
+    acutil.saveJSON(g.settingsFileLoc, g.settings)
+    --for debug
+    g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(session.GetMySession():GetCID()))
+    DBGOUT("psn"..g.personalsettingsFileLoc)
+    acutil.saveJSON(g.personalsettingsFileLoc, g.personalsettings)
+end
+
+function YAI_LOAD_SETTINGS()
+    DBGOUT("LOAD_SETTINGS "..tostring(session.GetMySession():GetCID()))
+    g.settings={}
+    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        g.settings =  YAI_DEFAULTSETTINGS()
+    else
+        --設定ファイル読み込み成功時処理
+        g.settings = t
+        if(not g.settings.version)then
+            g.settings.version=YAI_DEFAULTSETTINGS().version
+        end
+    end
+    DBGOUT("LOAD_PSETTINGS "..g.personalsettingsFileLoc)
+    g.personalsettings={}
+    local t, err = acutil.loadJSON(g.personalsettingsFileLoc, g.personalsettings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        g.personalsettings= YAI_DEFAULTPERSONALSETTINGS()
+        
+    else
+        --設定ファイル読み込み成功時処理
+        g.personalsettings = t
+        if(not g.personalsettings.version)then
+            g.personalsettings.version=YAI_DEFAULTPERSONALSETTINGS().version
+        end
+    end
+    local upc=YAI_UPGRADE_SETTINGS()
+    local upp=YAI_UPGRADE_PERSONALSETTINGS()
+    -- ショートサーキット評価を回避するため、いったん変数に入れる
+    if upc or upp then
+        YAI_SAVE_SETTINGS()
+    end
+end
+function YAI_UPGRADE_SETTINGS()
+    local upgraded=false
+    return upgraded
+end
+function YAI_UPGRADE_PERSONALSETTINGS()
+    local upgraded=false
+    return upgraded
+end
+
 function YAI_COUNT()
     local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
     local guidlist = itemList:GetSortedGuidList();
@@ -402,6 +511,7 @@ function YAI_ACCOUNTWAREHOUSE_OPEN(frame)
         end
     }
 end
+
 
 function YAI_ACCOUNT_WAREHOUSE_INV_LBTN(frame, invItem, dumm)
     EBI_try_catch{
@@ -711,8 +821,11 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             gbox:Resize(w, h)
             gbox2:Resize(w - 32, h - 2)
             
-            
-  
+            --YAI config
+            local btn=frame:CreateOrGetControl("button","yaiconfig", 400, 80+40, 100, 30)
+            AUTO_CAST(btn)
+            btn:SetText("{ol}"..L_("YAI Config"))
+            btn:SetEventScript(ui.LBUTTONUP,"YAI_OPEN_CONFIG")
             YAI_UPDATE()
         
         end,
@@ -720,6 +833,9 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             ERROUT(error)
         end
     }
+end
+function YAI_OPEN_CONFIG()
+    ui.ToggleFrame("yaiconfig")
 end
 function YAI_FIND_ACTIVEGBOX()
     return EBI_try_catch{
