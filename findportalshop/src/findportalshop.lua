@@ -13,8 +13,9 @@ end
 local function startswith(String, Start)
     return string.sub(String, 1, string.len(Start)) == Start
 end
-
-
+local g={}
+g.debug=true
+g.needtoopen=false
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -139,7 +140,7 @@ function FINDPORTALSHOP_LISTING()
                                 local sellBalloon = ui.GetFrame("SELL_BALLOON_" .. actor:GetHandleVal());
                                 if sellBalloon ~= nil then
                                     local sellType = sellBalloon:GetUserIValue("SELL_TYPE");
-                                    session.autoSeller.RequestOpenShop(actor:GetHandleVal(), sellType);
+                                    --session.autoSeller.RequestOpenShop(actor:GetHandleVal(), sellType);
                                 end
                                 local groupInfo = session.autoSeller.GetByIndex("Portal", 0);
                                 DBGOUT(tostring(session.autoSeller.GetCount("Portal")))
@@ -193,4 +194,18 @@ end
 
 function FINDPORTALSHOP_ON_TIMER()
     FINDPORTALSHOP_LISTING()
+end
+
+
+function BUFFSELLER_OPEN(parent, ctrl)
+	local frame = parent:GetTopParentFrame();
+	local sellType = frame:GetUserIValue("SELL_TYPE");
+	local handle = parent:GetUserIValue("HANDLE");
+
+	if sellType == AUTO_TITLE_FOOD_TABLE then
+		local frame = ui.GetFrame("foodtable_ui");
+		session.camp.RequestOpenFoodTable(handle);
+	else
+		session.autoSeller.RequestOpenShop(handle, sellType);
+	end
 end

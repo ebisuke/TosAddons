@@ -1,6 +1,6 @@
 ﻿$addonname="jumpcanceller"
 $emoji="📖"
-$version="v1.0.1"
+$version="v1.0.2"
 $prefix="__"
 if (!(Test-Path bin)) {
     mkdir bin 

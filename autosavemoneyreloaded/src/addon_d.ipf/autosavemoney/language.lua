@@ -65,6 +65,9 @@ local l={
     ["char"]={
         jpn="個人"
     },
+    ["Interval"]={
+        jpn="搬入間隔"
+    },
 }
 
 AUTOSAVEMONEYRELOADED_LANGUAGE_DATA=l
