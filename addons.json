@@ -361,8 +361,8 @@
     "name": "Yet Another Account Inventory",
     "file": "yaaccountinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.6",
-    "releaseTag": "yaaccountinventory-v0.0.6",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "yaaccountinventory-v0.1.0",
     "unicode": "📖",
     "description": "チーム倉庫を魔改造します",
     "tags": [
