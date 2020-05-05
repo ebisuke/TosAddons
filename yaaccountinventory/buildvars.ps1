@@ -1,3 +1,3 @@
 $addonname="yaaccountinventory"
 
-$version="v0.1.0"
+$version="v0.1.1"
