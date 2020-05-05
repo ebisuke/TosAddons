@@ -12,7 +12,9 @@ local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 local json = require "json_imc"
 
-g.version = 0
+
+
+g.version = 1
 g.settings = g.settings or {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
@@ -22,32 +24,106 @@ g.w = 650
 g.h = 570
 g.maxtabs = g.maxtabs or 1
 g.countpertab = 70
-g.limit=50
+g.limit = 50
 g.tree = g.tree or {}
 
-g.automata=nil
-g.filters = {
+g.automata = nil
+local function IsJpn()
+    if (option.GetCurrentCountry() == "Japanese") then
+        return true
+    else
+        return false
+    end
+end
+local function L_(str)
+    if (g.notrans) then
+        return str
+    end
+    if (IsJpn() and YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str]) then
+        return YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str].jpn
+    elseif (YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str] and YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str].eng) then
+        return YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA[str].eng
+    else
+        return str
+    end
+end
+local LS = LIBSTORAGEHELPERV1_3
+--定数
+local c = {}
+
+c.action = {
+    {name = "NONE", text = L_("(None)"), needvalue = false, depositfunc = nil, withdrawfunc = nil},
+    {name = "DWCOUNT", text = L_("Take/Put number of VALUE"), needvalue = true,
+        depositfunc = function(invItem, value)
+            LS.target = IT_ACCOUNT_WAREHOUSE
+            LS.putitem(invItem:GetIESID(), value)
+        end,
+        withdrawfunc = function(invItem, value)
+            LS.target = IT_ACCOUNT_WAREHOUSE
+            LS.takeitem(invItem:GetIESID(), value)
+        end},
+    {name = "DWSTACK", text = L_("Take/Put whole stack"), needvalue = false, depositfunc = function(invItem, value)
+        LS.target = IT_ACCOUNT_WAREHOUSE
+        LS.putitem(invItem:GetIESID())
+    end,
+    withdrawfunc = function(invItem, value)
+        LS.target = IT_ACCOUNT_WAREHOUSE
+        LS.takeitem(invItem:GetIESID())
+    end},
+    {name = "DWCLSID", text = L_("Take/Put same CLSID"), needvalue = false,
+        depositfunc = function(invItem, value)
+            
+            YAI_DEPOSIT_BY_CLSID(invItem.type)
+        end,
+        withdrawfunc = function(invItem, value)
+            YAI_WITHDRAW_BY_CLSID(invItem.type)
+        end
+    },
+    {name = "DWCATEGORY", text = L_("Take/Put same category"), needvalue = false,
+        depositfunc = function(invItem, value)
+            local obj = GetIES(invItem:GetObject());
+            local baseid = GetInvenBaseID(obj.ClassID)
+            local baseidcls = GetClassByNumProp("inven_baseid", "BaseID", baseid)
+            local titleName = baseidcls.ClassName
+            if baseidcls.MergedTreeTitle ~= "NO" then
+                titleName = baseidcls.MergedTreeTitle
+            end
+            YAI_DEPOSIT_BY_CATEGORY(titleName)
+        end,
+        withdrawfunc = function(invItem, value)
+            local obj = GetIES(invItem:GetObject());
+            local baseid = GetInvenBaseID(obj.ClassID)
+            local baseidcls = GetClassByNumProp("inven_baseid", "BaseID", baseid)
+            local titleName = baseidcls.ClassName
+            if baseidcls.MergedTreeTitle ~= "NO" then
+                titleName = baseidcls.MergedTreeTitle
+            end
+            YAI_WITHDRAW_BY_CATEGORY(titleName)
+        end
+    },
+    {name = "DWDIALOG", text = L_("Ask how many Take/Put"),
+        needvalue = false
+        , depositfunc = function(invItem, value)
+            INPUT_NUMBER_BOX(ui.GetFrame(g.framename), L_('How many put items?'),
+                'YAI_EXEC_PUTITEM', invItem.count, 1, invItem.count, nil,  invItem:GetIESID(), 1)
+        end,
+        withdrawfunc = function(invItem, value)
+            INPUT_NUMBER_BOX(ui.GetFrame(g.framename), L_('How many take items?'),
+                'YAI_EXEC_TAKEITEM', invItem.count, 1, invItem.count, nil,  invItem:GetIESID(), 1)
+        end},
+    {name = "LOCK", text = L_("Lock/Unlock"), needvalue = false, depositfunc = function(invItem, value)
+        local state = 1
+        if true == invItem.isLockState then
+            state = 0;
+        end
         
-        --{name = "Fav", text = "★", tooltip = "Favorites", imagename = "aoi_favorites", original = nil},
-        {name = "All", text = "All", tooltip = "All", imagename = "aoi_all", original = "All"},
-        {name = "Equ", text = "Equ", tooltip = "Equip", imagename = "aoi_equip", original = "Equip"},
-        {name = "Spl", text = "Spl", tooltip = "Consume Item", imagename = "aoi_consume", original = "Consume"},
-        {name = "Rcp", text = "Rcp", tooltip = "Recipe", imagename = "aoi_recipe", original = "Recipe"},
-        {name = "Crd", text = "Crd", tooltip = "Card", imagename = "aoi_card", original = "Card"},
-        {name = "Etc", text = "Etc", tooltip = "Etc", imagename = "aoi_etc", original = "Etc"},
-        {name = "Ing", text = "Ing", tooltip = "Material", imagename = "aoi_ingredients", original = nil},
-        {name = "Que", text = "Que", tooltip = "Quest Item", imagename = "aoi_quest", original = nil},
-        {name = "Gem", text = "Gem", tooltip = "Gem", imagename = "aoi_gem", original = "Gem"},
-        {name = "Prm", text = "Prm", tooltip = "Premium", imagename = "aoi_premium", original = "Premium"},
-        {name = "Lim", text = "Lim", tooltip = "Time Limited", imagename = "aoi_timelimited", original = nil},
-        {name = "Fnd", text = "Fnd", tooltip = "Find", imagename = "aoi_find", original = nil},
+        session.inventory.SendLockItem(invItem:GetIESID(), state);
+        ReserveScript('imcAddOn.BroadMsg("ITEM_PROP_UPDATE","' .. invItem:GetIESID() .. '")', 0.5);
+    end, withdrawfunc = function() end},
 }
 
-g.filterbyname = {}
-g.settings.filter = "All"
-for _, v in ipairs(g.filters) do
-    g.filterbyname[v.name] = v
-end
+g.constants = c
+
 --ライブラリ読み込み
 CHAT_SYSTEM("[YAI]loaded")
 local acutil = require('acutil')
@@ -61,7 +137,15 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
-
+local function YAI_FINDACTION(name)
+    for k, v in ipairs(c.action) do
+        if (v.name == name) then
+            return v
+        
+        end
+    end
+    return nil
+end
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -83,12 +167,12 @@ local function DBGOUT(msg)
 
 end
 local function AUTO_CAST(ctrl)
-    if(ctrl==nil)then
+    if (ctrl == nil) then
         
         return
     end
     ctrl = tolua.cast(ctrl, ctrl:GetClassString());
-	return ctrl;
+    return ctrl;
 end
 
 local function ERROUT(msg)
@@ -102,37 +186,7 @@ local function ERROUT(msg)
     }
 
 end
-local function _CHECK_ACCOUNT_WAREHOUSE_SLOT_COUNT_TO_PUT(insertItem)
-    local index = YAI_get_valid_index()
-    
-    local account = session.barrack.GetMyAccount();
-    local slotCount = account:GetAccountWarehouseSlotCount();
-    local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
-    local itemCnt = 0;
-    local guidList = itemList:GetGuidList();
-    local cnt = guidList:Count();
-    for i = 0, cnt - 1 do
-        local guid = guidList:Get(i);
-        local invItem = itemList:GetItemByGuid(guid);
-        local obj = GetIES(invItem:GetObject());
-        if obj.ClassName ~= MONEY_NAME and invItem.invIndex < (g.countpertab * g.maxtabs) then
-            itemCnt = itemCnt + 1;
-        end
-    end
-    
-    if slotCount <= itemCnt and index < (g.countpertab * g.maxtabs) then
-        ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
-        
-        return false;
-    end
-    
-    if slotCount <= index and index < (g.countpertab * g.maxtabs) then
-        ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
-        
-        return false;
-    end
-    return true;
-end
+
 function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -140,15 +194,12 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             g.addon = addon
             g.frame = frame
             
-            --addon:RegisterMsg('GAME_START_3SEC', 'TESTBOARD_SHOW')
             --ccするたびに設定を読み込む
             if not g.loaded then
                 
                 g.loaded = true
             end
-            --addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
-            --addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
-            --addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
+            
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_LIST", "YAI_ON_MSG");
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_ADD", "YAI_ON_MSG");
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_REMOVE", "YAI_ON_MSG");
@@ -156,7 +207,9 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_IN", "YAI_ON_MSG");
             addon:RegisterMsg("OPEN_DLG_ACCOUNTWAREHOUSE", "YAI_ON_OPEN_ACCOUNTWAREHOUSE");
             addon:RegisterMsg("FPS_UPDATE", "YAI_SHOW");
+            addon:RegisterMsg("GAME_START", "YAI_GAME_START");
             addon:RegisterMsg("GAME_START_3SEC", "YAI_3SEC");
+            addon:RegisterMsg("YAI_UPDATED_CONFIG", "YAI_ON_MSG");
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_OPEN, "ACCOUNTWAREHOUSE_OPEN")
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_CLOSE, "ACCOUNTWAREHOUSE_CLOSE")
             acutil.setupHook(YAI_ACCOUNT_WAREHOUSE_MAKE_TAB, "ACCOUNT_WAREHOUSE_MAKE_TAB")
@@ -164,7 +217,7 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("YAI_ON_TIMER");
             timer:Start(1.2);
-            --TESTBOARD_SHOW(g.frame)
+            
             YAI_INIT()
             g.frame:ShowWindow(1)
         end,
@@ -176,17 +229,20 @@ end
 function YAI_SHOW()
     ui.GetFrame(g.framename):ShowWindow(1)
 end
+function YAI_GAME_START()
+    LS = LIBSTORAGEHELPERV1_3
+end
 function YAI_3SEC()
     if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
         g.maxtabs = 5
-       
+    
     else
         g.maxtabs = 1
-       
+    
     end
 end
 function YAI_ON_TIMER()
-    if(ui.GetFrame("accountwarehouse"):IsVisible()==1)then
+    if (ui.GetFrame("accountwarehouse"):IsVisible() == 1) then
         YAI_ACTIVATE_MOUSEBUTTON()
     end
 end
@@ -198,11 +254,12 @@ function YAI_INIT(frame)
             frame:ShowWindow(1)
             if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
                 g.maxtabs = 5
-               
+            
             else
                 g.maxtabs = 1
-               
+            
             end
+            YAI_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
@@ -210,10 +267,18 @@ function YAI_INIT(frame)
     }
 end
 function YAI_ACTIVATE_MOUSEBUTTON()
-    if(ui.GetFrame("accountwarehouse"):IsVisible()==1)then
+    if (ui.GetFrame("accountwarehouse"):IsVisible() == 1) then
         local invframe = ui.GetFrame("inventory")
         INVENTORY_SET_CUSTOM_RBTNDOWN("YAI_ACCOUNT_WAREHOUSE_INV_RBTN")
-        SET_INV_LBTN_FUNC(invframe, "YAI_ACCOUNT_WAREHOUSE_INV_LBTN")
+        
+        if (g.settings.enabledrag==false) then
+            SET_INV_LBTN_FUNC(invframe, "YAI_ACCOUNT_WAREHOUSE_INV_LBTN")
+        
+        else
+            SET_INV_LBTN_FUNC(invframe, "None")
+        
+        end
+      
     end
 end
 function YAI_DEACTIVATE_MOUSEBUTTON()
@@ -225,20 +290,105 @@ function YAI_ACCOUNTWAREHOUSE_CLOSE(frame)
     local overlap = ui.GetFrame("yaireplacement")
     overlap:ShowWindow(0)
     ACCOUNTWAREHOUSE_CLOSE_OLD(frame)
-
+    
     YAI_DEACTIVATE_MOUSEBUTTON()
 end
+function YAI_DEFAULTSETTINGS()
+    return {
+        version = g.version,
+        --有効/無効
+        enable = false,
+        --フレーム表示場所
+        position = {
+            x = 436,
+            y = 171
+        },
+        speed = 0.8,
+        stacklimit = 50,
+        enabledrag = false,
+        keybinds = {
+            {trigger = "L", modifiers = {}, action = "DWCOUNT", value = 10},
+            {trigger = "L", modifiers = {"LSHIFT"}, action = "DWSTACK", value = 0},
+            {trigger = "L", modifiers = {"LCTRL"}, action = "DWCLSID", value = 0},
+            {trigger = "L", modifiers = {"LCTRL", "LALT"}, action = "DWCATEGORY", value = 0},
+            {trigger = "R", modifiers = {}, action = "DWCOUNT", value = 1},
+            {trigger = "R", modifiers = {"LSHIFT"}, action = "DWDIALOG", value = 0},
+            {trigger = "R", modifiers = {"LALT"}, action = "LOCK", value = 0},
+        }
+    }
+end
+function YAI_DEFAULTPERSONALSETTINGS()
+    return {
+        version = g.version
+    }
+end
+function YAI_SAVE_SETTINGS()
+    DBGOUT("SAVE_SETTINGS")
+    AUTOITEMMANAGE_SAVETOSTRUCTURE()
+    acutil.saveJSON(g.settingsFileLoc, g.settings)
+    --for debug
+    g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower, tostring(session.GetMySession():GetCID()))
+    DBGOUT("psn" .. g.personalsettingsFileLoc)
+    acutil.saveJSON(g.personalsettingsFileLoc, g.personalsettings)
+end
+
+function YAI_LOAD_SETTINGS()
+    DBGOUT("LOAD_SETTINGS " .. tostring(session.GetMySession():GetCID()))
+    g.settings = {}
+    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        g.settings = YAI_DEFAULTSETTINGS()
+    else
+        --設定ファイル読み込み成功時処理
+        g.settings = t
+        if (not g.settings.version) then
+            g.settings.version = YAI_DEFAULTSETTINGS().version
+        end
+    end
+    DBGOUT("LOAD_PSETTINGS " .. g.personalsettingsFileLoc)
+    g.personalsettings = {}
+    local t, err = acutil.loadJSON(g.personalsettingsFileLoc, g.personalsettings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        g.personalsettings = YAI_DEFAULTPERSONALSETTINGS()
+    
+    else
+        --設定ファイル読み込み成功時処理
+        g.personalsettings = t
+        if (not g.personalsettings.version) then
+            g.personalsettings.version = YAI_DEFAULTPERSONALSETTINGS().version
+        end
+    end
+    local upc = YAI_UPGRADE_SETTINGS()
+    local upp = YAI_UPGRADE_PERSONALSETTINGS()
+    -- ショートサーキット評価を回避するため、いったん変数に入れる
+    if upc or upp then
+        YAI_SAVE_SETTINGS()
+    end
+end
+function YAI_UPGRADE_SETTINGS()
+    local upgraded = false
+    return upgraded
+end
+function YAI_UPGRADE_PERSONALSETTINGS()
+    local upgraded = false
+    return upgraded
+end
+
 function YAI_COUNT()
     local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
     local guidlist = itemList:GetSortedGuidList();
     local cnt = itemList:Count();
-    local rcnt=0
+    local rcnt = 0
     for i = 0, cnt - 1 do
         local guid = guidlist:Get(i);
         local invItem = itemList:GetItemByGuid(guid)
         local invItem_obj = GetIES(invItem:GetObject());
         if invItem_obj.ClassName ~= MONEY_NAME then
-            rcnt=rcnt+1
+            rcnt = rcnt + 1
         end
     end
     return rcnt
@@ -249,8 +399,8 @@ function YAI_get_exist_item_index(insertItem)
     local ret2 = -1
     
     if geItemTable.IsStack(insertItem.ClassID) == 1 then
-        local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);    
-        local sortedGuidList = itemList:GetGuidList();    
+        local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+        local sortedGuidList = itemList:GetGuidList();
         local sortedCnt = sortedGuidList:Count();
         
         for i = 0, sortedCnt - 1 do
@@ -259,7 +409,7 @@ function YAI_get_exist_item_index(insertItem)
             local invItem_obj = GetIES(invItem:GetObject());
             if insertItem.ClassID == invItem_obj.ClassID then
                 ret1 = true
-                ret2 = invItem.invIndex 
+                ret2 = invItem.invIndex
                 break
             end
         end
@@ -280,7 +430,7 @@ function YAI_get_valid_index()
     local itemCnt = 0;
     local guidList = itemList:GetGuidList();
     local cnt = guidList:Count();
-    local offset=0
+    local offset = 0
     for i = 0, cnt - 1 do
         local guid = guidList:Get(i);
         local invItem = itemList:GetItemByGuid(guid);
@@ -295,51 +445,51 @@ function YAI_get_valid_index()
         
         if obj.ClassName ~= MONEY_NAME then
             __set[invItem.invIndex] = {item = invItem, obj = obj, mode = 1}
-
+        
         
         else
             --__set[invItem.invIndex] = {item = invItem, obj = obj, mode = 2}
-            money_offset=1
+            money_offset = 1
         end
     end
-    local first=0
-    for i=0,slotCount do
-        if(__set[i]~=nil)then
-            first=first+1
-
-        end
-    end
-     -- -1 is preventaion tos bug
-    DBGOUT(string.format("prevent %d/%d",first,slotCount-1))
-    if(first>=(slotCount-1))then
+    local first = 0
+    for i = 0, slotCount do
+        if (__set[i] ~= nil) then
+            first = first + 1
         
-        for i=0,g.countpertab do
-            __set[i] ={mode=1}
+        end
+    end
+    -- -1 is preventaion tos bug
+    DBGOUT(string.format("prevent %d/%d", first, slotCount - 1))
+    if (first >= (slotCount - 1)) then
+        
+        for i = 0, g.countpertab do
+            __set[i] = {mode = 1}
         end
     end
     --prevent tos bug
-    for i=1,g.maxtabs do
-        local count=0
-        for j=g.countpertab*i,g.countpertab*(i+1)-1  do
-            if(__set[j]~=nil and __set[j].mode==1)then
-                count=count+1
-    
+    for i = 1, g.maxtabs do
+        local count = 0
+        for j = g.countpertab * i, g.countpertab * (i + 1) - 1 do
+            if (__set[j] ~= nil and __set[j].mode == 1) then
+                count = count + 1
+            
             end
         end
-        if(count>=(g.countpertab-1))then
-            for j=g.countpertab*i,g.countpertab*(i+1)-1 do
-                __set[j] ={mode=1}
+        if (count >= (g.countpertab - 1)) then
+            for j = g.countpertab * i, g.countpertab * (i + 1) - 1 do
+                __set[j] = {mode = 1}
             end
         end
     end
-
+    
     local index = start_index
     
-    for k=start_index,last_index+1 do
+    for k = start_index, last_index + 1 do
         index = k
         if __set[k] == nil then
-            offset=offset-1
-            if(offset<=0)then
+            offset = offset - 1
+            if (offset <= 0) then
                 break
             end
         end
@@ -377,10 +527,10 @@ function YAI_callback_get_account_warehouse_title(code, ret_json)
             DBGOUT("maxtabs")
             if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
                 g.maxtabs = 5
-               
+            
             else
                 g.maxtabs = 1
-               
+            
             end
             YAI_UPDATE_STATUS()
         end,
@@ -402,42 +552,52 @@ function YAI_ACCOUNTWAREHOUSE_OPEN(frame)
         end
     }
 end
-
-function YAI_ACCOUNT_WAREHOUSE_INV_LBTN(frame, invItem, dumm)
+function YAI_HANDLE_ACTION(invItem, btntype, towarehouse)
+    
     EBI_try_catch{
         try = function()
             local awframe = ui.GetFrame("accountwarehouse");
-            if (not YAI_CHECKITEM(invItem)) then
-                return
-            end
-            local obj = GetIES(invItem:GetObject())
-            local ret, idx = YAI_get_exist_item_index(obj)
-            if (ret == false) then
-                idx = YAI_get_valid_index()
-            end
-            
-            if (idx ~= nil) then
-                local cnt = 10
-                DBGOUT("index:"..idx)
-                if (keyboard.IsKeyPressed("LSHIFT") == 1) then
-                    cnt = invItem.count
-                end
-                if (keyboard.IsKeyPressed("LCTRL") == 1) then
-                    if (keyboard.IsKeyPressed("LALT") == 1) then
-                        local baseid = GetInvenBaseID(obj.ClassID)
-                        local baseidcls = GetClassByNumProp("inven_baseid", "BaseID", baseid)
-                        local titleName = baseidcls.ClassName
-                        if baseidcls.MergedTreeTitle ~= "NO" then
-                            titleName = baseidcls.MergedTreeTitle
+            local frame = ui.GetFrame(g.framename);
+            local detaillevel = -1
+            local keybind = nil
+            for k, v in ipairs(g.settings.keybinds) do
+                if (v.trigger == btntype) then
+                    local succ = true
+                    for _, vv in ipairs(v.modifiers) do
+                        DBGOUT("MODIFIER:"..vv)
+                        if (vv~="" and keyboard.IsKeyPressed(vv) ~= 1) then
+                            succ = false
+                            break
                         end
-                        YAI_ACCOUNT_WAREHOUSE_INV_LBTN_CATEGORY(titleName)
-                    else
-                        YAI_ACCOUNT_WAREHOUSE_INV_LBTN_CTRL(obj.ClassID)
+                    end
+                    if (succ and detaillevel <= #v.modifiers) then
+                        
+                        --OK
+                        keybind = v
+                        detaillevel = #v.modifiers
                     end
                 end
-                
-                --10こ
-                item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), tostring(math.min(cnt, invItem.count)), awframe:GetUserIValue("HANDLE"), idx)
+            end
+            if (keybind ~= nil) then
+                -- do
+                local action = YAI_FINDACTION(keybind.action)
+                if (towarehouse) then
+                    DBGOUT("towarehouse")
+                    if (action.depositfunc) then
+                        action.depositfunc(invItem, keybind.value)
+                    else
+                        DBGOUT("No function")
+                    end
+                else
+                    DBGOUT("toinventory")
+                    if (action.withdrawfunc) then
+                        action.withdrawfunc(invItem, keybind.value)
+                    else
+                        DBGOUT("No function")
+                    end
+                end
+            else
+                DBGOUT("Not assigned.")
             end
         end,
         catch = function(error)
@@ -446,30 +606,31 @@ function YAI_ACCOUNT_WAREHOUSE_INV_LBTN(frame, invItem, dumm)
     }
 end
 
-function  YAI_ACCOUNT_WAREHOUSE_INV_LBTN_CATEGORY(category)
-     EBI_try_catch{
+
+function YAI_DEPOSIT_BY_CATEGORY(category)
+    EBI_try_catch{
         try = function()
             local awframe = ui.GetFrame("accountwarehouse");
-            if(category==nil)then
-
+            if (category == nil) then
+                
                 return
-
+            
             end
-            ui.SysMsg("分類名で搬入します:"..category.."{nl}動作中はほかの操作をしないでください")
-
-            local delay=1
-            local limit=g.limit
-
+            ui.SysMsg(string.format(L_("Put by Category:%s.{nl}Do not perform any other operations while in progress.", category)))
+            
+            local delay = 1
+            local limit =g.settings.stacklimit
+            
             local itemList = session.GetInvItemList();
             local guidList = itemList:GetGuidList();
             local invItemCount = guidList:Count();
-
+            
             for i = 0, invItemCount - 1 do
                 local invItem = session.GetInvItemByGuid(guidList:Get(i));
-                if(invItem~=nil)then
+                if (invItem ~= nil) then
                     local itemObj = GetIES(invItem:GetObject())
-                    if(itemObj~=nil)then
-
+                    if (itemObj ~= nil) then
+                        
                         local baseid = GetInvenBaseID(itemObj.ClassID)
                         local baseidcls = GetClassByNumProp("inven_baseid", "BaseID", baseid)
                         local titleName = baseidcls.ClassName
@@ -477,19 +638,19 @@ function  YAI_ACCOUNT_WAREHOUSE_INV_LBTN_CATEGORY(category)
                             titleName = baseidcls.MergedTreeTitle
                         end
                         if titleName == category then
-                            delay=delay+0.8
-                            limit=limit-1
-                            ReserveScript('YAI_EXEC_ACCOUNT_WAREHOUSE_INV_LBTN("'..invItem:GetIESID()..'")',delay)
                             
+                            limit = limit - 1
+                            ReserveScript('YAI_EXEC_ACCOUNT_WAREHOUSE_INV_LBTN("' .. invItem:GetIESID() .. '")', delay)
+                            delay = delay + g.settings.speed
                         end
-                        if(limit==0)then
-                            break    
+                        if (limit == 0) then
+                            break
                         end
                     end
                 end
             end
-            ReserveScript('ui.SysMsg("Completed")',delay)
-            
+            ReserveScript('ui.SysMsg("Completed")', delay)
+        
         end,
         catch = function(error)
             ERROUT(error)
@@ -498,48 +659,49 @@ function  YAI_ACCOUNT_WAREHOUSE_INV_LBTN_CATEGORY(category)
 end
 
 
-function YAI_ACCOUNT_WAREHOUSE_INV_LBTN_CTRL(clsid)
+function YAI_DEPOSIT_BY_CLSID(clsid)
     EBI_try_catch{
         try = function()
             local awframe = ui.GetFrame("accountwarehouse");
-            if(clsid==nil)then
-
+            if (clsid == nil) then
+                
                 return
-
+            
             end
-
-            ui.SysMsg("同一CLSIDで搬入します{nl}動作中はほかの操作をしないでください")
-
-            local delay=1
-            local limit=g.limit
-
+            
+            ui.SysMsg(string.format(L_("Put by CLSID.{nl}Do not perform any other operations while in progress.")))
+            
+            local delay = 1
+            local limit = g.settings.stacklimit
+            
             local itemList = session.GetInvItemList();
             local guidList = itemList:GetGuidList();
             local invItemCount = guidList:Count();
-
+            
             for i = 0, invItemCount - 1 do
-                   
+                
                 local invItem = session.GetInvItemByGuid(guidList:Get(i));
-                if(invItem~=nil)then
+                if (invItem ~= nil) then
                     local itemObj = GetIES(invItem:GetObject())
-                    if(itemObj~=nil)then
-                        DBGOUT("CC"..tostring(itemObj.ClassID))
+                    if (itemObj ~= nil) then
+                        DBGOUT("CC" .. tostring(itemObj.ClassID))
                         if itemObj.ClassID == clsid then
-                            delay=delay+0.8
-                            limit=limit-1
-                        
-                            ReserveScript('YAI_EXEC_ACCOUNT_WAREHOUSE_INV_LBTN("'..invItem:GetIESID()..'")',delay)
+                            
+                            limit = limit - 1
+                            
+                            ReserveScript('YAI_EXEC_ACCOUNT_WAREHOUSE_INV_LBTN("' .. invItem:GetIESID() .. '")', delay)
+                            delay = delay + g.settings.speed
                         end
-                        if(limit==0)then
+                        if (limit == 0) then
                             break
                         end
                     end
                 end
             end
-      
-            ReserveScript('ui.SysMsg("Completed")',delay)
             
-            
+            ReserveScript('ui.SysMsg("' .. L_("Complete.") .. '")', delay)
+        
+        
         end,
         catch = function(error)
             ERROUT(error)
@@ -552,27 +714,16 @@ function YAI_EXEC_ACCOUNT_WAREHOUSE_INV_LBTN(iesid)
             
             local awframe = ui.GetFrame("accountwarehouse");
             local invItem = GET_PC_ITEM_BY_GUID(iesid);
-            if(invItem==nil)then
+            if (invItem == nil) then
                 return
-
+            
             end
             local obj = GetIES(invItem:GetObject())
-            if (not YAI_CHECKITEM(invItem,true)) then
+            if (not YAI_CHECKITEM(invItem, true)) then
                 return
             end
-            local ret, idx = YAI_get_exist_item_index(obj)
-            
-            if (ret == false) then
-                DBGOUT("YAIA")
-                idx = YAI_get_valid_index()
-            end
-            if (idx ~= nil) then
-                DBGOUT("OK")
-                item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(),invItem.count, awframe:GetUserIValue("HANDLE"), idx)
-            
-            else
-                DBGOUT("fail")
-            end
+            LS.target = IT_ACCOUNT_WAREHOUSE
+            LS.putitem(iesid)
         end,
         catch = function(error)
             ERROUT(error)
@@ -582,10 +733,9 @@ end
 function YAI_EXEC_ACCOUNT_WAREHOUSE_INV_RBTN(awframe, numberString, inputFrame)
     
     local itemID = inputFrame:GetUserValue("ArgString");
-    local idx = inputFrame:GetValue();
     
-    local invItem = GET_PC_ITEM_BY_GUID(itemID);
-    item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), numberString, awframe:GetUserIValue("HANDLE"), idx)
+    LS.target = IT_ACCOUNT_WAREHOUSE
+    LS.putitem(itemID, tonumber(numberString))
 
 end
 
@@ -600,33 +750,7 @@ function YAI_ACCOUNT_WAREHOUSE_INV_RBTN(itemObj, slot)
                 return;
             end
             
-            local obj = GetIES(invItem:GetObject())
-            if (keyboard.IsKeyPressed("LALT") == 1) then
-                INV_ITEM_LOCK_LBTN_CLICK( ui.GetFrame("inventory"),invItem,slot)
-                ReserveScript('imcAddOn.BroadMsg("ITEM_PROP_UPDATE","'..iconInfo:GetIESID()..'")',0.5);
-                return
-            end
-            if (not YAI_CHECKITEM(invItem)) then
-                return
-            end
-            local ret, idx = YAI_get_exist_item_index(obj)
-            
-            if (ret == false) then
-                DBGOUT("YAI")
-                idx = YAI_get_valid_index()
-            end
-            if (idx ~= nil) then
-                
-               
-                if (keyboard.IsKeyPressed("LSHIFT") == 1) then
-                    INPUT_NUMBER_BOX(awframe, ScpArgMsg("InputCount"), "YAI_EXEC_ACCOUNT_WAREHOUSE_INV_RBTN", invItem.count, 1, invItem.count, idx, tostring(invItem:GetIESID()));
-                else
-                    DBGOUT("UI" .. tostring(idx))
-                    
-                    --1こ
-                    item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), tostring(1), awframe:GetUserIValue("HANDLE"), idx)
-                end
-            end
+            YAI_HANDLE_ACTION(invItem, "R", true)
         end,
         catch = function(error)
             ERROUT(error)
@@ -634,23 +758,48 @@ function YAI_ACCOUNT_WAREHOUSE_INV_RBTN(itemObj, slot)
     }
 end
 
+function YAI_ACCOUNT_WAREHOUSE_INV_LBTN(frame, invItem, dumm)
+    EBI_try_catch{
+        try = function()
+            local awframe = ui.GetFrame("accountwarehouse");
 
-function YAI_CHECKITEM(invItem,silent)
+            YAI_HANDLE_ACTION(invItem, "L", true)
+        
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+
+end
+
+function YAI_EXEC_TAKEITEM(awframe, numberString, inputFrame)
+    local itemID = inputFrame:GetUserValue("ArgString");
+    LS.target = IT_ACCOUNT_WAREHOUSE
+    LS.takeitem(itemID, tonumber(numberString))
+end
+
+function YAI_EXEC_PUTITEM(awframe, numberString, inputFrame)
+    local itemID = inputFrame:GetUserValue("ArgString");
+    LS.target = IT_ACCOUNT_WAREHOUSE
+    LS.putitem(itemID, tonumber(numberString))
+end
+function YAI_CHECKITEM(invItem, silent)
     local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
     local guidList = itemList:GetGuidList();
-    local sortedGuidList = itemList:GetSortedGuidList();    
-    local sortedCnt = sortedGuidList:Count();  
+    local sortedGuidList = itemList:GetSortedGuidList();
+    local sortedCnt = sortedGuidList:Count();
     local frame = ui.GetFrame("accountwarehouse")
     local obj = GetIES(invItem:GetObject())
     if YAI_SLOT_LIMIT_FIRSTTAB() <= YAI_COUNT() then
-        if(not silent)then
+        if (not silent) then
             ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
         end
         return false;
-
+    
     end
     if true == invItem.isLockState then
-        if(not silent)then
+        if (not silent) then
             ui.SysMsg(ClMsg("MaterialItemIsLock"));
         end
         return;
@@ -658,7 +807,7 @@ function YAI_CHECKITEM(invItem,silent)
     
     local itemCls = GetClassByType("Item", obj.ClassID);
     if itemCls.ItemType == 'Quest' then
-        if(not silent)then
+        if (not silent) then
             ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"));
         end
         return;
@@ -666,7 +815,7 @@ function YAI_CHECKITEM(invItem,silent)
     
     local enableTeamTrade = TryGetProp(itemCls, "TeamTrade");
     if enableTeamTrade ~= nil and enableTeamTrade == "NO" then
-        if(not silent)then
+        if (not silent) then
             ui.SysMsg(ClMsg("ItemIsNotTradable"));
         end
         return;
@@ -680,12 +829,12 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             local overlap = ui.GetFrame("yaireplacement")
             overlap:SetSkinName("None")
             overlap:ShowWindow(1)
-            if(g.debug)then
+            if (g.debug) then
                 overlap:SetOffset(10, 600)
-                          --タブ非表示
+                --タブ非表示
                 frame:GetChildRecursively("accountwarehouse_tab"):ShowWindow(1)
                 frame:GetChildRecursively("slotgbox"):ShowWindow(1)
-                 frame:GetChildRecursively("slotset"):ShowWindow(1)
+                frame:GetChildRecursively("slotset"):ShowWindow(1)
             else
                 overlap:SetOffset(10, 200)
                 --タブ非表示
@@ -693,7 +842,7 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
                 frame:GetChildRecursively("slotgbox"):ShowWindow(0)
                 frame:GetChildRecursively("slotset"):ShowWindow(0)
             end
-          
+            
             overlap:EnableHitTest(1)
             overlap:EnableHittestFrame(1)
             
@@ -711,8 +860,11 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             gbox:Resize(w, h)
             gbox2:Resize(w - 32, h - 2)
             
-            
-  
+            --YAI config
+            local btn = frame:CreateOrGetControl("button", "yaiconfig", 400, 80 + 40, 100, 30)
+            AUTO_CAST(btn)
+            btn:SetText("{ol}" .. L_("YAI Config"))
+            btn:SetEventScript(ui.LBUTTONUP, "YAI_OPEN_CONFIG")
             YAI_UPDATE()
         
         end,
@@ -720,6 +872,9 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             ERROUT(error)
         end
     }
+end
+function YAI_OPEN_CONFIG()
+    ui.ToggleFrame("yaiconfig")
 end
 function YAI_FIND_ACTIVEGBOX()
     return EBI_try_catch{
@@ -773,7 +928,7 @@ function YAI_UPDATE()
             local index_count = 1
             local cls_inv_index = {}
             local i_cnt = 0
-         
+            
             local curpos = etree_box:GetScrollCurPos();
             frame:SetUserValue("INVENTORY_CUR_SCROLL_POS", curpos);
             
@@ -816,8 +971,8 @@ function YAI_UPDATE()
                 end
             end
             
-           
-            local baseidclslist, baseidcnt  = GetClassList("inven_baseid");
+            
+            local baseidclslist, baseidcnt = GetClassList("inven_baseid");
             local invenTitleName = nil
             if invenTitleName == nil then
                 invenTitleName = {}
@@ -982,109 +1137,12 @@ function YAI_UPDATE()
     
     }
 end
-function YAI_TREE_CONTEXT(frame, ctrl, typeStr, argnum)
-    return EBI_try_catch{
-        try = function()
-            
-            if (keyboard.IsKeyPressed("LSHIFT") == 1) then
-                
-                local frame = ui.GetFrame("yaireplacement")
-                local group = GET_CHILD_RECURSIVELY(frame, 'inventoryGbox', 'ui::CGroupBox')
-                local context = ui.CreateContextMenu("YAI_Context", "", 0, 0, 300, 100);
-                local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. typeStr, 'ui::CGroupBox')
-                local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. typeStr, 'ui::CTreeControl')
-                
-                if (g.tree[typeStr]) then
-                    ui.AddContextMenuItem(context, "このカテゴリをすべて引き出す", 'YAI_WITHDRAW_TREE("' .. typeStr .. '")')
-                    for _, v in ipairs(g.tree[typeStr]) do
-                        ui.AddContextMenuItem(context, v.treegroupcaption .. "をすべて引き出す", 'YAI_WITHDRAW_TREE("' .. v.treegroup .. '","' .. v.treegroupcaption .. '")')
-                    end
-                    
-                    context:Resize(300, context:GetHeight())
-                    ui.OpenContextMenu(context)
-                end
-            end
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    
-    }
-end
-function YAI_WITHDRAW_TREE(typeStr, treegroupcaption)
-    EBI_try_catch{
-        try = function()
-            DBGOUT("HERE")
-            local frame = ui.GetFrame("yaireplacement")
-            local awframe = ui.GetFrame("accountwarehouse")
-            local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
-            local guidList = itemList:GetGuidList();
-            local sortedGuidList = itemList:GetSortedGuidList();
-            local sortedCnt = sortedGuidList:Count();
-            local cnt = 0
-            session.ResetItemList();
-            for i = 0, sortedCnt - 1 do
-                local guid = sortedGuidList:Get(i)
-                local invItem = itemList:GetItemByGuid(guid)
-                local itemObj = GetIES(invItem:GetObject());
-                local baseid = GetInvenBaseID(itemObj.ClassID)
-                local baseidcls = GetClassByNumProp("inven_baseid", "BaseID", baseid)
-                --鑑別
-                local slotsetname = YAI_GET_SLOTSET_NAME(baseidcls)
-                local tree_box = GET_CHILD_RECURSIVELY(frame, 'treeGbox_' .. typeStr, 'ui::CGroupBox')
-                local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. typeStr, 'ui::CTreeControl')
-                if (treegroup == nil) then
-                    local slotset = tree:GetChildRecursively(slotsetname)
-                    if (not slotset) then
-                        
-                        else
-                        AUTO_CAST(slotset)
-                        DBGOUT(slotset:GetName())
-                        if (slotset:GetName() == slotsetname) then
-                            --一覧取得
-                            DBGOUT("おｋ")
-                            for i = 0, slotset:GetSlotCount() - 1 do
-                                local slot = slotset:GetSlotByIndex(i)
-                                local icon = slot:GetIcon();
-                                if (icon) then
-                                    local iconInfo = icon:GetInfo();
-                                    local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iconInfo:GetIESID());
-                                    local itemObj = GetIES(invItem:GetObject());
-                                    session.AddItemIDWithAmount(iconInfo:GetIESID(), tostring(invItem.count));
-                                    cnt = cnt + 1
-                                end
-                            end
-                            break
-                        end
-                    end
-                else
-                    if (baseidcls.TreeGroupCaption == treegroupcaption) then
-                        
-                        session.AddItemIDWithAmount(guid, tostring(invItem.count));
-                        cnt = cnt + 1
-                    end
-                end
-            
-            end
-            if (cnt > 0) then
-                item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), frame:GetUserIValue("HANDLE"));
-            end
-        
-        
-        
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    
-    }
 
-end
 function YAI_SLOT_LIMIT_FIRSTTAB()
     local account = session.barrack.GetMyAccount();
     local slotCount = account:GetAccountWarehouseSlotCount();
     
-    return (slotCount-1) + (g.maxtabs - 1) * (g.countpertab-1)
+    return (slotCount - 1) + (g.maxtabs - 1) * (g.countpertab - 1)
 end
 function YAI_GET_SLOTSET_NAME(baseidcls)
     local cls = baseidcls
@@ -1103,26 +1161,31 @@ function YAI_ON_MSG(frame, msg, argStr, argNum)
     if msg == 'ACCOUNT_WAREHOUSE_ITEM_LIST' then
         YAI_UPDATE()
     elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_IN' then
-    elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_ADD' then
-        DebounceScript("YAI_UPDATE", 1, 0, 0)
+        --no op
+        elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_ADD' then
+        DebounceScript("YAI_UPDATE", 1.0, 0)
         YAI_UPDATE_STATUS(1)
         --YAI_ADD_TARGETED(argStr)
-    elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_REMOVE' then
-        
-        YAI_REMOVE_TARGETED(argStr)
-        DebounceScript("YAI_UPDATE", 3.0, 0)
-        YAI_UPDATE_STATUS(-1)
-    elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_CHANGE_COUNT' then
-        YAI_UPDATE_TARGETED(argStr)
-        DebounceScript("YAI_UPDATE", 3, 0, 0)
-    else
-        YAI_UPDATE()
+        elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_REMOVE' then
+            
+            YAI_REMOVE_TARGETED(argStr)
+            DebounceScript("YAI_UPDATE", 3.0, 0)
+            YAI_UPDATE_STATUS(-1)
+        elseif msg == 'ACCOUNT_WAREHOUSE_ITEM_CHANGE_COUNT' then
+            YAI_UPDATE_TARGETED(argStr)
+            DebounceScript("YAI_UPDATE", 3.0, 0)
+        elseif msg == 'YAI_UPDATED_CONFIG' then
+            YAI_UPDATE()
+        else
+            YAI_UPDATE()
     end
 
 end
 function YAI_ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame, msg, argStr, argNum, tab_index)
     --disabled function for lightweight
-    ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD(frame, msg, argStr, argNum, tab_index)
+    if(g.debug==true)then
+        ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD(frame, msg, argStr, argNum, tab_index)
+    end
     if (ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OVERRIDE ~= nil) then
         ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OVERRIDE(frame, msg, argStr, argNum, tab_index)
     end
@@ -1180,7 +1243,7 @@ function YAI_UPDATE_TARGETED(itemguid)
             local slotset = frame:GetChildRecursively(slotsetname)
             AUTO_CAST(slotset)
             local slot = GET_SLOT_BY_ITEMID(slotset, itemguid);
-            if(slot~=nil)then
+            if (slot ~= nil) then
                 slot:ClearIcon()
                 slot:SetSkinName("None")
                 YAI_DRAW_ITEM(invItem, slot)
@@ -1299,8 +1362,6 @@ function YAI_INSERT_ITEM_TO_TREE(frame, tree, invItem, itemCls, baseidcls, typeS
         
         local newSlotsname = MAKE_INVEN_SLOTSET_NAME(tree, slotsettitle, baseidcls.TreeSSetTitle)
         
-        newSlotsname:SetEventScript(ui.RBUTTONUP, "YAI_TREE_CONTEXT")
-        newSlotsname:SetEventScriptArgString(ui.RBUTTONUP, typeStr)
         
         g.tree[typeStr] = g.tree[typeStr] or {}
         g.tree[typeStr][#g.tree[typeStr] + 1] = {
@@ -1308,7 +1369,7 @@ function YAI_INSERT_ITEM_TO_TREE(frame, tree, invItem, itemCls, baseidcls, typeS
             treegroupcaption = newSlotsname:GetText():gsub("%(.*%)", ""),
             slotsetname = slotsetname,
         }
-  
+        
         MAKE_INVEN_SLOTSET_AND_TITLE(tree, treegroup, slotsetname, baseidcls);
         INVENTORY_CATEGORY_OPENOPTION_CHECK(tree:GetName(), baseidcls.ClassName);
     end
@@ -1365,12 +1426,16 @@ function YAI_INSERT_ITEM_TO_TREE(frame, tree, invItem, itemCls, baseidcls, typeS
         else
             CLEAR_ICON_REMAIN_LIFETIME(slot, icon);
         end
-        
+    
     end
     --INV_ICON_SETINFO(frame, slot, invItem, nil, nil, nil);
     _DRAW_ITEM(invItem, slot, nil)
     SET_SLOTSETTITLE_COUNT(tree, baseidcls, 1)
-    slot:EnableDrag(0)
+    if (g.settings.enabledrag) then
+        slot:EnableDrag(1)
+    else
+        slot:EnableDrag(0)
+    end
     slot:SetEventScript(ui.LBUTTONUP, "YAI_ON_LBUTTON")
     slot:SetEventScript(ui.RBUTTONUP, "YAI_ON_RBUTTON")
     slotset:MakeSelectionList();
@@ -1401,71 +1466,25 @@ function YAI_UPDATE_STATUS(inc)
     itemcnt:SetTextByKey('slotmax', YAI_SLOT_LIMIT_FIRSTTAB());
     itemcnt:UpdateFormat()
 end
-function YAI_EXEC_ON_RBUTTON(awframe, numberString, inputFrame)
-    
-    local itemID = inputFrame:GetUserValue("ArgString");
-    
-    
-    session.ResetItemList();
-    session.AddItemID(itemID, tonumber(numberString));
-    item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
-end
-function YAI_ON_LBUTTON(frame, slot, argstr, argnum)
+
+
+function YAI_WITHDRAW_BY_CATEGORY(titlename)
     EBI_try_catch{
         try = function()
             
-            local awframe = ui.GetFrame("accountwarehouse");
-            local icon = slot:GetIcon();
-            local iconInfo = icon:GetInfo();
-            local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iconInfo:GetIESID());
-            local obj = GetIES(invItem:GetObject());
-            DBGOUT("hire")
-            session.ResetItemList();
-            local cnt = math.min(10, invItem.count)
-            if (keyboard.IsKeyPressed("LSHIFT") == 1) then
-                cnt = invItem.count
-            end
-            if (keyboard.IsKeyPressed("LCTRL") == 1) then
-                if (keyboard.IsKeyPressed("LALT") == 1) then
-                    local baseid = GetInvenBaseID(obj.ClassID)
-                    local baseidcls = GetClassByNumProp("inven_baseid", "BaseID", baseid)
-                    local titleName = baseidcls.ClassName
-					if baseidcls.MergedTreeTitle ~= "NO" then
-						titleName = baseidcls.MergedTreeTitle
-					end
-                    YAI_ON_LBUTTON_CTRL_LALT(titleName)
-                else
-                    DBGOUT("INAA")
-                    YAI_ON_LBUTTON_CTRL(obj.ClassID)
-                end
-                return
-            end
-            DBGOUT("TAKE")
-            session.AddItemID(iconInfo:GetIESID(), cnt);
-            item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
-function YAI_ON_LBUTTON_CTRL_LALT(titlename)
-    EBI_try_catch{
-        try = function()
-          
             DBGOUT("INA")
             local awframe = ui.GetFrame("accountwarehouse");
             local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
             local guidList = itemList:GetGuidList();
-            local sortedGuidList = itemList:GetSortedGuidList();    
-            local sortedCnt = sortedGuidList:Count();    
-   
+            local sortedGuidList = itemList:GetSortedGuidList();
+            local sortedCnt = sortedGuidList:Count();
+            
             --同一CLSID搬出
-            ui.SysMsg("分類で搬出します:"..titlename.."{nl}作業中はほかの操作をしないでください")
+            ui.SysMsg(string.format(L_("Take items by category:%s"), titlename))
             local delay = 0
             session.ResetItemList();
-            local itemmap={}
-            local limit=g.limit
+            local itemmap = {}
+            local limit = g.settings.stacklimit
             for i = 0, sortedCnt - 1 do
                 local guid = sortedGuidList:Get(i)
                 local invItem = itemList:GetItemByGuid(guid)
@@ -1479,19 +1498,18 @@ function YAI_ON_LBUTTON_CTRL_LALT(titlename)
                 if invItem ~= nil then
                     if (titlename == titleName) and (not itemmap[invItem:GetIESID()]) then
                         --add
-                        DBGOUT("GO "..tostring(clsid).."/"..tostring(invItem.type))
+                        DBGOUT("GO " .. tostring(clsid) .. "/" .. tostring(invItem.type))
                         --ReserveScript(string.format('YAI_TAKE_ITEM("%s")', invItem:GetIESID()), delay)
                         session.AddItemID(invItem:GetIESID(), invItem.count);
-                        itemmap[invItem:GetIESID()]=true
+                        itemmap[invItem:GetIESID()] = true
                         delay = delay + 0.1
-                        limit=limit-1
-                        if(limit==0)then
+                        limit = limit - 1
+                        if (limit == 0) then
                             break
                         end
                     end
                 end
             end
-
             item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
         end,
         catch = function(error)
@@ -1499,44 +1517,44 @@ function YAI_ON_LBUTTON_CTRL_LALT(titlename)
         end
     }
 end
-function YAI_ON_LBUTTON_CTRL(clsid)
+function YAI_WITHDRAW_BY_CLSID(clsid)
     EBI_try_catch{
         try = function()
-          
+            
             DBGOUT("INA")
             local awframe = ui.GetFrame("accountwarehouse");
             local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
             local guidList = itemList:GetGuidList();
-            local sortedGuidList = itemList:GetSortedGuidList();    
-            local sortedCnt = sortedGuidList:Count();    
-  
+            local sortedGuidList = itemList:GetSortedGuidList();
+            local sortedCnt = sortedGuidList:Count();
+            
             --同一CLSID搬出
-            ui.SysMsg("同一CLSIDで搬出します{nl}作業中はほかの操作をしないでください")
+            ui.SysMsg(L_("Take items by CLSID."))
             local delay = 0
             session.ResetItemList();
-            local itemmap={}
-            local limit=g.limit
+            local itemmap = {}
+            local limit = g.settings.stacklimit
             for i = 0, sortedCnt - 1 do
                 local guid = sortedGuidList:Get(i)
                 local invItem = itemList:GetItemByGuid(guid)
                 local obj = GetIES(invItem:GetObject());
-            
+                
                 if invItem ~= nil then
                     if (clsid == obj.ClassID) and (not itemmap[invItem:GetIESID()]) then
                         --add
-                        DBGOUT("GO "..tostring(clsid).."/"..tostring( obj.ClassID))
+                        DBGOUT("GO " .. tostring(clsid) .. "/" .. tostring(obj.ClassID))
                         --ReserveScript(string.format('YAI_TAKE_ITEM("%s")', invItem:GetIESID()), delay)
                         session.AddItemID(invItem:GetIESID(), invItem.count);
-                        itemmap[invItem:GetIESID()]=true
+                        itemmap[invItem:GetIESID()] = true
                         delay = delay + 0.1
-                        limit=limit-1
-                        if(limit==0)then
+                        limit = limit - 1
+                        if (limit == 0) then
                             break
                         end
                     end
                 end
             end
-
+            
             item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
         end,
         catch = function(error)
@@ -1548,10 +1566,32 @@ function YAI_TAKE_ITEM(iesid)
     EBI_try_catch{
         try = function()
             local awframe = ui.GetFrame("accountwarehouse");
-            local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE,iesid)
+            local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iesid)
             session.ResetItemList();
             session.AddItemID(iesid, invItem.count);
             item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function YAI_ON_LBUTTON(frame, slot, argstr, argnum)
+    EBI_try_catch{
+        try = function()
+            
+            local awframe = ui.GetFrame("accountwarehouse");
+            local icon = slot:GetIcon();
+            if (icon == nil) then
+                return
+            
+            end
+            local iconInfo = icon:GetInfo();
+            if (iconInfo == nil) then
+                return
+            end
+            local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iconInfo:GetIESID());
+            YAI_HANDLE_ACTION(invItem, "L", false)
         end,
         catch = function(error)
             ERROUT(error)
@@ -1569,51 +1609,15 @@ function YAI_ON_RBUTTON(frame, slot, argstr, argnum)
             
             end
             local iconInfo = icon:GetInfo();
-            local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iconInfo:GetIESID());
-            local obj = GetIES(invItem:GetObject());
-            
-            session.ResetItemList();
-            local cnt = math.min(1, invItem.count)
-            if (keyboard.IsKeyPressed("LSHIFT") == 1) then
-                
-                INPUT_NUMBER_BOX(awframe, ScpArgMsg("InputCount"), "YAI_EXEC_ON_RBUTTON", invItem.count, 1, invItem.count, nil, tostring(invItem:GetIESID()));
-            
-            else
-                
-                session.AddItemID(iconInfo:GetIESID(), cnt);
-                item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), awframe:GetUserIValue("HANDLE"));
+            if (iconInfo == nil) then
+                return
             end
-        
-        
+            local invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iconInfo:GetIESID());
+            
+            YAI_HANDLE_ACTION(invItem, "R", false)
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
-end
-
-function YAI_TESTCOROUTINE()
-    local colo = coroutine.create(
-        function( init )
-            if init == nil then init = 0 end
-    
-            local i = init
-            while i < 10 do
-                coroutine.yield(i)
-                i = i+1
-            end
-            assert( false )
-    
-            return -1
-        end
-    )
-    
-    repeat
-        local bStat, vRet = coroutine.resume( colo, 5 )
-        if bStat then
-            print("->", vRet )
-        else
-            print("assert! -> ", vRet)
-        end
-    until coroutine.status( colo ) == "dead"
 end

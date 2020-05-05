@@ -377,7 +377,13 @@ function p.takeitem(iesid,count)
 
     DBGOUT("TAKE")
     
-    item.TakeItemFromWarehouse(p.target, iesid, cnt, frame:GetUserIValue("HANDLE"));
+    if(p.target==IT_ACCOUNT_WAREHOUSE)then
+        session.ResetItemList();
+        session.AddItemID(iesid, cnt);
+        item.TakeItemFromWarehouse_List(p.target,session.GetItemIDList(), frame:GetUserIValue("HANDLE"));
+    else
+        item.TakeItemFromWarehouse(p.target, iesid, cnt, frame:GetUserIValue("HANDLE"));
+    end
 end
 --gets account money
 --return amount of silver as string
@@ -417,7 +423,7 @@ function p.items()
     end
 end
 
-LIBSTORAGEHELPERV1_2=p
+LIBSTORAGEHELPERV1_3=p
 
 LIBSTORAGEHELPER=
     LIBSTORAGEHELPER or 
