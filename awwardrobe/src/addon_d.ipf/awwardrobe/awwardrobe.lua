@@ -9,7 +9,7 @@ _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
-local LS= LIBSTORAGEHELPERV1_2 
+local LS= LIBSTORAGEHELPERV1_3
 --設定ファイル保存先
 g.version = 0
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
@@ -352,7 +352,7 @@ function AWWARDROBE_ON_INIT(addon, frame)
             AWWARDROBE_INITIALIZE_FRAME()
             frame:ShowWindow(0)
             g.interlocked=false
-            LS=LIBSTORAGEHELPER
+            LS=LIBSTORAGEHELPERV1_3
         end,
         catch = function(error)
             AWWARDROBE_ERROUT(error)
