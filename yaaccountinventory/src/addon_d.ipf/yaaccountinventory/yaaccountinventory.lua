@@ -616,7 +616,7 @@ function YAI_DEPOSIT_BY_CATEGORY(category)
                 return
             
             end
-            ui.SysMsg(string.format(L_("Put by Category:%s.{nl}Do not perform any other operations while in progress.", category)))
+            ui.SysMsg(string.format(L_("Put by Category:%s.{nl}Do not perform any other operations while in progress."), category))
             
             local delay = 1
             local limit =g.settings.stacklimit
