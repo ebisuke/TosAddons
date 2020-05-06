@@ -649,7 +649,7 @@ function YAI_DEPOSIT_BY_CATEGORY(category)
                     end
                 end
             end
-            ReserveScript('ui.SysMsg("Completed")', delay)
+            ReserveScript('ui.SysMsg("'..L_("Complete.")..'")', delay)
         
         end,
         catch = function(error)
@@ -845,7 +845,8 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             
             overlap:EnableHitTest(1)
             overlap:EnableHittestFrame(1)
-            
+            --fix height
+            g.h=frame:GetHeight()-1080+570
             local w = g.w
             local h = g.h
             overlap:Resize(w, h)
@@ -1000,18 +1001,21 @@ function YAI_UPDATE()
                 end
             end
             local sortType = 3
-            --1 등급순 / 2 무게순 / 3 이름순 / 4 소지량순
-            if sortType == 1 then
-                table.sort(invItemList, INVENTORY_SORT_BY_GRADE)
-            elseif sortType == 2 then
-                table.sort(invItemList, INVENTORY_SORT_BY_WEIGHT)
-            elseif sortType == 3 then
-                table.sort(invItemList, INVENTORY_SORT_BY_NAME)
-            elseif sortType == 4 then
-                table.sort(invItemList, INVENTORY_SORT_BY_COUNT)
-            else
-                table.sort(invItemList, INVENTORY_SORT_BY_NAME)
-            end
+
+            --@TODO ソート処理をここに
+
+            -- --1 등급순 / 2 무게순 / 3 이름순 / 4 소지량순
+            -- if sortType == 1 then
+            --     table.sort(invItemList, INVENTORY_SORT_BY_GRADE)
+            -- elseif sortType == 2 then
+            --     table.sort(invItemList, INVENTORY_SORT_BY_WEIGHT)
+            -- elseif sortType == 3 then
+            --     table.sort(invItemList, INVENTORY_SORT_BY_NAME)
+            -- elseif sortType == 4 then
+            --     table.sort(invItemList, INVENTORY_SORT_BY_COUNT)
+            -- else
+            --     table.sort(invItemList, INVENTORY_SORT_BY_NAME)
+            -- end
             
             for i = 1, #invenTitleName do
                 local category = invenTitleName[i]
@@ -1398,10 +1402,7 @@ function YAI_INSERT_ITEM_TO_TREE(frame, tree, invItem, itemCls, baseidcls, typeS
     
     local function _DRAW_ITEM(invItem, slot)
         local obj = GetIES(invItem:GetObject());
-        
-        
-        
-        
+
         slot:SetSkinName('invenslot2')
         local itemCls = GetIES(invItem:GetObject());
         local iconImg = GET_ITEM_ICON_IMAGE(itemCls);

@@ -384,4 +384,20 @@
       "warehouse"
     ]
   }
+  ,
+  {
+    "name": "SmallSummonedMonster",
+    "file": "smallsummonedmonster",
+    "extension": "ipf",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "smallsummonedmonster-v0.0.2",
+    "unicode": "📖",
+    "description": "(他人の)召喚獣を常時小さくします",
+    "tags": [
+      "summon",
+      "monster",
+      "small"
+    ]
+  }
+    
 ]
