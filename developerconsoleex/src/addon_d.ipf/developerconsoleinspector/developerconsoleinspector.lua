@@ -189,12 +189,14 @@ function DEVELOPERCONSOLEINSPECTOR_INIT()
             local adv = frame:GetChildRecursively("inspector")
             AUTO_CAST(adv)
             adv:SetSkinName("bg2")
+            adv:SetStartRow(1);	
             adv:EnableAutoResize(false, true)
             adv:SetEventScript(ui.LBUTTONDBLCLICK, "DEVELOPERCONSOLEINSPECTOR_ADV_ON_LBUTTONDBLCLICK")
-            
+            adv:SetRowBgColor(0, "#4a443f");
             adv:SetEventScript(ui.RBUTTONUP, "DEVELOPERCONSOLEINSPECTOR_ADV_ON_RCLICK")
             DEVELOPERCONSOLEINSPECTOR_RESIZE()
-        
+
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -493,9 +495,7 @@ function DEVELOPERCONSOLEINSPECTOR_RESIZE()
             adv:SetGravity(ui.LEFT, ui.TOP)
             adv:SetOffset(0, 0)
             adv:Resize(gbox:GetWidth(), gbox:GetHeight())
-            adv:SetColWidth(0, adv:GetWidth() - 250);
-            adv:SetColWidth(1, 100);
-            adv:SetColWidth(2, 200);
+  
             DEVELOPERCONSOLEINSPECTOR_START_INSPECT(true, false)
         end,
         catch = function(error)
