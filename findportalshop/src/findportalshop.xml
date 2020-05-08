@@ -30,5 +30,6 @@
 		<advlistboxsetting parent="adv" layout_gravity="left top" col="6" colwidth="0" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
 		<!--<slotset name="itemSlotset" rect="0 0 480 500" margin="0 145 0 0" layout_gravity="center top" row="1" col="10" size="65 65" skin="invenslot2" spc="2 2" enabledrop="true" enablepop="true"/>-->
 		<timer name="addontimer" rect="0 0 10 10"/>
+		<timer name="addontimer2" rect="0 0 10 10"/>
 	</controls>
 </uiframe>

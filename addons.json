@@ -399,5 +399,18 @@
       "small"
     ]
   }
-    
+  ,
+  {
+    "name": "FindPortalShop",
+    "file": "findportalshop",
+    "extension": "ipf",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "findportalshop-v0.0.2",
+    "unicode": "📖",
+    "description": "近くにあるポータルショップの一覧を表示します。",
+    "tags": [
+      "portal",
+      "shop"
+    ]
+  } 
 ]
