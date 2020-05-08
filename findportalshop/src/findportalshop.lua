@@ -20,6 +20,7 @@ g.needtoopen = false
 g.portals = {}
 g.delay = 3
 g.itemcount = 0
+g.routing=nil
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -60,6 +61,7 @@ g.gid = g.gid or nil
 g.tgt = {}
 g.inc = 1
 g.sz = {}
+
 function FINDPORTALSHOP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -73,10 +75,15 @@ function FINDPORTALSHOP_ON_INIT(addon, frame)
                 MAP_OPEN = FINDPORTALSHOP_MAP_OPEN_JUMPER
             end
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
-            
+            frame:EnableHideProcess(1);
             timer:SetUpdateScript("FINDPORTALSHOP_ON_TIMER");
             timer:EnableHideUpdate(1)
             timer:Start(0.5);
+            local timer2 = GET_CHILD(frame, "addontimer2", "ui::CAddOnTimer");
+            timer2:SetUpdateScript("FINDPORTALSHOP_ON_TIMER2");
+            timer2:EnableHideUpdate(1)
+            timer2:Start(1);
+            addon:RegisterMsg('ESCAPE_PRESSED', 'FINDPORTALSHOP_ON_PRESS_ESCAPE');
             --frame:ShowWindow(1)
             acutil.setupHook(FINDPORTALSHOP_PORTAL_SELLER_OPEN_UI, "PORTAL_SELLER_OPEN_UI")
             acutil.setupHook(FINDPORTALSHOP_BUFFSELLER_OPEN, "BUFFSELLER_OPEN")
@@ -127,9 +134,9 @@ function FINDPORTALSHOP_LISTING()
         try = function()
             if (not g.inspecting) then
                 g.inspecting = true
-
-                g.tgt={}
-                g.inc=1
+                
+                g.tgt = {}
+                g.inc = 1
                 DBGOUT("go")
                 --比較的遠くまでのポータルショップを探す
                 local objList, objCount = SelectObject(GetMyPCObject(), 400, 'ALL', 1)
@@ -162,28 +169,29 @@ function FINDPORTALSHOP_LISTING()
                                 --DBGOUT(tostring(groupname))
                                 --ショップの情報を仕入れる
                                 --ポタ屋
-                             
                                 local sellBalloon = ui.GetFrame("SELL_BALLOON_" .. actor:GetHandleVal());
-                                local text = sellBalloon:GetTextByKey("Text")
-                                local tt = sellBalloon:GetChild("text");
-                                local val=tt:GetTextByKey("value");
-                                local sellType
-                                if sellBalloon ~= nil then
-                                    sellType = sellBalloon:GetUserIValue("SELL_TYPE");
-                                --session.autoSeller.RequestOpenShop(actor:GetHandleVal(), sellType);
-                                end
-                                if (sellType == AUTO_SELL_PORTAL) then
+                                if(sellBalloon~=nil)then
+                                    local text = sellBalloon:GetTextByKey("Text")
+                                    local tt = sellBalloon:GetChild("text");
+                                    local val = tt:GetTextByKey("value");
+                                    local sellType
+                                    if sellBalloon ~= nil then
+                                        sellType = sellBalloon:GetUserIValue("SELL_TYPE");
+                                    --session.autoSeller.RequestOpenShop(actor:GetHandleVal(), sellType);
+                                    end
+                                    if (sellType == AUTO_SELL_PORTAL) then
+                                        
+                                        g.tgt[#g.tgt + 1] = {
+                                            handle = actor:GetHandleVal(),
+                                            teamname = info.GetFamilyName(actor:GetHandleVal()),
+                                            title = val
+                                        }
+                                        DBGOUT("portal")
                                     
-                                    g.tgt[#g.tgt + 1] = {
-                                        handle = actor:GetHandleVal(),
-                                        teamname =  info.GetFamilyName(actor:GetHandleVal()),
-                                        title = val
-                                    }
-                                    DBGOUT("portal")
-                                
-                                -- ReserveScript(string.format("session.autoSeller.RequestOpenShop(%d,AUTO_SELL_PORTAL)", actor:GetHandleVal()), delay)
-                                -- ReserveScript(string.format("FINDPORTALSHOP_INSPECT_RESULT('%s')", "Portal"), delay + 4)
-                                -- delay = delay + 6
+                                    -- ReserveScript(string.format("session.autoSeller.RequestOpenShop(%d,AUTO_SELL_PORTAL)", actor:GetHandleVal()), delay)
+                                    -- ReserveScript(string.format("FINDPORTALSHOP_INSPECT_RESULT('%s')", "Portal"), delay + 4)
+                                    -- delay = delay + 6
+                                    end
                                 end
                             
                             end
@@ -210,8 +218,8 @@ function FINDPORTALSHOP_PORTAL_SELLER_OPEN_UI(groupName, sellType, handle)
                 FINDPORTALSHOP_FIX()
                 
                 PORTAL_SELLER_OPEN_UI_OLD(groupName, sellType, handle)
-                
-                
+            
+            
             end
         end,
         catch = function(error)
@@ -228,24 +236,24 @@ function FINDPORTALSHOP_INIT()
             local frame = ui.GetFrame(g.framename)
             local adv = frame:GetChildRecursively("adv")
             AUTO_CAST(adv)
-            frame:Resize(1200,800)
+            frame:Resize(1200, 800)
             frame:SetColorTone("77777777")
             frame:SetLayerLevel(50)
             frame:SetSkinName("chat_window_2")
-            adv:Resize(frame:GetWidth(),frame:GetHeight()-adv:GetY())
+            adv:Resize(frame:GetWidth(), frame:GetHeight() - adv:GetY())
             adv:EnableAutoResize(false, true)
             
             adv:SetGravity(ui.LEFT, ui.TOP)
             adv:SetOffset(0, 100)
-            adv:SetStartRow(1);	
-            adv:SetColWidth(0,200)
-            adv:SetColWidth(1,300)
-            adv:SetColWidth(2,200)
-            adv:SetColWidth(3,200)
-            adv:SetColWidth(4,200)
-            adv:SetColWidth(5,200)
-            adv:SetColWidth(6,100)
-
+            adv:SetStartRow(1);
+            adv:SetColWidth(0, 200)
+            adv:SetColWidth(1, 300)
+            adv:SetColWidth(2, 200)
+            adv:SetColWidth(3, 200)
+            adv:SetColWidth(4, 200)
+            adv:SetColWidth(5, 200)
+            adv:SetColWidth(6, 100)
+            
             adv:Resize(frame:GetWidth() - 10, frame:GetHeight() - 200)
             adv:SetSkinName("bg2")
             adv:SetEventScript(ui.LBUTTONUP, "FINDPORTALSHOP_LBTN")
@@ -267,41 +275,73 @@ function FINDPORTALSHOP_LBTN()
             local frame = ui.GetFrame(g.framename)
             
             local adv = frame:GetChildRecursively("adv")
-            local key = adv:GetObjectXY(tonumber(adv:GetSelectedKey())+1, 5):GetText()
-            local handle = tonumber(adv:GetObjectXY(tonumber(adv:GetSelectedKey())+1, 6):GetText())
-            local actor=world.GetActor(handle)
-            if(actor)then
-                local fndList, fndCount = SelectObject(GetMyActor(), 400, 'ALL');
+            if (tonumber(adv:GetSelectedKey()) == nil or adv:GetObjectXY(tonumber(adv:GetSelectedKey()) + 1, 5) == nil) then
+                DBGOUT("bye")
+                return
+            end
+            local key = adv:GetObjectXY(tonumber(adv:GetSelectedKey()) + 1, 5):GetText()
+            local handle = tonumber(adv:GetObjectXY(tonumber(adv:GetSelectedKey()) + 1, 6):GetText())
+            local actor = world.GetActor(handle)
+            local y=nil
+            if (actor) then
+                local fndList, fndCount = SelectObject(GetMyActor(), 800, 'ALL');
                 for i = 1, fndCount do
                     local actor = world.GetActor(GetHandle(fndList[i]));
-                    local hnd =GetHandle(fndList[i])
-                    local targetInfo= info.GetTargetInfo(hnd);
-                
-                    if(targetInfo.IsDummyPC==1)then
-                        if(hnd~=handle)then
-                            actor:SetAuraInfo("None");
-                        else
-                            actor:SetAuraInfo("EliteBuff");
-                            DBGOUT("aura")
+                    local hnd = GetHandle(fndList[i])
+                    local targetInfo = info.GetTargetInfo(hnd);
+                    
+                    if false then
+                        if (targetInfo.IsDummyPC == 1) then
+                            if (hnd ~= handle) then
+                                actor:SetAuraInfo("None");
+                            else
+                                actor:SetAuraInfo("EliteBuff");
+                                DBGOUT("aura")
+                            end
                         end
                     end
-                    
                 end
-                local self=GetMyActor()
-                local pos=actor:GetPos()
-                --self:ActorJump(10, 0);
-                --geMCC.MoveTo(actor, enemy:GetPos());
-                local dist=info.GetDestPosDistance(pos.x, pos.y, pos.z, session.GetMyHandle());
-                direct.MoveToTarget(self:GetHandleVal(), handle, 10, 33);
-                --self:MoveMathPoint(pos.x, pos.y, pos.z, 0.1*dist, 1.0);
-                --self:RotateToTarget(actor, 0.0);
-                --actor:GetAnimation():PlayFixAnim('WALK', 0.1*dist,0)
+                local self = GetMyActor()
+                local pos = actor:GetPos()
+                local dist = info.GetDestPosDistance(pos.x, pos.y, pos.z, session.GetMyHandle());
+                y=pos.y
+                if false then
+                    direct.MoveToTarget(self:GetHandleVal(), handle, 10, 33);
+                end
             end
             DBGOUT(key)
             --SLM(key)
             local frame = ui.GetFrame(g.framename)
             
-            --frame:ShowWindow(0)
+            local pc = GetMyActor()
+            local pos = pc:GetPos()
+            
+            local len = 10
+
+            local argStrings = StringSplit(key, "#");
+            local mapID = argStrings[1];
+            local x = argStrings[2];
+            local z = argStrings[3];
+
+            g.routing={
+                x=x,
+                y=y,
+                z=z,
+            }
+            --effect.AddActorEffect(pc, 'F_wizard_InfernalShadow_dark_smoke', 1, pos.x, pos.y, pos.z, -1)
+        --frame:ShowWindow(0)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function FINDPORTALSHOP_ATTRACT(effect, x, y, z)
+    EBI_try_catch{
+        try = function()
+            local pc = GetMyActor()
+            
+            effect.AddActorEffect(pc, effect, 1, x, y, z, -1)
         end,
         catch = function(error)
             ERROUT(error)
@@ -315,15 +355,19 @@ function FINDPORTALSHOP_RBTN()
             local frame = ui.GetFrame(g.framename)
             
             local adv = frame:GetChildRecursively("adv")
-            local key = adv:GetObjectXY(tonumber(adv:GetSelectedKey())+1, 5):GetText()
-            local handle = tonumber(adv:GetObjectXY(tonumber(adv:GetSelectedKey())+1, 6):GetText())
-            local actor=world.GetActor(handle)
+            if (tonumber(adv:GetSelectedKey()) == nil or adv:GetObjectXY(tonumber(adv:GetSelectedKey()) + 1, 5) == nil) then
+                DBGOUT("bye")
+                return
+            end
+            local key = adv:GetObjectXY(tonumber(adv:GetSelectedKey()) + 1, 5):GetText()
+            local handle = tonumber(adv:GetObjectXY(tonumber(adv:GetSelectedKey()) + 1, 6):GetText())
+            local actor = world.GetActor(handle)
             
             DBGOUT(key)
             SLM(key)
             local frame = ui.GetFrame(g.framename)
-            
-            --frame:ShowWindow(0)
+        
+        --frame:ShowWindow(0)
         end,
         catch = function(error)
             ERROUT(error)
@@ -363,14 +407,14 @@ function FINDPORTALSHOP_INSPECT_RESULT(groupname, kanban, teamname, handle)
             local actor = world.GetActor(handle)
             FINDPORTALSHOP_ADD(teamname, kanban, portals,
                 {
-                    Handle=actor:GetHandleVal(),
+                    Handle = actor:GetHandleVal(),
                     Name = session.GetMapName(),
                     x = actor:GetPos().x,
                     z = actor:GetPos().z
                 })
             g.inc = g.inc + 1
             session.autoSeller.Close("Portal");
-
+            
             ui.GetFrame("portal_seller"):ShowWindow(0)
         end,
         catch = function(error)
@@ -413,21 +457,65 @@ function FINDPORTALSHOP_ON_TIMER()
                 DBGOUT("do")
                 if (#g.tgt >= g.inc) then
                     local v = g.tgt[g.inc]
-                    if(v)then
-                      
-                        if(v.handle)then
+                    if (v) then
+                        
+                        if (v.handle) then
                             session.SetMyPageOwnerHandle(v.handle)
                             session.autoSeller.RequestOpenShop(v.handle, AUTO_SELL_PORTAL)
-                            ReserveScript(string.format("FINDPORTALSHOP_INSPECT_RESULT('%s','%s','%s',%d)", "Portal",  v.title,v.teamname, v.handle), 0.25)
+                            ReserveScript(string.format("FINDPORTALSHOP_INSPECT_RESULT('%s','%s','%s',%d)", "Portal", v.title, v.teamname, v.handle), 0.25)
                         end
-                        
+                    
                     end
                 else
                     DBGOUT("end" .. tostring(#g.tgt) .. "/" .. tostring(g.inc))
                     g.inspecting = false
                     g.inc = 1
                     FINDPORTALSHOP_FIX()
-                    
+                
+                end
+            end
+
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function FINDPORTALSHOP_ON_TIMER2()
+    EBI_try_catch{
+        try = function()
+            
+            
+            if(g.routing)then
+
+                --near?
+
+                
+                local actor=GetMyActor()
+                local pos=actor:GetPos()
+                if(math.pow((g.routing.x-pos.x),2)+math.pow((g.routing.z-pos.z),2))<30*30 then
+                    g.routing=nil
+                else
+                    local eff="F_sys_arrow_pc"
+                    local dist=math.sqrt(math.pow((g.routing.x-pos.x),2)+math.pow((g.routing.z-pos.z),2))
+                    local dirinitial=dist
+                    DBGOUT("DIST"..tostring(dirinitial))
+                    while dist >= 1 do
+                        local dir=math.atan(g.routing.x-pos.x,g.routing.z-pos.z)
+                        
+                        local di=dist/dirinitial
+                        local div
+                        local xx=pos.x+math.sin(dir)*dirinitial*di
+                        local zz=pos.z+math.cos(dir)*dirinitial*di
+
+
+
+                        effect.PlayGroundEffect(GetMyActor(),eff,1,xx,pos.y+10,zz,1,"None",-dir+math.pi,0)
+                        dist=dist-20
+                    end
+
+     
+
                 end
             end
         end,
@@ -447,9 +535,7 @@ function FINDPORTALSHOP_FIX()
             ui.GetFrame("portal_seller"):Resize(450, 1200)
             ui.GetFrame("portal_seller"):SetOffset(0, 0)
             DBGOUT("fix")
-            --g.inc = 1
-            --g.inspecting = false
-            --g.tgt = {}
+
         end,
         catch = function(error)
             ERROUT(error)
@@ -476,9 +562,13 @@ function FINDPORTALSHOP_CLEAR()
     local frame = ui.GetFrame("findportalshop")
     local adv = frame:GetChildRecursively("adv")
     AUTO_CAST(adv)
-    --adv:RemoveAllChild()    
+    --adv:RemoveAllChild()
     adv:ClearUserItems()
     g.itemcount = 0
+end
+function FINDPORTALSHOP_ON_PRESS_ESCAPE()
+    g.routing=nil
+
 end
 function FINDPORTALSHOP_ADD(groupname, kanban, portals, map)
     EBI_try_catch{
@@ -506,12 +596,12 @@ function FINDPORTALSHOP_ADD(groupname, kanban, portals, map)
                 x = x + adv:GetColWidth(i + 1)
             end
             local mapprop = geMapTable.GetMapProp(map.Name);
-            local str=string.format("%d#%d#%d", mapprop.type,map.x, map.z);	
-            local item = adv:SetItem(g.itemcount, 5,str)
+            local str = string.format("%d#%d#%d", mapprop.type, map.x, map.z);
+            local item = adv:SetItem(g.itemcount, 5, str)
             item:Resize(adv:GetColWidth(5), item:GetHeight())
             item:SetOffset(x, o)
             x = x + adv:GetColWidth(5)
-            local item = adv:SetItem(g.itemcount, 6,tostring(map.Handle))
+            local item = adv:SetItem(g.itemcount, 6, tostring(map.Handle))
             item:Resize(adv:GetColWidth(6), item:GetHeight())
             item:SetOffset(x, o)
             x = x + adv:GetColWidth(6)
