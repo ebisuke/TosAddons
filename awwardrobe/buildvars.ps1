@@ -1,3 +1,3 @@
 $addonname="awwardrobe"
 
-$version="v0.4.3"
+$version="v0.4.4"
