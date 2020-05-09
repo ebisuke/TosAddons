@@ -405,6 +405,7 @@ function FINDPORTALSHOP_INSPECT_RESULT(groupname, kanban, teamname, handle)
                 }
             end
             local actor = world.GetActor(handle)
+            if(actor)then
             FINDPORTALSHOP_ADD(teamname, kanban, portals,
                 {
                     Handle = actor:GetHandleVal(),
@@ -412,6 +413,7 @@ function FINDPORTALSHOP_INSPECT_RESULT(groupname, kanban, teamname, handle)
                     x = actor:GetPos().x,
                     z = actor:GetPos().z
                 })
+            end
             g.inc = g.inc + 1
             session.autoSeller.Close("Portal");
             
