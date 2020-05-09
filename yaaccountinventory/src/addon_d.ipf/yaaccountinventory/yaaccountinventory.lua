@@ -324,7 +324,7 @@ function YAI_DEFAULTPERSONALSETTINGS()
 end
 function YAI_SAVE_SETTINGS()
     DBGOUT("SAVE_SETTINGS")
-    AUTOITEMMANAGE_SAVETOSTRUCTURE()
+
     acutil.saveJSON(g.settingsFileLoc, g.settings)
     --for debug
     g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower, tostring(session.GetMySession():GetCID()))
