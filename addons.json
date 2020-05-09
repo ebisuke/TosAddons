@@ -404,8 +404,8 @@
     "name": "FindPortalShop",
     "file": "findportalshop",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "findportalshop-v0.0.2",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "findportalshop-v0.0.3",
     "unicode": "📖",
     "description": "近くにあるポータルショップの一覧を表示します。",
     "tags": [
