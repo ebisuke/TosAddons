@@ -352,7 +352,7 @@ function AWWARDROBE_ON_INIT(addon, frame)
             AWWARDROBE_INITIALIZE_FRAME()
             frame:ShowWindow(0)
             g.interlocked=false
-            LS=LIBSTORAGEHELPERV1_3
+           
         end,
         catch = function(error)
             AWWARDROBE_ERROUT(error)
@@ -360,7 +360,7 @@ function AWWARDROBE_ON_INIT(addon, frame)
     }
 end
 function AWWARDROBE_GAMESTART()
-    LS=LIBSTORAGEHELPERV1_2
+    LS=LIBSTORAGEHELPERV1_3
 end
 function AWWARDROBE_TOGGLE_FRAME()
     if g.frame:IsVisible() == 0 then
