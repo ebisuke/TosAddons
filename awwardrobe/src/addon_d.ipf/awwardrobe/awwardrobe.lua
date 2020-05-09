@@ -963,7 +963,7 @@ function AWWARDROBE_UNWEAR_MATCHED(frame, tbl)
             for _, d in pairs(tbl) do
                 --ロックされているアイテムは入れない
                 local invItem=GET_PC_ITEM_BY_GUID(d.iesid)
-                if(true ~= invItem.isLockState)then
+                if(invItem~=nil and true ~= invItem.isLockState)then
                     ReserveScript(string.format("AWWARDROBE_DEPOSITITEM(\"%s\")",  d.iesid), delay)
                     delay = delay + 0.6
                 end
