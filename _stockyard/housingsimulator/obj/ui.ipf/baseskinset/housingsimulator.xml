@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="housingsimulator_images">
+		<image name="hsim_h_weapon_laboratory_0" file="\skin\h_weapon_laboratory_0.png" imgrect="0 0 300 600"/>
+        <image name="hsim_h_topiary_cube_0" file="\skin\h_topiary_cube_0.png" imgrect="0 0 300 600"/>
+	</imagelist>
+
+</skinset>
