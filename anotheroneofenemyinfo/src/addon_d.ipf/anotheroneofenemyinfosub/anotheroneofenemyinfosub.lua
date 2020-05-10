@@ -101,6 +101,7 @@ function ANOTHERONEOFENEMYINFOSUB_ON_INIT(addon, frame)
             --CHALLENGEMODESTUFF_SHOW(g.frame)
             DBGOUT("INIT")
             g.subctrls = {}
+            frame:ShowWindow(0)
         --CHALLENGEMODESTUFF_INIT()
         end,
         catch = function(error)
@@ -109,6 +110,9 @@ function ANOTHERONEOFENEMYINFOSUB_ON_INIT(addon, frame)
     }
 end
 
+--disabled works
+return 
+--[[
 function AOE_SUB_INIT()
     
     EBI_try_catch{
@@ -738,3 +742,4 @@ function AOE_SUB_ON_LONGTIMER(frame)
         end
     }
 end
+]]
