@@ -210,6 +210,7 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             addon:RegisterMsg("GAME_START", "YAI_GAME_START");
             addon:RegisterMsg("GAME_START_3SEC", "YAI_3SEC");
             addon:RegisterMsg("YAI_UPDATED_CONFIG", "YAI_ON_MSG");
+            addon:RegisterOpenOnlyMsg('INV_ITEM_LIST_GET', 'YAI_INVENTORY_ON_MSG');
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_OPEN, "ACCOUNTWAREHOUSE_OPEN")
             acutil.setupHook(YAI_ACCOUNTWAREHOUSE_CLOSE, "ACCOUNTWAREHOUSE_CLOSE")
             acutil.setupHook(YAI_ACCOUNT_WAREHOUSE_MAKE_TAB, "ACCOUNT_WAREHOUSE_MAKE_TAB")
@@ -996,6 +997,7 @@ function YAI_UPDATE()
             for i = 0, invItemCount - 1 do
                 local invItem = itemList:GetItemByGuid(sortedGuidList:Get(i));
                 if invItem ~= nil then
+                    invItem.index=index_count
                     invItemList[index_count] = invItem
                     index_count = index_count + 1
                 end
@@ -1004,18 +1006,18 @@ function YAI_UPDATE()
 
             --@TODO ソート処理をここに
 
-            -- --1 등급순 / 2 무게순 / 3 이름순 / 4 소지량순
-            -- if sortType == 1 then
-            --     table.sort(invItemList, INVENTORY_SORT_BY_GRADE)
-            -- elseif sortType == 2 then
-            --     table.sort(invItemList, INVENTORY_SORT_BY_WEIGHT)
-            -- elseif sortType == 3 then
-            --     table.sort(invItemList, INVENTORY_SORT_BY_NAME)
-            -- elseif sortType == 4 then
-            --     table.sort(invItemList, INVENTORY_SORT_BY_COUNT)
-            -- else
-            --     table.sort(invItemList, INVENTORY_SORT_BY_NAME)
-            -- end
+            --1 등급순 / 2 무게순 / 3 이름순 / 4 소지량순
+            if sortType == 1 then
+                table.sort(invItemList, INVENTORY_SORT_BY_GRADE)
+            elseif sortType == 2 then
+                table.sort(invItemList, INVENTORY_SORT_BY_WEIGHT)
+            elseif sortType == 3 then
+                table.sort(invItemList, INVENTORY_SORT_BY_NAME)
+            elseif sortType == 4 then
+                table.sort(invItemList, INVENTORY_SORT_BY_COUNT)
+            else
+                table.sort(invItemList, INVENTORY_SORT_BY_NAME)
+            end
             
             for i = 1, #invenTitleName do
                 local category = invenTitleName[i]
@@ -1184,6 +1186,11 @@ function YAI_ON_MSG(frame, msg, argStr, argNum)
             YAI_UPDATE()
     end
 
+end
+function YAI_INVENTORY_ON_MSG()
+    if(ui.GetFrame("accountwarehouse"):IsVisible()==1)then
+        YAI_UPDATE()
+    end
 end
 function YAI_ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame, msg, argStr, argNum, tab_index)
     --disabled function for lightweight

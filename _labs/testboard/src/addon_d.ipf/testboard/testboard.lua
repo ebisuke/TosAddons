@@ -22,6 +22,7 @@ g.currentIndex = 1
 g.x = nil
 g.y = nil
 g.buffs = {}
+g.prevtime=nil
 --ライブラリ読み込み
 CHAT_SYSTEM("[TESTBOARD]loaded")
 local acutil = require('acutil')
@@ -123,6 +124,8 @@ function TESTBOARD_ON_INIT(addon, frame)
                 
                 g.loaded = true
             end
+            addon:RegisterMsg("ZONE_TRAFFICS", "TESTBOARD_ON_ZONE_TRAFFICS");
+
             --addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
             --addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
             --addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
@@ -164,6 +167,8 @@ function TESTBOARD_INIT()
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
             timer:Start(1);
             timer:EnableHideUpdate(true)
+
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -209,19 +214,7 @@ function TESTBOARD_ON_TIMER(frame)
             --         end
             --     end
             -- end
-            TESTBOARD_TEST()
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
-
-function TESTBOARD_TEST()
-    
-    EBI_try_catch{
-        try = function()
-
+            --TESTBOARD_TEST()
             local objList, objCount = SelectObject(GetMyActor(), 400, 'ALL');
             if objCount > 0 then
                 for i = 1, objCount do
@@ -229,16 +222,16 @@ function TESTBOARD_TEST()
                     local enemy = world.GetActor(enemyHandle);
                     if enemy ~= nil then
                         
-      
+                        
                         local tgto = enemy:GetSkillTargetObject()
-                        if(tgto)then
+                        if (tgto) then
                             local targetpos = tgto:GetPos()
                             local pos = enemy:GetPos()
-                            print("" .. targetpos.x)
+                            --print("" .. targetpos.x)
                             local eff = "F_sys_arrow_pc"
                             local dist = math.sqrt(math.pow((targetpos.x - pos.x), 2) + math.pow((targetpos.z - pos.z), 2))
                             local dirinitial = dist
-                            DBGOUT("DIST" .. tostring(dirinitial))
+                            --DBGOUT("DIST" .. tostring(dirinitial))
                             while dist >= 1 do
                                 local dir = math.atan(targetpos.x - pos.x, targetpos.z - pos.z)
                                 
@@ -257,6 +250,70 @@ function TESTBOARD_TEST()
                 end
             
             end
+
+            
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+
+function TESTBOARD_TEST()
+    
+    EBI_try_catch{
+        try = function()
+            --MarketRecipeSearch(1, "0;", 12);
+            -- local clsList, cnt = GetClassList("AchievePoint");
+            -- for i = 0, cnt - 1 do
+                
+            --     local cls = GetClassByIndexFromList(clsList, i);
+            --     local rankName = cls.RankName;
+            --     local group = cls.RankGroup;
+                
+            --     if rankName ~= "None" then
+            --         if rankGroup == "None" or group == rankGroup then
+            --             -- fameList:AddItem(cls.ClassID, rankName, 0);
+            --             local key = cls.ClassID;
+            --             local name = string.format("{a SEL_VIEW_RANK %s}{@st45}%s{/}{/}", key, rankName);
+            --             setTxt = setTxt .. name .. "{s6}{nl} {nl}{/}";
+            --         --local item = SET_ADVBOX_ITEM_C(fameList, key, 0, name, "white_16_ol");
+            --         --item:EnableHitTest(1);
+            --         end
+            --     end
+            
+            -- end
+            
+            -- local objList, objCount = SelectObject(GetMyActor(), 400, 'ALL');
+            -- if objCount > 0 then
+            --     for i = 1, objCount do
+            --         local enemyHandle = GetHandle(objList[i]);
+            --         local enemy = world.GetActor(enemyHandle);
+            --         if enemy ~= nil then
+            --             local inf=info.GetTargetInfo(enemyHandle)
+            --             if(inf.isBoss==1)then
+            --                 local monCls=GetClassByType("Monster",enemy:GetType())
+            --                 print(monCls.ClassName)
+            --                 mouseUtil.SetMouseMonster(monCls.ClassName);
+            --                 mouseUtil.HoldMouseMonster(true);
+            --             end
+            --         end
+            --     end
+            -- end
+            g.prevtime=imcTime.GetDWTime()
+            app.RequestChannelTraffics();
+
+            local handle=session.GetMyHandle()
+            local buffCount = info.GetBuffCount(handle);
+
+            for i = 0, buffCount - 1 do
+                local buff = info.GetBuffIndexed(handle, i);
+                local class = GetClassByType('Buff', buff.buffID);
+                DBGOUT(string.format("No%d:%s,%d,%d,%d,%d,%d",i,class.Name,buff.arg1,buff.arg2,buff.arg3,buff.arg4,buff.arg5))
+            end
+    
+            --end
+            --TESTBOARD_SET_NECRO_CARD_STATE()
         --TESTBOARD_SET_NECRO_CARD_STATE()
         end,
         catch = function(error)
@@ -264,7 +321,9 @@ function TESTBOARD_TEST()
         end
     }
 end
-
+function TESTBOARD_TAKEDAMAGE()
+    DBGOUT("take")
+end
 function TESTBOARD_SET_NECRO_CARD_STATE()
     local frame = ui.GetFrame("necronomicon")
     frame:ShowWindow(1)
@@ -305,8 +364,8 @@ function TESTBOARD_SET_NECRO_CARD_STATE()
     end
     tempObj.Lv = inf.level
     print("here")
-    print("" .. actor:GetFSMArg1())
-    local pcObj = GetMyPCObject();
+    --print("" .. GetObject(tempObj))
+    local pcObj = GetObject();
     
     --CLIENT_SORCERER_SUMMONING_MON(tempObj, pcObj, GetIES(skl:GetObject()), bosscardcls);
     -- 체력
@@ -410,4 +469,13 @@ function TESTBOARD_SCR_Get_MON_MHP(self)
     end
     
     return math.floor(value);
+end
+
+
+function TESTBOARD_ON_ZONE_TRAFFICS()
+    if(g.prevtime~=nil)then
+        DBGOUT("RTT"..(imcTime.GetDWTime()-g.prevtime))
+        g.prevtime=nil
+
+    end
 end

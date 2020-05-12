@@ -24,3 +24,10 @@ housingsimulator/tool/HousingRenderer/Library/*
 /buffremainvisualizer/tool/buffskingen/venv/
 .vscode/settings.json
 *.ipf/*
+_labs/partyaura/bin/__partyaura-📖-v0.0.1.ipf
+_labs/partyaura/bin/partyaura-v0.0.1.ipf
+_labs/partyaura/obj/addon_d.ipf/partyaura/partyaura.lua
+_labs/partyaura/obj/xml_client.ipf/monsterAuraColor.xml
+_labs/testboard/bin/__testboard-📖-v1.0.0.ipf
+_labs/testboard/bin/testboard-v1.0.0.ipf
+_labs/testboard/obj/addon_d.ipf/testboard/testboard.lua

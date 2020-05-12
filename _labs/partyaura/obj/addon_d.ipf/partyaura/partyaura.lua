@@ -14,7 +14,7 @@ g.version = 0
 g.settings = {x = 300, y = 300, volume = 100, mute = false}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.framename = "partyaura"
-g.debug = false
+g.debug = true
 g.x = nil
 g.y = nil
 g.buffs = {}
@@ -122,7 +122,7 @@ function PARTYAURA_ON_TIMER()
                 for i = 1, objCount do
                     local handle = GetHandle(objList[i]);
                     local actor = world.GetActor(handle);
-         
+                   
                     local targetinfo = info.GetTargetInfo(handle);
                     if info.IsPC(handle) and targetinfo.IsDummyPC ~= 1 then
                         local cid = info.GetCID(handle);
@@ -139,11 +139,12 @@ function PARTYAURA_ON_TIMER()
                             for i = 0 , count - 1 do
                                 local partyMemberInfo = list:Element(i);                            
                                 local aid = partyMemberInfo:GetAID();
-                                if(paid==aid)then
+                                --if(paid==aid)then
                                     --aura
+                                    
+                                    actor:GetEffect():PlayEffect("F_light029_blue", 0.2);
 
-                                    actor:SetAuraInfo("GuildMemberAura");
-                                end
+                                --end
                             end
                         end
                     end

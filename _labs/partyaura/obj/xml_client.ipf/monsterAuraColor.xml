@@ -17,7 +17,7 @@
 			<Color RGBA="3000;50;1500;120" Time="0"/>
 			<Color RGBA="8000;50;2000;255" Time="0.5"/>
 			<Color RGBA="3000;50;3000;180" Time="1"/>
-			<Color RGBA="3000;50;2000;120" Time="1.5"/>
+			<Color RGBA="3000;50;2000;60" Time="1.5"/>
 		</Node>
 	</Pattern>
 </Aura>
