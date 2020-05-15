@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="additionalhotkey" x="0" y="0" width="1000" height="800" create="open">
+	<draw drawnotitlebar="false" drawtitlebar="false"/>
+	<skin frameskin="test_frame_low"/>
+	<frame title="" fullheight="false" fasthide="true" layout_gravity="center center" margin="0 0 0 0"/>
+	<input moveable="true" hittestframe="true" moveintitlebar="false"/>
+	<layer layerlevel="100"/>
+	<option closebutton="false"/>
+	<sound opensound="window_open" closesound="window_close"/>
+	<controls>
+		<!--<slotset name="itemSlotset" rect="0 0 480 500" margin="0 145 0 0" layout_gravity="center top" row="1" col="10" size="65 65" skin="invenslot2" spc="2 2" enabledrop="true" enablepop="true"/>-->
+		<timer name="addontimer" rect="0 0 10 10"/>
+		
+	</controls>
+</uiframe>

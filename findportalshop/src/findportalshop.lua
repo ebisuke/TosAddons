@@ -21,6 +21,14 @@ g.portals = {}
 g.delay = 3
 g.itemcount = 0
 g.routing=nil
+
+g.framename = "findportalshop"
+g.inspecting = false
+g.gid = g.gid or nil
+g.tgt = {}
+g.inc = 1
+g.sz = {}
+
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -53,15 +61,6 @@ local function ERROUT(msg)
 
 end
 
-
-g.location = g.location or nil
-g.framename = "findportalshop"
-g.inspecting = false
-g.gid = g.gid or nil
-g.tgt = {}
-g.inc = 1
-g.sz = {}
-
 function FINDPORTALSHOP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -70,10 +69,7 @@ function FINDPORTALSHOP_ON_INIT(addon, frame)
             frame = g.frame
             frame:ShowWindow(0)
             acutil.slashCommand("/fpsf", FINDPORTALSHOP_PROCESS_COMMAND);
-            if OLD_MAP_OPEN == nil then
-                OLD_MAP_OPEN = MAP_OPEN
-                MAP_OPEN = FINDPORTALSHOP_MAP_OPEN_JUMPER
-            end
+
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             frame:EnableHideProcess(1);
             timer:SetUpdateScript("FINDPORTALSHOP_ON_TIMER");
@@ -89,6 +85,7 @@ function FINDPORTALSHOP_ON_INIT(addon, frame)
             acutil.setupHook(FINDPORTALSHOP_BUFFSELLER_OPEN, "BUFFSELLER_OPEN")
             
             acutil.addSysIcon('findportalshop', 'sysmenu_sys', 'findportalshop', 'FINDPORTALSHOP_TOGGLE')
+            g.routing=nil
             FINDPORTALSHOP_VIEWINIT()
             FINDPORTALSHOP_INIT()
         end,
@@ -99,25 +96,7 @@ function FINDPORTALSHOP_ON_INIT(addon, frame)
 
 end
 
-function FINDPORTALSHOP_MAP_OPEN_JUMPER(frame)
-    if OLD_MAP_OPEN ~= nil then
-        OLD_MAP_OPEN(frame)
-    end
-    FINDPORTALSHOP_MAP_OPEN(frame)
-end
 
-function FINDPORTALSHOP_MAP_OPEN(frame)
-    EBI_try_catch{
-        try = function()
-        
-        
-        end,
-        catch = function(error)
-            CHAT_SYSTEM(error)
-        end
-    }
-
-end
 function FINDPORTALSHOP_TOGGLE()
     EBI_try_catch{
         try = function()
@@ -437,19 +416,6 @@ function FINDPORTALSHOP_REFRESH()
         end
     }
 end
-function FINDPORTALSHOP_PROCESS_COMMAND(command)
-    local cmd = "";
-    
-    if #command > 0 then
-        cmd = table.remove(command, 1);
-    else
-        local msg = "usage{nl}/fpsf 地点の名前"
-        return ui.MsgBox(msg, "", "Nope")
-    end
-    
-    g.finding = cmd
-    DBGOUT("COMMAND SUCCESS")
-end
 
 function FINDPORTALSHOP_ON_TIMER()
     EBI_try_catch{
@@ -570,7 +536,7 @@ function FINDPORTALSHOP_CLEAR()
 end
 function FINDPORTALSHOP_ON_PRESS_ESCAPE()
     g.routing=nil
-
+    g.inspecting=false
 end
 function FINDPORTALSHOP_ADD(groupname, kanban, portals, map)
     EBI_try_catch{

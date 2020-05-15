@@ -26,7 +26,7 @@ g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 g.isediting=false
 g.editkeydown=false
 --GAMESTARTでも取っておくこと
-local LS=LIBSTORAGEHELPERV1_2
+local LS=LIBSTORAGEHELPERV1_3
 --ライブラリ読み込み
 CHAT_SYSTEM("[AIM]loaded")
 local acutil  = require('acutil')
@@ -335,7 +335,7 @@ function AUTOITEMMANAGE_RESERVE_INIT(frame)
 
 end
 function AUTOITEMMANAGE_GAME_START()
-    LS=LIBSTORAGEHELPERV1_2
+    LS=LIBSTORAGEHELPERV1_3
 end
 function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
         --if (not g.foundasm) then
@@ -892,7 +892,7 @@ function AUTOITEMMANAGE_CHANGENUMBER(argnum)
             slo:SetNumberMode(1)
             slo:SetEnableEditTag(1);
             slo:SetMinNumber(1)
-            slo:SetMaxNumber(99999)
+            slo:SetMaxNumber(999999)
             slo:SetSkinName("None")
             slo:SetFontName('green_20_ol')
             slo:SetGravity(ui.RIGHT, ui.TOP);
@@ -1437,7 +1437,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
 end
 function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index,isstackable)
     g.editindex = index
-    local maxcount=99999
+    local maxcount=999999
     if(isstackable==false)then
         imcSound.PlaySoundEvent('button_click_big_2');
         ui.MsgBox(L_("ClassidWarn"),
