@@ -4,7 +4,7 @@ local addonName = 'subquickslot'
 _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
-
+local acutil=require("acutil")
 -- 領域へのポインターを取得
 local g = _G['ADDONS'][author][addonName]
 
@@ -136,6 +136,8 @@ function g.new(self)
             CreateIcon(slot):SetColorTone('FFFFFFFF')
           end
         end
+
+        
       end
       self:Dbg('Finish redraw... target='..frame:GetName())
     end
@@ -306,6 +308,7 @@ function g.new(self)
         else
           self:SetSubSlot(slot, dummyLiftIconInfo)
         end
+
       end
     end
     self:Dbg('recovered slot.')
@@ -814,6 +817,26 @@ function g.new(self)
     self:Log(string.format('%s -> %s', targetClass.Name, targetClass.ClassID))
   end
 
+  members.HandleQuickslot = function(self, idx,frameIndex)
+      local frame = ui.GetFrame(addonName..'-'..frameIndex)
+      local slotset = frame:GetChild('slotset')
+      tolua.cast(slotset, 'ui::CSlotSet')
+      local slot=slotset:GetSlotByIndex(idx-1)
+      if slot then
+       
+       
+        local icon=slot:GetIcon()
+
+        if(icon)then
+          local str=slot:GetEventScriptArgString(ui.RBUTTONUP)
+          local type=slot:GetEventScriptArgNumber(ui.RBUTTONUP)
+          local category=slot:GetUserValue(__USERVALUE_SLOT_CATEGORY)
+
+          self:SlotClickAction(ui.GetFrame("quickslotnexpbar"),slot,str,type)
+        end
+	
+      end
+  end
   -- デストラクター
   members.Destroy = function(self)
   end
@@ -835,6 +858,50 @@ function SUBQUICKSLOT_ON_INIT(addon, frame)
   -- 遅延呼び出し的な
   -- これをしないとSCR_QUEST_CHECK_Q() の戻り値がNoneになって正しく動かない
   addon:RegisterMsg('GAME_START', 'SUBQUICKSLOT_ON_MENU_REDRAW')
+  addon:RegisterMsg('GAME_START_3SEC', 'SUBQUICKSLOT_ON_GAME_START_3SEC')
+  acutil.setupHook(SUBQUICKSLOT_QUICKSLOTNEXPBAR_EXECUTE,"TEST_TOS")
+
+end
+function SUBQUICKSLOT_ON_GAME_START_3SEC()
+  --念の為
+  config.CreateHotKeyElementsForConfig("hotkey.xml", "Battle");
+  config.SaveHotKey("hotkey.xml");
+		
+	ReloadHotKey();
+end
+function SUBQUICKSLOT_QUICKSLOTNEXPBAR_EXECUTE()
+  for i=1,100 do
+    local id="SubQuickSlot"..tostring(i)
+
+    local KeyIdx = config.GetHotKeyElementIndex('ID', id);
+    if(KeyIdx==nil or KeyIdx < 0) then
+
+      break
+    end
+    local Key = config.GetHotKeyElementAttributeForConfig(KeyIdx, 'Key');
+    local useShift = config.GetHotKeyElementAttributeForConfig(KeyIdx, "UseShift");
+    local useAlt = config.GetHotKeyElementAttributeForConfig(KeyIdx, "UseAlt");
+    local useCtrl = config.GetHotKeyElementAttributeForConfig(KeyIdx, "UseCtrl");
+    local flag=true
+
+    if(useShift=="YES" and keyboard.IsKeyPressed("LSHIFT")~=1)then
+        flag=false
+    end
+    if(useAlt=="YES" and keyboard.IsKeyPressed("LALT")~=1)then
+        flag=false
+    end
+    if(useCtrl=="YES" and keyboard.IsKeyPressed("LCTRL")~=1)then
+        flag=false
+    end
+    if(Key=="None" or keyboard.IsKeyDown(Key)~=1)then
+        flag=false
+    end
+    
+    if flag == true then
+      g.instance:HandleQuickslot(i,1)
+      break
+    end
+  end
 end
 
 -- === イベントハンドラー === --
