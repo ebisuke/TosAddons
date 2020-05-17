@@ -19,7 +19,7 @@ g.settings = g.settings or {
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofpartyinfo"
-g.debug = true
+g.debug = false
 g.tick = 0
 g.casting=false
 g.castanim=0
@@ -787,13 +787,13 @@ function AOP_RENDER_PARTY(frame, pic)
                     oy = 0*rd+55*d
                 elseif (inc == 1) then
                     ox = 50*rd+5*d
-                    oy = 60*rd+245*d
+                    oy = 90*rd+245*d
                 elseif (inc == 2) then
                     ox = 50*rd+220*d
-                    oy = 120*rd+445*d
+                    oy = 180*rd+445*d
                 else
                     ox = 50*rd+445*d
-                    oy = 180*rd+245*d
+                    oy = 270*rd+245*d
                 end
             end
          

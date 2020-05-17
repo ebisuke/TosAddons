@@ -23,7 +23,7 @@ g.configurepattern = {
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofenemyinfo"
-g.debug = true
+g.debug = false
 g.tick = 0
 
 g.castanim = 0
