@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by imc (imc) -->
+<!-- edited with XMLSpy v2008 sp1 (http://www.altova.com) by MintPC (Mi) -->
+<skinset name="Base">
+	<skinlist category="frames">
+		<skin name="ebi_cool" texture="\skin\ebi_cool.tga">
+            <img name="slot" imgrect="0 0 42 42"/>
+			<img name="mouseon" imgrect="42 0 42 42"/>
+			<img name="cooltime" imgrect="84 0 42 42"/>
+			<img name="selected" imgrect="126 0 42 42"/>
+        </skin>
+    </skinlist>
+</skinset>

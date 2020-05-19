@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="partyaura" x="0" y="0" width="10" height="10" create="open">
+	<draw drawnotitlebar="false" drawtitlebar="false"/>
+
+	<frame title="" fullheight="false" fasthide="true" layout_gravity="left top" margin="100 100 0 0"/>
+	<input moveable="false" hittestframe="false" moveintitlebar="false"/>
+	<layer layerlevel="100"/>
+	<option closebutton="false"/>
+
+	<controls>
+
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

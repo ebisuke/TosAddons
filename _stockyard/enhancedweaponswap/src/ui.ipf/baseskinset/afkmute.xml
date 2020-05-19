@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="ews_icons">
+		<image name="ews_purple_1" file="\skin\ews_purple_1.png" imgrect="0 0 128 128"/>
+		<image name="ews_blue_1" file="\skin\ews_blue_1.png" imgrect="0 0 128 128"/>
+		<image name="ews_red_1" file="\skin\ews_red_1.png" imgrect="0 0 128 128"/>
+		<image name="ews_yellow_1" file="\skin\ews_yellow_1.png" imgrect="0 0 128 128"/>
+		<image name="ews_green_1" file="\skin\ews_green_1.png" imgrect="0 0 128 128"/>
+		
+	</imagelist>
+</skinset>
