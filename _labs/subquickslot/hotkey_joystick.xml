@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Category>
+	<HotKey ID="MoveUp" Name="@dicID_^*$ETC_20151119_017586$*^" DownScp="None" UpScp="None" Key="JOY_UP" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveDown" Name="@dicID_^*$ETC_20151119_017587$*^" DownScp="None" UpScp="None" Key="JOY_DOWN" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveLeft" Name="@dicID_^*$ETC_20151119_017588$*^" DownScp="None" UpScp="None" Key="JOY_LEFT" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveRight" Name="@dicID_^*$ETC_20151119_017589$*^" DownScp="None" UpScp="None" Key="JOY_RIGHT" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute1" Name="퀵슬롯1" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(0)" UpScp="None" Key="JOY_BTN_1" PressedKey="JOY_BTN_5" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute2" Name="퀵슬롯2" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(1)" UpScp="None" Key="JOY_BTN_2" PressedKey="JOY_BTN_5" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute3" Name="퀵슬롯3" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(2)" UpScp="None" Key="JOY_BTN_4" PressedKey="JOY_BTN_5" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute4" Name="퀵슬롯4" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(3)" UpScp="None" Key="JOY_BTN_3" PressedKey="JOY_BTN_5" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute5" Name="퀵슬롯5" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(4)" UpScp="None" Key="JOY_BTN_1" PressedKey="JOY_BTN_7" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute6" Name="퀵슬롯6" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(5)" UpScp="None" Key="JOY_BTN_2" PressedKey="JOY_BTN_7" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute7" Name="퀵슬롯7" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(6)" UpScp="None" Key="JOY_BTN_4" PressedKey="JOY_BTN_7" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute8" Name="퀵슬롯8" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(7)" UpScp="None" Key="JOY_BTN_3" PressedKey="JOY_BTN_7" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute9" Name="퀵슬롯9" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(12)" UpScp="None" Key="JOY_BTN_1" PressedKey="JOY_BTN_6" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute14" Name="퀵슬롯14" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(13)" UpScp="None" Key="JOY_BTN_2" PressedKey="JOY_BTN_6" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute15" Name="퀵슬롯15" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(14)" UpScp="None" Key="JOY_BTN_4" PressedKey="JOY_BTN_6" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute16" Name="퀵슬롯16" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(15)" UpScp="None" Key="JOY_BTN_3" PressedKey="JOY_BTN_6" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute17" Name="퀵슬롯17" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(16)" UpScp="None" Key="JOY_BTN_1" PressedKey="JOY_BTN_8" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute18" Name="퀵슬롯18" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(17)" UpScp="None" Key="JOY_BTN_2" PressedKey="JOY_BTN_8" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute19" Name="퀵슬롯19" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(18)" UpScp="None" Key="JOY_BTN_4" PressedKey="JOY_BTN_8" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute20" Name="퀵슬롯20" DownScp="JOYSTICK_QUICKSLOT_EXECUTE(19)" UpScp="None" Key="JOY_BTN_3" PressedKey="JOY_BTN_8" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-1" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-2" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-3" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-4" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-5" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-6" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-7" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-8" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-9" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-10" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-11" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-12" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-13" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-14" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-15" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-16" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-17" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-18" Name="퀵슬롯20" DownScp="TEST_TOS()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="NormalAttack" Name="일반공격" DownScp="None" UpScp="None" Key="JOY_BTN_1" PressedKey="MustNone" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="Jump" Name="@dicID_^*$SKILL_20150317_001988$*^" DownScp="None" UpScp="None" Key="JOY_BTN_2" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="ToggleMouseMode" Name="마우스모드토글" DownScp="joystick.ToggleMouseMode()" UpScp="None" Key="JOY_BTN_10" PressedKey="JOY_BTN_6" Mode="Both" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Map" Name="@dicID_^*$UI_20170919_002907$*^" DownScp="UI_TOGGLE_MAP()" UpScp="None" Key="JOY_BTN_9" PressedKey="JOY_BTN_5" Mode="Both" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Select" Name="@dicID_^*$ETC_20151119_017597$*^" DownScp="None" UpScp="None" Key="JOY_BTN_3" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="QuestItemUse" Name="퀘스트아이템 사용" DownScp="QUESTITEMUSE_EXECUTE()" UpScp="None" Key="JOY_BTN_10" PressedKey="JOY_BTN_7" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="MouseSpeedUP" Name="마우스속도증가" DownScp="joystick.MouseSpeedUp(5)" UpScp="joystick.MouseSpeedUp(-5)" Key="JOY_BTN_4" PressedKey="None" Mode="Mouse" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Escape" Name="@dicID_^*$ETC_20151119_017583$*^" DownScp="None" UpScp="None" Key="JOY_BTN_10" PressedKey="None" Mode="Both" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="QuickSlotSwap1" Name="퀵슬롯 변경" DownScp="JOYSTICK_QUICKSLOT_SWAP(1)" UpScp="None" Key="JOY_BTN_8" PressedKey="JOY_BTN_7" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="QuickSlotSwap2" Name="퀵슬롯 변경" DownScp="JOYSTICK_QUICKSLOT_SWAP(2)" UpScp="None" Key="JOY_BTN_7" PressedKey="JOY_BTN_8" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="WeaponSwap1" Name="@dicID_^*$SKILL_20150414_003996$*^" DownScp="WEAPONSWAP_HOTKEY_ENTERED()" UpScp="None" Key="JOY_BTN_11" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="TargetFixed" Name="@dicID_^*$ETC_20151119_017585$*^" DownScp="None" UpScp="None" Key="JOY_BTN_12" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="TargetChange" Name="타겟 변경" DownScp="None" UpScp="None" Key="JOY_TARGET_CHANGE" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="WarpQuest" Name="@dicID_^*$ETC_20150317_003683$*^" DownScp="SELECT_QUEST_WARP()" UpScp="None" Key="JOY_BTN_9" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="LHand" Name="@dicID_^*$ETC_20181115_036116$*^" DownScp="None" UpScp="None" Key="JOY_BTN_4" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="RideOn" Name="탈것 타기" DownScp="ON_RIDING_VEHICLE(1)" UpScp="None" Key="JOY_UP" PressedKey="JOY_L1L2" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="RideOff" Name="탈것 내리기" DownScp="ON_RIDING_VEHICLE(0)" UpScp="None" Key="JOY_DOWN" PressedKey="JOY_L1L2" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="CrossUp" Name="@dicID_^*$ETC_20151119_017599$*^" DownScp="None" UpScp="None" Key="JOY_CROSS_UP" PressedKey="None" Mode="Mouse" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="CrossDown" Name="@dicID_^*$ETC_20151119_017600$*^" DownScp="None" UpScp="None" Key="JOY_CROSS_DOWN" PressedKey="None" Mode="Mouse" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="CrossLeft" Name="@dicID_^*$ETC_20151119_017601$*^" DownScp="None" UpScp="None" Key="JOY_CROSS_LEFT" PressedKey="None" Mode="Mouse" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="CrossRight" Name="@dicID_^*$ETC_20151119_017602$*^" DownScp="None" UpScp="None" Key="JOY_CROSS_RIGHT" PressedKey="None" Mode="Mouse" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="ChatType" Name="@dicID_^*$ETC_20151119_017598$*^" DownScp="ui.ProcessTabKey()" UpScp="None" Key="TAB" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="System"/>
+	<HotKey ID="FishingBag" Name="@dicID_^*$ETC_20170919_028780$*^" DownScp="FISHING_ITEM_BAG_TOGGLE_UI()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="System"/>
+	<HotKey ID="GuildRank" Name="길드 랭킹" DownScp="GUILD_RANK_INFO_TOGGLE()" UpScp="None" Key="None" PressedKey="None" Mode="Key" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="System"/>
+	<HotKey ID="ZoomIn" Name="@dicID_^*$ETC_20190724_042215$*^" DownScp="HOTKEY_ZOOM_IN()" UpScp="None" Key="MWUP" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="ZoomOut" Name="@dicID_^*$ETC_20190724_042216$*^" DownScp="HOTKEY_ZOOM_OUT()" UpScp="None" Key="MWDN" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+</Category>

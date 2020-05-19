@@ -36,7 +36,7 @@ function g.new(self)
     local __CONFIG_SLOTSET_DIRECT_WARP = 'directwarp'
     local __COMMON_CONFIG_FILENAME = 'commonConfig'
     local __HOTKEY_MOUSE = 'hotkey_mousemode.xml'
-    local __HOTKEY_KEYBOARD = 'hotkey_user.xml'
+    local __HOTKEY_KEYBOARD = 'hotkey.xml'
     local __HOTKEY_JOYSTICK = 'hotkey_joystick.xml'  
     local __HOTKEYCATEGORY="Battle"
     local __HOTKEYMODE_MOUSE = 1
@@ -955,7 +955,13 @@ function g.new(self)
         local ignitedepth = 0
         local ignitefunc=nil
         local endoffor=false
-        
+
+        -- prevent use in pvp area
+        if IsPVPField(pc) == 1 or IsPVPServer(pc) == 1 then
+            ui.SysMsg("Cannot use the Subquickslot hotkey in PVP area.");
+            return;
+        end
+    
         for frameIndex in string.gmatch(__config[__CONFIG_FRAME_INDEXIES] or '1', "%S+") do
             local configKey = GetConfigByFrameKey(frameIndex)
             local slotw, sloth = string.match(__config[configKey][__CONFIG_SLOTSET_SIZE] or '1x1', '(%d+)x(%d+)')

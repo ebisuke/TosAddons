@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Category>
+	<HotKey ID="Chat" Name="@dicID_^*$ETC_20150317_004715$*^" DownScp="ui.ProcessReturnKey()" UpScp="None" Key="ENTER" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatPad" Name="채팅(숫자패드)" DownScp="ui.ProcessReturnKey()" UpScp="None" Key="PADENTER" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="Status_info" Name="@dicID_^*$UI_20150317_001067$*^" DownScp="UI_TOGGLE_STATUS()" UpScp="None" Key="F1" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="Inventory" Name="@dicID_^*$ETC_20150317_005917$*^" DownScp="UI_TOGGLE_INVENTORY()" UpScp="None" Key="F2" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="SkillTree" Name="@dicID_^*$ETC_20151014_015764$*^" DownScp="UI_TOGGLE_SKILLTREE()" UpScp="None" Key="F3" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO " Category="System"/>
+	<HotKey ID="Journal" Name="@dicID_^*$ETC_20150317_005945$*^" DownScp="UI_TOGGLE_JOURNAL()" UpScp="None" Key="F4" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO " Category="System"/>
+	<HotKey ID="QuestInfo_" Name="@dicID_^*$ETC_20150317_001711$*^" DownScp="UI_TOGGLE_QUEST()" UpScp="None" Key="F5" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO " Category="System"/>
+	<HotKey ID="PartyHistory" Name="파티리스트" DownScp="UI_TOGGLE_PARTY()" UpScp="None" Key="F6" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="Guild" Name="길드리스트" DownScp="UI_TOGGLE_GUILD()" UpScp="None" Key="G" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="Friends" Name="친구리스트" DownScp="UI_TOGGLE_FRIEND()" UpScp="None" Key="F7" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO " Category="System"/>
+	<HotKey ID="Pose" Name="@dicID_^*$ETC_20190117_038475$*^" DownScp="UI_TOGGLE_POSE_MACRO()" UpScp="None" Key="F8" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="FriendShip" Name="@dicID_^*$ETC_20150317_006146$*^" DownScp="UI_TOGGLE_PETLIST()" UpScp="None" Key="F9" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="DungeonInfo" Name="@dicID_^*$ETC_20170808_028166$*^" DownScp="UI_TOGGLE_INDUN()" UpScp="None" Key="F10" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="Collection" Name="@dicID_^*$ETC_20190117_036430$*^" DownScp="UI_TOGGLE_COLLECTION()" UpScp="None" Key="F11" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="QuestItemUse" Name="퀘스트아이템 사용" DownScp="QUESTITEMUSE_EXECUTE()" UpScp="None" Key="V" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Worldmap" Name="@dicID_^*$ETC_20151119_017576$*^" DownScp="UI_TOGGLE_WORLDMAP()" UpScp="None" Key="N" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Map" Name="@dicID_^*$UI_20170919_002907$*^" DownScp="UI_TOGGLE_MAP()" UpScp="None" Key="M" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Minimap_+" Name="미니맵+" DownScp="SET_MINIMAP_SIZE(1)" UpScp="None" Key="EQUALS" UseShift="NO " UseAlt="NO " UseCtrl="YES" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Minimap_-" Name="미니맵-" DownScp="SET_MINIMAP_SIZE(0)" UpScp="None" Key="MINUS" UseShift="NO " UseAlt="NO " UseCtrl="YES" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Minimap_+2" Name="미니맵+2" DownScp="SET_MINIMAP_SIZE(1)" UpScp="None" Key="ADD" UseShift="NO " UseAlt="NO " UseCtrl="YES" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="Minimap_-2" Name="미니맵-2" DownScp="SET_MINIMAP_SIZE(0)" UpScp="None" Key="NUMMINUS" UseShift="NO " UseAlt="NO " UseCtrl="YES" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="ShowUI" Name="UI토글" DownScp="ui.ToggleUi()" UpScp="None" Key="A" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="QuickSlotExecute1" Name="퀵슬롯1" DownScp="QUICKSLOTNEXPBAR_EXECUTE(0)" UpScp="None" Key="A" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute2" Name="퀵슬롯2" DownScp="QUICKSLOTNEXPBAR_EXECUTE(1)" UpScp="None" Key="S" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute3" Name="퀵슬롯3" DownScp="QUICKSLOTNEXPBAR_EXECUTE(2)" UpScp="None" Key="D" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute4" Name="퀵슬롯4" DownScp="QUICKSLOTNEXPBAR_EXECUTE(3)" UpScp="None" Key="F" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute5" Name="퀵슬롯5" DownScp="QUICKSLOTNEXPBAR_EXECUTE(4)" UpScp="None" Key="G" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute6" Name="퀵슬롯6" DownScp="QUICKSLOTNEXPBAR_EXECUTE(5)" UpScp="None" Key="H" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute7" Name="퀵슬롯7" DownScp="QUICKSLOTNEXPBAR_EXECUTE(6)" UpScp="None" Key="J" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute8" Name="퀵슬롯8" DownScp="QUICKSLOTNEXPBAR_EXECUTE(7)" UpScp="None" Key="K" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute9" Name="퀵슬롯9" DownScp="QUICKSLOTNEXPBAR_EXECUTE(8)" UpScp="None" Key="L" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute10" Name="퀵슬롯10" DownScp="QUICKSLOTNEXPBAR_EXECUTE(9)" UpScp="None" Key=";" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute11" Name="퀵슬롯11" DownScp="QUICKSLOTNEXPBAR_EXECUTE(10)" UpScp="None" Key="Q" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute12" Name="퀵슬롯12" DownScp="QUICKSLOTNEXPBAR_EXECUTE(11)" UpScp="None" Key="W" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute13" Name="퀵슬롯13" DownScp="QUICKSLOTNEXPBAR_EXECUTE(12)" UpScp="None" Key="E" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute14" Name="퀵슬롯14" DownScp="QUICKSLOTNEXPBAR_EXECUTE(13)" UpScp="None" Key="R" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute15" Name="퀵슬롯15" DownScp="QUICKSLOTNEXPBAR_EXECUTE(14)" UpScp="None" Key="T" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute16" Name="퀵슬롯16" DownScp="QUICKSLOTNEXPBAR_EXECUTE(15)" UpScp="None" Key="Y" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute17" Name="퀵슬롯17" DownScp="QUICKSLOTNEXPBAR_EXECUTE(16)" UpScp="None" Key="U" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute18" Name="퀵슬롯18" DownScp="QUICKSLOTNEXPBAR_EXECUTE(17)" UpScp="None" Key="I" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute19" Name="퀵슬롯19" DownScp="QUICKSLOTNEXPBAR_EXECUTE(18)" UpScp="None" Key="O" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute20" Name="퀵슬롯20" DownScp="QUICKSLOTNEXPBAR_EXECUTE(19)" UpScp="None" Key="P" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute21" Name="퀵슬롯21" DownScp="QUICKSLOTNEXPBAR_EXECUTE(20)" UpScp="None" Key="1" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute22" Name="퀵슬롯22" DownScp="QUICKSLOTNEXPBAR_EXECUTE(21)" UpScp="None" Key="2" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute23" Name="퀵슬롯23" DownScp="QUICKSLOTNEXPBAR_EXECUTE(22)" UpScp="None" Key="3" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute24" Name="퀵슬롯24" DownScp="QUICKSLOTNEXPBAR_EXECUTE(23)" UpScp="None" Key="4" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute25" Name="퀵슬롯25" DownScp="QUICKSLOTNEXPBAR_EXECUTE(24)" UpScp="None" Key="5" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute26" Name="퀵슬롯26" DownScp="QUICKSLOTNEXPBAR_EXECUTE(25)" UpScp="None" Key="6" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute27" Name="퀵슬롯27" DownScp="QUICKSLOTNEXPBAR_EXECUTE(26)" UpScp="None" Key="7" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute28" Name="퀵슬롯28" DownScp="QUICKSLOTNEXPBAR_EXECUTE(27)" UpScp="None" Key="8" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute29" Name="퀵슬롯29" DownScp="QUICKSLOTNEXPBAR_EXECUTE(28)" UpScp="None" Key="9" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute30" Name="퀵슬롯30" DownScp="QUICKSLOTNEXPBAR_EXECUTE(29)" UpScp="None" Key="0" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute31" Name="퀵슬롯31" DownScp="QUICKSLOTNEXPBAR_EXECUTE(30)" UpScp="None" Key="A" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute32" Name="퀵슬롯32" DownScp="QUICKSLOTNEXPBAR_EXECUTE(31)" UpScp="None" Key="S" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute33" Name="퀵슬롯33" DownScp="QUICKSLOTNEXPBAR_EXECUTE(32)" UpScp="None" Key="D" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute34" Name="퀵슬롯34" DownScp="QUICKSLOTNEXPBAR_EXECUTE(33)" UpScp="None" Key="F" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute35" Name="퀵슬롯35" DownScp="QUICKSLOTNEXPBAR_EXECUTE(34)" UpScp="None" Key="G" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute36" Name="퀵슬롯36" DownScp="QUICKSLOTNEXPBAR_EXECUTE(35)" UpScp="None" Key="H" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute37" Name="퀵슬롯37" DownScp="QUICKSLOTNEXPBAR_EXECUTE(36)" UpScp="None" Key="J" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute38" Name="퀵슬롯38" DownScp="QUICKSLOTNEXPBAR_EXECUTE(37)" UpScp="None" Key="K" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute39" Name="퀵슬롯39" DownScp="QUICKSLOTNEXPBAR_EXECUTE(38)" UpScp="None" Key="L" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="QuickSlotExecute40" Name="퀵슬롯40" DownScp="QUICKSLOTNEXPBAR_EXECUTE(39)" UpScp="None" Key=";" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-1" Name="퀵슬롯41" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD7" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-2" Name="퀵슬롯42" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD8" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-3" Name="퀵슬롯43" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD9" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-4" Name="퀵슬롯44" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD4" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-5" Name="퀵슬롯45" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD5" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-6" Name="퀵슬롯46" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD6" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-7" Name="퀵슬롯47" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD1" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-8" Name="퀵슬롯48" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD2" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-9" Name="퀵슬롯49" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD3" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-10" Name="퀵슬롯50" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD7" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-11" Name="퀵슬롯51" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD8" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-12" Name="퀵슬롯52" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD9" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-13" Name="퀵슬롯53" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD4" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-14" Name="퀵슬롯54" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD5" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-15" Name="퀵슬롯55" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD6" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-16" Name="퀵슬롯56" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD1" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-17" Name="퀵슬롯55" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD2" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="SubQuickSlot1-18" Name="퀵슬롯56" DownScp="TEST_TOS()" UpScp="None" Key="NUMPAD3" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="ChatMacro1" Name="채팅매크로1" DownScp="EXEC_CHATMACRO(1)" UpScp="None" Key="1" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro2" Name="채팅매크로2" DownScp="EXEC_CHATMACRO(2)" UpScp="None" Key="2" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro3" Name="채팅매크로3" DownScp="EXEC_CHATMACRO(3)" UpScp="None" Key="3" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro4" Name="채팅매크로4" DownScp="EXEC_CHATMACRO(4)" UpScp="None" Key="4" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro5" Name="채팅매크로5" DownScp="EXEC_CHATMACRO(5)" UpScp="None" Key="5" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro6" Name="채팅매크로6" DownScp="EXEC_CHATMACRO(6)" UpScp="None" Key="6" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro7" Name="채팅매크로7" DownScp="EXEC_CHATMACRO(7)" UpScp="None" Key="7" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro8" Name="채팅매크로8" DownScp="EXEC_CHATMACRO(8)" UpScp="None" Key="8" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro9" Name="채팅매크로9" DownScp="EXEC_CHATMACRO(9)" UpScp="None" Key="9" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="ChatMacro10" Name="채팅매크로10" DownScp="EXEC_CHATMACRO(10)" UpScp="None" Key="0" UseShift="YES" UseAlt="YES" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="OkayButton" Name="@dicID_^*$ETC_20150317_001840$*^" DownScp="UI_KEYDOWN_OKAY()" UpScp="None" Key="Y" UseShift="NO" UseAlt="NO" UseCtrl="YES" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="CancelButton" Name="@dicID_^*$QUEST_LV_0200_20150317_001559$*^" DownScp="UI_KEYDOWN_CANCEL()" UpScp="None" Key="N" UseShift="NO" UseAlt="NO" UseCtrl="YES" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="WarpQuest" Name="@dicID_^*$ETC_20150317_003683$*^" DownScp="SELECT_QUEST_WARP()" UpScp="None" Key="BACKSPACE" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="RideOn" Name="탈것타기" DownScp="ON_RIDING_VEHICLE(1)" UpScp="None" Key="UP" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="RideOff" Name="탈것내리기" DownScp="ON_RIDING_VEHICLE(0)" UpScp="None" Key="DOWN" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="CompanionStroke" Name="컴페니언 쓰다듬기" DownScp="COMPANION_INTERACTION(1)" UpScp="None" Key="1" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="CompanionInformation" Name="컴페니언 정보" DownScp="COMPANION_INTERACTION(2)" UpScp="None" Key="2" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="ToggleRest" Name="@dicID_^*$ETC_20151119_017596$*^" DownScp="control.RestSit()" UpScp="None" Key="INSERT" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="Select" Name="@dicID_^*$ETC_20151119_017597$*^" DownScp="None" UpScp="None" Key="SPACE" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="Record" Name="동영상켭쳐" DownScp="None" UpScp="None" Key="F12" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO " Category="System"/>
+	<HotKey ID="MoveUp" Name="@dicID_^*$ETC_20151119_017586$*^" DownScp="None" UpScp="None" Key="UP" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveDown" Name="@dicID_^*$ETC_20151119_017587$*^" DownScp="None" UpScp="None" Key="DOWN" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveLeft" Name="@dicID_^*$ETC_20151119_017588$*^" DownScp="None" UpScp="None" Key="LEFT" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveRight" Name="@dicID_^*$ETC_20151119_017589$*^" DownScp="None" UpScp="None" Key="RIGHT" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Battle"/>
+	<HotKey ID="MoveUp_pad" Name="@dicID_^*$ETC_20151119_017586$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveDown_pad" Name="@dicID_^*$ETC_20151119_017587$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveLeft_pad" Name="@dicID_^*$ETC_20151119_017588$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveRight_pad" Name="@dicID_^*$ETC_20151119_017589$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveLeftUp_pad" Name="@dicID_^*$ETC_20151119_017590$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveRightUp_pad" Name="@dicID_^*$ETC_20151119_017591$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveLeftDown_pad" Name="@dicID_^*$ETC_20151119_017592$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="MoveRightDown_pad" Name="@dicID_^*$ETC_20151119_017593$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="NormalAttack" Name="일반 공격/UI 선택 모드 : 좌클릭" DownScp="None" UpScp="None" Key="Z" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="Jump" Name="점프/UI 선택 모드 : 우클릭" DownScp="None" UpScp="None" Key="X" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="LHand" Name="왼손/UI 선택 모드 : 휠다운" DownScp="None" UpScp="None" Key="C" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="UISelectMode_LDClick" Name="UI 선택 모드 : 좌더블클릭" DownScp="None" UpScp="None" Key="Z" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="UISelectMode_RDClick" Name="UI 선택 모드 : 우더블클릭" DownScp="None" UpScp="None" Key="X" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="UISelectMode_WheelUp" Name="UI 선택 모드 : 휠업" DownScp="None" UpScp="None" Key="C" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="LAlt" Name="@dicID_^*$ETC_20151119_017581$*^" DownScp="None" UpScp="None" Key="None" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="Tab" Name="@dicID_^*$ETC_20151119_017582$*^" DownScp="None" UpScp="None" Key="TAB" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="Escape" Name="@dicID_^*$ETC_20151119_017583$*^" DownScp="None" UpScp="None" Key="ESCAPE" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="UISelectMode" Name="@dicID_^*$ETC_20151119_017584$*^" DownScp="imcSound.PlaySoundEvent('anvil_list_select');" UpScp="None" Key="LBRACKET" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="WeaponSwap" Name="@dicID_^*$SKILL_20150414_003996$*^" DownScp="WEAPONSWAP_HOTKEY_ENTERED()" UpScp="None" Key="Z" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="TargetFixed" Name="@dicID_^*$ETC_20151119_017585$*^" DownScp="None" UpScp="None" Key="LCTRL" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Battle"/>
+	<HotKey ID="ChatType" Name="@dicID_^*$ETC_20151119_017598$*^" DownScp="ui.ProcessTabKey()" UpScp="None" Key="TAB" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="System"/>
+	<HotKey ID="ChatFrameType" Name="@dicID_^*$ETC_20170418_027632$*^" DownScp="CHAT_TABSET_BTN_CLICK()" UpScp="None" Key="TAB" UseShift="YES" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="FishingBag" Name="@dicID_^*$ETC_20170919_028780$*^" DownScp="FISHING_ITEM_BAG_TOGGLE_UI()" UpScp="None" Key="F" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="GuildRank" Name="길드 랭킹" DownScp="GUILD_RANK_INFO_TOGGLE()" UpScp="None" Key="R" UseShift="NO" UseAlt="YES" UseCtrl="NO" OnEdit="NO" Category="System"/>
+	<HotKey ID="PartyMemberInfo" Name="@dicID_^*$ETC_20190314_040710$*^" DownScp="PARTYINFO_TOGGLE()" UpScp="None" Key="GRAVE" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="YES" Category="Basic"/>
+	<HotKey ID="AutoMove" Name="@dicID_^*$ETC_20190724_042214$*^" DownScp="HOTKEY_AUTO_MOVE()" UpScp="None" Key="CAPSLOCK" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="ZoomIn" Name="@dicID_^*$ETC_20190724_042215$*^" DownScp="HOTKEY_ZOOM_IN()" UpScp="None" Key="WHEELUP" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+	<HotKey ID="ZoomOut" Name="@dicID_^*$ETC_20190724_042216$*^" DownScp="HOTKEY_ZOOM_OUT()" UpScp="None" Key="WHEELDOWN" UseShift="NO" UseAlt="NO" UseCtrl="NO" OnEdit="NO" Category="Basic"/>
+</Category>
