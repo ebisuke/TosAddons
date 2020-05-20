@@ -20,6 +20,8 @@ To configure, please enter `/suic` in chat window.
 * NEWSを除き、画面右端に小さく表示されます
 
 # リリースノート
+## v0.1.1
+* Hidable=falseにした。これにより、ESCが効かない問題を修正。
 ## v0.1.0
 * チャットの修正をやめた
 * 右側ボタンの位置調整
