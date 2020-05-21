@@ -5,7 +5,7 @@
 
 	<frame title="" fullheight="false" fasthide="true" layout_gravity="left top" margin="100 100 0 0"/>
 	<input moveable="false" hittestframe="false" moveintitlebar="false"/>
-	<layer layerlevel="100"/>
+	<layer layerlevel="10"/>
 	<option closebutton="false" hidable="false"/>
 
 	<controls>

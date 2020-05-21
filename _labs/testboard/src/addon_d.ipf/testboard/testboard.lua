@@ -335,8 +335,9 @@ function TESTBOARD_TEST()
             for k,v in pairs(g.framelist) do
                 local f=ui.GetFrame(k)
                 if(f)then
-                    if f:GetWidth()==10 then
+                    if f:GetHeight()==10 or  f:GetHeight()==39 then
                         f:SetOffset(100+off,100+off)
+                        f:Resize(200,39)
                         off=off+1
                         CHAT_SYSTEM(k)
                     end
