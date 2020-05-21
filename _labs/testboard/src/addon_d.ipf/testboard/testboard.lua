@@ -23,6 +23,7 @@ g.x = nil
 g.y = nil
 g.buffs = {}
 g.prevtime=nil
+g.framelist={}
 --ライブラリ読み込み
 CHAT_SYSTEM("[TESTBOARD]loaded")
 local acutil = require('acutil')
@@ -125,7 +126,7 @@ function TESTBOARD_ON_INIT(addon, frame)
                 g.loaded = true
             end
             addon:RegisterMsg("ZONE_TRAFFICS", "TESTBOARD_ON_ZONE_TRAFFICS");
-
+            
             --addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
             --addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
             --addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
@@ -134,6 +135,9 @@ function TESTBOARD_ON_INIT(addon, frame)
             -- --ドラッグ
             -- frame:SetEventScript(ui.LBUTTONUP, "AFKMUTE_END_DRAG")
             --TESTBOARD_SHOW(g.frame)
+            TESTBOARD_GETFRAME_OLD=ui.GetFrame
+            ui.GetFrame=TESTBOARD_GETFRAME
+
             TESTBOARD_INIT()
             g.frame:ShowWindow(0)
         end,
@@ -175,6 +179,14 @@ function TESTBOARD_INIT()
         end
     }
 end
+function TESTBOARD_GETFRAME(name)
+    
+    local frame= TESTBOARD_GETFRAME_OLD(name)
+    if(frame)then
+        g.framelist[name]=frame
+    end
+    return frame
+end
 function TESTBOARD_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
@@ -215,43 +227,48 @@ function TESTBOARD_ON_TIMER(frame)
             --     end
             -- end
             --TESTBOARD_TEST()
-            local objList, objCount = SelectObject(GetMyActor(), 400, 'ALL');
-            if objCount > 0 then
-                for i = 1, objCount do
-                    local enemyHandle = GetHandle(objList[i]);
-                    local enemy = world.GetActor(enemyHandle);
-                    if enemy ~= nil then
+            -- local objList, objCount = SelectObject(GetMyActor(), 400, 'ALL');
+            -- if objCount > 0 then
+            --     for i = 1, objCount do
+            --         local enemyHandle = GetHandle(objList[i]);
+            --         local enemy = world.GetActor(enemyHandle);
+            --         if enemy ~= nil then
                         
                         
-                        local tgto = enemy:GetSkillTargetObject()
-                        if (tgto) then
-                            local targetpos = tgto:GetPos()
-                            local pos = enemy:GetPos()
-                            --print("" .. targetpos.x)
-                            local eff = "F_sys_arrow_pc"
-                            local dist = math.sqrt(math.pow((targetpos.x - pos.x), 2) + math.pow((targetpos.z - pos.z), 2))
-                            local dirinitial = dist
-                            --DBGOUT("DIST" .. tostring(dirinitial))
-                            while dist >= 1 do
-                                local dir = math.atan(targetpos.x - pos.x, targetpos.z - pos.z)
+            --             local tgto = enemy:GetSkillTargetObject()
+            --             if (tgto) then
+            --                 local targetpos = tgto:GetPos()
+            --                 local pos = enemy:GetPos()
+            --                 --print("" .. targetpos.x)
+            --                 local eff = "F_sys_arrow_pc"
+            --                 local dist = math.sqrt(math.pow((targetpos.x - pos.x), 2) + math.pow((targetpos.z - pos.z), 2))
+            --                 local dirinitial = dist
+            --                 --DBGOUT("DIST" .. tostring(dirinitial))
+            --                 while dist >= 1 do
+            --                     local dir = math.atan(targetpos.x - pos.x, targetpos.z - pos.z)
                                 
-                                local di = dist / dirinitial
+            --                     local di = dist / dirinitial
                                 
-                                local xx = pos.x + math.sin(dir) * dirinitial * di
-                                local zz = pos.z + math.cos(dir) * dirinitial * di
+            --                     local xx = pos.x + math.sin(dir) * dirinitial * di
+            --                     local zz = pos.z + math.cos(dir) * dirinitial * di
                                 
                                 
                                 
-                                effect.PlayGroundEffect(GetMyActor(), eff, 1, xx, pos.y + 1, zz, 1, "None", -dir + math.pi, 0)
-                                dist = dist - 20
-                            end
-                        end
-                    end
-                end
+            --                     effect.PlayGroundEffect(GetMyActor(), eff, 1, xx, pos.y + 1, zz, 1, "None", -dir + math.pi, 0)
+            --                     dist = dist - 20
+            --                 end
+            --             end
+            --         end
+            --     end
             
-            end
-
-            
+            -- end
+            -- local frame = ui.GetFrame(g.framename)
+            -- frame:EnableHide(0)
+            -- local f=ui.GetFocusFrame()
+            -- if(f)then
+            --    -- f:SetOffset(100,100)
+            --     CHAT_SYSTEM(f:GetName())
+            -- end
         end,
         catch = function(error)
             ERROUT(error)
@@ -300,20 +317,31 @@ function TESTBOARD_TEST()
             --         end
             --     end
             -- end
-            g.prevtime=imcTime.GetDWTime()
-            app.RequestChannelTraffics();
+            -- g.prevtime=imcTime.GetDWTime()
+            -- app.RequestChannelTraffics();
 
-            local handle=session.GetMyHandle()
-            local buffCount = info.GetBuffCount(handle);
+            -- local handle=session.GetMyHandle()
+            -- local buffCount = info.GetBuffCount(handle);
 
-            for i = 0, buffCount - 1 do
-                local buff = info.GetBuffIndexed(handle, i);
-                local class = GetClassByType('Buff', buff.buffID);
-                DBGOUT(string.format("No%d:%s,%d,%d,%d,%d,%d",i,class.Name,buff.arg1,buff.arg2,buff.arg3,buff.arg4,buff.arg5))
-            end
-    
+            -- for i = 0, buffCount - 1 do
+            --     local buff = info.GetBuffIndexed(handle, i);
+            --     local class = GetClassByType('Buff', buff.buffID);
+            --     DBGOUT(string.format("No%d:%s,%d,%d,%d,%d,%d",i,class.Name,buff.arg1,buff.arg2,buff.arg3,buff.arg4,buff.arg5))
+            -- end
+            
             --end
             --TESTBOARD_SET_NECRO_CARD_STATE()
+            local off=0
+            for k,v in pairs(g.framelist) do
+                local f=ui.GetFrame(k)
+                if(f)then
+                    if f:GetWidth()==10 then
+                        f:SetOffset(100+off,100+off)
+                        off=off+1
+                        CHAT_SYSTEM(k)
+                    end
+                end
+            end
         --TESTBOARD_SET_NECRO_CARD_STATE()
         end,
         catch = function(error)
