@@ -125,7 +125,7 @@ function SMALLSUMMONEDMONSTER_ON_TIMER()
                     local targetinfo = info.GetTargetInfo(enemyHandle);
                   
                     if enemy ~= nil and ownerHandle ~= 0 
-                    --and ownerHandle ~= myHandle
+                    and ownerHandle ~= myHandle
                     then
        
                         local monCls = GetClassByType("Monster", enemy:GetType());
