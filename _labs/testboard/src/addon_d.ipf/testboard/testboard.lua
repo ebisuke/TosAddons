@@ -331,18 +331,25 @@ function TESTBOARD_TEST()
             
             --end
             --TESTBOARD_SET_NECRO_CARD_STATE()
-            local off=0
-            for k,v in pairs(g.framelist) do
-                local f=ui.GetFrame(k)
-                if(f)then
-                    if f:GetHeight()==10 or  f:GetHeight()==39 then
-                        f:SetOffset(100+off,100+off)
-                        f:Resize(200,39)
-                        off=off+1
-                        CHAT_SYSTEM(k)
-                    end
-                end
-            end
+            -- local off=0
+            -- for k,v in pairs(g.framelist) do
+            --     local f=ui.GetFrame(k)
+            --     if(f)then
+            --         if f:GetHeight()==10 or  f:GetHeight()==39 then
+            --             f:SetOffset(100+off,100+off)
+            --             f:Resize(200,39)
+            --             off=off+1
+            --             CHAT_SYSTEM(k)
+            --         end
+            --     end
+            -- end
+            local len=3000
+            local path="C:\\Windows\\Media\\Alarm03.wav"
+            local f=io.open("c:\\temp\\wav.txt","w")
+            f:write(path)
+            f:flush()
+            io.close()
+            debug.ShellExecute("C:\\Windows\\Media\\Alarm03.wav")
         --TESTBOARD_SET_NECRO_CARD_STATE()
         end,
         catch = function(error)
