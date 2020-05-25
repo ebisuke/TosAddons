@@ -253,9 +253,7 @@ function AOP_INIT()
 
             
             AOP_RENDER()
-            if (g.debug) then
-                AOP_TIMER_BEGIN()
-            end
+            AOP_TIMER_BEGIN()
         end,
         catch = function(error)
             ERROUT(error)
@@ -286,11 +284,12 @@ function AOP_TIMER_BEGIN()
     local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
     timer:SetUpdateScript("AOP_ON_TIMER");
     timer:Start(0.01);
+    timer:EnableHideUpdate(1)
     frame:CreateOrGetControl("timer", "addontimer2", 0, 0, 10, 10)
     local timer = GET_CHILD(frame, "addontimer2", "ui::CAddOnTimer");
     timer:SetUpdateScript("AOP_ON_LONGTIMER");
     timer:Start(1);
-
+    timer:EnableHideUpdate(1)
 end
 
 function AOP_CALC_POINT(actualval, minw, maxw, maxav)
@@ -569,7 +568,7 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo,idx, inc, ox, oy)
         slotsdebuff = frame:CreateOrGetControl("slotset", "debuffs" .. id, ox, oy + 80 + 15, 120, 15)
         AUTO_CAST(slotsbuff)
         AUTO_CAST(slotsdebuff)
-        if(slotsbuff:GetSlotCount()==0)then
+        if(slotsbuff:GetCol()~=10)then
             slotsbuff:SetSlotSize(15, 15)
             slotsdebuff:SetSlotSize(15, 15)
             slotsbuff:SetColRow(10, 3)
@@ -670,10 +669,10 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo,idx, inc, ox, oy)
         
         local buffCount = partyMemberInfo:GetBuffCount();
         -- 아이콘 셋팅
-        if buffCount <= 0 then
+        --if buffCount <= 0 then
             partyMemberInfo:ResetBuff();
             buffCount = partyMemberInfo:GetBuffCount();
-        end
+        --end
         
         if buffCount > 0 then
             local buffIndex = 0;
