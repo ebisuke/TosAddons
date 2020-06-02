@@ -245,7 +245,7 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
             ANOTHERONEOFINVENTORY_LOAD_SETTINGS()
             
            
-            ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
+            --ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
 
             if(not g.settings.noshow)then
                 ui.GetFrame("anotheroneofinventory"):ShowWindow(1)
@@ -256,18 +256,26 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
         end
     }
 end
-function ANOTHERONEOFINVENTORY_SHOW(frame)
-    frame = ui.GetFrame(g.framename)
-    frame:ShowWindow(1)
-    g.settings.noshow=false
-    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+function ANOTHERONEOFINVENTORY_OPEN(frame)
+    -- 開いてほしくないときは開かない
+    if(g.settings.noshow)then
+        frame = ui.GetFrame(g.framename)
+        frame:ShowWindow(0)
+    end
+
 end
-function ANOTHERONEOFINVENTORY_CLOSE(frame)
-    frame = ui.GetFrame(g.framename)
-    frame:ShowWindow(0)
-    g.settings.noshow=true
-    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
-end
+-- function ANOTHERONEOFINVENTORY_DO_SHOW(frame)
+--     frame = ui.GetFrame(g.framename)
+--     frame:ShowWindow(1)
+--     g.settings.noshow=false
+--     ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+-- end
+-- function ANOTHERONEOFINVENTORY_DO_CLOSE(frame)
+--     frame = ui.GetFrame(g.framename)
+--     frame:ShowWindow(0)
+--     g.settings.noshow=true
+--     ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+-- end
 function ANOTHERONEOFINVENTORY_TOGGLE_FRAME(frame)
     g.settings.noshow=not (not (ui.IsFrameVisible(g.framename)==1))
     ui.ToggleFrame(g.framename)
@@ -310,13 +318,6 @@ function AOI_INVENTORY_UPDATE_ICONS(frame)
     end
     AOI_INV_REFRESH()
 end
-function AOI_INVENTORY_UPDATE_ICONS(frame)
-    INVENTORY_UPDATE_ICONS_OLD(frame)
-    if (not AOI_ISINITIALIZED()) then
-        return
-    end
-    AOI_INV_REFRESH()
-end
 
 function AOI_INIT()
     EBI_try_catch{
@@ -324,12 +325,9 @@ function AOI_INIT()
             local frame = ui.GetFrame("anotheroneofinventory") or ui.GetFrame(g.framename)
             frame:Resize(g.settings.w, g.settings.h)
             frame:SetOffset(g.settings.x, g.settings.y)
-            frame:EnableMove(1)
-            frame:SetSkinName("chat_window")
-            frame:EnableHittestFrame(1)
+
             --frame:SetGravity(ui.LEFT, ui.BOTTOM)
-            frame:EnableResize(1)
-            frame:EnableHide(0)
+
             frame:SetLayerLevel(80)
             local slotgbox = frame:CreateOrGetControl("groupbox", "aoi_gboxslt", tabsize + 10, 25, 0, 0)
             tolua.cast(slotgbox, "ui::CGroupBox")
@@ -1214,7 +1212,7 @@ function AOI_CHECK_FRAME()
         "accountwarehouse",
         "itemcraft",
         "reinforce_by_mix",
-        "reinforce_by_mix_certific",
+        "reinforce_by_mix_certificate",
         "shop",
         "oblation_sell",
         "legendcardupgrade",
@@ -1226,6 +1224,14 @@ function AOI_CHECK_FRAME()
         "legendprefix",
         "itemdungeon",
         "guildgrowth",
+        "ark_composition",
+        "ark_relocation",
+        "itemoptionadd",
+        "itemoptionextract",
+        "itemoptionlegendextract",
+        "itemoptionrelease",
+        "itemoptionrelease_random",
+        "itemrullet",
     }
     for _, v in ipairs(frames) do
         if ui.IsFrameVisible(v) == 1 then
