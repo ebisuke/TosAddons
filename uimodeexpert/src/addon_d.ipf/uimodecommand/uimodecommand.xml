@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="uimodecommand" x="0" y="0" width="200" height="30">
+	<frame fasthide="true" layout_gravity="left top"/>
+	<input moveable="false" hittestframe="false"/>
+	<layer layerlevel="10"/>
+	<draw drawframe="false" drawtitlebarframe="false" drawtitlebar="false"/>
+	<option closebutton="false" hideable="true"/>
+	<script OpenScp="UIMODECOMMAND_OPEN" CloseScp="UIMODECOMMAND_CLOSE"/>
+	<controls>
+		<edit name="mainchat" rect="0 0 200 30" margin="0 0 0 0" layout_gravity="left center" OffsetForDraw="5 0" border="0 0 0 0" drawbackground="false" fontname="white_20" maxlen="512" maxlenfunc="CHAT_MAXLEN_MSG" resizebytext="false" skin="None" allowtag="color img link size ul" typingsound="chat_typing" />
+		<setfocus name="mainchat_1" layout_gravity="left top"/>
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

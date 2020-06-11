@@ -15,6 +15,9 @@ local function startswith(String, Start)
 end
 local acutil = require('acutil')
 local g = {}
+local whitelist={
+    [640475]=true,
+}
 g.debug = false
 g.framename="cubeopener"
 g.total=nil
@@ -74,6 +77,7 @@ function CUBEOPENER_ON_INIT(addon, frame)
     }
 end
 function CUBEOPENER_REQUEST_TRADE_ITEM_JUMPER(frame, ctrl, argStr, argNum)
+    DBGOUT("REQ")
     if(g.openitem==nil)then
         if(not REQUEST_TRADE_ITEM_OLD(frame, ctrl, argStr, argNum))then
             --fail
@@ -91,11 +95,12 @@ end
 function CUBEOPENER_CANCEL_TRADE_ITEM(frame, ctrl, argStr, argNum)
     g.total=nil
     g.openitem=nil
+    DBGOUT("CANCEL TRADE")
 end
 function CUBEOPENER_REQUEST_TRADE_ITEM(frame, ctrl, argStr, argNum)
     local box = frame:GetChild('box');
 	tolua.cast(box, "ui::CGroupBox");
-
+    DBGOUT("REQUEST TRADE")
 	local selectExist = 0;
 	local selected = 0;
 	local cnt = box:GetChildCount();
@@ -119,7 +124,7 @@ function CUBEOPENER_REQUEST_TRADE_ITEM(frame, ctrl, argStr, argNum)
 	if selectExist == 1 then
 		local itemGuid = frame:GetUserValue("UseItemGuid");
 		local argStr = string.format("%s#%d", itemGuid, selected);
-		
+		DBGOUT("selectExist")
         for i=1,g.total do
     	    ReserveScript(string.format("pc.ReqExecuteTx('SCR_TX_TRADE_SELECT_ITEM','%s' );",argStr),0.5*i)
         end
@@ -141,7 +146,7 @@ function CUBEOPENER_OPEN_TRADE_SELECT_ITEM_JUMPER(invItem)
     CUBEOPENER_OPEN_TRADE_SELECT_ITEM(invItem)
 end
 function CUBEOPENER_OPEN_TRADE_SELECT_ITEM(invItem)
-
+    DBGOUT("OPEN TRADE")
 end
 function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
     return EBI_try_catch{
@@ -163,7 +168,8 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                 --それはキューブ？
                 local groupName = itemobj.GroupName;
                 DBGOUT(groupName)
-                if(groupName=="Cube" or groupName=="Event" )then
+                local itemtype = invitem.type;
+                if(groupName=="Cube" or groupName=="Event" or whitelist[itemtype])then
                         
                     if true == invitem.isLockState then
                         ui.SysMsg(ClMsg("MaterialItemIsLock"));
@@ -180,16 +186,26 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                         return true;
                     end
                     
-                    local itemtype = invitem.type;
+                    
                     local curTime = item.GetCoolDown(itemtype);
                     if curTime ~= 0 then
                         imcSound.PlaySoundEvent("skill_cooltime");
                         return true;
                     end
+                    if(whitelist[itemtype])then
+                        if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
-                    if(groupName=="Cube")then
+                            --再開封可能
+                            g.openitem=invitem
+                            INPUT_NUMBER_BOX(ui.GetFrame(g.framename), '消費キューブいくつ開きますか？', 'CUBEOPENER_CONSUMEOPEN', invitem.count, 1, invitem.count, nil, nil, 1)
+                            return true
+                        else
+                            return false
+                        end
+
+                    elseif(groupName=="Cube")then
                         local rerollPrice =TryGet(itemobj, "NumberArg1")
-                        if(rerollPrice==0 or not rerollPrice)then
+                        if(rerollPrice==0 or not rerollPrice )then
                             if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
                                 --再開封可能
@@ -235,6 +251,11 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
 end
 function CUBEOPENER_EVENTOPEN(frame, cnt)
 
+    g.total=cnt
+    INV_ICON_USE(g.openitem)
+end
+
+function CUBEOPENER_CONSUMEOPEN(frame, cnt)
     g.total=cnt
     INV_ICON_USE(g.openitem)
 end
