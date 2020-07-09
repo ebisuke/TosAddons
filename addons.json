@@ -275,8 +275,8 @@
     "name": "Another One of Inventory",
     "file": "anotheroneofinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.13",
-    "releaseTag": "anotheroneofinventory-v0.0.13",
+    "fileVersion": "v0.0.14",
+    "releaseTag": "anotheroneofinventory-v0.0.14",
     "unicode": "📖",
     "description": "もう一つのインベントリ画面を提供します。",
     "tags": [
