@@ -1,4 +1,4 @@
-﻿$addonname="advancednumberinput"
+﻿$addonname="advancedmoneyinput"
 $emoji="📖"
 $prefix="__"
 $version="v0.0.1"

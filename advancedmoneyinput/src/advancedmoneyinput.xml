@@ -6,5 +6,7 @@
 	<draw drawframe="false" drawtitlebarframe="false" drawtitlebar="false"/>
 	<option closebutton="false" hideable="false"/>
 
-<controls/>
+	<controls>
+			<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
 </uiframe>

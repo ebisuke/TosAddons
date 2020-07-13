@@ -9,7 +9,7 @@ _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
-local acutil = require('acutil')
+
 g.version = 0
 g.settings = {x = 300, y = 300}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
@@ -72,7 +72,7 @@ function ADVANCEDMONEYINPUT_ON_INIT(addon,frame)
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            addon:RegisterMsg("OPEN_DLG_ACCOUNTWAREHOUSE", " ADVANCEDMONEYINPUT_ON_OPEN_ACCOUNTWAREHOUSE");
+            addon:RegisterMsg("OPEN_DLG_ACCOUNTWAREHOUSE", "ADVANCEDMONEYINPUT_ACCOUNTWAREHOUSE_OPEN");
         end,
         catch = function(error)
             ERROUT(error)
@@ -103,7 +103,8 @@ function ADVANCEDMONEYINPUT_CLEAR(frame,ctrl)
 
     editMoney:SetText("0")
 end
-function ADVANCEDMONEYINPUT_ON_OPEN_ACCOUNTWAREHOUSE(frame)
+function ADVANCEDMONEYINPUT_ACCOUNTWAREHOUSE_OPEN(frame)
+
     EBI_try_catch{
         try = function()
             frame=ui.GetFrame("accountwarehouse")
@@ -117,7 +118,7 @@ function ADVANCEDMONEYINPUT_ON_OPEN_ACCOUNTWAREHOUSE(frame)
             btnc:SetEventScript(ui.LBUTTONUP,"ADVANCEDMONEYINPUT_CLEAR")
 
             local base=100
-            local btn10k=DepositSkin:CreateOrGetControl("button","btn10k",editMoney:GetX()-60,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
+            local btn10k=DepositSkin:CreateOrGetControl("button","btn10k",editMoney:GetX()+180,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
             AUTO_CAST(btn10k)
   
             btn10k:SetUserValue("amount","10000")
@@ -126,7 +127,7 @@ function ADVANCEDMONEYINPUT_ON_OPEN_ACCOUNTWAREHOUSE(frame)
             btn10k:SetEventScript(ui.RBUTTONUP,"ADVANCEDMONEYINPUT_RBTN")
             btn10k:SetEventScriptArgString(ui.RBUTTONUP,"-1")
            
-            local btn100k=DepositSkin:CreateOrGetControl("button","btn100k",editMoney:GetX()-0,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
+            local btn100k=DepositSkin:CreateOrGetControl("button","btn100k",editMoney:GetX()+120,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
             AUTO_CAST(btn100k)
             btn100k:SetUserValue("amount","100000")
             btn100k:SetEventScript(ui.LBUTTONUP,"ADVANCEDMONEYINPUT_LBTN")
@@ -140,14 +141,14 @@ function ADVANCEDMONEYINPUT_ON_OPEN_ACCOUNTWAREHOUSE(frame)
             btn1m:SetEventScriptArgString(ui.LBUTTONUP,"1")
             btn1m:SetEventScript(ui.RBUTTONUP,"ADVANCEDMONEYINPUT_RBTN")
             btn1m:SetEventScriptArgString(ui.RBUTTONUP,"-1")
-            local btn10m=DepositSkin:CreateOrGetControl("button","btn10m",editMoney:GetX()+120,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
+            local btn10m=DepositSkin:CreateOrGetControl("button","btn10m",editMoney:GetX()+0,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
             AUTO_CAST(btn10m)
             btn10m:SetUserValue("amount","10000000")
             btn10m:SetEventScript(ui.LBUTTONUP,"ADVANCEDMONEYINPUT_LBTN")
             btn10m:SetEventScriptArgString(ui.LBUTTONUP,"1")
             btn10m:SetEventScript(ui.RBUTTONUP,"ADVANCEDMONEYINPUT_RBTN")
             btn10m:SetEventScriptArgString(ui.RBUTTONUP,"-1")
-            local btn100m=DepositSkin:CreateOrGetControl("button","btn100m",editMoney:GetX()+180,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
+            local btn100m=DepositSkin:CreateOrGetControl("button","btn100m",editMoney:GetX()-60,editMoney:GetY()+editMoney:GetHeight()-4,60,25)
             AUTO_CAST(btn100m)
             btn100m:SetUserValue("amount","100000000")
             btn100m:SetEventScript(ui.LBUTTONUP,"ADVANCEDMONEYINPUT_LBTN")
