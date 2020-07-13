@@ -23,7 +23,7 @@ function OVERDOSEDCOMPOSITION_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
             acutil.setupHook(ODDC_REINFORCE_BY_MIX_SETITEM,"REINFORCE_BY_MIX_SETITEM")
-            acutil.setupHook(ODDC_RECREATE_MATERIAL_SLOT,"RECREATE_MATERIAL_SLOT_OLD")
+            acutil.setupHook(ODDC_RECREATE_MATERIAL_SLOT,"RECREATE_MATERIAL_SLOT")
 
         end,
         catch = function(error)
