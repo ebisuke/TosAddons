@@ -435,8 +435,8 @@
     "name": "OverdosedComposition",
     "file": "overdosedcomposition",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "overdosedcompostion-v0.0.2",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "overdosedcomposition-v0.0.3",
     "unicode": "📖",
     "description": "ジェム・カード強化の上限枚数を増やします。",
     "tags": [
