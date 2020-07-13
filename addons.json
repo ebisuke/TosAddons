@@ -431,4 +431,18 @@
     ]
   }
   ,
+  {
+    "name": "OverdosedComposition",
+    "file": "overdosedcompostion",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "overdosedcompostion-v0.0.1",
+    "unicode": "📖",
+    "description": "ジェム・カード強化の上限枚数を増やします。",
+    "tags": [
+      "card",
+      "gem",
+      "ui"
+    ]
+  }
 ]
