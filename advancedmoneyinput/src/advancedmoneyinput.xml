@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uiframe name="advancednumberinput" x="0" y="0" width="10" height="10">
+<uiframe name="advancedmoneyinput" x="0" y="0" width="10" height="10">
 	<frame fasthide="true" layout_gravity="left top"/>
 	<input moveable="false" hittestframe="false"/>
 	<layer layerlevel="10"/>
