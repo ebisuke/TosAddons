@@ -417,5 +417,18 @@
       "portal",
       "shop"
     ]
-  } 
+  },
+  {
+    "name": "Buff Notifier",
+    "file": "buffnotifier",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "buffnotifier-v0.0.1",
+    "unicode": "📖",
+    "description": "バフ・デバフ切れ時に効果音を鳴らします",
+    "tags": [
+      "buff"
+    ]
+  }
+  ,
 ]

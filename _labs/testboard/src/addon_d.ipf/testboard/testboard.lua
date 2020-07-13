@@ -343,13 +343,10 @@ function TESTBOARD_TEST()
             --         end
             --     end
             -- end
-            local len=3000
-            local path="C:\\Windows\\Media\\Alarm03.wav"
-            local f=io.open("c:\\temp\\wav.txt","w")
-            f:write(path)
-            f:flush()
-            io.close()
-            debug.ShellExecute("C:\\Windows\\Media\\Alarm03.wav")
+            --ui.GetFrame("chat_option_e"):ShowWindow(1)
+            local sObj = GetIES(session.GetSessionObjectByName("ssn_klapeda"):GetIESObject());
+            RegisterHookMsg_C(GetMyPCObject(),  nil, "TAKEDMG", "TESTBOARD_TAKEDAMAGE");
+            SetSObjTimeScp_C(GetMyPCObject(), nil, "TESTBOARD_SCP", 500);
         --TESTBOARD_SET_NECRO_CARD_STATE()
         end,
         catch = function(error)
@@ -359,6 +356,9 @@ function TESTBOARD_TEST()
 end
 function TESTBOARD_TAKEDAMAGE()
     DBGOUT("take")
+end
+function TESTBOARD_SCP()
+    DBGOUT("scp")
 end
 function TESTBOARD_SET_NECRO_CARD_STATE()
     local frame = ui.GetFrame("necronomicon")
@@ -508,10 +508,9 @@ function TESTBOARD_SCR_Get_MON_MHP(self)
 end
 
 
-function TESTBOARD_ON_ZONE_TRAFFICS()
-    if(g.prevtime~=nil)then
-        DBGOUT("RTT"..(imcTime.GetDWTime()-g.prevtime))
-        g.prevtime=nil
 
-    end
+
+function SHOW_DMG_DIGIT(arg)
+    CHAT_SYSTEM(tostring(arg))
+	return ScpArgMsg("ADD_DAMAGE_{Auto_1}!", "Auto_1", arg);
 end

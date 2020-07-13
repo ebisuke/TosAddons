@@ -13,12 +13,12 @@ local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 
 local function AUTO_CAST(ctrl)
-    if(ctrl==nil)then
+    if (ctrl == nil) then
         
         return
     end
     ctrl = tolua.cast(ctrl, ctrl:GetClassString());
-	return ctrl;
+    return ctrl;
 end
 --ライブラリ読み込み
 CHAT_SYSTEM("[BN]loaded")
@@ -80,17 +80,17 @@ confighandler.alloc = function()
                     self.f = ui.GetFrame("buffnotifierconfig")
                     local f = self.f
                     f:ShowWindow(1)
-                    f:Resize(600,400)
+                    f:Resize(600, 400)
                     local btnsave = f:CreateOrGetControl("button", "btnsave", 20, 100, 100, 30)
                     btnsave:SetText("Close")
                     btnsave:SetEventScript(ui.LBUTTONUP, "BUFFNOTIFIERCONFIG_CLOSE")
                     btnsave:SetGravity(ui.RIGHT, ui.TOP)
-                    btnsave:SetOffset( 20, 100)
+                    btnsave:SetOffset(20, 100)
                     local btnadd = f:CreateOrGetControl("button", "btnadd", 20, 100, 100, 30)
                     btnadd:SetText("Add")
                     btnadd:SetEventScript(ui.LBUTTONUP, "BUFFNOTIFIERCONFIG_ONBTNADD")
                     btnadd:SetGravity(ui.LEFT, ui.TOP)
-                    btnadd:SetOffset( 20, 100)
+                    btnadd:SetOffset(20, 100)
                     local gbox = f:CreateOrGetControl("groupbox", "gbox", 10, 150, f:GetWidth() - 20, f:GetHeight() - 170)
                     AUTO_CAST(gbox)
                     gbox:RemoveAllChild()
@@ -112,12 +112,13 @@ confighandler.alloc = function()
                 self.buffboxcount = 0
             else
                 
-            end
-            local index =  self.buffboxcount
+                end
+            local index = self.buffboxcount
             for k, v in pairs(g.settings.buffs) do
-                local c = gbox:GetChild("buff_" .. tostring(index))
+                local idx=k:match("buff_(.*)")
+                local c = gbox:GetChild("buff_" .. tostring(idx))
                 if not c then
-                    self:generateBuffBox(k, v, index)
+                    self:generateBuffBox( v, idx,index)
                 end
                 index = index + 1
             end
@@ -125,10 +126,10 @@ confighandler.alloc = function()
         
         end,
         addBuffBox = function(self)
-            self:generateBuffBox(0, {sound = ""}, self.buffboxcount)
-            
+            self:generateBuffBox( {sound = ""}, 0, self.buffboxcount)
+        
         end,
-        generateBuffBox = function(self, k, v, index)
+        generateBuffBox = function(self,  v,buffid, index)
             EBI_try_catch{
                 try = function()
                     local f = self.f
@@ -140,7 +141,7 @@ confighandler.alloc = function()
                     --buffid
                     local txtid = cobox:CreateOrGetControl("edit", "txtid", 10, 10, 100, 30)
                     AUTO_CAST(txtid)
-                    txtid:SetText(tostring(k))
+                    txtid:SetText(tostring(buffid))
                     txtid:SetTypingScp("BUFFNOTIFIERCONFIG_ONCHANGEDBUFFID")
                     txtid:SetUserValue("index", index)
                     --buffico
@@ -171,7 +172,7 @@ confighandler.alloc = function()
                     btndel:SetEventScriptArgNumber(ui.LBUTTONUP, k)
                     btndel:SetGravity(ui.RIGHT, ui.BOTTOM)
                     btndel:SetOffset(30, 50)
-                    self:updateIconAndName(index)
+                    self:updateIconAndName(buffid,index)
                     self.buffboxcount = self.buffboxcount + 1
                 end,
                 catch = function(error)
@@ -180,11 +181,11 @@ confighandler.alloc = function()
             }
         end,
         
-        updateIconAndName = function(self, index)
+        updateIconAndName = function(self, buffid,index)
             local f = self.f
             local gbox = f:GetChild("gbox")
             AUTO_CAST(gbox)
-            DBGOUT("".. tostring(index))
+            DBGOUT("" .. tostring(index))
             local cobox = gbox:GetChild("buff_" .. tostring(index))
             AUTO_CAST(cobox)
             local name = cobox:GetChild("name")
@@ -197,7 +198,7 @@ confighandler.alloc = function()
             local cls = GetClassByType("Buff", typeid)
             if (cls) then
                 pic:SetImage(cls.Icon)
-                name:SetText("{ol}"..dictionary.ReplaceDicIDInCompStr(cls.Name))
+                name:SetText("{ol}" .. dictionary.ReplaceDicIDInCompStr(cls.Name))
             else
                 pic:SetImage("None")
                 name:SetText("")
@@ -211,7 +212,7 @@ confighandler.alloc = function()
             table.sort(BUFFNOTIFIER_SOUNDLIST)
             local i = 0
             local sel
-            for idx, v in ipairs(BUFFNOTIFIER_SOUNDLIST) do
+            for _, v in pairs(BUFFNOTIFIER_SOUNDLIST) do
                 if (not findstr or v:find(findstr)) then
                     cmb:AddItem(i, v)
                     if (findstr == v) then
@@ -234,62 +235,62 @@ confighandler.alloc = function()
 
 end
 g = {
-    
-    framename = "buffnotifier",
-    cframename = "buffnotifierconfig",
-    confighandler = confighandler,
-    debug = true,
-    v = g.v or {
-    
-    },
-    settings = g.settings or {
-        buffs = {}-- [buffid]={sound="hogehoge"}
-    
-    },
-    settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower),
-    saveSettings = function(self)
-        acutil.saveJSON(self.settingsFileLoc, self.settings)
-    end,
-    loadSettings = function(self)
-        DBGOUT("LOAD_SETTING")
-        self.settings = {foods = {}}
-        local t, err = acutil.loadJSON(self.settingsFileLoc, self.settings)
-        if err then
-            --設定ファイル読み込み失敗時処理
-            DBGOUT(string.format('[%s] cannot load setting files', addonName))
-            self.settings = {
-                buffs = {}
-            }
-        else
-            --設定ファイル読み込み成功時処理
-            self.settings = t
-            if (not self.settings.version) then
-                self.settings.version = 0
-            
-            end
-        end
-    
-    end,
-    onRemovedBuff = function(self, buffid)
-        if self.settings.buffs[buffid] then
-            --play sound
-            imcSound.PlaySoundEvent(self.settings.buffs[buffid].sound)
-        end
-    end,
-    newConfigWindow = function(self)
-        local f = ui.GetFrame(g.cframename)
         
-        local ch = confighandler.alloc():init()
-        self.confighandler = ch
-    end,
-    disposeConfigWindow = function(self)
-        if self.confighandler then
-            self.confighandler:dispose()
+        framename = "buffnotifier",
+        cframename = "buffnotifierconfig",
+        confighandler = confighandler,
+        debug = false,
+        v = g.v or {
+        
+        },
+        settings = g.settings or {
+            buffs = {}-- [buffid]={sound="hogehoge"}
+        
+        },
+        settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower),
+        saveSettings = function(self)
+            acutil.saveJSON(self.settingsFileLoc, self.settings)
+        end,
+        loadSettings = function(self)
+            DBGOUT("LOAD_SETTING")
+            self.settings = {foods = {}}
+            local t, err = acutil.loadJSON(self.settingsFileLoc, self.settings)
+            if err then
+                --設定ファイル読み込み失敗時処理
+                DBGOUT(string.format('[%s] cannot load setting files', addonName))
+                self.settings = {
+                    buffs = {}
+                }
+            else
+                --設定ファイル読み込み成功時処理
+                self.settings = t
+                if (not self.settings.version) then
+                    self.settings.version = 0
+                
+                end
+            end
+        
+        end,
+        onRemovedBuff = function(self, buffid)
+            if self.settings.buffs["buff_"..buffid] then
+                --play sound
+                imcSound.PlaySoundEvent(self.settings.buffs["buff_"..buffid].sound)
+            end
+        end,
+        newConfigWindow = function(self)
+            local f = ui.GetFrame(g.cframename)
+            
+            local ch = confighandler.alloc():init()
+            self.confighandler = ch
+        end,
+        disposeConfigWindow = function(self)
+            if self.confighandler then
+                self.confighandler:dispose()
+                self.confighandler = nil
+            end
+            g:saveSettings()
             self.confighandler = nil
         end
-        g:saveSettings()
-        self.confighandler = nil
-    end
 }
 
 --マップ読み込み時処理（1度だけ）
@@ -367,17 +368,24 @@ function BUFFNOTIFIERCONFIG_ONBTNADD(frame)
     g.confighandler:addBuffBox()
 end
 function BUFFNOTIFIERCONFIG_APPLYBUFF(frame, ctrl, argstr, argnum)
-    local cobox = ctrl:GetParent()
-    AUTO_CAST(cobox)
-    local txtid = cobox:GetChild("txtid")
-    local txtsound = cobox:GetChild("txtsound")
-    
-    local newid = tonumber(txtid:GetText())
-    g.settings.buffs[argnum] = nil
-    g.settings.buffs[newid] = {
-        sound = txtsound:GetText()
+    EBI_try_catch{
+        try = function()
+            local cobox = ctrl:GetParent()
+            AUTO_CAST(cobox)
+            local txtid = cobox:GetChild("txtid")
+            local txtsound = cobox:GetChild("txtsound")
+            
+            local newid = tonumber(txtid:GetText())
+            g.settings.buffs["buff_"..argnum] = nil
+            g.settings.buffs["buff_"..newid] = {
+                sound = txtsound:GetText()
+            }
+            g:saveSettings()
+        end,
+        catch = function(error)
+            DBGOUT(error)
+        end
     }
-    g:saveSettings()
 end
 function BUFFNOTIFIERCONFIG_DELETEBUFF(frame, ctrl, argstr, argnum)
     g.settings.buffs[argnum] = nil
