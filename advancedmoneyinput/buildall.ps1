@@ -1,7 +1,7 @@
 ﻿$addonname="advancedmoneyinput"
 $emoji="📖"
 $prefix="__"
-$version="v0.0.1"
+$version="v0.0.2"
 
 if (!(Test-Path bin)) {
     mkdir bin 
