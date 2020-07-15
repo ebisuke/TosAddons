@@ -34,3 +34,4 @@ class HandResponse(object):
             return self.error
         else:
             return '{} han, {} fu'.format(self.han, self.fu)
+

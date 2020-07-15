@@ -4,5 +4,6 @@
         "g_invenTypeStrList",
         "ReserveScript"
     ],
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "LuaCoderAssist.format.lineWidth": 180
 }
