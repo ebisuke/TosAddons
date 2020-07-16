@@ -10,7 +10,7 @@
 		<image name="mg_man7" file="\skin\man7.png" imgrect="0 0 53 73"/>
 		<image name="mg_man8" file="\skin\man8.png" imgrect="0 0 53 73"/>
 		<image name="mg_man9" file="\skin\man9.png" imgrect="0 0 53 73"/>
-
+		<image name="mg_pin1" file="\skin\pin1.png" imgrect="0 0 53 73"/>
 		<image name="mg_pin2" file="\skin\pin2.png" imgrect="0 0 53 73"/>
 		<image name="mg_pin3" file="\skin\pin3.png" imgrect="0 0 53 73"/>
 		<image name="mg_pin4" file="\skin\pin4.png" imgrect="0 0 53 73"/>
@@ -19,7 +19,7 @@
 		<image name="mg_pin7" file="\skin\pin7.png" imgrect="0 0 53 73"/>
 		<image name="mg_pin8" file="\skin\pin8.png" imgrect="0 0 53 73"/>
 		<image name="mg_pin9" file="\skin\pin9.png" imgrect="0 0 53 73"/>
-	
+		<image name="mg_sou1" file="\skin\sou1.png" imgrect="0 0 53 73"/>
 		<image name="mg_sou2" file="\skin\sou2.png" imgrect="0 0 53 73"/>
 		<image name="mg_sou3" file="\skin\sou3.png" imgrect="0 0 53 73"/>
 		<image name="mg_sou4" file="\skin\sou4.png" imgrect="0 0 53 73"/>
@@ -38,9 +38,9 @@
 		<image name="mg_sha" file="\skin\sha.png" imgrect="0 0 53 73"/>
 		<image name="mg_pei" file="\skin\pei.png" imgrect="0 0 53 73"/>
 
-		<image name="mg_D_man5" file="\skin\D_man5.png" imgrect="0 0 53 73"/>
-		<image name="mg_D_sou5" file="\skin\D_sou5.png" imgrect="0 0 53 73"/>
-		<image name="mg_D_pin5" file="\skin\D_pin5.png" imgrect="0 0 53 73"/>
+		<image name="mg_R_man5" file="\skin\R_man5.png" imgrect="0 0 53 73"/>
+		<image name="mg_R_sou5" file="\skin\R_sou5.png" imgrect="0 0 53 73"/>
+		<image name="mg_R_pin5" file="\skin\R_pin5.png" imgrect="0 0 53 73"/>
 	
 		<image name="mg_B100" file="\skin\B100.png" imgrect="0 0 199 21"/>
 		<image name="mg_B500" file="\skin\B500.png" imgrect="0 0 199 21"/>
@@ -51,5 +51,4 @@
 	
 	</imagelist>
 
-</skinlist>
 </skinset>

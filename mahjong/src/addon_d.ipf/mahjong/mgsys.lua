@@ -1,3 +1,33 @@
+
+-- This library based on mahjong created by MahjongRepository members.
+-- Translated to lua by ebisuke.
+
+-- https://github.com/MahjongRepository/mahjong
+
+-- MIT License
+
+-- Copyright (c) [2017] [Alexey Lisikhin]
+
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
+
+
+
 --
 -- itertools.lua
 -- Copyright (C) 2016 Adrian Perez <aperez@igalia.com>
@@ -148,10 +178,18 @@ end
 --
 function itertools.collect(iterable)
     local t, n = {}, 0
-    for element in iterable do
-        n = n + 1
-        t[n] = element
+    if type(iterable)=="table" then
+        for _,element in ipairs(iterable) do
+            n = n + 1
+            t[n] = element
+        end
+    else
+        for element in iterable do
+            n = n + 1
+            t[n] = element
+        end
     end
+   
     return t, n
 end
 
@@ -243,7 +281,6 @@ function itertools.value(value, times)
         )
     end
 end
-
 
 --- Iterate over selected values of an iterable.
 --
@@ -369,7 +406,16 @@ local function make_comp_func(key)
 end
 
 local _collect = itertools.collect
-
+local function expanditerator(iter)
+    local tbl={}
+    local i=1
+   
+    for k,v in iter do
+        tbl[i]=v
+        i=i+1
+    end
+    return tbl
+end
 --- Iterate over the sorted elements from an iterable.
 --
 -- A custom `key` function can be supplied, and it will be applied to each
@@ -388,88 +434,143 @@ local _collect = itertools.collect
 --   (descending) order. If not supplied, defaults to `false`.
 -- @treturn coroutine An iterator over the sorted elements.
 --
-function itertools.sorted(iterable, key, reverse)
-    local t, n = _collect(iterable)
-    t_sort(t, make_comp_func(key))
-    if reverse then
-        return co_wrap(
-            function()
-                for i = n, 1, -1 do
-                    co_yield(t[i])
-                end
-            end
-        )
-    else
-        return co_wrap(
-            function()
-                for i = 1, n do
-                    co_yield(t[i])
-                end
-            end
-        )
+local function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
     end
+    return copy
 end
+
+local function sorted(list, cond)
+    local copy = deepcopy(list)
+    
+
+
+    table.sort(copy, cond or 
+    function(a,b)
+        if type(a)=="table" then
+            for k,v in ipairs(a) do
+                if v ~= b[k] then
+                    return v < b[k]
+                end
+            end
+            --same
+            return true
+        else
+            return a < b
+        end
+    end)
+    return copy
+end
+function itertools.sorted(iterable, key, reverse)
+    local tbl=sorted(iterable,key)
+    if reverse then
+        local tbl2={}
+        for i=1,#tbl do
+            tbl2[#tbl-i+1]=tbl[i]
+        end
+        return tbl2
+    end
+    return tbl
+end
+
+
 
 local _value = itertools.value
-
---- Cartesian product of iterables.
---
--- This is equivalent to nested for-loops, with the leftmost iterators
--- being the outermost for-loops, so the yielded results cycle in a
--- manner similar to an odometer, with the rightmost element changing
--- on every iteration.
---
--- @tparam coroutine iterable An iterator.
--- @tparam[opt] coroutine ... Additional iterators.
--- @treturn coroutine An iterator over tuples of product elements.
---
-function itertools.product(...)
-    local niterables = select('#', ...)
-    local items = {}
-    for i = 1, niterables do
-        items[i] = _collect(select(i, ...))
+local function arraygenerator(count, init)
+    local list = {}
+    for x = 1, count  do
+        list[x] = init
     end
-    return co_wrap(
-        function()
-            local indices, _ = _collect(_value(1, niterables))
-            while true do
-                -- Assemble and yield a result using the current indices.
-                local result = {}
-                for i = 1, niterables do
-                    result[i] = items[i][indices[i]]
-                end
-                co_yield(t_unpack(result))
-
-                -- Update the indices, right to left, advancing to the
-                -- next column when the previous one has rolled over.
-                local last_rolled = nil
-                for i = niterables, 1, -1 do
-                    indices[i] = indices[i] + 1
-                    if indices[i] > #items[i] then
-                        -- Roll over.
-                        last_rolled = i
-                        indices[i] = 1
-                        result[i] = items[i][indices[i]]
-                    else
-                        -- No roll over.
-                        result[i] = items[i][indices[i]]
-                        break
-                    end
-                end
-                -- All the columns rolled over: stop.
-                if last_rolled == 1 then
-                    return
-                end
-            end
-        end
-    )
+    return list
 end
 
-local function tableremove(tbl, tgt)
+
+local function arrayequal(a,b)
+    if type(a)~="table"then
+        return a==b
+    end
+    if #a ~= #b then
+        return false
+    end
+    for k,v in pairs(a) do
+        if type(a[k])=="table" and type(b[k])=='table' then
+            return arrayequal(a[k],b[k])
+        elseif a[k]~=b[k] then
+            return false
+        end
+    end
+    return true
+end
+local function isin(table, elems)
+    if type(elems) == 'table' then
+        for _, v in ipairs(table) do
+            for _, k in ipairs(elems) do
+                
+                
+                if arrayequal(v,k) then
+                    return true
+                end
+                
+            end
+        end
+    else
+        for _, v in ipairs(table) do
+            if arrayequal(v,elems) then
+                return true
+            end
+        end
+    end
+    return false
+end
+local function uniq(a)
+    local list={}
+    local f=true
+    for k,v in ipairs(a) do
+        if f then
+            list[k]=v
+            f=false
+        else
+            local ok=true
+            for kk,vv in ipairs(list) do
+                if arrayequal(v,vv) then
+                    ok=false
+                    break
+                end
+            end
+            if ok then
+                list[k]=v
+            end
+        end
+    end
+    return list
+end
+local function tableremove(tbl, tgt, rep)
     for k, v in ipairs(tbl) do
-        if (v == tgt) then
-            tbl[k] = nil
-            break
+
+        if type(v)=="table" then
+            if arrayequal(v,tgt) then
+                table.remove(tbl,k)
+                if not rep then
+                    break
+                end
+            end
+        else
+
+            if (v == tgt) then
+                table.remove(tbl,k)
+                if not rep then
+                    break
+                end
+            end
         end
     end
     return tbl
@@ -519,118 +620,169 @@ local function countof(list, data)
     end
     return count
 end
--- Iterative version
-local function ipermutations(a, b)
-    if a == 0 then
-        return
+local permgen
+local coroutine = coroutine
+local resume = coroutine.resume
+permgen = function (a, n, fn)
+  if n == 0 then
+    fn(a)
+  else
+    for i=1,n do
+      -- put i-th element as the last one
+      a[n], a[i] = a[i], a[n]
+
+      -- generate all permutations of the other elements
+      permgen(a, n - 1, fn)
+
+      -- restore i-th element
+      a[n], a[i] = a[i], a[n]
+
     end
-    local taken = {}
-    local slots = {}
-    for i = 1, a do
-        slots[i] = 0
-    end
-    for i = 1, b do
-        taken[i] = false
-    end
-    local index = 1
-    while index > 0 do
-        repeat
-            repeat
-                slots[index] = slots[index] + 1
-            until slots[index] > b or not taken[slots[index]]
-            if slots[index] > b then
-                slots[index] = 0
-                index = index - 1
-                if index > 0 then
-                    taken[slots[index]] = false
-                end
-                break
-            else
-                taken[slots[index]] = true
-            end
-            if index == a then
-                for i = 1, a do
-                    io.write(slots[i])
-                    io.write(' ')
-                end
-                io.write('\n')
-                taken[slots[index]] = false
-                break
-            end
-            index = index + 1
-        until true
+  end
+end
+
+--- an iterator over all permutations of the elements of a list.
+-- Please note that the same list is returned each time, so do not keep references!
+-- @param a list-like table
+-- @return an iterator which provides the next permutation as a list
+local function permuteiter (a,n)
+    --local n = #a
+    local co = coroutine.create(function () permgen(a, n, coroutine.yield) end)
+    return function ()   -- iterator
+        local code, res = resume(co)
+        return res
     end
 end
-local function pand(a,b)
+local function noop(...)
+    return ...
+end
+
+-- convert a nested table to a flat table
+local function flatten(t,  res)
+    if type(t) ~= 'table' then
+        return t
+    end
+
+  
+
+    if res == nil then
+        res = {}
+    end
+
+    for k, v in pairs(t) do
+        if type(v) == 'table' then
+            local v = flatten(v, {})
+            for k2, v2 in pairs(v) do
+                res[#res+1] = v2
+            end
+        else
+            res[#res+1] = v
+        end
+    end
+    return res
+end
+
+local function permutations(N)
+	local level, set, co = -1, {}, nil
+
+	for i = 1, N do set[i] = 0 end
+
+	co = coroutine.create(function () permute(set, level, N, 1) end)
+
+	return function ()
+		local _, p = coroutine.resume(co)
+		return p
+	end
+end 
+
+local function permute(set, level, N, k)
+	level = level + 1
+	set[k] = level
+	if level == N then
+		coroutine.yield(set)
+	else
+		for i = 1, N do
+			if set[i] == 0 then
+				permute(set, level, N, i)
+			end
+		end
+	end
+
+	level = level - 1
+	set[k] = 0
+end
+local function range(a,b,c)
+    local l={}
+    if b==nil then
+        b=a
+        a=0
+    end
+    c=c or 1
+
+    while a~=b do
+        l[#l+1]=a
+        a=a+c
+    end
+    return l
+end
+
+local function picker(list, cond, add, pick)
+    local l = {}
+    for _, v in ipairs(list) do
+        local pass = true
+        if cond then
+            pass = cond(v)
+        end
+        if pick then
+            l[#l + 1] = pick(v)
+        else
+            if pass then
+                local val = v
+                if add then
+                    val = v + (add or 0)
+                end
+                l[#l + 1] = val
+            end
+        end
+    end
+    return l
+end
+
+local function slice(l,s,e)
+   local list={}
+   s=s or 1
+   e=e or (#l+1)
+   for i=s,e-1 do
+    list[#list+1]=l[i]
+   end
+   return list
+end
+local function reverse(t)
+    local r=deepcopy(t)
+  local n = #r
+  local i = 1
+  while i < n do
+    r[i],r[n] = r[n],r[i]
+    i = i + 1
+    n = n - 1
+  end
+  return r
+end
+  
+local function pand(a, b)
     if a then
         return b
     else
         return a
     end
 end
+
 local g = {}
--- https://github.com/MahjongRepository/mahjong
+
 -- python specific functions
-local function noop(...)
-    return ...
-end
-
--- convert a nested table to a flat table
-local function flatten(t, sep, key_modifier, res)
-    if type(t) ~= 'table' then
-        return t
-    end
-
-    if sep == nil then
-        sep = '.'
-    end
-
-    if res == nil then
-        res = {}
-    end
-
-    if key_modifier == nil then
-        key_modifier = noop
-    end
-
-    for k, v in pairs(t) do
-        if type(v) == 'table' then
-            local v = flatten(v, sep, key_modifier, {})
-            for k2, v2 in pairs(v) do
-                res[key_modifier(k) .. sep .. key_modifier(k2)] = v2
-            end
-        else
-            res[key_modifier(k)] = v
-        end
-    end
-    return res
-end
 
 local copy = {}
-local function isin(table, elems)
-    for _, v in ipairs(table) do
-        for _, k in ipairs(elems) do
-            if v == k then
-                return true
-            end
-        end
-    end
-    return false
-end
-function copy.copy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[copy.deepcopy(orig_key)] = copy.deepcopy(orig_value)
-        end
-        setmetatable(copy, copy.deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
+
 
 local function cartesian_product(sets)
     local item_counts = {}
@@ -683,25 +835,7 @@ local function cartesian_product(sets)
         return combination_index, results
     end
 end
-function copy.deepcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[copy.deepcopy(orig_key)] = copy.deepcopy(orig_value)
-        end
-        setmetatable(copy, copy.deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-local function sorted(list, cond)
-    local copy = copy.deepcopy(list)
-    table.sort(copy, cond)
-    return copy
-end
+
 local function sum(list)
     local s = 0
     for _, v in ipairs(list) do
@@ -710,40 +844,20 @@ local function sum(list)
     return s
 end
 local function all(list, cond)
+    cond=cond or function(v)
+        return v
+    end
     for _, v in ipairs(list) do
+       
         if (not cond(v)) then
             return false
         end
     end
     return true
 end
-local function picker(list, cond, add, pick)
-    local l = {}
-    for _, v in ipairs(list) do
-        local pass = true
-        if cond then
-            pass = cond(v)
-        end
-        if pick then
-            l[#l + 1] = pick(v)
-        else
-            if pass then
-                local val = v + (add or 0)
-                l[#l + 1] = val
-            end
-        end
-    end
-    return l
-end
-local function arraygenerator(count, init)
-    local list = {}
-    for x = 0, count - 1 do
-        list[#list + 1] = init
-    end
-    return list
-end
+
 local function find(list, dest)
-    local list = {}
+    --local list = {}
     for k, v in ipairs(list) do
         if (v == dest) then
             return true
@@ -751,28 +865,129 @@ local function find(list, dest)
     end
     return false
 end
+local function cat(tbla,tblb)
+    
+    local cpy=deepcopy(tbla)
+    for k,v in pairs(tblb) do
+        table.insert(cpy,v)
+    end
+    return cpy
+end
+-- Cartesian product of iterables.
+--
+-- This is equivalent to nested for-loops, with the leftmost iterators
+-- being the outermost for-loops, so the yielded results cycle in a
+-- manner similar to an odometer, with the rightmost element changing
+-- on every iteration.
+--
+-- @tparam coroutine iterable An iterator.
+-- @tparam[opt] coroutine ... Additional iterators.
+-- @treturn coroutine An iterator over tuples of product elements.
+--
+function itertools.product(args,rep)
+    -- product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
+    -- product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
+    rep=rep or 1
+    local pools = arraygenerator(rep,args)
+    local result = {{}}
+    for _,pool in ipairs(pools) do
+        
+        for k,x in ipairs(result)do
+            local rs=x
+            for _,y in ipairs(pool)do
+                rs=cat(rs,{y})
+            end
+            result[k]=rs
+        end
+    end
+        
+    local ret={}
+    for _,prod in ipairs(result) do
+        table.insert(ret,prod)
+    end
+
+    return ret
+end
+local function combine(tbla,tblb)
+    
+    local cpy=deepcopy(tbla)
+    for k,v in pairs(tblb) do
+        cpy[k]=v
+    end
+    return cpy
+end
+
+local function ipermutations(iterable,r)
+
+    -- permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
+    -- permutations(range(3)) --> 012 021 102 120 201 210
+    local pool = deepcopy(iterable)
+    local n = #(pool)
+    r = r or n 
+
+    if r > n then
+        return {pool}
+    end
+    local indices = range(n)
+    local cycles = range(n, n-r, -1)
+
+    local list={}
+    table.insert(list,picker(slice(indices,1,r+1),nil,nil,function(x)return pool[x+1]end))
+
+    --yield tuple(pool[i] for i in indices[:r])
+    while n do
+        local broken=false
+        local p=reverse(range(r))
+        for _,i in ipairs(p) do
+            cycles[i+1] =  cycles[i+1]-1
+            if cycles[i+1] == 0 then
+                local sl=slice(indices,i+1+1)
+                local sll=slice(indices,i+1,i+1+1)
+                local ca=cat(sl,sll)
+                for j=i+1,#indices do
+                    indices[j]=ca[j-i]
+                end
+                -- indices[i:] = indices[i+1:] + indices[i:i+1]
+                cycles[i+1] = n - i
+            else
+                local j = cycles[i+1]
+                indices[i+1], indices[#indices-j+1] = indices[#indices-j+1], indices[i+1]
+                table.insert(list,picker(slice(indices,1,r+1),nil,nil,function(x)return pool[x+1]end))
+
+                broken=true
+                break
+            end
+        end
+        if not broken then
+            break
+        end
+
+    end
+    return list
+end
 --agari
 g.Agari = {
-    is_agari = function(self, tiles_34, open_sets_34)
-        local tiles = copy.deepcopy(tiles_34)
+    is_agari = function( tiles_34, open_sets_34)
+        local tiles = deepcopy(tiles_34)
 
         if open_sets_34 then
-            local isolated_tiles = find_isolated_tile_indices(tiles)
-            for meld in ipairs(open_sets_34) do
+            local isolated_tiles =  g.utils.find_isolated_tile_indices(tiles)
+            for _,meld in ipairs(open_sets_34) do
                 if not isolated_tiles then
                     break
                 end
-                local isolated_tile = isolated_tiles.pop()
+                local isolated_tile = table.remove(isolated_tiles)
 
                 tiles[meld[0 + 1]] = tiles[meld[0 + 1]] - 1
                 tiles[meld[1 + 1]] = tiles[meld[1 + 1]] - 1
                 tiles[meld[2 + 1]] = tiles[meld[2 + 1]] - 1
-                tiles[isolated_tile] = 3
+                tiles[isolated_tile+1] = 3
             end
         end
-        j = (1 << tiles[27 + 1]) | (1 << tiles[28 + 1]) | (1 << tiles[29 + 1]) | (1 << tiles[30 + 1]) | (1 << tiles[31 + 1]) | (1 << tiles[32 + 1]) | (1 << tiles[33 + 1])
+        local j = (1 << tiles[27 + 1]) | (1 << tiles[28 + 1]) | (1 << tiles[29 + 1]) | (1 << tiles[30 + 1]) | (1 << tiles[31 + 1]) | (1 << tiles[32 + 1]) | (1 << tiles[33 + 1])
 
         if j >= 0x10 then
+          
             return false
         end
 
@@ -787,15 +1002,16 @@ g.Agari = {
             return true
         end
         local sum = 0
-        for k, v in range(0, 34) do
+        for i=1,34 do
             if (tiles[i] == 2) then
                 sum = sum + 1
             end
         end
-        if not (j & 10) and sum == 7 then
+        if (j & 10)==0 and sum == 7 then
             return true
         end
-        if j & 2 then
+        if (j & 2)~=0 then
+            print("fail2")
             return false
         end
         local n00 = tiles[0 + 1] + tiles[3 + 1] + tiles[6 + 1]
@@ -822,34 +1038,43 @@ g.Agari = {
         if n2 == 1 then
             return false
         end
+        local function b(x)
+            if x then
+                return 1
+            else
+                return 0
+
+            end
+        end
         if
-            ((n0 == 2) + (n1 == 2) + (n2 == 2) + (tiles[27] == 2) + (tiles[28] == 2) + (tiles[29] == 2) + (tiles[30] == 2) + (tiles[31] == 2) + (tiles[32] == 2) + (tiles[33] == 2) ~=
+            ((b(n0 == 2) + b(n1 == 2) + b(n2 == 2) + b(tiles[27+1] == 2) + b(tiles[28+1] == 2) + b(tiles[29+1] == 2) + b(tiles[30+1] == 2) + b(tiles[31+1] == 2) + b(tiles[32+1] == 2) + b(tiles[33+1] == 2)) ~=
                 1)
          then
+            
             return false
         end
         local nn0 = (n00 * 1 + n01 * 2) % 3
-        local m0 = self._to_meld(tiles, 0)
+        local m0 =  g.Agari._to_meld(tiles, 0)
         local nn1 = (n10 * 1 + n11 * 2) % 3
-        local m1 = self._to_meld(tiles, 9)
+        local m1 =  g.Agari._to_meld(tiles, 9)
         local nn2 = (n20 * 1 + n21 * 2) % 3
-        local m2 = self._to_meld(tiles, 18)
+        local m2 =  g.Agari._to_meld(tiles, 18)
 
-        if j & 4 then
-            return not (n0 | nn0 | n1 | nn1 | n2 | nn2) and self._is_mentsu(m0) and self._is_mentsu(m1) and self._is_mentsu(m2)
+        if (j & 4)~=0 then
+            return (n0 | nn0 | n1 | nn1 | n2 | nn2)==0 and g.Agari._is_mentsu(m0) and g.Agari._is_mentsu(m1) and g.Agari._is_mentsu(m2)
         end
         if n0 == 2 then
-            return not (n1 | nn1 | n2 | nn2) and self._is_mentsu(m1) and self._is_mentsu(m2) and self._is_atama_mentsu(nn0, m0)
+            return (n1 | nn1 | n2 | nn2)==0  and g.Agari._is_mentsu(m1) and g.Agari._is_mentsu(m2) and g.Agari._is_atama_mentsu(nn0, m0)
         end
         if n1 == 2 then
-            return not (n2 | nn2 | n0 | nn0) and self._is_mentsu(m2) and self._is_mentsu(m0) and self._is_atama_mentsu(nn1, m1)
+            return (n2 | nn2 | n0 | nn0)==0  and g.Agari._is_mentsu(m2) and g.Agari._is_mentsu(m0) and g.Agari._is_atama_mentsu(nn1, m1)
         end
         if n2 == 2 then
-            return not (n0 | nn0 | n1 | nn1) and self._is_mentsu(m0) and self._is_mentsu(m1) and self._is_atama_mentsu(nn2, m2)
+            return (n0 | nn0 | n1 | nn1)==0  and g.Agari._is_mentsu(m0) and g.Agari._is_mentsu(m1) and g.Agari._is_atama_mentsu(nn2, m2)
         end
         return false
     end,
-    _is_mentsu = function(self, m)
+    _is_mentsu = function( m)
         local a = m & 7
         local b = 0
         local c = 0
@@ -892,44 +1117,44 @@ g.Agari = {
 
         return a == 0 or a == 3
     end,
-    _is_atama_mentsu = function(self, nn, m)
+    _is_atama_mentsu = function( nn, m)
         if nn == 0 then
-            if (m & (7 << 6)) >= (2 << 6) and self._is_mentsu(m - (2 << 6)) then
+            if (m & (7 << 6)) >= (2 << 6) and  g.Agari._is_mentsu(m - (2 << 6)) then
                 return true
             end
-            if (m & (7 << 15)) >= (2 << 15) and self._is_mentsu(m - (2 << 15)) then
+            if (m & (7 << 15)) >= (2 << 15) and  g.Agari._is_mentsu(m - (2 << 15)) then
                 return true
             end
-            if (m & (7 << 24)) >= (2 << 24) and self._is_mentsu(m - (2 << 24)) then
+            if (m & (7 << 24)) >= (2 << 24) and  g.Agari._is_mentsu(m - (2 << 24)) then
                 return true
             end
         elseif nn == 1 then
-            if (m & (7 << 3)) >= (2 << 3) and self._is_mentsu(m - (2 << 3)) then
+            if (m & (7 << 3)) >= (2 << 3) and  g.Agari._is_mentsu(m - (2 << 3)) then
                 return true
             end
-            if (m & (7 << 12)) >= (2 << 12) and self._is_mentsu(m - (2 << 12)) then
+            if (m & (7 << 12)) >= (2 << 12) and  g.Agari._is_mentsu(m - (2 << 12)) then
                 return true
             end
-            if (m & (7 << 21)) >= (2 << 21) and self._is_mentsu(m - (2 << 21)) then
+            if (m & (7 << 21)) >= (2 << 21) and  g.Agari._is_mentsu(m - (2 << 21)) then
                 return true
             end
         elseif nn == 2 then
-            if (m & (7 << 0)) >= (2 << 0) and self._is_mentsu(m - (2 << 0)) then
+            if (m & (7 << 0)) >= (2 << 0) and  g.Agari._is_mentsu(m - (2 << 0)) then
                 return true
             end
-            if (m & (7 << 9)) >= (2 << 9) and self._is_mentsu(m - (2 << 9)) then
+            if (m & (7 << 9)) >= (2 << 9) and  g.Agari._is_mentsu(m - (2 << 9)) then
                 return true
             end
-            if (m & (7 << 18)) >= (2 << 18) and self._is_mentsu(m - (2 << 18)) then
+            if (m & (7 << 18)) >= (2 << 18) and  g.Agari._is_mentsu(m - (2 << 18)) then
                 return true
             end
         end
         return false
     end,
-    _to_meld = function(self, tiles, d)
+    _to_meld = function(tiles, d)
         local result = 0
         for i = 0, 8 do
-            result = result | (tiles[d + i] << i * 3)
+            result = result | (tiles[d + i+1] << i * 3)
         end
         return result
     end
@@ -948,7 +1173,8 @@ g.HATSU = 32
 g.CHUN = 33
 
 g.WINDS = {g.EAST, g.SOUTH, g.WEST, g.NORTH}
-g.HONOR_INDICES = g.WINDS + {g.HAKU, g.HATSU, g.CHUN}
+
+g.HONOR_INDICES = cat(g.WINDS , {g.HAKU, g.HATSU, g.CHUN})
 
 g.FIVE_RED_MAN = 16
 g.FIVE_RED_PIN = 52
@@ -964,9 +1190,9 @@ g.DISPLAY_WINDS = {
 }
 
 -- for python conventional
-local False=false
-local True=true
-local None=nil
+local False = false
+local True = true
+local None = nil
 local function len(x)
     return #x
 end
@@ -1022,9 +1248,9 @@ function g.Shanten()
         number_isolated_tiles = 0,
         min_shanten = 0,
         calculate_shanten = function(self, tiles_34, open_sets_34, chiitoitsu, kokushi)
-            tiles_34 = copy.deepcopy(tiles_34)
+            tiles_34 = deepcopy(tiles_34)
 
-            self._init(tiles_34)
+            self:_init(tiles_34)
 
             local count_of_tiles = sum(tiles_34)
 
@@ -1033,26 +1259,26 @@ function g.Shanten()
             end
 
             if open_sets_34 then
-                local isolated_tiles = find_isolated_tile_indices(tiles_34)
-                for meld in open_sets_34 do
+                local isolated_tiles = g.utils.find_isolated_tile_indices(tiles_34)
+                for _,meld in ipairs(open_sets_34) do
                     if not isolated_tiles then
                         break
                     end
-                    local isolated_tile = isolated_tiles.pop()
+                    local isolated_tile = table.remove(isolated_tiles)
 
-                    tiles_34[meld[0 + 1]] = tiles_34[meld[0 + 1]] - 1
-                    tiles_34[meld[1 + 1]] = tiles_34[meld[1 + 1]] - 1
-                    tiles_34[meld[2 + 1]] = tiles_34[meld[2 + 1]] - 1
-                    tiles_34[isolated_tile] = 3
+                    tiles_34[meld[0 + 1]+1] = tiles_34[meld[0 + 1]+1] - 1
+                    tiles_34[meld[1 + 1]+1] = tiles_34[meld[1 + 1]+1] - 1
+                    tiles_34[meld[2 + 1]+1] = tiles_34[meld[2 + 1]+1] - 1
+                    tiles_34[isolated_tile+1] = 3
                 end
             end
             if not open_sets_34 then
-                self.min_shanten = self._scan_chiitoitsu_and_kokushi(chiitoitsu, kokushi)
+                self.min_shanten = self:_scan_chiitoitsu_and_kokushi(chiitoitsu, kokushi)
             end
-            self._remove_character_tiles(count_of_tiles)
+            self:_remove_character_tiles(count_of_tiles)
 
             local init_mentsu = math.floor((14 - count_of_tiles) / 3)
-            self._scan(init_mentsu)
+            self:_scan(init_mentsu)
 
             return self.min_shanten
         end,
@@ -1068,18 +1294,24 @@ function g.Shanten()
         end,
         _scan = function(self, init_mentsu)
             self.number_characters = 0
-            for i = 0, 26 do
-                self.number_characters = self.number_characters | (self.tiles[i] == 4) << i
+            for i = 1, 27 do
+                local v=0
+                if (self.tiles[i] == 4) then
+                    v=1
+                else
+                    v=0
+                end
+                self.number_characters = self.number_characters | v << (i-1)
             end
             self.number_melds = self.number_melds + init_mentsu
-            self._run(0)
+            self:_run(0)
         end,
         _run = function(self, depth)
-            if self.min_shanten == AGARI_STATE then
+            if self.min_shanten == g.AGARI_STATE then
                 return
             end
-
-            while not self.tiles[depth] do
+           
+            while self.tiles[depth+1]==0 do
                 depth = depth + 1
 
                 if depth >= 27 then
@@ -1087,8 +1319,9 @@ function g.Shanten()
                 end
             end
             if depth >= 27 then
-                return self._update_result()
+                return self:_update_result()
             end
+          
             local i = depth
             if i > 8 then
                 i = i - 9
@@ -1096,112 +1329,112 @@ function g.Shanten()
             if i > 8 then
                 i = i - 9
             end
-            if self.tiles[depth] == 4 then
-                self._increase_set(depth)
-                if i < 7 and self.tiles[depth + 2] then
-                    if self.tiles[depth + 1] then
-                        self._increase_syuntsu(depth)
-                        self._run(depth + 1)
-                        self._decrease_syuntsu(depth)
+            if self.tiles[depth+1] == 4 then
+                self:_increase_set(depth)
+                if i < 7 and self.tiles[depth + 2+1]~=0 then
+                    if self.tiles[depth + 1+1]~=0 then
+                        self:_increase_syuntsu(depth)
+                        self:_run(depth + 1)
+                        self:_decrease_syuntsu(depth)
                     end
-                    self._increase_tatsu_second(depth)
-                    self._run(depth + 1)
-                    self._decrease_tatsu_second(depth)
+                    self:_increase_tatsu_second(depth)
+                    self:_run(depth + 1)
+                    self:_decrease_tatsu_second(depth)
                 end
-                if i < 8 and self.tiles[depth + 1] then
-                    self._increase_tatsu_first(depth)
-                    self._run(depth + 1)
-                    self._decrease_tatsu_first(depth)
+                if i < 8 and self.tiles[depth + 1+1]~=0 then
+                    self:_increase_tatsu_first(depth)
+                    self:_run(depth + 1)
+                    self:_decrease_tatsu_first(depth)
                 end
-                self._increase_isolated_tile(depth)
-                self._run(depth + 1)
-                self._decrease_isolated_tile(depth)
-                self._decrease_set(depth)
-                self._increase_pair(depth)
+                self:_increase_isolated_tile(depth)
+                self:_run(depth + 1)
+                self:_decrease_isolated_tile(depth)
+                self:_decrease_set(depth)
+                self:_increase_pair(depth)
 
-                if i < 7 and self.tiles[depth + 2] then
-                    if self.tiles[depth + 1] then
-                        self._increase_syuntsu(depth)
-                        self._run(depth)
-                        self._decrease_syuntsu(depth)
+                if i < 7 and self.tiles[depth + 2+1]~=0 then
+                    if self.tiles[depth + 1+1] then
+                        self:_increase_syuntsu(depth)
+                        self:_run(depth)
+                        self:_decrease_syuntsu(depth)
                     end
-                    self._increase_tatsu_second(depth)
-                    self._run(depth + 1)
-                    self._decrease_tatsu_second(depth)
+                    self:_increase_tatsu_second(depth)
+                    self:_run(depth + 1)
+                    self:_decrease_tatsu_second(depth)
                 end
-                if i < 8 and self.tiles[depth + 1] then
-                    self._increase_tatsu_first(depth)
-                    self._run(depth + 1)
-                    self._decrease_tatsu_first(depth)
+                if i < 8 and self.tiles[depth + 1+1]~=0 then
+                    self:_increase_tatsu_first(depth)
+                    self:_run(depth + 1)
+                    self:_decrease_tatsu_first(depth)
                 end
-                self._decrease_pair(depth)
+                self:_decrease_pair(depth)
             end
-            if self.tiles[depth] == 3 then
-                self._increase_set(depth)
-                self._run(depth + 1)
-                self._decrease_set(depth)
-                self._increase_pair(depth)
+            if self.tiles[depth+1] == 3 then
+                self:_increase_set(depth)
+                self:_run(depth + 1)
+                self:_decrease_set(depth)
+                self:_increase_pair(depth)
 
-                if i < 7 and self.tiles[depth + 1] and self.tiles[depth + 2] then
-                    self._increase_syuntsu(depth)
-                    self._run(depth + 1)
-                    self._decrease_syuntsu(depth)
+                if i < 7 and self.tiles[depth + 1+1]~=0 and self.tiles[depth + 2+1]~=0 then
+                    self:_increase_syuntsu(depth)
+                    self:_run(depth + 1)
+                    self:_decrease_syuntsu(depth)
                 else
-                    if i < 7 and self.tiles[depth + 2] then
-                        self._increase_tatsu_second(depth)
-                        self._run(depth + 1)
-                        self._decrease_tatsu_second(depth)
+                    if i < 7 and self.tiles[depth + 2+1]~=0 then
+                        self:_increase_tatsu_second(depth)
+                        self:_run(depth + 1)
+                        self:_decrease_tatsu_second(depth)
                     end
-                    if i < 8 and self.tiles[depth + 1] then
-                        self._increase_tatsu_first(depth)
-                        self._run(depth + 1)
-                        self._decrease_tatsu_first(depth)
+                    if i < 8 and self.tiles[depth + 1+1]~=0 then
+                        self:_increase_tatsu_first(depth)
+                        self:_run(depth + 1)
+                        self:_decrease_tatsu_first(depth)
                     end
                 end
-                self._decrease_pair(depth)
+                self:_decrease_pair(depth)
 
-                if i < 7 and self.tiles[depth + 2] >= 2 and self.tiles[depth + 1] >= 2 then
-                    self._increase_syuntsu(depth)
-                    self._increase_syuntsu(depth)
-                    self._run(depth)
-                    self._decrease_syuntsu(depth)
-                    self._decrease_syuntsu(depth)
+                if i < 7 and self.tiles[depth + 2+1] >= 2 and self.tiles[depth + 1+1] >= 2 then
+                    self:_increase_syuntsu(depth)
+                    self:_increase_syuntsu(depth)
+                    self:_run(depth)
+                    self:_decrease_syuntsu(depth)
+                    self:_decrease_syuntsu(depth)
                 end
             end
-            if self.tiles[depth] == 2 then
-                self._increase_pair(depth)
-                self._run(depth + 1)
-                self._decrease_pair(depth)
-                if i < 7 and self.tiles[depth + 2] and self.tiles[depth + 1] then
-                    self._increase_syuntsu(depth)
-                    self._run(depth)
-                    self._decrease_syuntsu(depth)
+            if self.tiles[depth+1] == 2 then
+                self:_increase_pair(depth)
+                self:_run(depth + 1)
+                self:_decrease_pair(depth)
+                if i < 7 and self.tiles[depth + 2+1]~=0 and self.tiles[depth + 1+1]~=0 then
+                    self:_increase_syuntsu(depth)
+                    self:_run(depth)
+                    self:_decrease_syuntsu(depth)
                 end
             end
-            if self.tiles[depth] == 1 then
-                if i < 6 and self.tiles[depth + 1] == 1 and self.tiles[depth + 2] and self.tiles[depth + 3] ~= 4 then
-                    self._increase_syuntsu(depth)
-                    self._run(depth + 2)
-                    self._decrease_syuntsu(depth)
+            if self.tiles[depth+1] == 1 then
+                if i < 6 and self.tiles[depth + 1+1] == 1 and self.tiles[depth + 2+1]~=0 and self.tiles[depth + 3+1] ~= 4 then
+                    self:_increase_syuntsu(depth)
+                    self:_run(depth + 2)
+                    self:_decrease_syuntsu(depth)
                 else
-                    self._increase_isolated_tile(depth)
-                    self._run(depth + 1)
-                    self._decrease_isolated_tile(depth)
+                    self:_increase_isolated_tile(depth)
+                    self:_run(depth + 1)
+                    self:_decrease_isolated_tile(depth)
 
-                    if i < 7 and self.tiles[depth + 2] then
-                        if self.tiles[depth + 1] then
-                            self._increase_syuntsu(depth)
-                            self._run(depth + 1)
-                            self._decrease_syuntsu(depth)
+                    if i < 7 and self.tiles[depth + 2+1]~=0 then
+                        if self.tiles[depth + 1+ 1]~=0 then
+                            self:_increase_syuntsu(depth)
+                            self:_run(depth + 1)
+                            self:_decrease_syuntsu(depth)
                         end
-                        self._increase_tatsu_second(depth)
-                        self._run(depth + 1)
-                        self._decrease_tatsu_second(depth)
+                        self:_increase_tatsu_second(depth)
+                        self:_run(depth + 1)
+                        self:_decrease_tatsu_second(depth)
                     end
-                    if i < 8 and self.tiles[depth + 1] then
-                        self._increase_tatsu_first(depth)
-                        self._run(depth + 1)
-                        self._decrease_tatsu_first(depth)
+                    if i < 8 and self.tiles[depth + 1+1]~=0 then
+                        self:_increase_tatsu_first(depth)
+                        self:_run(depth + 1)
+                        self:_decrease_tatsu_first(depth)
                     end
                 end
             end
@@ -1219,7 +1452,7 @@ function g.Shanten()
             if n_mentsu_kouho > 4 then
                 ret_shanten = ret_shanten + n_mentsu_kouho - 4
             end
-            if ret_shanten ~= g.Shanten.AGARI_STATE and ret_shanten < self.number_jidahai then
+            if ret_shanten ~= g.AGARI_STATE and ret_shanten < self.number_jidahai then
                 ret_shanten = self.number_jidahai
             end
             if ret_shanten < self.min_shanten then
@@ -1227,59 +1460,59 @@ function g.Shanten()
             end
         end,
         _increase_set = function(self, k)
-            self.tiles[k] = self.tiles[k] - 3
+            self.tiles[k+1] = self.tiles[k+1] - 3
             self.number_melds = self.number_melds + 1
         end,
         _decrease_set = function(self, k)
-            self.tiles[k] = self.tiles[k] + 3
+            self.tiles[k+1] = self.tiles[k+1] + 3
             self.number_melds = self.number_melds - 1
         end,
         _increase_pair = function(self, k)
-            self.tiles[k] = self.tiles[k] - 2
+            self.tiles[k+1] = self.tiles[k+1] - 2
             self.number_pairs = self.number_pairs + 1
         end,
         _decrease_pair = function(self, k)
-            self.tiles[k] = self.tiles[k] + 2
+            self.tiles[k+1] = self.tiles[k+1] + 2
             self.number_pairs = self.number_pairs - 1
         end,
         _increase_syuntsu = function(self, k)
-            self.tiles[k] = self.tiles[k] - 1
-            self.tiles[k + 1] = self.tiles[k + 1] - 1
-            self.tiles[k + 2] = self.tiles[k + 2] - 1
+            self.tiles[k+1] = self.tiles[k+1] - 1
+            self.tiles[k + 1+1] = self.tiles[k + 1+1] - 1
+            self.tiles[k + 2+1] = self.tiles[k + 2+1] - 1
             self.number_melds = self.number_melds + 1
         end,
         _decrease_syuntsu = function(self, k)
-            self.tiles[k] = self.tiles[k] + 1
-            self.tiles[k + 1] = self.tiles[k + 1] + 1
-            self.tiles[k + 2] = self.tiles[k + 2] + 1
+            self.tiles[k+1] = self.tiles[k+1] + 1
+            self.tiles[k + 1+1] = self.tiles[k + 1+1] + 1
+            self.tiles[k + 2+1] = self.tiles[k + 2+1] + 1
             self.number_melds = self.number_melds - 1
         end,
         _increase_tatsu_first = function(self, k)
-            self.tiles[k] = self.tiles[k] - 1
-            self.tiles[k + 1] = self.tiles[k + 1] - 1
+            self.tiles[k+1] = self.tiles[k+1] - 1
+            self.tiles[k + 1+1] = self.tiles[k + 1+1] - 1
             self.number_tatsu = self.number_tatsu + 1
         end,
         _decrease_tatsu_first = function(self, k)
-            self.tiles[k] = self.tiles[k] + 1
-            self.tiles[k + 1] = self.tiles[k + 1] + 1
+            self.tiles[k+1] = self.tiles[k+1] + 1
+            self.tiles[k + 1+1] = self.tiles[k + 1+1] + 1
             self.number_tatsu = self.number_tatsu - 1
         end,
         _increase_tatsu_second = function(self, k)
-            self.tiles[k] = self.tiles[k] - 1
-            self.tiles[k + 2] = self.tiles[k + 2] - 1
+            self.tiles[k+1] = self.tiles[k+1] - 1
+            self.tiles[k + 2+1] = self.tiles[k + 2+1] - 1
             self.number_tatsu = self.number_tatsu + 1
         end,
         _decrease_tatsu_second = function(self, k)
-            self.tiles[k] = self.tiles[k] + 1
-            self.tiles[k + 2] = self.tiles[k + 2] + 1
+            self.tiles[k+1] = self.tiles[k+1] + 1
+            self.tiles[k + 2+1] = self.tiles[k + 2+1] + 1
             self.number_tatsu = self.number_tatsu - 1
         end,
         _increase_isolated_tile = function(self, k)
-            self.tiles[k] = self.tiles[k] - 1
+            self.tiles[k+1] = self.tiles[k+1] - 1
             self.number_isolated_tiles = self.number_isolated_tiles | (1 << k)
         end,
         _decrease_isolated_tile = function(self, k)
-            self.tiles[k] = self.tiles[k] + 1
+            self.tiles[k+1] = self.tiles[k+1] + 1
             self.number_isolated_tiles = self.number_isolated_tiles | (1 << k)
         end,
         _scan_chiitoitsu_and_kokushi = function(self, chiitoitsu, kokushi)
@@ -1289,13 +1522,13 @@ function g.Shanten()
 
             local completed_terminals = 0
             for _, i in ipairs(indices) do
-                if self.tiles[i] >= 2 then
-                    completed_terminals = completed_terminals
+                if self.tiles[i+1] >= 2 then
+                    completed_terminals = completed_terminals+1
                 end
             end
             local terminals = 0
             for _, i in ipairs(indices) do
-                if self.tiles[i] ~= 0 then
+                if self.tiles[i+1] ~= 0 then
                     terminals = terminals + 1
                 end
             end
@@ -1303,24 +1536,24 @@ function g.Shanten()
 
             local completed_pairs = completed_terminals
             for _, i in ipairs(indices) do
-                if self.tiles[i] >= 2 then
+                if self.tiles[i+1] >= 2 then
                     completed_pairs = completed_pairs + 1
                 end
             end
             local pairs = terminals
             for _, i in ipairs(indices) do
-                if self.tiles[i] ~= 0 then
+                if self.tiles[i+1] ~= 0 then
                     pairs = pairs + 1
                 end
             end
             if chiitoitsu then
-                local ret_shanten = 6 - completed_pairs + (pand(pairs < 7 , 7 - pairs) or 0)
+                local ret_shanten = 6 - completed_pairs + (pand(pairs < 7, 7 - pairs) or 0)
                 if ret_shanten < shanten then
                     shanten = ret_shanten
                 end
             end
             if kokushi then
-                local ret_shanten = 13 - terminals - (pand(completed_terminals,1) or 0)
+                local ret_shanten = 13 - terminals - (pand(completed_terminals, 1) or 0)
                 if ret_shanten < shanten then
                     shanten = ret_shanten
                 end
@@ -1333,19 +1566,19 @@ function g.Shanten()
 
             --for i in range(27, 34):
             for i = 27, 33 do
-                if self.tiles[i] == 4 then
+                if self.tiles[i+1] == 4 then
                     self.number_melds = self.number_melds + 1
                     self.number_jidahai = self.number_jidahai + 1
                     number = number | (1 << (i - 27))
                     isolated = isolated | (1 << (i - 27))
                 end
-                if self.tiles[i] == 3 then
+                if self.tiles[i+1] == 3 then
                     self.number_melds = self.number_melds + 1
                 end
-                if self.tiles[i] == 2 then
+                if self.tiles[i+1] == 2 then
                     self.number_pairs = self.number_pairs + 1
                 end
-                if self.tiles[i] == 1 then
+                if self.tiles[i+1] == 1 then
                     isolated = isolated | (1 << (i - 27))
                 end
             end
@@ -1413,7 +1646,7 @@ g.TilesConverter = {
         )
         honors = picker(honors, nil, -108)
 
-        function words(suits, red_five, suffix)
+        local function words(suits, red_five, suffix)
             local word = ''
             for _, v in ipairs(suits) do
                 if v == red_five and print_aka_dora then
@@ -1434,9 +1667,9 @@ g.TilesConverter = {
     end,
     to_34_array = function(tiles)
         local results = arraygenerator(34, 0)
-        for tile in tiles do
+        for _,tile in ipairs(tiles) do
             tile = math.floor(tile / 4)
-            results[tile] = results[tile] + 1
+            results[tile+1] = results[tile+1] + 1
         end
         return results
     end,
@@ -1444,9 +1677,9 @@ g.TilesConverter = {
         local temp = {}
         local results = {}
         --for x in range(0, 34):
-        for x = 0, 33 do
+        for x = 1, 34 do
             if tiles[x] then
-                local temp_value = arraygenerator(x * 4, tiles[x])
+                local temp_value = arraygenerator((x-1) * 4, tiles[x])
                 for _, tile in ipairs(temp_value) do
                     if find(results, tile) then
                         local count_of_tiles =
@@ -1469,21 +1702,32 @@ g.TilesConverter = {
         return results
     end,
     string_to_136_array = function(sou, pin, man, honors, has_aka_dora)
-        local function _split_string(string, offset, red)
+        --[[
+        Method to convert one line string tiles format to the 136 array.
+        You can pass r or 0 instead of 5 for it to become a red five from
+        that suit. To prevent old usage without red,
+        has_aka_dora has to be True for this to do that.
+        We need it to increase readability of our tests
+        ]]
+        local function _split_string(st, offset, red)
             local data = {}
             local temp = {}
-
-            if not string then
+            
+            if not st then
+               
                 return {}
             end
 
-            for k, i in ipairs(string) do
+            for idx=1,#st do
+                local i=string.sub(st,idx,idx)
+                
                 if (i == 'r' or i == '0') and has_aka_dora then
                     table.insert(temp, red)
                     table.insert(data, red)
                 else
                     local tile = offset + (tonumber(i) - 1) * 4
                     if tile == red and has_aka_dora then
+                        -- prevent non reds to become red
                         tile = tile + 1
                     end
                     if find(data, tile) then
@@ -1504,20 +1748,21 @@ g.TilesConverter = {
                     end
                 end
             end
+           
             return data
         end
 
         local results = _split_string(man, 0, g.FIVE_RED_MAN)
-        for k, v in pairs(_split_string(pin, 36, g.FIVE_RED_PIN)) do
+        for k, v in ipairs(_split_string(pin, 36, g.FIVE_RED_PIN)) do
             results[#results + 1] = v
         end
-        for k, v in pairs(_split_string(sou, 72, g.FIVE_RED_SOU)) do
+        for k, v in ipairs(_split_string(sou, 72, g.FIVE_RED_SOU)) do
             results[#results + 1] = v
         end
-        for k, v in pairs(_split_string(honors, 108)) do
+        for k, v in ipairs(_split_string(honors, 108)) do
             results[#results + 1] = v
         end
-
+      
         return results
     end,
     string_to_34_array = function(sou, pin, man, honors)
@@ -1588,7 +1833,7 @@ g.utils = {
         if not aka_enabled then
             return false
         end
-        if find({g.Tile.FIVE_RED_MAN, g.Tile.FIVE_RED_PIN, g.Tile.FIVE_RED_SOU}, tile) then
+        if find({g.FIVE_RED_MAN, g.FIVE_RED_PIN, g.FIVE_RED_SOU}, tile) then
             return true
         end
         return false
@@ -1601,7 +1846,7 @@ g.utils = {
             dora = math.floor(dora / 4)
 
             -- sou, pin, man
-            if tile_index < g.Tile.EAST then
+            if tile_index < g.EAST then
                 -- with indicator 9, dora will be 1
                 if dora == 8 then
                     dora = -1
@@ -1614,7 +1859,7 @@ g.utils = {
                     dora_count = dora_count + 1
                 end
             else
-                if dora < g.Tile.EAST then
+                if dora < g.EAST then
                     --continue
                 else
                     dora = dora - 9 * 3
@@ -1640,13 +1885,13 @@ g.utils = {
         if #item ~= 3 then
             return false
         end
-        return item[0 + 1] == item[1 + 1] - 1 == item[2 + 1] - 2
+        return (item[0 + 1] == item[1 + 1] - 1) and (item[1 + 1] - 1 == item[2 + 1] - 2)
     end,
     is_pon = function(item)
         if #item ~= 3 then
             return false
         end
-        return item[0 + 1] == item[1 + 1] == item[2 + 1]
+        return (item[0 + 1] == item[1 + 1]) and ( item[1 + 1] == item[2 + 1])
     end,
     is_pair = function(item)
         return #item == 2
@@ -1655,10 +1900,10 @@ g.utils = {
         return tile <= 8
     end,
     is_pin = function(tile)
-        return 8 < tile <= 17
+        return (8 < tile) and (tile <= 17)
     end,
     is_sou = function(tile)
-        return 17 < tile <= 26
+        return (17 < tile) and (tile) <= 26
     end,
     is_honor = function(tile)
         return tile >= 27
@@ -1671,19 +1916,19 @@ g.utils = {
     end,
     contains_terminals = function(hand_set)
         for _, v in ipairs(hand_set) do
-            if (find(g.Tile.TERMINAL_INDICES, v)) then
+            if (find(g.TERMINAL_INDICES, v)) then
                 return true
             end
         end
         return false
     end,
     simplify = function(tile)
-        return tile - 9 * (tile // 9)
+        return tile - 9 * math.floor(tile / 9)
     end,
     find_isolated_tile_indices = function(hand_34)
         local isolated_indices = {}
 
-        for x = 0, g.Tile.CHUN + 1 - 1 do
+        for x = 1, g.CHUN + 1 -1 +1 do
             -- for honor tiles we don't need to check nearby tiles
             if g.utils.is_honor(x) and hand_34[x] == 0 then
                 table.insert(isolated_indices, x)
@@ -1711,7 +1956,7 @@ g.utils = {
         return isolated_indices
     end,
     is_tile_strictly_isolated = function(hand_34, tile_34)
-        hand_34 = copy.copy(hand_34)
+        hand_34 = deepcopy(hand_34)
         -- we don't need to count target tile in the hand
         hand_34[tile_34] = hand_34[tile_34] - 1
         if hand_34[tile_34] < 0 then
@@ -1770,15 +2015,24 @@ g.utils = {
         return suits
     end
 }
-
+local function simplifyindices(tbl)
+    return picker(
+        tbl,
+        nil,
+        nil,
+        function(x)
+            g.utils.simplify(x)
+        end
+    )
+end
 --
 g.HandDivider = {
-    divide_han = function(self, tiles_34, melds)
+    divide_hand = function(tiles_34, melds)
         if not melds then
             melds = {}
         end
 
-        local closed_hand_tiles_34 = copy.copy(tiles_34)
+        local closed_hand_tiles_34 = deepcopy(tiles_34)
 
         -- small optimization, we can't have a pair in open part of the hand,
         -- so we don't need to try find pairs in open sets
@@ -1787,62 +2041,72 @@ g.HandDivider = {
         for _, v in ipairs(melds) do
             sum = sum + v.tiles_34
         end
-
+        
         --local open_tile_indices = melds and reduce(lambda x, y: x + y, [x.tiles_34 for x in melds]) or []
         local open_tile_indices = melds or {}
-        for _, open_item in open_tile_indices do
+        for _, open_item in ipairs(open_tile_indices) do
             closed_hand_tiles_34[open_item] = closed_hand_tiles_34[open_item] - 1
         end
-        local pair_indices = self.find_pairs(closed_hand_tiles_34)
+        local pair_indices = g.HandDivider.find_pairs(closed_hand_tiles_34)
 
         -- let's try to find all possible hand options
         local hands = {}
-        for _, pair_index in ipairs(pair_indices) do
-            local local_tiles_34 = copy.copy(tiles_34)
 
+        
+        for _, pair_index in ipairs(pair_indices) do
+            local local_tiles_34 = deepcopy(tiles_34)
+            
             -- we don't need to combine already open sets
-            for open_item in open_tile_indices do
-                local_tiles_34[open_item] = local_tiles_34[open_item] - 1
+            for _,open_item in ipairs(open_tile_indices) do
+                local_tiles_34[open_item+1] = local_tiles_34[open_item+1] - 1
             end
-            local_tiles_34[pair_index] = local_tiles_34[pair_index] - 2
+            local_tiles_34[pair_index+1] = local_tiles_34[pair_index+1] - 2
 
             -- 0 - 8 man tiles
-            local man = self.find_valid_combinations(local_tiles_34, 0, 8)
+            local man = g.HandDivider.find_valid_combinations(local_tiles_34, 0, 8)
 
             -- 9 - 17 pin tiles
-            local pin = self.find_valid_combinations(local_tiles_34, 9, 17)
+            local pin = g.HandDivider.find_valid_combinations(local_tiles_34, 9, 17)
 
             -- 18 - 26 sou tiles
-            local sou = self.find_valid_combinations(local_tiles_34, 18, 26)
+            local sou = g.HandDivider.find_valid_combinations(local_tiles_34, 18, 26)
 
             local honor = {}
-            for _, x in ipairs(g.tile.HONOR_INDICES) do
-                if local_tiles_34[x] == 3 then
+            for _, x in ipairs(g.HONOR_INDICES) do
+                if local_tiles_34[x+1] == 3 then
                     table.insert(honor, arraygenerator(3, x))
                 end
             end
-            if honor then
+            if #honor>0 then
                 honor = {honor}
             end
             local arrays = {{arraygenerator(2, pair_index)}}
-            if sou then
-                table.insert(arrays, sou)
+            if #sou>0  then
+                arrays=cat(arrays,sou)
+                --table.insert(arrays, sou)
             end
-            if man then
-                table.insert(arrays, man)
+            if #man>0 then
+                arrays=cat(arrays,man)
+                --table.insert(arrays, man)
             end
-            if pin then
-                table.insert(arrays, pin)
+            if #pin>0 then
+                arrays=cat(arrays,pin)
+                --table.insert(arrays, pin)
             end
-            if honor then
-                table.insert(arrays, honor)
+            if #honor>0 then
+                arrays=cat(arrays,honor)
+                --table.insert(arrays, honor)
             end
-            for meld in melds do
-                table.insert(arrays, {meld.tiles_34})
+            for _,meld in ipairs(melds) do
+                arrays=cat(arrays, {meld.tiles_34})
+                --table.insert(arrays, {meld.tiles_34})
             end
+           
+
             -- let's find all possible hand from our valid sets
-            for _, s in cartesian_product(arrays) do
+            for _,s in ipairs(itertools.product(arrays)) do
                 local hand = {}
+               
                 for _, item in ipairs(s) do
                     if type(item[0 + 1]) == 'table' then
                         for _, x in ipairs(item) do
@@ -1859,14 +2123,17 @@ g.HandDivider = {
                         return x[0 + 1] < y[0 + 1]
                     end
                 )
+               
                 if #hand == 5 then
                     table.insert(hands, hand)
+                    
                 end
             end
         end
         -- small optimization, let's remove hand duplicates
         local unique_hands = {}
         for _, hand in ipairs(hands) do
+           
             hand =
                 sorted(
                 hand,
@@ -1899,29 +2166,33 @@ g.HandDivider = {
             end
             table.insert(hands, hand)
         end
-        return sorted(hands)
+      
+        --return sorted(hands)
+        return hands
     end,
-    find_pairs = function(self, tiles_34, first_index, second_index)
+    find_pairs = function(tiles_34, first_index, second_index)
         --[[
     Find all possible pairs in the hand and return their indices
     :return: array of pair indices
     ]]
-        first_index = first_index or 1
-        second_index = second_index or 34
+       
+        first_index = first_index or 0
+        second_index = second_index or 33
         local pair_indices = {}
         for x = first_index, second_index + 1 - 1 do
             -- ignore pon of honor tiles, because it can't be a part of pair
-            if isin(x, g.HONOR_INDICES) and tiles_34[x] ~= 2 then
+            if isin({x}, g.HONOR_INDICES) and tiles_34[x+1] ~= 2 then
                 --continue
             else
-                if tiles_34[x] >= 2 then
+                if tiles_34[x+1] >= 2 then
                     table.insert(pair_indices, x)
                 end
             end
         end
+    
         return pair_indices
     end,
-    find_valid_combinations = function(self, tiles_34, first_index, second_index, hand_not_completed)
+    find_valid_combinations = function(tiles_34, first_index, second_index, hand_not_completed)
         --[[
     Find and return all valid set combinations in given suit
     :param tiles_34:
@@ -1932,16 +2203,19 @@ g.HandDivider = {
     ]]
         local indices = {}
         for x = first_index, second_index + 1 - 1 do
-            if tiles_34[x] > 0 then
-                indices = table.concat(indices, arraygenerator(tiles_34[x], x))
+            if tiles_34[x+1] > 0 then
+               
+                indices = cat(indices, arraygenerator(tiles_34[x+1], x))
             end
         end
-        if not indices then
+       
+        if  #indices==0 then
             return {}
         end
-        local all_possible_combinations = ipermutations(indices, 3)
-
+        local all_possible_combinations = ipermutations(indices,3)
+        
         local function is_valid_combination(possible_set)
+            
             if g.utils.is_chi(possible_set) then
                 return true
             end
@@ -1953,19 +2227,20 @@ g.HandDivider = {
             return false
         end
         local valid_combinations = {}
-        for _, combination in all_possible_combinations do
+        for _, combination in ipairs(all_possible_combinations) do
             if is_valid_combination(combination) then
-                table.insert(valid_combinations, {combination})
+                table.insert(valid_combinations,combination)
             end
         end
         if #valid_combinations == 0 then
+         
             return {}
         end
         local count_of_needed_combinations = math.floor(#indices / 3)
 
         local z = {}
         for _, v in ipairs(valid_combinations) do
-            z = table.concat(z, v)
+            z = cat(z, v)
         end
 
         local comp = true
@@ -2032,7 +2307,8 @@ g.HandDivider = {
                     )
 
                     if count_of_sets > count_of_possible_sets then
-                        valid_combinations.remove(item)
+                        tableremove(valid_combinations,item)
+                        
                     end
                 end
             end
@@ -2046,29 +2322,32 @@ g.HandDivider = {
         -- [1, 2, 3] [4, 5, 6] [2, 3, 4] [3, 4, 5]
         -- and only two of them valid in the same time [1, 2, 3] [4, 5, 6]
         local tbl = {}
-        for i = 0, #valid_combinations - 1 do
+        for i = 1, #valid_combinations do
             tbl[#tbl + 1] = i
         end
         local possible_combinations = ipermutations(tbl, count_of_needed_combinations)
 
         local combinations_results = {}
-        for _, combination in possible_combinations do
-            local result = {}
-            for _, item in ipairs(combination) do
-                table.insert(result, valid_combinations[item])
-            end
-            result = sorted(result)
 
-            if result == indices then
+        for _, combination in ipairs(possible_combinations) do
+            local result = {}
+            
+            for _, item in ipairs(combination) do
+                result=cat(result, valid_combinations[item])
+            end
+            
+            result = sorted(result)
+           
+            if  arrayequal(result,indices) then
                 local results = {}
                 for _, item in ipairs(combination) do
-                    table.insert(result, valid_combinations[item])
+                    table.insert(results, valid_combinations[item])
                 end
                 results =
                     sorted(
                     results,
-                    function(z)
-                        return z[0 + 1]
+                    function(a,z)
+                        return  a[0 + 1]< z[0 + 1]
                     end
                 )
                 if not isin(results, combinations_results) then
@@ -2076,6 +2355,7 @@ g.HandDivider = {
                 end
             end
         end
+        combinations_results=uniq(combinations_results)
         return combinations_results
     end
 }
@@ -2097,7 +2377,7 @@ g.FuCalculator = {
     OPEN_KAN = 'open_kan',
     CLOSED_TERMINAL_KAN = 'closed_terminal_kan',
     OPEN_TERMINAL_KAN = 'open_terminal_kan',
-    calculate_fu = function(self, hand, win_tile, win_group, config, valued_tiles, melds)
+    calculate_fu = function( hand, win_tile, win_group, config, valued_tiles, melds)
         --[[
         Calculate hand fu with explanations
         :param hand:
@@ -2147,7 +2427,7 @@ g.FuCalculator = {
             end
         )
         local closed_chi_sets = {}
-        for _, x in hand do
+        for _, x in ipairs(hand) do
             if not isin(copied_opened_melds, x) then
                 --closed_chi_sets.append(x)
                 table.insert(closed_chi_sets, x)
@@ -2182,12 +2462,12 @@ g.FuCalculator = {
                 end
             end
             -- kanchan waiting 5-...-7
-            if win_group.index(win_tile_34) == 1 then
+            if indexof(win_group,win_tile_34) == 1 then
                 table.insert(fu_details, {['fu'] = 2, ['reason'] = g.FuCalculator.KANCHAN})
             end
         end
         -- valued pair
-        local count_of_valued_pairs = countof(valued_tiles, pair[0])
+        local count_of_valued_pairs = countof(valued_tiles, pair[1])
         if count_of_valued_pairs == 1 then
             table.insert(fu_details, {['fu'] = 2, ['reason'] = g.FuCalculator.VALUED_PAIR})
         end
@@ -2212,10 +2492,10 @@ g.FuCalculator = {
 
             local set_was_open = open_meld and open_meld.opened or false
             local is_kan = (open_meld and (open_meld.type == g.Meld.KAN or open_meld.type == g.Meld.CHANKAN)) or false
-            local is_honor = isin(set_item[0], g.TERMINAL_INDICES) or isin(set_item[0], g.HONOR_INDICES)
+            local is_honor = isin(g.TERMINAL_INDICES,set_item[1]) or isin( g.HONOR_INDICES,set_item[1])
 
             -- we win by ron on the third pon tile, our pon will be count as open
-            if not config.is_tsumo and set_item == win_group then
+            if not config.is_tsumo and arrayequal(set_item,win_group) then
                 set_was_open = true
             end
             if is_honor then
@@ -2265,7 +2545,7 @@ g.FuCalculator = {
         end
         return fu_details, g.FuCalculator.round_fu(fu_details)
     end,
-    round_fu = function(self, fu_details)
+    round_fu = function(fu_details)
         -- 22 -> 30 and etc.
         local fu =
             sum(
@@ -2284,7 +2564,7 @@ g.FuCalculator = {
 --handcalculator
 g.HandCalculator = {
     config = nil,
-    estimate_hand_value = function(self, tiles, win_tile, melds, dora_indicators, config)
+    estimate_hand_value = function(tiles, win_tile, melds, dora_indicators, config)
         --[[
         :param tiles: array with 14 tiles in 136-tile format
         :param win_tile: 136 format tile that caused win (ron or tsumo)
@@ -2303,7 +2583,7 @@ g.HandCalculator = {
         end
         self.config = config or g.HandConfig()
 
-        local agari = g.Agari()
+        local agari = g.Agari
         local hand_yaku = {}
         local scores_calculator = g.ScoresCalculator
         local tiles_34 = g.TilesConverter.to_34_array(tiles)
@@ -2342,22 +2622,22 @@ g.HandCalculator = {
             return g.HandResponse(cost, han, fu, hand_yaku)
         end
         if not isin(tiles, win_tile) then
-            return g.HandResponse(nil, nil, nil, nil, nil, 'Win tile not in the hand')
+            return g.HandResponse(nil, nil, nil, nil,  'Win tile not in the hand')
         end
         if self.config.is_riichi and is_open_hand then
-            return g.HandResponse(nil, nil, nil, nil, nil, "Riichi can't be declared with open hand")
+            return g.HandResponse(nil, nil, nil, nil,  "Riichi can't be declared with open hand")
         end
         if self.config.is_daburu_riichi and is_open_hand then
-            return g.HandResponse(nil, nil, nil, nil, nil, "Daburu Riichi can't be declared with open hand")
+            return g.HandResponse(nil, nil, nil, nil,  "Daburu Riichi can't be declared with open hand")
         end
         if self.config.is_ippatsu and is_open_hand then
-            return g.HandResponse(nil, nil, nil, nil, nil, "Ippatsu can't be declared with open hand")
+            return g.HandResponse(nil, nil, nil, nil,  "Ippatsu can't be declared with open hand")
         end
         if self.config.is_ippatsu and not self.config.is_riichi and not self.config.is_daburu_riichi then
-            return g.HandResponse(nil, nil, nil, nil, nil, "Ippatsu can't be declared without riichi")
+            return g.HandResponse(nil, nil, nil, nil,  "Ippatsu can't be declared without riichi")
         end
         if not agari.is_agari(tiles_34, all_melds) then
-            return g.HandResponse(nil, nil, nil, nil, nil, 'Hand is not winning')
+            return g.HandResponse(nil, nil, nil, nil,  'Hand is not winning')
         end
         if not self.config.options.has_double_yakuman then
             self.config.yaku.daburu_kokushi.han_closed = 13
@@ -2366,15 +2646,17 @@ g.HandCalculator = {
             self.config.yaku.daisuushi.han_closed = 13
             self.config.yaku.daisuushi.han_open = 13
         end
-        local hand_options = divider.divide_hand(tiles_34, melds)
-
+        
+        local hand_options = g.HandDivider.divide_hand(tiles_34, melds)
+       
         local calculated_hands = {}
         for _, hand in ipairs(hand_options) do
-            local is_chiitoitsu = self.config.yaku.chiitoitsu.is_condition_met(hand)
+            local is_chiitoitsu = self.config.yaku.chiitoitsu:is_condition_met(hand)
             local valued_tiles = {g.HAKU, g.HATSU, g.CHUN, self.config.player_wind, self.config.round_wind}
-
+            
             local win_groups = self._find_win_groups(win_tile, hand, opened_melds)
             for _, win_group in ipairs(win_groups) do
+            
                 local cost = nil
                 local error = nil
                 local hand_yaku = {}
@@ -2414,12 +2696,12 @@ g.HandCalculator = {
                     if is_chiitoitsu then
                         table.insert(hand_yaku, self.config.yaku.chiitoitsu)
                     end
-                    local is_daisharin = self.config.yaku.daisharin.is_condition_met(hand, self.config.options.has_daisharin_other_suits)
+                    local is_daisharin = self.config.yaku.daisharin:is_condition_met(hand, self.config.options.has_daisharin_other_suits)
                     if self.config.options.has_daisharin and is_daisharin then
                         self.config.yaku.daisharin.rename(hand)
                         table.insert(hand_yaku, self.config.yaku.daisharin)
                     end
-                    local is_tanyao = self.config.yaku.tanyao.is_condition_met(hand)
+                    local is_tanyao = self.config.yaku.tanyao:is_condition_met(hand)
                     if is_open_hand and not self.config.options.has_open_tanyao then
                         is_tanyao = false
                     end
@@ -2461,84 +2743,84 @@ g.HandCalculator = {
                     if self.config.is_chiihou then
                         table.insert(hand_yaku, self.config.yaku.chiihou)
                     end
-                    if self.config.yaku.honitsu.is_condition_met(hand) then
+                    if self.config.yaku.honitsu:is_condition_met(hand) then
                         table.insert(hand_yaku, self.config.yaku.honitsu)
                     end
 
-                    if self.config.yaku.chinitsu.is_condition_met(hand) then
+                    if self.config.yaku.chinitsu:is_condition_met(hand) then
                         table.insert(hand_yaku, self.config.yaku.chinitsu)
                     end
-                    if self.config.yaku.tsuisou.is_condition_met(hand) then
+                    if self.config.yaku.tsuisou:is_condition_met(hand) then
                         table.insert(hand_yaku, self.config.yaku.tsuisou)
                     end
 
-                    if self.config.yaku.honroto.is_condition_met(hand) then
+                    if self.config.yaku.honroto:is_condition_met(hand) then
                         table.insert(hand_yaku, self.config.yaku.honroto)
                     end
 
-                    if self.config.yaku.chinroto.is_condition_met(hand) then
+                    if self.config.yaku.chinroto:is_condition_met(hand) then
                         table.insert(hand_yaku, self.config.yaku.chinroto)
                     end
-                    if self.config.yaku.ryuisou.is_condition_met(hand) then
+                    if self.config.yaku.ryuisou:is_condition_met(hand) then
                         table.insert(hand_yaku, self.config.yaku.ryuisou)
                     end
 
                     -- small optimization, try to detect yaku with chi required sets only if we have chi sets in hand
                     if #chi_sets > 0 then
-                        if self.config.yaku.chanta.is_condition_met(hand) then
+                        if self.config.yaku.chanta:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.chanta)
                         end
 
-                        if self.config.yaku.junchan.is_condition_met(hand) then
+                        if self.config.yaku.junchan:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.junchan)
                         end
 
-                        if self.config.yaku.ittsu.is_condition_met(hand) then
+                        if self.config.yaku.ittsu:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.ittsu)
                         end
 
                         if not is_open_hand then
-                            if self.config.yaku.ryanpeiko.is_condition_met(hand) then
+                            if self.config.yaku.ryanpeiko:is_condition_met(hand) then
                                 table.insert(hand_yaku, self.config.yaku.ryanpeiko)
                             end
-                        elseif self.config.yaku.iipeiko.is_condition_met(hand) then
+                        elseif self.config.yaku.iipeiko:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.iipeiko)
                         end
-                        if self.config.yaku.sanshoku.is_condition_met(hand) then
+                        if self.config.yaku.sanshoku:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.sanshoku)
                         end
                     end
                     -- small optimization, try to detect yaku with pon required sets only if we have pon sets in hand
                     if #pon_sets > 0 then
-                        if self.config.yaku.toitoi.is_condition_met(hand) then
+                        if self.config.yaku.toitoi:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.toitoi)
                         end
 
-                        if self.config.yaku.sanankou.is_condition_met(hand, win_tile, melds, self.config.is_tsumo) then
+                        if self.config.yaku.sanankou:is_condition_met(hand, win_tile, melds, self.config.is_tsumo) then
                             table.insert(hand_yaku, self.config.yaku.sanankou)
                         end
 
-                        if self.config.yaku.sanshoku_douko.is_condition_met(hand) then
+                        if self.config.yaku.sanshoku_douko:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.sanshoku_douko)
                         end
 
-                        if self.config.yaku.shosangen.is_condition_met(hand) then
+                        if self.config.yaku.shosangen:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.shosangen)
                         end
 
-                        if self.config.yaku.haku.is_condition_met(hand) then
+                        if self.config.yaku.haku:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.haku)
                         end
 
-                        if self.config.yaku.hatsu.is_condition_met(hand) then
+                        if self.config.yaku.hatsu:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.hatsu)
                         end
 
-                        if self.config.yaku.chun.is_condition_met(hand) then
+                        if self.config.yaku.chun:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.chun)
                         end
 
-                        if self.config.yaku.east.is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
+                        if self.config.yaku.east:is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
                             if self.config.player_wind == g.EAST then
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_place)
                             end
@@ -2546,7 +2828,7 @@ g.HandCalculator = {
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_round)
                             end
                         end
-                        if self.config.yaku.south.is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
+                        if self.config.yaku.south:is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
                             if self.config.player_wind == g.SOUTH then
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_place)
                             end
@@ -2554,7 +2836,7 @@ g.HandCalculator = {
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_round)
                             end
                         end
-                        if self.config.yaku.west.is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
+                        if self.config.yaku.west:is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
                             if self.config.player_wind == g.WEST then
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_place)
                             end
@@ -2562,7 +2844,7 @@ g.HandCalculator = {
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_round)
                             end
                         end
-                        if self.config.yaku.north.is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
+                        if self.config.yaku.north:is_condition_met(hand, self.config.player_wind, self.config.round_wind) then
                             if self.config.player_wind == g.NORTH then
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_place)
                             end
@@ -2570,19 +2852,19 @@ g.HandCalculator = {
                                 table.insert(hand_yaku, self.config.yaku.yakuhai_round)
                             end
                         end
-                        if self.config.yaku.daisangen.is_condition_met(hand) then
+                        if self.config.yaku.daisangen:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.daisangen)
                         end
 
-                        if self.config.yaku.shosuushi.is_condition_met(hand) then
+                        if self.config.yaku.shosuushi:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.shosuushi)
                         end
 
-                        if self.config.yaku.daisuushi.is_condition_met(hand) then
+                        if self.config.yaku.daisuushi:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.daisuushi)
                         end
                         -- closed kan can't be used in chuuren_poutou
-                        if not len(melds) and self.config.yaku.chuuren_poutou.is_condition_met(hand) then
+                        if not len(melds) and self.config.yaku.chuuren_poutou:is_condition_met(hand) then
                             if tiles_34[math.floor(win_tile / 4)] == 2 or tiles_34[math.floor(win_tile / 4)] == 4 then
                                 table.insert(hand_yaku, self.config.yaku.daburu_chuuren_poutou)
                             else
@@ -2590,7 +2872,7 @@ g.HandCalculator = {
                             end
                         end
 
-                        if not is_open_hand and self.config.yaku.suuankou.is_condition_met(hand, win_tile, self.config.is_tsumo) then
+                        if not is_open_hand and self.config.yaku.suuankou:is_condition_met(hand, win_tile, self.config.is_tsumo) then
                             if tiles_34[math.floor(win_tile / 4)] == 2 then
                                 table.insert(hand_yaku, self.config.yaku.suuankou_tanki)
                             else
@@ -2598,11 +2880,11 @@ g.HandCalculator = {
                             end
                         end
 
-                        if self.config.yaku.sankantsu.is_condition_met(hand, melds) then
+                        if self.config.yaku.sankantsu:is_condition_met(hand, melds) then
                             table.insert(hand_yaku, self.config.yaku.sankantsu)
                         end
 
-                        if self.config.yaku.suukantsu.is_condition_met(hand, melds) then
+                        if self.config.yaku.suukantsu:is_condition_met(hand, melds) then
                             table.insert(hand_yaku, self.config.yaku.suukantsu)
                         end
                     end
@@ -2632,7 +2914,7 @@ g.HandCalculator = {
 
                     -- we don't need to add dora to yakuman
                     if #yakuman_list == 0 then
-                        local tiles_for_dora = copy.copy(tiles)
+                        local tiles_for_dora = deepcopy(tiles)
 
                         -- we had to search for dora in kan fourth tiles as well
                         for _, meld in ipairs(melds) do
@@ -2668,7 +2950,7 @@ g.HandCalculator = {
                         end
                     end
                     if not error then
-                        cost = scores_calculator.calculate_scores(han, fu, self.config, #yakuman_list > 0)
+                        cost = scores_calculator:calculate_scores(han, fu, self.config, #yakuman_list > 0)
                     end
                     local calculated_hand = {
                         ['cost'] = cost,
@@ -2683,7 +2965,7 @@ g.HandCalculator = {
             end
         end
         -- exception hand
-        if not is_open_hand and self.config.yaku.kokushi.is_condition_met(nil, tiles_34) then
+        if not is_open_hand and self.config.yaku.kokushi:is_condition_met(nil, tiles_34) then
             if tiles_34[math.floor(win_tile / 4)] == 2 then
                 table.insert(hand_yaku, self.config.yaku.daburu_kokushi)
             else
@@ -2709,7 +2991,7 @@ g.HandCalculator = {
                 end
             end
             local fu = 0
-            local cost = scores_calculator.calculate_scores(han, fu, self.config, #hand_yaku > 0)
+            local cost = scores_calculator:calculate_scores(han, fu, self.config, #hand_yaku > 0)
             table.insert(
                 calculated_hands,
                 {
@@ -2725,6 +3007,7 @@ g.HandCalculator = {
 
         -- let's use cost for most expensive hand
         --calculated_hands = itertools.sorted(calculated_hands, function(x) return x['han'], x['fu'] end, true)
+       
         calculated_hands =
             itertools.sorted(
             calculated_hands,
@@ -2733,19 +3016,19 @@ g.HandCalculator = {
             end,
             true
         )
-
-        local calculated_hand = calculated_hands[0]
-
+      
+        local calculated_hand = calculated_hands[0+1]
+        
         local cost = calculated_hand['cost']
         local error = calculated_hand['error']
-        hand_yaku = calculated_hand['hand_yaku']
+        local hand_yaku = calculated_hand['hand_yaku']
         local han = calculated_hand['han']
         local fu = calculated_hand['fu']
         local fu_details = calculated_hand['fu_details']
 
         return g.HandResponse(cost, han, fu, hand_yaku, error, fu_details)
     end,
-    _find_win_groups = function(self, win_tile, hand, opened_melds)
+    _find_win_groups = function(win_tile, hand, opened_melds)
         local win_tile_34 = math.floor((win_tile or 0) / 4)
 
         -- to detect win groups
@@ -2841,8 +3124,8 @@ g.OptionalRules = function()
 end
 
 g.HandConfig = function()
-    return table.concat(
-        copy.copy(g.HandConstants),
+    local c= combine(
+        deepcopy(g.HandConstants),
         {
             --[[
     Special class to pass various settings to the hand calculator object
@@ -2903,25 +3186,26 @@ g.HandConfig = function()
             end
         }
     )
+    c:__init__()
+    return c
 end
 --HandResponse
 
-g.HandResponse=function( cost, han, fu, yaku, error, fu_details)
-    local self= {
+g.HandResponse = function(cost, han, fu, yaku, error, fu_details)
+    local self = {
         cost = nil,
         han = nil,
         fu = nil,
         fu_details = nil,
         yaku = nil,
         error = nil,
-        str__== function(self)
-        if self.error then
-            return self.error
-        else
-            return string.format('%d han, %d fu',self.han, self.fu)
-         
-        end
-    end
+        str__ = function(self)
+                if self.error then
+                    return self.error
+                else
+                    return string.format('%d han, %d fu', self.han, self.fu)
+                end
+            end
     }
     self.cost = cost
     self.han = han
@@ -2929,19 +3213,31 @@ g.HandResponse=function( cost, han, fu, yaku, error, fu_details)
     self.error = error
 
     if fu_details then
-        self.fu_details = itertools.sorted(fu_details, function(x) return x['fu'] end, true)
+        self.fu_details =
+            itertools.sorted(
+            fu_details,
+            function(x,y)
+                return x['fu']<x['fu']
+            end,
+            true
+        )
     end
 
     if yaku then
-        self.yaku = itertools.sorted(yaku, function(x) return x.yaku_id end)
+        self.yaku =
+            itertools.sorted(
+            yaku,
+            function(x,y)
+                return x.yaku_id<y.yaku_id
+            end
+        )
     end
     return self
 end
 
 --scores
-g.ScoresCalculator={
-
-    calculate_scores=function(self, han, fu, config, is_yakuman)
+g.ScoresCalculator = {
+    calculate_scores = function(self, han, fu, config, is_yakuman)
         --[[
         Calculate how much scores cost a hand with given han and fu
         :param han: int
@@ -2953,21 +3249,20 @@ g.ScoresCalculator={
         for tsumo main cost is cost for dealer and additional is cost for player
         {'main': 1000, 'additional': 0}
         ]]
-
         -- kazoe hand
         if han >= 13 and not is_yakuman then
             -- Hands over 26+ han don't count as double yakuman
             if config.options.kazoe_limit == g.HandConfig.KAZOE_LIMITED then
+                -- Hands over 13+ is a sanbaiman
                 han = 13
-            -- Hands over 13+ is a sanbaiman
             elseif config.options.kazoe_limit == g.HandConfig.KAZOE_SANBAIMAN then
                 han = 12
             end
         end
-        local base_points 
-        local rounded 
-        local double_rounded 
-        local four_rounded 
+        local base_points
+        local rounded
+        local double_rounded
+        local four_rounded
         local six_rounded
 
         if han >= 5 then
@@ -2979,34 +3274,34 @@ g.ScoresCalculator={
             elseif han >= 52 then
                 rounded = 32000
             elseif han >= 39 then
+                -- double yakuman
                 rounded = 24000
-            -- double yakuman
-             elseif han >= 26 then
+            elseif han >= 26 then
+                -- yakuman
                 rounded = 16000
-            -- yakuman
             elseif han >= 13 then
-                    rounded = 8000
                 -- sanbaiman
+                rounded = 8000
             elseif han >= 11 then
-                    rounded = 6000
                 -- baiman
+                rounded = 6000
             elseif han >= 8 then
-                    rounded = 4000
                 -- haneman
+                rounded = 4000
             elseif han >= 6 then
-                    rounded = 3000
+                rounded = 3000
             else
-                    rounded = 2000
+                rounded = 2000
             end
             double_rounded = rounded * 2
             four_rounded = double_rounded * 2
             six_rounded = double_rounded * 3
         else
-            base_points = fu * math.pow(2, 2 + han)
-            rounded = (base_points + 99) // 100 * 100
-            double_rounded = (2 * base_points + 99) // 100 * 100
-            four_rounded = (4 * base_points + 99) // 100 * 100
-            six_rounded = (6 * base_points + 99) // 100 * 100
+            base_points = fu * (2^ (2 + han))
+            rounded = math.floor((base_points + 99) / 100) * 100
+            double_rounded = math.floor((2 * base_points + 99) / 100) * 100
+            four_rounded = math.floor((4 * base_points + 99) / 100) * 100
+            six_rounded = math.floor((6 * base_points + 99) / 100) * 100
 
             local is_kiriage = false
             if config.options.kiriage then
@@ -3029,22 +3324,22 @@ g.ScoresCalculator={
         if config.is_tsumo then
             --return {['main']= double_rounded, ['additional']= config.is_dealer and double_rounded or rounded}
             if config.is_dealer then
-                return {['main']= double_rounded ,['additional']= double_rounded}
+                return {['main'] = double_rounded, ['additional'] = double_rounded}
             else
-                return {['main']=  double_rounded, ['additional']= rounded}
+                return {['main'] = double_rounded, ['additional'] = rounded}
             end
         else
             if config.is_dealer then
-                return {['main']= six_rounded ,['additional']= 0}
+                return {['main'] = six_rounded, ['additional'] = 0}
             else
-                return {['main']=  four_rounded, ['additional']= 0}
+                return {['main'] = four_rounded, ['additional'] = 0}
             end
         end
-    end,
+    end
 }
 
-g.Yaku=function()
-    local self={
+g.Yaku = function(id)
+    local self = {
         yaku_id = nil,
         tenhou_id = nil,
         name = nil,
@@ -3053,54 +3348,51 @@ g.Yaku=function()
         is_yakuman = nil,
         english = nil,
         japanese = nil,
-
-        __str__=function(self)
+        __str__ = function(self)
             return self.name
         end,
-
         __repr__ = function(self)
             -- for calls in array
             return self:__str__()
         end,
-        __init__ = function(self,yaku_id)
+        __init__ = function(self, yaku_id)
             self.tenhou_id = nil
             self.yaku_id = yaku_id
 
             self:set_attributes()
         end,
-        is_condition_met=function(self, hand, args)
+        is_condition_met = function(self, hand, args)
             --[[
             Is this yaku exists in the hand?
             :param: hand
             :param: args: some yaku requires additional attributes
             :return: boolean
             ]]
-            error("NotImplementedError")
+            error('NotImplementedError')
         end,
-        set_attributes=function(self)
+        set_attributes = function(self)
             --[[
             Set id, name, han related to the yaku
             ]]
-            error("NotImplementedError")
+            error('NotImplementedError')
         end
     }
     
-    return self 
+    return self
 end
-g.Count=function(init)
+g.Count = function(init)
     return {
-        v=init,
-        next=function(self)
-            local c=self.v
-            self.v=self.v+1
-            return  self.v
-        end,
-        
+        v = init,
+        next = function(self)
+            local c = self.v
+            self.v = self.v + 1
+            return self.v
+        end
     }
 end
-g.YakuConfig=function()
-    local self= {
-        __init__=function(self)
+g.YakuConfig = function()
+    local self = {
+        __init__ = function(self)
             local id = g.Count(0)
 
             -- Yaku situations
@@ -3128,15 +3420,15 @@ g.YakuConfig=function()
             self.west = g.YakuhaiWest(id:next())
             self.north = g.YakuhaiNorth(id:next())
             self.yakuhai_place = g.YakuhaiOfPlace(id:next())
-            self.yakuhai_round =g. YakuhaiOfRound(id:next())
+            self.yakuhai_round = g.YakuhaiOfRound(id:next())
 
             -- Yaku 2 Hands
-            self.sanshoku =g. Sanshoku(id:next())
-            self.ittsu =g. Ittsu(id:next())
-            self.chanta =g. Chanta(id:next())
-            self.honroto =g. Honroto(id:next())
+            self.sanshoku = g.Sanshoku(id:next())
+            self.ittsu = g.Ittsu(id:next())
+            self.chanta = g.Chanta(id:next())
+            self.honroto = g.Honroto(id:next())
             self.toitoi = g.Toitoi(id:next())
-            self.sanankou =g. Sanankou(id:next())
+            self.sanankou = g.Sanankou(id:next())
             self.sankantsu = g.SanKantsu(id:next())
             self.sanshoku_douko = g.SanshokuDoukou(id:next())
             self.chiitoitsu = g.Chiitoitsu(id:next())
@@ -3148,25 +3440,25 @@ g.YakuConfig=function()
             self.ryanpeiko = g.Ryanpeikou(id:next())
 
             -- Yaku 6 Hands
-            self.chinitsu =g. Chinitsu(id:next())
+            self.chinitsu = g.Chinitsu(id:next())
 
             -- Yakuman list
-            self.kokushi =g. KokushiMusou(id:next())
-            self.chuuren_poutou =g. ChuurenPoutou(id:next())
+            self.kokushi = g.KokushiMusou(id:next())
+            self.chuuren_poutou = g.ChuurenPoutou(id:next())
             self.suuankou = g.Suuankou(id:next())
-            self.daisangen =g.Daisangen(id:next())
+            self.daisangen = g.Daisangen(id:next())
             self.shosuushi = g.Shousuushii(id:next())
             self.ryuisou = g.Ryuuiisou(id:next())
-            self.suukantsu =g. Suukantsu(id:next())
+            self.suukantsu = g.Suukantsu(id:next())
             self.tsuisou = g.Tsuuiisou(id:next())
             self.chinroto = g.Chinroutou(id:next())
             self.daisharin = g.Daisharin(id:next())
 
             --Double yakuman
             self.daisuushi = g.DaiSuushii(id:next())
-            self.daburu_kokushi =g. DaburuKokushiMusou(id:next())
-            self.suuankou_tanki =g. SuuankouTanki(id:next())
-            self.daburu_chuuren_poutou =g. DaburuChuurenPoutou(id:next())
+            self.daburu_kokushi = g.DaburuKokushiMusou(id:next())
+            self.suuankou_tanki = g.SuuankouTanki(id:next())
+            self.daburu_chuuren_poutou = g.DaburuChuurenPoutou(id:next())
 
             --Yakuman situations
             self.tenhou = g.Tenhou(id:next())
@@ -3179,23 +3471,47 @@ g.YakuConfig=function()
             return self
         end
     }
-    
+
     self:__init__()
     return self
 end
 
 --Yaku s
-local function yakuinherit(attribstr,condstr,condparams,strstr)
-    local c= g.Yaku()
-    condparams=condparams or "(self,hand,args)"
-    c.set_attributes=assert(load("return function(self) "..attribstr.." end",nil,nil,_G))()
-    c.is_condition_met=assert(load("return function"..condparams:gsub("%*","").." "..condstr.." end",nil,nil,_G))()
-    c.__str__=assert(load("return function(self) "..strstr.." end",nil,nil,_G))()
+local function yakuinherit(attribstr, condstr, condparams, strstr)
+    
+    return function(id)
+
+        local c = g.Yaku(id)
+        local env = {
+            g=g,
+            len=len,   
+            ipairs=ipairs,
+            simplifyindices=simplifyindices,
+            flatten=flatten,
+            picker=picker,
+            any=any,
+            cat=cat,
+            isin=isin,
+            deepcopy=deepcopy,
+            all=all,
+            table=table,
+            math=math,
+        }
+        
+
+        --print(attribstr)
+        condparams = condparams or '(self,hand,args)'
+        c.set_attributes = assert(load('return function(self) ' .. attribstr .. ' end', nil, nil, env))()
+        c.is_condition_met = assert(load('return function' .. condparams:gsub('%*', '') .. ' ' .. condstr .. ' end', nil, nil, env))()
+        c.__str__ = assert(load('return function(self) ' .. (strstr or "") .. ' end', nil, nil, env))()
+        c:__init__(id)
+        return c    
+    end
 end
-local function simplifyindices(tbl)
-    return picker(tbl,nil,nil,function(x) g.utils.simplify(x) end)
-end
-g.Chiihou=yakuinherit([[
+
+g.Chiihou =
+    yakuinherit(
+    [[
 
     self.tenhou_id = 38
     self.name = 'Chiihou'
@@ -3205,8 +3521,11 @@ g.Chiihou=yakuinherit([[
     self.han_open = None
     self.han_closed = 13
 
-    self.is_yakuman = true]],[[return true]])
-g.Chinroutou=yakuinherit(
+    self.is_yakuman = true]],
+    [[return true]]
+)
+g.Chinroutou =
+    yakuinherit(
     [[
     self.tenhou_id = 44
 
@@ -3218,11 +3537,14 @@ g.Chinroutou=yakuinherit(
     self.han_closed = 13
 
     self.is_yakuman = true
-]],[[ 
+]],
+    [[ 
     indices = flatten(hand)
-    return all(picker(indices,function(x) isin(x,g.TERMINAL_INDICES) ]]
+    return all(picker(indices,nil,nil,function(x) return isin(g.TERMINAL_INDICES,x) end)) ]]
 )
-g.ChuurenPoutou=yakuinherit([[
+g.ChuurenPoutou =
+    yakuinherit(
+    [[
 self.tenhou_id = 45
 
 self.name = 'Chuuren Poutou'
@@ -3233,7 +3555,7 @@ self.han_open = None
 self.han_closed = 13
 
 self.is_yakuman = true]],
-[[
+    [[
     local sou_sets = 0
     local pin_sets = 0
     local man_sets = 0
@@ -3255,18 +3577,18 @@ self.is_yakuman = true]],
         return false
     end
     local indices = flatten(hand)
-    # cast tile indices to 0..8 representation
+    -- cast tile indices to 0..8 representation
     indices = picker(indices,nil,nil,function(x) return g.utils.simplify(x)end)
 
-    # 1-1-1
+    -- 1-1-1
     if  #picker(indices,function(x) return x==0 end )  < 3 then
         return alse
     end
-    # 9-9-9
-    if #picker(indices,function(x) return x==8 end ) < 3:
+    -- 9-9-9
+    if #picker(indices,function(x) return x==8 end ) < 3 then
         return False
-
-    # 1-2-3-4-5-6-7-8-9 and one tile to any of them
+    end
+    -- 1-2-3-4-5-6-7-8-9 and one tile to any of them
     tableremove(indices,0)
     tableremove(indices,0)
     tableremove(indices,8)
@@ -3277,12 +3599,15 @@ self.is_yakuman = true]],
              tableremove(indices,x)
         end
     end
-    if #indices == 1:
+    if #indices == 1 then
         return true
     end
-    return False]])
+    return False]]
+)
 
-g.DaburuChuurenPoutou=yakuinherit([[self.tenhou_id = 46
+g.DaburuChuurenPoutou =
+    yakuinherit(
+    [[self.tenhou_id = 46
 
 self.name = 'Daburu Chuuren Poutou'
 self.english = 'Pure Nine Gates'
@@ -3291,11 +3616,15 @@ self.japanese = '純正九蓮宝燈'
 self.han_open = None
 self.han_closed = 26
 
-self.is_yakuman = true]],[[ 
+self.is_yakuman = true]],
+    [[ 
     -- was it here or not is controlling by superior code
-return true]])
+return true]]
+)
 
-g.DaburuKokushiMusou=yakuinherit([[
+g.DaburuKokushiMusou =
+    yakuinherit(
+    [[
     self.tenhou_id = 48
 
     self.name = 'Kokushi Musou Juusanmen Matchi'
@@ -3306,9 +3635,13 @@ g.DaburuKokushiMusou=yakuinherit([[
     self.han_closed = 26
 
     self.is_yakuman = true
-]],[[-- was it here or not is controlling by superior code
-return true]])
-g.Daisangen=yakuinherit([[
+]],
+    [[-- was it here or not is controlling by superior code
+return true]]
+)
+g.Daisangen =
+    yakuinherit(
+    [[
     self.tenhou_id = 39
 
     self.name = 'Daisangen'
@@ -3320,25 +3653,30 @@ g.Daisangen=yakuinherit([[
 
     self.is_yakuman = true
 
-]],[[
+]],
+    [[
     local count_of_dragon_pon_sets = 0
-    for _,item in ipairs(hand):
-        if g.utils.is_pon(item) and isin(item[0] , {g.CHUN, g.HAKU, g.HATSU}):
+    for _,item in ipairs(hand) do
+        if g.utils.is_pon(item) and isin( {g.CHUN, g.HAKU, g.HATSU},item[0]) then
             count_of_dragon_pon_sets = count_of_dragon_pon_sets+1
+        end
+    end
     return count_of_dragon_pon_sets == 3
-]])
+]]
+)
 
-g.Daisharin=function()
-    
-    local self= yakuinherit(
-    [[self.name = 'Daisharin'
+g.Daisharin = function(id)
+    local self =
+        yakuinherit(
+        [[self.name = 'Daisharin'
     self.english = 'Big wheels'
     self.japanese = '大車輪'
     self.han_open = None
     self.han_closed = 13
 
     self.is_yakuman = true
-    ]],[[
+    ]],
+        [[
         local sou_sets = 0
         local pin_sets = 0
         local  man_sets = 0
@@ -3369,7 +3707,7 @@ g.Daisharin=function()
     -- cast tile indices to 0..8 representation
     indices = simplifyindices(indices)
 
-    # check for pairs
+    -- check for pairs
     for x=1,7  do
         if #picker(indices,function(y)return x==y end) ~= 2 then
             return false
@@ -3377,40 +3715,42 @@ g.Daisharin=function()
 
     end
 
-    return true]],[[(self, hand, allow_other_sets, *args)]])
-    self.set_pin=function(self)
-
-        self.name = 'Daisharin'
-        self.english = 'Big wheels'
-        self.japanese = '大車輪'
-
+    return true]],
+        [[(self, hand, allow_other_sets, *args)]]
+    )(id)
+    self.set_pin = function(me)
+        me.name = 'Daisharin'
+        me.english = 'Big wheels'
+        me.japanese = '大車輪'
     end
-    self.set_sou=function(self)
-        self.name = 'Daisuurin'
-        self.english = 'Bamboo forest'
-        self.japanese = '大竹林'
-      
+    self.set_sou = function(me)
+        me.name = 'Daisuurin'
+        me.english = 'Bamboo forest'
+        me.japanese = '大竹林'
     end
-    self.set_man=function(self)
-        self.name = 'Daichikurin'
-        self.english = 'Numerous numbers'
-        self.japanese = '大数隣'
+    self.set_man = function(me)
+        me.name = 'Daichikurin'
+        me.english = 'Numerous numbers'
+        me.japanese = '大数隣'
     end
-    self.rename=function(self,hand)
+    self.rename = function(me, hand)
         -- rename this yakuman depending on tiles used
-        if g.utils.is_sou(hand[0+1][0+1]) then
-            self.set_sou()
-        elseif g.utils.is_pin(hand[0+1][0+1]) then
-            self.set_pin()
+        if g.utils.is_sou(hand[0 + 1][0 + 1]) then
+            me.set_sou()
+        elseif g.utils.is_pin(hand[0 + 1][0 + 1]) then
+            me.set_pin()
         else
-            self.set_man()
+            me.set_man()
         end
     end
-    
-end
-g.Daisharin=g.Daisharin()
 
-g.DaiSuushii=yakuinherit([[
+    return self
+end
+
+
+g.DaiSuushii =
+    yakuinherit(
+    [[
     self.tenhou_id = 49
 
     self.name = 'Dai Suushii'
@@ -3421,25 +3761,28 @@ g.DaiSuushii=yakuinherit([[
     self.han_closed = 26
 
     self.is_yakuman = true
-]],[[
+]],
+    [[
     
     local pon_sets = picker(hand,g.utils.is_pon)
-    if #pon_sets) ~= 4 then
+    if #pon_sets ~= 4 then
         return false
     end
 
 
     local count_wind_sets = 0
-    winds = {g.EAST, g.SOUTH, g.WEST, g.NORTH}
+    local winds = {g.EAST, g.SOUTH, g.WEST, g.NORTH}
     for _,item in ipairs(pon_sets) do
         if g.utils.is_pon(item) and isin(winds,item[0+1]) then
             count_wind_sets = count_wind_sets+1
         end
     end
     return count_wind_sets == 4
-]])
+]]
+)
 
-g.KokushiMusou=yakuinherit(
+g.KokushiMusou =
+    yakuinherit(
     [[self.tenhou_id = 47
 
     self.name = 'Kokushi Musou'
@@ -3459,10 +3802,12 @@ g.KokushiMusou=yakuinherit(
 
         return false
 
-    ]],[[(self, hand, tiles_34, *args)]]
+    ]],
+    [[(self, hand, tiles_34, *args)]]
 )
 
-g.RenhouYakuman=yakuinherit(
+g.RenhouYakuman =
+    yakuinherit(
     [[self.name = 'Renhou'
     self.english = 'Hand Of Man'
     self.japanese = '人和'
@@ -3473,7 +3818,8 @@ g.RenhouYakuman=yakuinherit(
     self.is_yakuman = true]],
     [[return true]]
 )
-g.Ryuuiisou=yakuinherit(
+g.Ryuuiisou =
+    yakuinherit(
     [[self.tenhou_id = 43
 
     self.name = 'Ryuuiisou'
@@ -3484,12 +3830,13 @@ g.Ryuuiisou=yakuinherit(
     self.han_closed = 13
 
     self.is_yakuman = true]],
-    [[ local green_indices = [19, 20, 21, 23, 25, g.HATSU]
+    [[ local green_indices = {19, 20, 21, 23, 25, g.HATSU}
     local indices = flatten(hand)
     return all(indices,function(x) return isin(green_indices,x) end)]]
 )
 
-g.Shousuushii=yakuinherit(
+g.Shousuushii =
+    yakuinherit(
     [[ self.tenhou_id = 50
 
     self.name = 'Shousuushii'
@@ -3509,16 +3856,17 @@ g.Shousuushii=yakuinherit(
     local wind_pair = 0
     local winds = {g.EAST, g.SOUTH, g.WEST, g.NORTH}
     for _,item in ipairs(hand) do
-        if is_pon(item) and isin(winds,item[0+1]) then
+        if g.utils.is_pon(item) and isin(winds,item[0+1]) then
             count_of_wind_sets = count_of_wind_sets+1
         end
-        if is_pair(item) and isin(winds,item[0+1]) then
+        if g.utils.is_pair(item) and isin(winds,item[0+1]) then
             wind_pair = wind_pair+1
         end
     end
     return count_of_wind_sets == 3 and wind_pair == 1]]
 )
-g.Suuankou=yakuinherit(
+g.Suuankou =
+    yakuinherit(
     [[  self.tenhou_id = 41
 
     self.name = 'Suu ankou'
@@ -3531,33 +3879,35 @@ g.Suuankou=yakuinherit(
     self.is_yakuman = True]],
     [[
         win_tile = math.floor(win_tile/4)
-        local closed_hand = {}}
+        local closed_hand = {}
         for _,item in ipairs(hand) do
             -- if we do the ron on syanpon wait our pon will be consider as open
-            if is_pon(item) and win_tile in item and not is_tsumo then
+            if g.utils.is_pon(item) and isin(item,win_tile) and not is_tsumo then
             else
                table.insert(closed_hand,item) 
             
             end
         end
     local count_of_pon = #picker(closed_hand,g.utils.is_pon)
-    return count_of_pon == 4]],[[(self, hand, win_tile, is_tsumo)]]
+    return count_of_pon == 4]],
+    [[(self, hand, win_tile, is_tsumo)]]
 )
-g.SuuankouTanki=yakuinherit(
+g.SuuankouTanki =
+    yakuinherit(
     [[self.tenhou_id = 40
 
     self.name = 'Suu ankou tanki'
     self.english = 'Four Concealed Triplets Single Wait'
-    self.japanese = '四暗刻単騎'
+    self.japanese = '四暗刻単騎待ち'
 
     self.han_open = None
     self.han_closed = 26
 
     self.is_yakuman = true]],
     [[return true]]
-
 )
-g.Suukantsu=yakuinherit(
+g.Suukantsu =
+    yakuinherit(
     [[self.tenhou_id = 51
 
     self.name = 'Suu kantsu'
@@ -3569,11 +3919,13 @@ g.Suukantsu=yakuinherit(
 
     self.is_yakuman = True]],
     [[ 
-        kan_sets = picker(melds,function(x)return x.type == g.Meld.KAN or x.type == g.Meld.CHANKAN end
-    return #kan_sets == 4]],[[(self, hand, melds, *args)]]
+        kan_sets = picker(melds,function(x) return x.type == g.Meld.KAN or x.type == g.Meld.CHANKAN end)
+    return #kan_sets == 4]],
+    [[(self, hand, melds, *args)]]
 )
 
-g.Tenhou=yakuinherit(
+g.Tenhou =
+    yakuinherit(
     [[self.tenhou_id = 37
 
     self.name = 'Tenhou'
@@ -3587,7 +3939,8 @@ g.Tenhou=yakuinherit(
     [[return true]]
 )
 
-g.Tsuuiisou=yakuinherit(
+g.Tsuuiisou =
+    yakuinherit(
     [[self.tenhou_id = 42
 
     self.name = 'Tsuu iisou'
@@ -3600,9 +3953,11 @@ g.Tsuuiisou=yakuinherit(
     self.is_yakuman = True]],
     [[ 
     local indices = flatten(hand)
-    return all(picker(indices,nil,nil,function(x) isin( g.HONOR_INDICES,x) )]]
+    local p=picker(indices,nil,nil,function(x) return isin( g.HONOR_INDICES,x) end)
+    return all(p)]]
 )
-g.AkaDora=yakuinherit(
+g.AkaDora =
+    yakuinherit(
     [[ self.tenhou_id = 54
 
     self.name = 'Aka Dora'
@@ -3613,11 +3968,12 @@ g.AkaDora=yakuinherit(
     self.han_closed = 1
 
     self.is_yakuman = False]],
-    [[return true]],nil,
+    [[return true]],
+    nil,
     [[string.format('Aka Dora %d',(self.han_closed))]]
-    
 )
-g.Chankan=yakuinherit(
+g.Chankan =
+    yakuinherit(
     [[self.tenhou_id = 3
 
     self.name = 'Chankan'
@@ -3631,7 +3987,8 @@ g.Chankan=yakuinherit(
     [[return true]]
 )
 
-g.Chanta=yakuinherit(
+g.Chanta =
+    yakuinherit(
     [[self.tenhou_id = 23
 
     self.name = 'Chanta'
@@ -3645,37 +4002,39 @@ g.Chanta=yakuinherit(
     [[ 
         local function tile_in_indices(item_set, indices_array)
             for _,x in ipairs(item_set) do
-                if _,x in ipairs(indices_array) then
+                if isin(indices_array,x) then
                     return True
                 end
             end
             return False
         end
 
-    local honor_sets = 0
-    local terminal_sets = 0
-    local count_of_chi = 0
-    for _,item in ipairs(hand) do
-        if g.utils.is_chi(item) then
-            count_of_chi = count_of_chi+1
+        local honor_sets = 0
+        local terminal_sets = 0
+        local count_of_chi = 0
+        for _,item in ipairs(hand) do
+            if g.utils.is_chi(item) then
+                count_of_chi = count_of_chi+1
+            end
+            if tile_in_indices(item, g.TERMINAL_INDICES) then
+                terminal_sets = terminal_sets+1
+            end
+            if tile_in_indices(item, g.HONOR_INDICES) then
+                honor_sets = honor_sets+1
+            end
+            if count_of_chi == 0 then
+                return False
+            end
         end
-        if g.utils.tile_in_indices(item, g.TERMINAL_INDICES) then
-            terminal_sets = terminal_sets+1
-        end
-        if g.utils.tile_in_indices(item, g.HONOR_INDICES) then
-            honor_sets = honor_sets+1
-        end
-        if count_of_chi == 0 then
-            return False
-        end
-    end
 
-    return terminal_sets + honor_sets == 5 and terminal_sets != 0 and honor_sets != 0
+        return terminal_sets + honor_sets == 5 and terminal_sets ~= 0 and honor_sets ~= 0
 
 ]]
 )
 
-g.Chiitoitsu=yakuinherit([[
+g.Chiitoitsu =
+    yakuinherit(
+    [[
     self.tenhou_id = 22
 
     self.name = 'Chiitoitsu'
@@ -3687,11 +4046,15 @@ g.Chiitoitsu=yakuinherit([[
 
     self.is_yakuman = False
 
-]],[[
+]],
+    [[
     return len(hand) == 7
-]])
+]]
+)
 
-g.Chinitsu=yakuinherit([[
+g.Chinitsu =
+    yakuinherit(
+    [[
     self.tenhou_id = 35
 
     self.name = 'Chinitsu'
@@ -3702,12 +4065,13 @@ g.Chinitsu=yakuinherit([[
     self.han_closed = 6
 
     self.is_yakuman = False
-]],[[
+]],
+    [[
     local honor_sets = 0
     local sou_sets = 0
     local pin_sets = 0
     local man_sets = 0
-    for _,item in hand do
+    for _,item in ipairs(hand) do
         if isin(g.HONOR_INDICES,item[0+1] ) then
             honor_sets = honor_sets+1
         end
@@ -3726,8 +4090,10 @@ g.Chinitsu=yakuinherit([[
     local only_one_suit = len(picker(sets,function(x)return x~=0 end)) == 1
 
     return only_one_suit and honor_sets == 0
-]])
-g.Chun=yakuinherit(
+]]
+)
+g.Chun =
+    yakuinherit(
     [[self.tenhou_id = 20
 
     self.name = 'Yakuhai (chun)'
@@ -3738,11 +4104,13 @@ g.Chun=yakuinherit(
     self.han_closed = 1
 
     self.is_yakuman = False
-]],[[
-    return len(picker(hand,function(x) return g.utils.is_pon(x) and  x[0+1] == g.CHUN) == 1
+]],
+    [[
+    return len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == g.CHUN end)) == 1
 ]]
 )
-g.DaburuRiichi=yakuinherit(
+g.DaburuRiichi =
+    yakuinherit(
     [[self.tenhou_id = 21
 
     self.name = 'Double Riichi'
@@ -3752,11 +4120,12 @@ g.DaburuRiichi=yakuinherit(
     self.han_open = None
     self.han_closed = 2
 
-    self.is_yakuman = False]], 
+    self.is_yakuman = False]],
     [[return true]]
 )
 
-g.Dora=yakuinherit(
+g.Dora =
+    yakuinherit(
     [[self.tenhou_id = 52
 
     self.name = 'Dora'
@@ -3767,12 +4136,16 @@ g.Dora=yakuinherit(
     self.han_closed = 1
 
     self.is_yakuman = False
-]],[[
+]],
+    [[
     return true
-]],nil,[[string.format('Dora %d',(self.han_closed))]]
+]],
+    nil,
+    [[string.format('Dora %d',(self.han_closed))]]
 )
-g.YakuhaiEast=yakuinherit(
-[[
+g.YakuhaiEast =
+    yakuinherit(
+    [[
     self.tenhou_id = 10
 
     self.name = 'Yakuhai (east)'
@@ -3784,19 +4157,21 @@ g.YakuhaiEast=yakuinherit(
 
     self.is_yakuman = False
 ]],
-[[
-    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == player_wind] end) == 1 and player_wind == EAST:
+    [[
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == player_wind end)) == 1 and player_wind == g.EAST then
     return True
+    end
 
-if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == round_wind] end) == 1 and round_wind == EAST:
+if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == round_wind end)) == 1 and round_wind == g.EAST then
     return True
-
+end
 return False
 ]],
-[[(self, hand, player_wind, round_wind, *args)]]
+    [[(self, hand, player_wind, round_wind, *args)]]
 )
 
-g.Haitei=yakuinherit(
+g.Haitei =
+    yakuinherit(
     [[
         self.tenhou_id = 5
 
@@ -3811,7 +4186,8 @@ g.Haitei=yakuinherit(
     ]],
     [[return true]]
 )
-g.Haku=yakuinherit(
+g.Haku =
+    yakuinherit(
     [[self.tenhou_id = 18
 
     self.name = 'Yakuhai (haku)'
@@ -3823,11 +4199,13 @@ g.Haku=yakuinherit(
 
     self.is_yakuman = False
 
-]],[[
-    return len(picker(hand,function(x) return g.utils.is_pon(x) and  x[0+1] == g.HAKU) == 1
+]],
+    [[
+    return len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == g.HAKU end)) == 1
 ]]
 )
-g.Hatsu=yakuinherit(
+g.Hatsu =
+    yakuinherit(
     [[self.tenhou_id = 19
 
     self.name = 'Yakuhai (hatsu)'
@@ -3839,11 +4217,13 @@ g.Hatsu=yakuinherit(
 
     self.is_yakuman = False
 
-]],[[
-    return len(picker(hand,function(x) return g.utils.is_pon(x) and  x[0+1] == g.HATSU) == 1
+]],
+    [[
+    return len(picker(hand,function(x) return g.utils.is_pon(x) and  x[0+1] == g.HATSU end)) == 1
 ]]
 )
-g.Honitsu=yakuinherit(
+g.Honitsu =
+    yakuinherit(
     [[
         self.tenhou_id = 34
         self.name = 'Honitsu'
@@ -3860,7 +4240,7 @@ g.Honitsu=yakuinherit(
         local sou_sets = 0
         local pin_sets = 0
         local man_sets = 0
-        for _,item in ipairs(hand)do
+        for _,item in ipairs(hand) do
             if isin(g.HONOR_INDICES,item[0+1]) then
                 honor_sets = honor_sets+1
             end
@@ -3874,12 +4254,13 @@ g.Honitsu=yakuinherit(
             end
         end
         local sets = {sou_sets, pin_sets, man_sets}
-        local only_one_suit = len( picker(sets,function(x) return x~=0 end) == 1
+        local only_one_suit = len( picker(sets,function(x) return x~=0 end)) == 1
 
-        return only_one_suit and honor_sets != 0
+        return only_one_suit and honor_sets ~= 0
     ]]
 )
-g.Honroto=yakuinherit(
+g.Honroto =
+    yakuinherit(
     [[ self.tenhou_id = 31
 
     self.name = 'Honroutou'
@@ -3891,14 +4272,15 @@ g.Honroto=yakuinherit(
 
     self.is_yakuman = False]],
     [[
-        local indices = reduce(lambda z, y: z + y, hand)
-        local tbl=copy.copy(HONOR_INDICES)
-        table.concat(tbl,TERMINAL_INDICES)
+        local indices = flatten(hand)
+        local tbl=deepcopy(g.HONOR_INDICES)
+        cat(tbl,g.TERMINAL_INDICES)
         local result = tbl
-        return all(picker(indices,nil,nil,function(x) return isin(result,in)end))
+        return all(picker(indices,nil,nil,function(x) return isin(result,indices)end))
     ]]
 )
-g.Houtei=yakuinherit(
+g.Houtei =
+    yakuinherit(
     [[
         self.tenhou_id = 6
 
@@ -3915,7 +4297,8 @@ g.Houtei=yakuinherit(
         return true
     ]]
 )
-g.Iipeiko=yakuinherit(
+g.Iipeiko =
+    yakuinherit(
     [[
         self.tenhou_id = 9
 
@@ -3947,7 +4330,8 @@ g.Iipeiko=yakuinherit(
         return count_of_identical_chi >= 2
     ]]
 )
-g.Ippatsu=yakuinherit(
+g.Ippatsu =
+    yakuinherit(
     [[
         self.tenhou_id = 2
 
@@ -3960,9 +4344,10 @@ g.Ippatsu=yakuinherit(
 
         self.is_yakuman = False
     ]],
-    [[return true]]   
+    [[return true]]
 )
-g.Ittsu=yakuinherit(
+g.Ittsu =
+    yakuinherit(
     [[self.tenhou_id = 24
 
     self.name = 'Ittsu'
@@ -4013,7 +4398,7 @@ g.Ittsu=yakuinherit(
                     g.utils.simplify(set_item[2+1])})
       
                 end
-                if isin(casted_sets,{0, 1, 2}) and isin(casted_sets,{3, 4, 5}) and  isin(casted_sets,{6, 7, 8}):
+                if isin(casted_sets,{0, 1, 2}) and isin(casted_sets,{3, 4, 5}) and  isin(casted_sets,{6, 7, 8}) then
                     return True
                 end
             end
@@ -4022,7 +4407,8 @@ g.Ittsu=yakuinherit(
     ]]
 )
 
-g.Junchan=yakuinherit(
+g.Junchan =
+    yakuinherit(
     [[  self.tenhou_id = 33
 
     self.name = 'Junchan'
@@ -4036,7 +4422,7 @@ g.Junchan=yakuinherit(
     [[
         local function tile_in_indices(item_set, indices_array)
             for _,x in ipairs(item_set) do
-                if _,x in ipairs(indices_array) do
+                if isin(indices_array,x) then
                     return True
                 end
 
@@ -4046,15 +4432,493 @@ g.Junchan=yakuinherit(
 
     local terminal_sets = 0
     local count_of_chi = 0
-    for item in hand:
-        if is_chi(item):
-            count_of_chi += 1
-
-        if tile_in_indices(item, TERMINAL_INDICES):
-            terminal_sets += 1
-
-    if count_of_chi == 0:
+    for _,item in ipairs(hand) do
+        if g.utils.is_chi(item) then
+            count_of_chi =count_of_chi+ 1
+        end
+        if tile_in_indices(item, g.TERMINAL_INDICES) then
+            terminal_sets = terminal_sets+1
+        end
+    end
+    if count_of_chi == 0 then
         return False
-
+    end
     return terminal_sets == 5]]
 )
+
+g.NagashiMangan =
+    yakuinherit(
+    [[self.name = 'Nagashi Mangan'
+    self.english = 'Nagashi Mangan'
+    self.japanese = '流し満貫'
+
+    self.han_open = 5
+    self.han_closed = 5
+
+    self.is_yakuman = False]],
+    [[return true]]
+)
+
+g.YakuhaiNorth =
+    yakuinherit(
+    [[
+        self.tenhou_id = 10
+
+        self.name = 'Yakuhai (north)'
+        self.english = 'North Round/Seat'
+        self.japanese = '役牌(北)'
+
+        self.han_open = 1
+        self.han_closed = 1
+
+        self.is_yakuman = False
+]],
+    [[
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == player_wind end)) == 1 and player_wind == g.NORTH then
+    return True
+    end
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == round_wind end)) == 1 and round_wind == g.NORTH then
+        return True
+    end
+
+    return False
+]],
+    [[(self, hand, player_wind, round_wind, *args)]]
+)
+
+g.Pinfu =
+    yakuinherit(
+    [[self.tenhou_id = 7
+
+    self.name = 'Pinfu'
+    self.english = 'All Sequences'
+    self.japanese = '平和'
+
+    self.han_open = None
+    self.han_closed = 1
+
+    self.is_yakuman = False]],
+    [[return true]]
+)
+g.Renhou =
+    yakuinherit(
+    [[
+        self.tenhou_id = 36
+
+        self.name = 'Renhou'
+        self.english = 'Hand Of Man'
+        self.japanese = '人和'
+
+        self.han_open = None
+        self.han_closed = 5
+
+        self.is_yakuman = False
+    ]],
+    [[return true]]
+)
+g.Riichi =
+    yakuinherit(
+    [[self.tenhou_id = 1
+
+    self.name = 'Riichi'
+    self.english = 'Riichi'
+    self.japanese = '立直'
+
+    self.han_open = None
+    self.han_closed = 1
+
+    self.is_yakuman = False]],
+    [[return true]]
+)
+g.Rinshan =
+    yakuinherit(
+    [[
+        self.tenhou_id = 4
+
+        self.name = 'Rinshan Kaihou'
+        self.english = 'Dead Wall Draw'
+        self.japanese = '嶺上開花'
+
+        self.han_open = 1
+        self.han_closed = 1
+
+        self.is_yakuman = False
+    ]],
+    [[return true]]
+)
+
+g.Ryanpeikou =
+    yakuinherit(
+    [[self.tenhou_id = 32
+
+    self.name = 'Ryanpeikou'
+    self.english = 'Two Sets Of Identical Sequences'
+    self.japanese = '二盃口'
+
+    self.han_open = None
+    self.han_closed = 3
+
+    self.is_yakuman = False]],
+    [[
+        local chi_sets = picker(hand,function(i) return g.utils.is_chi(i)end)
+        local count_of_identical_chi = {}
+        for _,x in ipairs(chi_sets) do
+            local count = 0
+            for _,y in ipairs(chi_sets) do
+                if x == y then
+                    count = count+1
+                end
+            end
+            table.insert(count_of_identical_chi,count)
+           
+        end
+        return len(
+            picker(count_of_identical_chi,function(x) return x>=2 end)    
+        ) == 4
+    ]]
+)
+g.Sanankou =
+    yakuinherit(
+    [[self.tenhou_id = 29
+
+    self.name = 'San Ankou'
+    self.english = 'Tripple Concealed Triplets'
+    self.japanese = '三暗刻'
+
+    self.han_open = 2
+    self.han_closed = 2
+
+    self.is_yakuman = False]],
+    [[ 
+        win_tile = math.floor(win_tile / 4)
+
+    local  open_sets = picker(melds,function(x) return x.opened end,nil,function(x) return x.tiles_34 end) 
+
+    local chi_sets = picker(hand,function(x) return (g.utils.is_chi(x) and isin(x,win_tile) and not isin(open_sets,x)) end)
+    local pon_sets = picker(hand,g.utils.is_pon)
+
+    local closed_pon_sets = {}
+    for _,item in ipairs(pon_sets) do
+        if isin(open_sets,item) then
+            -- continue
+        else
+            -- if we do the ron on syanpon wait our pon will be consider as open
+            -- and it is not 789999 set
+            if isin(item,win_tile) and not is_tsumo and len(chi_sets)>0 then
+                -- continue
+            else
+                table.insert(closed_pon_sets,item)
+
+            end
+        end
+    end
+    return len(closed_pon_sets) == 3]],
+    [[(self, hand, win_tile, melds, is_tsumo)]]
+)
+g.SanKantsu =
+    yakuinherit(
+    [[ self.tenhou_id = 27
+
+    self.name = 'San Kantsu'
+    self.english = 'Three Kans'
+    self.japanese = '三槓子'
+
+    self.han_open = 2
+    self.han_closed = 2
+
+    self.is_yakuman = False]],
+    [[ 
+        kan_sets = picker(melds,function(x)return x.type == g.Meld.KAN or x.type == g.Meld.CHANKAN end)
+        return len(kan_sets) == 3
+    ]],
+    [[(self, hand, melds, *args)]]
+)
+
+g.Sanshoku =
+    yakuinherit(
+    [[
+        self.tenhou_id = 25
+
+        self.name = 'Sanshoku Doujun'
+        self.english = 'Three Colored Triplets'
+        self.japanese = '三色同順'
+
+        self.han_open = 1
+        self.han_closed = 2
+
+        self.is_yakuman = False
+    ]],
+    [[
+        local chi_sets = picker(hand,function(i) return g.utils.is_chi(i) end)
+        if len(chi_sets) < 3 then
+            return False
+        end
+        local sou_chi = {}
+        local pin_chi = {}
+        local man_chi = {}
+        for _,item in ipairs(chi_sets) do
+            if g.utils.is_sou(item[0+1]) then
+                table.insert(sou_chi,item)
+
+             elseif g.utils.is_pin(item[0+1]) then
+                table.insert(pin_chi,item)
+             
+            elseif g.utils.is_man(item[0+1]) then
+                table.insert(man_chi,item)
+             
+            end
+        end
+        for _,sou_item in ipairs(sou_chi) do
+            for _,pin_item in  ipairs(pin_chi) do
+                for _,man_item in  ipairs(man_chi) do
+                    -- cast tile indices to 0..8 representation
+                    sou_item =  picker(sou_item,nil,nil,function(x) return g.utils.simplify(x) end)
+                    pin_item =  picker(pin_item,nil,nil,function(x) return g.utils.simplify(x) end)
+                    man_item =  picker(man_item,nil,nil,function(x) return g.utils.simplify(x) end)
+                    if sou_item == pin_item and pin_item == man_item then
+                        return True
+                    end
+                end
+
+            end
+        end
+        return False
+    ]]
+)
+g.SanshokuDoukou =
+    yakuinherit(
+    [[self.tenhou_id = 26
+
+    self.name = 'Sanshoku Doukou'
+    self.english = 'Three Colored Triplets'
+    self.japanese = '三色同刻'
+
+    self.han_open = 2
+    self.han_closed = 2
+
+    self.is_yakuman = False]],
+    [[
+        local pon_sets = picker(hand,function(i) return g.utils.is_pon(i) end)
+        if len(pon_sets) < 3 then
+            return False
+        end
+        local sou_pon = {}
+        local pin_pon = {}
+        local man_pon = {}
+        for _,item in ipairs(pon_sets) do
+            if g.utils.is_sou(item[0+1]) then
+                table.insert(sou_pon,item)
+
+             elseif g.utils.is_pin(item[0+1]) then
+                table.insert(pin_pon,item)
+             
+            elseif g.utils.is_man(item[0+1]) then
+                table.insert(man_pon,item)
+             
+            end
+        end
+        for _,sou_item in ipairs(sou_pon) do
+            for _,pin_item in  ipairs(pin_pon) do
+                for _,man_item in  ipairs(man_pon) do
+                    -- cast tile indices to 0..8 representation
+                    sou_item =  picker(sou_item,nil,nil,function(x) return g.utils.simplify(x) end)
+                    pin_item =  picker(pin_item,nil,nil,function(x) return g.utils.simplify(x) end)
+                    man_item =  picker(man_item,nil,nil,function(x) return g.utils.simplify(x) end)
+                    if sou_item == pin_item and pin_item == man_item then
+                        return True
+                    end
+                end
+
+            end
+        end
+        return False
+
+    ]]
+)
+
+g.Shosangen =
+    yakuinherit(
+    [[self.tenhou_id = 30
+
+    self.name = 'Shou Sangen'
+    self.english = 'Small Three Dragons'
+    self.japanese = '小三元'
+
+    self.han_open = 2
+    self.han_closed = 2
+
+    self.is_yakuman = False]],
+    [[
+        local dragons = {g.CHUN, g.HAKU, g.HATSU}
+    local count_of_conditions = 0
+    for _,item in ipairs(hand) do
+        -- dragon pon or pair
+        if (g.utils.is_pair(item) or g.utils.is_pon(item)) and isin(dragons,item[0+1]) then
+            count_of_conditions = count_of_conditions+1
+        end
+    end
+    return count_of_conditions == 3]]
+)
+
+g.YakuhaiSouth =
+    yakuinherit(
+    [[self.tenhou_id = 10
+
+    self.name = 'Yakuhai (south)'
+    self.english = 'South Round/Seat'
+    self.japanese = '役牌(南)'
+
+    self.han_open = 1
+    self.han_closed = 1
+
+    self.is_yakuman = False]],
+    [[
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == player_wind end)) == 1 and player_wind == g.SOUTH then
+    return True
+    end
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == round_wind end)) == 1 and round_wind == g.SOUTH then
+        return True
+    end
+    return False
+    ]],
+    [[(self, hand, player_wind, round_wind, *args)]]
+)
+
+g.Tanyao=yakuinherit(
+    [[
+        self.tenhou_id = 8
+
+        self.name = 'Tanyao'
+        self.english = 'All Simples'
+        self.japanese = '断么九'
+
+        self.han_open = 1
+        self.han_closed = 1
+
+        self.is_yakuman = False
+    ]],
+    [[
+        local indices = flatten(hand)
+        local result={}
+        result=cat(result,g.TERMINAL_INDICES)
+        result=cat(result,g.HONOR_INDICES)
+        
+        return not any(picker(indices,nil,nil,function(x) return isin(result,x) end))
+    ]]
+)
+g.Toitoi=yakuinherit(
+    [[self.tenhou_id = 28
+    self.name = 'Toitoi'
+    self.english = 'All Triplets'
+    self.japanese = '対々和'
+
+    self.han_open = 2
+    self.han_closed = 2
+
+    self.is_yakuman = False]],
+    [[
+        local count_of_pon = len(picker(hand,g.utils.is_pon))
+        return count_of_pon==4
+    ]]
+)
+g.Tsumo=yakuinherit(
+    [[self.tenhou_id = 0
+    self.name = 'Menzen Tsumo'
+    self.english = 'Self Draw'
+    self.japanese = '門前清自摸和'
+
+    self.han_open = None
+    self.han_closed = 1
+
+    self.is_yakuman = False
+]],[[return true]]
+)
+
+g.YakuhaiWest=yakuinherit(
+[[self.tenhou_id = 10
+
+self.name = 'Yakuhai (west)'
+self.english = 'West Round/Seat'
+self.japanese = '役牌(西)'
+
+self.han_open = 1
+self.han_closed = 1
+
+self.is_yakuman = False
+]],[[
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == player_wind end)) == 1 and player_wind == g.WEST then
+    return True
+    end
+    if len(picker(hand,function(x) return g.utils.is_pon(x) and x[0+1] == round_wind end)) == 1 and round_wind == g.WEST then
+        return True
+    end
+    return False
+    ]],
+    [[(self, hand, player_wind, round_wind, *args)]]
+)
+g.YakuhaiOfPlace=yakuinherit(
+    [[ self.tenhou_id = 10
+
+    self.name = 'Yakuhai (wind of place)'
+    self.english = 'Value Tiles (Seat)'
+    self.japanese = '自風'
+
+    self.han_open = 1
+    self.han_closed = 1
+
+    self.is_yakuman = False
+]],
+[[return true]]
+)
+
+g.YakuhaiOfRound=yakuinherit(
+    [[ self.tenhou_id = 11
+
+    self.name = 'Yakuhai (wind of round)'
+    self.english = 'Value Tiles (Round)'
+    self.japanese = '場風'
+
+    self.han_open = 1
+    self.han_closed = 1
+
+    self.is_yakuman = False]],
+    [[return true]]
+)
+g.Version=1
+g.Hand=function()
+    return {
+        close={},
+        open={},
+        discard={},
+        calculateShanten=function()
+
+        end
+    }
+end
+g.Member=function(idx,name,initial_score)
+    return {
+        hand=g.Hand(),
+        index=idx,
+        name=name,
+        score=initial_score,
+        wind=g.EAST,        --暫定
+    }
+end
+g.Board=function()
+    return {
+        members={},
+        rules={},
+        yama={},
+        wanpai={
+            dora={},
+            rinshan={}
+        },
+
+        round=g.EAST,
+        kyoku=1,
+    }
+end
+
+MAHJONG_LIBRARY_V1=g
+
+return g
