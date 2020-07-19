@@ -334,11 +334,17 @@ function MAHJONG_INIT()
             local hand = g.mg.board.members[g.mg.me].hand
             local hc=m.HandCalculator
             local config=m.HandConfig()
-            local tiles = m.TilesConverter.string_to_136_array('22444', '333567', '444')
+            local tiles = m.TilesConverter.string_to_136_array('334450', '406', '45688',nil,true)
             hand.close=tiles
             local result=hc.estimate_hand_value(hand.close,hand.close[1],nil,nil,config)
-        
-            print(result:str__())
+            local pp=g.frame:CreateOrGetControl("richtext","yaku",20,20,300,200)
+            AUTO_CAST(pp)
+            local s="{ol}"
+            for _,v in ipairs(result.yaku) do
+                s=s..string.format("%s %d翻{nl}" ,v.japanese,v.han_closed)
+            end
+            s=s..string.format("{#FF9999}{s20}%d翻 %d符 %d点 +%d" ,result.han,result.fu,result.cost.main,result.cost.additional)
+            pp:SetText(s)
             g.render()
         end,
         catch = function(error)

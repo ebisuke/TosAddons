@@ -1011,7 +1011,7 @@ g.Agari = {
             return true
         end
         if (j & 2)~=0 then
-            print("fail2")
+          
             return false
         end
         local n00 = tiles[0 + 1] + tiles[3 + 1] + tiles[6 + 1]
@@ -1198,8 +1198,8 @@ local function len(x)
 end
 
 --meld
-function g.Meld()
-    return {
+ g.Meld=function( meld_type, tiles, opened, called_tile, who, from_who)
+    local r= {
         CHI = 'chi',
         PON = 'pon',
         KAN = 'kan',
@@ -1211,13 +1211,14 @@ function g.Meld()
         from_who = nil,
         called_tile = nil,
         opened = true,
-        init = function(self, meld_type, tiles, opened, called_tile, who, from_who)
+        __init__ = function(self, meld_type, tiles, opened, called_tile, who, from_who)
             self.type = meld_type
             self.tiles = tiles or {}
             self.opened = opened
             self.called_tile = called_tile
             self.who = who
             self.from_who = from_who
+            return self
         end,
         __str__ = function(self)
             return string.format('Type: {%s}, Tiles: {%s} {%s}', self.type, g.TilesConverter.to_one_line_string(self.tiles), self.tiles)
@@ -1232,6 +1233,8 @@ function g.Meld()
             end
         end
     }
+    
+    return r:__init__(meld_type, tiles, opened, called_tile, who, from_who)
 end
 
 --shanten
@@ -1610,7 +1613,9 @@ g.Tile = {
 g.TilesConverter = {
     to_one_line_string = function(tiles, print_aka_dora)
         tiles = sorted(tiles)
-
+        if print_aka_dora==nil then
+            print_aka_dora= true
+        end
         local man =
             picker(
             tiles,
@@ -1650,20 +1655,20 @@ g.TilesConverter = {
             local word = ''
             for _, v in ipairs(suits) do
                 if v == red_five and print_aka_dora then
-                    word = 0
+                    word = word.."0"
                 else
-                    word = tostring(math.floor(i / 4) + 1)
+                    word = word..tostring(math.floor(v / 4) + 1)
                 end
             end
 
-            return suits and '' .. word .. suffix or ''
+            return pand(suits , '' .. word .. suffix) or ''
         end
         sou = words(sou, g.FIVE_RED_SOU - 72, 's')
         pin = words(pin, g.FIVE_RED_PIN - 36, 'p')
         man = words(man, g.FIVE_RED_MAN, 'm')
         honors = words(honors, -1 - 108, 'z')
 
-        return man + pin + sou + honors
+        return man .. pin .. sou .. honors
     end,
     to_34_array = function(tiles)
         local results = arraygenerator(34, 0)
@@ -1839,7 +1844,7 @@ g.utils = {
         return false
     end,
     plus_dora = function(tile, dora_indicators)
-        local tile_index = tile // 4
+        local tile_index = math.floor(tile / 4)
         local dora_count = 0
 
         for _, dora in ipairs(dora_indicators) do
@@ -2782,9 +2787,10 @@ g.HandCalculator = {
                         if not is_open_hand then
                             if self.config.yaku.ryanpeiko:is_condition_met(hand) then
                                 table.insert(hand_yaku, self.config.yaku.ryanpeiko)
+                            
+                            elseif self.config.yaku.iipeiko:is_condition_met(hand) then
+                                table.insert(hand_yaku, self.config.yaku.iipeiko)
                             end
-                        elseif self.config.yaku.iipeiko:is_condition_met(hand) then
-                            table.insert(hand_yaku, self.config.yaku.iipeiko)
                         end
                         if self.config.yaku.sanshoku:is_condition_met(hand) then
                             table.insert(hand_yaku, self.config.yaku.sanshoku)
@@ -3085,8 +3091,8 @@ g.OptionalRules = function()
         --[[
     All the supported optional rules
     ]]
-        has_open_tanyao = false,
-        has_aka_dora = false,
+        has_open_tanyao = true,
+        has_aka_dora = true,
         has_double_yakuman = true,
         kazoe_limit = g.HandConstants.KAZOE_LIMITED,
         kiriage = false,
@@ -3094,9 +3100,9 @@ g.OptionalRules = function()
         fu_for_open_pinfu = true,
         -- if true, pinfu tsumo will be disabled
         fu_for_pinfu_tsumo = false,
-        renhou_as_yakuman = false,
-        has_daisharin = false,
-        has_daisharin_other_suits = false,
+        renhou_as_yakuman = true,
+        has_daisharin = true,
+        has_daisharin_other_suits = true,
         __init__ = function(
             self,
             has_open_tanyao,
@@ -3496,6 +3502,7 @@ local function yakuinherit(attribstr, condstr, condparams, strstr)
             all=all,
             table=table,
             math=math,
+            arrayequal=arrayequal,
         }
         
 
@@ -4274,9 +4281,9 @@ g.Honroto =
     [[
         local indices = flatten(hand)
         local tbl=deepcopy(g.HONOR_INDICES)
-        cat(tbl,g.TERMINAL_INDICES)
+        tbl=cat(tbl,g.TERMINAL_INDICES)
         local result = tbl
-        return all(picker(indices,nil,nil,function(x) return isin(result,indices)end))
+        return all(picker(result,nil,nil,function(x) return isin(indices,x)end))
     ]]
 )
 g.Houtei =
@@ -4318,10 +4325,9 @@ g.Iipeiko =
         for _,x in ipairs(chi_sets) do
             local count = 0
             for _,y in ipairs(chi_sets) do
-                if x == y then
+                if arrayequal(x, y) then
                     count =count+ 1
                 end
-
             end
             if count > count_of_identical_chi then
                 count_of_identical_chi = count
@@ -4565,7 +4571,7 @@ g.Ryanpeikou =
         for _,x in ipairs(chi_sets) do
             local count = 0
             for _,y in ipairs(chi_sets) do
-                if x == y then
+                if arrayequal(x ,y) then
                     count = count+1
                 end
             end
@@ -4888,22 +4894,155 @@ g.Version=1
 g.Hand=function()
     return {
         close={},
-        open={},
-        discard={},
-        calculateShanten=function()
+        tsumo=nil,
+        open_melds={},
+        discards={},    --鳴きを考慮した河
+        discards_raw={},--鳴きを無視した河（捨て牌の一覧）
+        last_discard_index=nil,
+        getAllTiles=function(self)
+            local tiles=deepcopy(self.close)
+            tiles=cat(tiles,self:getOpenMeldsToSets())
+            return tiles
+        end,
+        getAllTilesAs34=function(self)
+            return g.TilesConverter.to_34_array(self:getAllTiles())
+        end,
+        getOpenMeldsToSets=function(self)
+            local open_sets={}
+            for _,v in ipairs(self.open_melds) do
+                open_sets=cat(open_sets,v.tiles)
+            end
+            return open_sets
+        end,
+        __str__ = function(self)
+            return 
+            "close:"..g.TilesConverter.to_one_line_string(self.close).."\n"..
+            "open:"..g.TilesConverter.to_one_line_string(flatten(picker(self.open_melds,nil,nil,function(x)return x.tiles end))).."\n"
 
         end
     }
 end
-g.Member=function(idx,name,initial_score)
+
+g.Member=function(board,idx,name,initial_score,config)
     return {
+        board=board,
         hand=g.Hand(),
         index=idx,
         name=name,
         score=initial_score,
         wind=g.EAST,        --暫定
+        config=deepcopy(config),
+        riichi_total_index=nil,
+
+        calculateShanten=function(self)
+            local sn=g.Shanten()
+      
+                return sn:calculate_shanten(g.TilesConverter.to_34_array(self.hand.close),self.hand.open_melds)
+            
+        end,
+        
+        isFuriten=function(self,tile)
+            --振り聴条件
+            --自分の河に当たり牌のいずれかがある場合
+            --他家の捨て配を見逃して自ターンになるまで
+            --リーチ後の見逃し
+            
+            --自分の河チェック
+            for _,v in ipairs(self.hand.discards_raw) do
+                if self:checkAgariFormation(v) then
+                    --自分の河に当たり牌のいずれかがある場合
+                    return true
+                end
+            end
+
+            --他家の捨て牌を見逃して自ターンになるまで
+            local idx=self.wind
+            if idx==g.NORTH then
+                idx=g.EAST
+            else
+                idx=idx+1
+            end
+            while idx~=self.board.current_active do
+                if self.discards_raw[#self.discards_raw]~= nil then
+                    if self:checkAgariFormation(self.discards_raw[#self.discards_raw]) then
+                        return true
+                    end
+                end
+
+                if idx==g.NORTH then
+                    idx=g.EAST
+                else
+                    idx=idx+1
+                end
+            end
+
+            
+            --リーチ後の見逃し
+            if config.is_riichi or config.is_daburu_riichi then
+                for _,player in ipairs(self.board.members) do
+                    for i=player.riichi_index,#player.hand.discards_raw do
+                        if self:checkAgariFormation(self.discards_raw[i]) then
+                            return true
+                        end
+                    end
+                end
+            end 
+            return false
+        end,
+        --形式上がりの判定
+        checkAgariFormation=function(self,win_tile)
+       
+            local agari= g.Agari.is_agari(
+                cat(self.hand:getAllTilesAs34(),{math.floor(win_tile / 4)}),self.hand.open_melds)
+            return agari
+          
+        end,
+        --上がり判定
+        checkAgari=function(self,win_tile)
+            
+            local agari=g.HandCalculator.estimate_hand_value(
+                self.hand:getAllTiles(),win_tile,self.hand.open_melds,self.board:getDoraIndicators(),config)
+            return agari
+          
+        end,
+        --牌を切る
+        doDiscard=function(self,index,riichi)
+            --TODO 食い替え無効入れる
+            self.hand.last_discard_index=index
+            local tile=self.hand.close[index]
+            table.remove(self.hand.close,index)
+            --河に追加
+            table.insert(self.hand.discards,tile)
+            table.insert(self.hand.discards_raw,tile)
+            table.insert(self.board.total_discards,tile)
+            --切ったらソート
+            table.sort(self.hand.close)
+            --ツモ牌を消す
+            self.hand.tsumo=nil
+            --自ターン移行を試みる
+            self.board:attemptToNext()
+        end,
+        
     }
 end
+local function shuffle(t)
+    local tbl = {}
+    for i = 1, #t do
+        tbl[i] = t[i]
+    end
+    for i = #tbl, 2, -1 do
+        --local j = math.random(i)
+        local j
+        if IMCRandom then
+             j=IMCRandom(1, i)
+        else
+            j = math.random(i)
+        end
+        tbl[i], tbl[j] = tbl[j], tbl[i]
+    end
+    return tbl
+end
+
 g.Board=function()
     return {
         members={},
@@ -4913,12 +5052,103 @@ g.Board=function()
             dora={},
             rinshan={}
         },
-
+        total_discards={},
+        current_active=g.EAST,
         round=g.EAST,
         kyoku=1,
+        getDoraIndicators=function(self)
+            local opened_dora_count=1+(4-#self.wanpai.rinshan)
+            local dora_indicator={}
+            for i=1,opened_dora_count do
+                dora_indicator[i]=self.wanpai.doras[1+(i-1)*2]
+            end
+            return dora_indicator
+        end,
+        isDora=function(self,tile)
+            local dora_indicators=self:getDoraIndicator()
+            return g.utils.plus_dora(tile,dora_indicators)>=0
+        end,
+        startGame=function(self)
+      
+            
+            for player = 1, 4 do
+                self.members[player] =g.Member(self,player, 'ほげほげ', 25000)
+            end
+            self:initializeRound()
+        end,
+        initializeRound = function(self)
+           self:doShipai()
+        end,
+        doShipai = function(self)
+            --山生成
+            local yama = {}
+            for i = 0, 135 do
+                --数字
+                table.insert(yama, i)
+            end
+            --シャッフル
+            yama = shuffle(yama)
+            local dora = {}
+            local rinshan = {}
+            --王牌確保
+
+            --どら
+            for i = 1, 5 * 2 do
+                local hai = table.remove(yama)
+                table.insert(dora, hai)
+            end
+            --りんしゃん
+            for i = 1, 2 * 2 do
+                local hai = table.remove(yama)
+                table.insert(rinshan, hai)
+            end
+
+            --くばる
+            --雑な配り方だけど許して
+            for player = 1, #self.members do
+                local hand = g.Hand()
+                for i = 1, 13 do
+                    local hai = table.remove(yama)
+                    table.insert(hand.close, hai)
+                end
+                --ソート
+                table.sort(hand.close)
+                self.members[player].hand = hand
+               
+            end
+            self.total_discards={}
+            self.wanpai.dora = dora
+            self.wanpai.rinshan = rinshan
+            self.yama = yama
+
+            self:tsumoFromYama()
+        end,
+        attemptToNext=function(self)
+            --TODO 差し込みを入れる
+            self:changeToNextPlayer()
+        end,
+        changeToNextPlayer=function(self)
+            self.current_active=self.current_active+1
+            if self.current_active>g.NORTH then
+                self.current_active=g.EAST
+            end
+            self:tsumoFromYama()
+        end,
+
+        tsumoFromYama=function(self)
+            local player=self.members[self.current_active-g.EAST+1]
+
+            --ツモる
+            local tile=table.remove(self.yama)
+            player.hand.tsumo=tile
+            table.insert(player.hand.close,tile)
+
+            
+            --
+        end,
     }
 end
-
+g.picker=picker
 MAHJONG_LIBRARY_V1=g
 
 return g

@@ -232,7 +232,7 @@ function AOE_INIT()
             local jobIcon = TryGetProp(jobCls, 'Icon');
             if jobIcon ~= nil then
                 touch:SetImage(jobIcon)
-                touch:SetTextTooltip("To show AOE menu,Press LSHIFT + RBtn ");
+                touch:SetTextTooltip("To show AOE menu,Press LSHIFT + LALT + RBtn ");
             end
             
             
