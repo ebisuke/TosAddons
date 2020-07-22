@@ -11,7 +11,8 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 local json = require "json_imc"
-
+local libsearch
+libsearch=libsearch or LIBITEMSEARCHER_V1_0 --dummy
 
 
 g.version = 1
@@ -218,7 +219,7 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("YAI_ON_TIMER");
             timer:Start(1.2);
-            
+           
             YAI_INIT()
             g.frame:ShowWindow(1)
         end,
@@ -232,6 +233,7 @@ function YAI_SHOW()
 end
 function YAI_GAME_START()
     LS = LIBSTORAGEHELPERV1_3
+    libsearch=LIBITEMSEARCHER_V1_0
 end
 function YAI_3SEC()
     if (true == session.loginInfo.IsPremiumState(ITEM_TOKEN)) then
@@ -261,6 +263,7 @@ function YAI_INIT(frame)
             
             end
             YAI_LOAD_SETTINGS()
+          
         end,
         catch = function(error)
             ERROUT(error)
@@ -290,6 +293,7 @@ end
 function YAI_ACCOUNTWAREHOUSE_CLOSE(frame)
     local overlap = ui.GetFrame("yaireplacement")
     overlap:ShowWindow(0)
+    --g.suggester:closeSearch()
     ACCOUNTWAREHOUSE_CLOSE_OLD(frame)
     
     YAI_DEACTIVATE_MOUSEBUTTON()
@@ -836,12 +840,14 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
                 frame:GetChildRecursively("accountwarehouse_tab"):ShowWindow(1)
                 frame:GetChildRecursively("slotgbox"):ShowWindow(1)
                 frame:GetChildRecursively("slotset"):ShowWindow(1)
+                frame:GetChildRecursively("receiveitem"):ShowWindow(1)
             else
                 overlap:SetOffset(10, 200)
                 --タブ非表示
                 frame:GetChildRecursively("accountwarehouse_tab"):ShowWindow(0)
                 frame:GetChildRecursively("slotgbox"):ShowWindow(0)
                 frame:GetChildRecursively("slotset"):ShowWindow(0)
+                frame:GetChildRecursively("receiveitem"):ShowWindow(0)
             end
             
             overlap:EnableHitTest(1)
@@ -850,23 +856,56 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             g.h=frame:GetHeight()-1080+570
             local w = g.w
             local h = g.h
-            overlap:Resize(w, h)
+            overlap:Resize(w, h+300)
             frame:SetLayerLevel(94)
+            overlap:EnableHittestFrame(false)
+
             overlap:SetLayerLevel(95)
             local gbox = overlap:GetChild("inventoryGbox")
             AUTO_CAST(gbox)
             local gbox2 = overlap:GetChildRecursively("inventoryitemGbox")
             AUTO_CAST(gbox2)
-            gbox:EnableScrollBar(0)
+           
+            gbox:Resize(w, h-30)
+            gbox2:Resize(w - 32, h - 2-35)
+       
             
-            gbox:Resize(w, h)
-            gbox2:Resize(w - 32, h - 2)
+            --search gbox
+            --[[
+                <groupbox name="searchSkin" parent="searchGbox" rect="0 0 350 30" margin="5 0 0 5" layout_gravity="right bottom" draw="true" hittestbox="true" resizebyparent="false" scrollbar="false" skin="test_edit_skin"/>
+                <edit name="ItemSearch" parent="searchSkin" rect="0 0 270 26" margin="2 0 0 0" layout_gravity="left center" OffsetForDraw="0 -1" clicksound="button_click_big" drawbackground="false" fontname="white_18_ol" maxlen="40" oversound="button_over" skin="None" textalign="left top" typingscp="SEARCH_ITEM_INVENTORY_KEY" typingsound="chat_typing"/>
+                <button name="inventory_serch" parent="searchSkin" rect="0 0 60 38" margin="0 0 0 0" layout_gravity="right center" LBtnUpArgNum="" LBtnUpScp="SEARCH_ITEM_INVENTORY" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" image="inven_s" oversound="button_over" stretch="true" texttooltip="{@st59}입력한 이름으로 검색합니다{/}"/>
+                
+                
+            ]]
+            local searchgbox= overlap:CreateOrGetControl("groupbox", "searchGbox", 10, h-35,w, 35)
             
+            local searchSkin= searchgbox:CreateOrGetControl("groupbox", "searchSkin", 0, 5,w, 30)
+            AUTO_CAST(searchgbox)
+            AUTO_CAST(searchSkin)
+            searchSkin:SetSkinName("test_edit_skin")
+            local ItemSearch= searchSkin:CreateOrGetControl("edit", "ItemSearch", 0, 0,w-60, 30)
+            AUTO_CAST(ItemSearch)
+            ItemSearch:SetFontName("white_18_ol")
+            ItemSearch:SetTypingSound("chat_typing")
+            ItemSearch:SetOverSound("button_over")
+            ItemSearch:SetSkinName("None")
+            ItemSearch:SetEventScript(ui.ENTERKEY,"YAI_ON_ENTER_SEARCH")
+            local inventory_serch= searchSkin:CreateOrGetControl("button", "inventory_serch", w-58, -2,60, 30)
+            AUTO_CAST(inventory_serch)
+            inventory_serch:SetOverSound("button_over")
+            inventory_serch:SetClickSound("button_click_big")
+            inventory_serch:SetImage("inven_s")
+            inventory_serch:EnableImageStretch(true)
+            inventory_serch:SetEventScript(ui.LBUTTONUP,"YAI_ON_SEARCH")
             --YAI config
             local btn = frame:CreateOrGetControl("button", "yaiconfig", 400, 80 + 40, 100, 30)
             AUTO_CAST(btn)
             btn:SetText("{ol}" .. L_("YAI Config"))
             btn:SetEventScript(ui.LBUTTONUP, "YAI_OPEN_CONFIG")
+            g.searcher=libsearch.Searcher()
+            g.suggester=libsearch.SuggestLister():init(g.searcher,ItemSearch,"yaisearch")
+
             YAI_UPDATE()
         
         end,
@@ -874,6 +913,21 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
             ERROUT(error)
         end
     }
+end
+function YAI_ON_ENTER_SEARCH()
+    if g.suggester:isShown() then
+        g.suggester:determine()
+    else
+        --一定時間遅延させる
+        DebounceScript("YAI_ON_SEARCH",1)
+    end
+end
+function YAI_ON_SEARCH()
+    local overlap = ui.GetFrame("yaireplacement")
+    local edit=overlap:GetChildRecursively("ItemSearch")
+    local text=edit
+
+    YAI_UPDATE()
 end
 function YAI_OPEN_CONFIG()
     ui.ToggleFrame("yaiconfig")
@@ -993,15 +1047,34 @@ function YAI_UPDATE()
             end
             
             
-            
+            local filter=g.suggester:getFilter()
+            g.searcher:clearItems()
+
             for i = 0, invItemCount - 1 do
                 local invItem = itemList:GetItemByGuid(sortedGuidList:Get(i));
                 if invItem ~= nil then
-                    invItem.index=index_count
-                    invItemList[index_count] = invItem
-                    index_count = index_count + 1
+                    local pass=true
+                    local obj = GetIES(invItem:GetObject())
+                    local class = GetClassByType("Item", obj.ClassID)
+                    local realname = dictionary.ReplaceDicIDInCompStr(class.Name)
+                    if #filter>0 then
+                      
+                        for _,v in ipairs(filter) do
+                            if not libsearch.utf8lib.find(realname,v) then
+                                pass=false
+                            end
+                        end
+                    end
+                    g.searcher:addItem(realname,invItem)
+                    if pass then
+                        invItem.index=index_count
+                        invItemList[index_count] = invItem
+                        index_count = index_count + 1
+                    end
                 end
             end
+
+
             local sortType = 3
 
             --@TODO ソート処理をここに
