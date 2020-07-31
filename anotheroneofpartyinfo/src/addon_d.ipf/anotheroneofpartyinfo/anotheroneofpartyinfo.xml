@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="anotheroneofpartyinfo" x="0" y="0" width="1400" height="80" create="open">
+	<frame layout_gravity="left top" scale_align="left top"/>
+    <option closebutton="false" hideable="false" useimageitem="true"/>
+    <layer layerlevel="90"/>
+    <draw drawtitlebar="false" drawframe="true"/>
+    <skin frameskin="None"/> 
+    <input hittest="true" hittestframe="false" movable="true"/>
+	<controls>
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

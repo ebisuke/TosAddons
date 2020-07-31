@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="uimodeinventory" x="0" y="0" width="500" height="300">
+	<frame fasthide="false" layout_gravity="center center"/>
+	<input moveable="false" hittestframe="false"/>
+	<layer layerlevel="10"/>
+	<draw drawframe="true" drawtitlebarframe="false" drawtitlebar="true"/>
+	<option closebutton="true" hideable="true"/>
+	<controls>
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

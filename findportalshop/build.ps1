@@ -1,6 +1,6 @@
 ﻿$addonname="findportalshop"
 $emoji="📖"
-$version="v0.0.1"
+$version="v0.0.4"
 $prefix="__"
 if (!(Test-Path bin)) {
     mkdir bin 

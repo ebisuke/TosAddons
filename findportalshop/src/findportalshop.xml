@@ -1,13 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uiframe name="findportalshop" x="0" y="0" width="10" height="10" create="open">
-		<frame fasthide="true" layout_gravity="left top"/>
-	<input moveable="false" hittestframe="false"/>
-	<layer layerlevel="10"/>
-	<draw drawframe="false" drawtitlebarframe="false" drawtitlebar="false"/>
-	<option closebutton="false" hideable="false"/>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="findportalshop" x="0" y="0" width="1000" height="800" create="open">
+	<draw drawnotitlebar="false" drawtitlebar="false"/>
+	<skin frameskin="test_frame_low"/>
+	<frame title="" fullheight="false" fasthide="true" layout_gravity="center center" margin="0 0 0 0"/>
+	<input moveable="true" hittestframe="true" moveintitlebar="false"/>
+	<layer layerlevel="100"/>
+	<option closebutton="false"/>
+	<sound opensound="window_open" closesound="window_close"/>
 	<controls>
+		<groupbox name="headerBox" rect="0 0 400 55" margin="0 16 0 0" layout_gravity="center top" skin="test_socket_topskin" hittest="false"/>
+		<button name="xBtn" rect="0 0 40 40" margin="0 20 25 0" layout_gravity="right top" image="testclose_button" texttooltip="CLOSE" LBtnUpScp="FINDPORTALSHOP_CLOSE"/>
+		<richtext name="headerText" rect="0 0 500 50" parent="headerBox" margin="0 5 0 0" layout_gravity="center center" caption="{@st43}FindPortalShop{/}" hittest="false"/>
+		<advlistbox name="adv" parent="gbox" rect="0 0 1000 400" margin="20 40 0 0" layout_gravity="left top" heightperrow="20" maxrowcol="10000 7" scroll="true" selectgroup="achieve" widthpercol="100"/>
+        <advlistboxitem name="Name" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}チーム名" col="0" datatype="richtext" fontname="white_16_ol" row="0"/>
+        <advlistboxitem name="Kanban" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}看板" col="1" datatype="richtext" fontname="white_16_ol" row="0"/>
+        <advlistboxitem name="ToOne" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}行先1" col="2" datatype="richtext" fontname="white_16_ol" row="0"/>
+        <advlistboxitem name="ToTwo" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}行先2" col="3" datatype="richtext" fontname="white_16_ol" row="0"/>
+        <advlistboxitem name="ToThree" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}行先3" col="4" datatype="richtext" fontname="white_16_ol" row="0"/>
+		<advlistboxitem name="Location" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}位置" col="5" datatype="richtext" fontname="white_16_ol" row="0"/>
+		<advlistboxitem name="Handle" parent="adv" rect="0 0 10 10" margin="0 0 0 0" layout_gravity="left center" caption="{s18}{ol}Handle" col="6" datatype="richtext" fontname="white_16_ol" row="0"/>
+		
+        <advlistboxsetting parent="adv" layout_gravity="left top" col="0" colwidth="100" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+        <advlistboxsetting parent="adv" layout_gravity="left top" col="1" colwidth="150" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+		<advlistboxsetting parent="adv" layout_gravity="left top" col="2" colwidth="250" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+        <advlistboxsetting parent="adv" layout_gravity="left top" col="3" colwidth="250" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+        <advlistboxsetting parent="adv" layout_gravity="left top" col="4" colwidth="250" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+        <advlistboxsetting parent="adv" layout_gravity="left top" col="5" colwidth="250" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+		<advlistboxsetting parent="adv" layout_gravity="left top" col="6" colwidth="0" row="0" rowbgcolor="#4a443f" rowheight="20" startrow="1"/>
+		<!--<slotset name="itemSlotset" rect="0 0 480 500" margin="0 145 0 0" layout_gravity="center top" row="1" col="10" size="65 65" skin="invenslot2" spc="2 2" enabledrop="true" enablepop="true"/>-->
 		<timer name="addontimer" rect="0 0 10 10"/>
+		<timer name="addontimer2" rect="0 0 10 10"/>
 	</controls>
-</uiframe>
-
 </uiframe>

@@ -1,3 +1,3 @@
 $addonname="smallui"
 
-$version="v0.0.6"
+$version="v0.1.1"

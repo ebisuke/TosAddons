@@ -1,7 +1,7 @@
 ﻿$addonname="autoitemmanage"
 $emoji="📖"
 $prefix="__"
-$version="v0.3.0"
+$version="v0.3.4"
 
 if (!(Test-Path bin)) {
     mkdir bin 

@@ -3,8 +3,8 @@
     "name": "Developer Console Ex",
     "file": "developerconsole",
     "extension": "ipf",
-    "fileVersion": "v2.0.0",
-    "releaseTag": "developerconsole-v2.0.0",
+    "fileVersion": "v2.0.1",
+    "releaseTag": "developerconsole-v2.0.1",
     "unicode": "📖",
     "description": "DeveloperConsoleの私的改造版です。",
     "tags": [
@@ -16,8 +16,8 @@
     "name": "AutoItemManage",
     "file": "autoitemmanage",
     "extension": "ipf",
-    "fileVersion": "v0.2.0",
-    "releaseTag": "autoitemmanage_v0.2.0",
+    "fileVersion": "v0.3.3",
+    "releaseTag": "autoitemmanage-v0.3.3",
     "unicode": "📖",
     "description": "倉庫から自動でアイテムを補充します。",
     "tags": [
@@ -33,6 +33,7 @@
     "unicode": "📖",
     "description": "数値入力ダイアログを改造します。",
     "tags": [
+      "ui",
       "advancednumberdialog",
       "dialog",
       "number"
@@ -129,8 +130,8 @@
     "name": "Account Warehouse Wardrobe",
     "file": "awwardrobe",
     "extension": "ipf",
-    "fileVersion": "v0.3.4",
-    "releaseTag": "awwardrobe-v0.3.4",
+    "fileVersion": "v0.4.4",
+    "releaseTag": "awwardrobe-v0.4.4",
     "unicode": "📖",
     "description": "チーム倉庫内にある装備を他のキャラクターに渡す支援をします",
     "tags": [
@@ -143,8 +144,8 @@
     "name": "Barrack ItemList Fastload",
     "file": "barrackitemlist",
     "extension": "ipf",
-    "fileVersion": "v3.3.0",
-    "releaseTag": "barrackitemlist-v3.3.0",
+    "fileVersion": "v3.4.1",
+    "releaseTag": "barrackitemlist-v3.4.1",
     "unicode": "📖",
     "description": "Faster loading of BarrackItemList. BarrackItemListのロード処理を高速化しました。",
     "tags": [
@@ -185,6 +186,7 @@
     "unicode": "📖",
     "description": "レジェンド経験値ポーション（ファモカの試薬瓶）の経験値量を常時可視化します。",
     "tags": [
+      "ui",
       "legend",
       "exppotion"
     ]
@@ -248,8 +250,8 @@
     "name": "Remove Warning For Book",
     "file": "removewarningforbook",
     "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "rwfb-v0.0.1",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "rwfb-v0.0.2",
     "unicode": "📖",
     "description": "カードブックを読むときの警告を削除します",
     "tags": [
@@ -265,6 +267,7 @@
     "unicode": "📖",
     "description": "ちょっと変わったステータスバーを追加します",
     "tags": [
+      "ui",
       "statbar"
     ]
   },
@@ -272,10 +275,10 @@
     "name": "Another One of Inventory",
     "file": "anotheroneofinventory",
     "extension": "ipf",
-    "fileVersion": "v0.0.5",
-    "releaseTag": "anotheroneofinventory-v0.0.5",
+    "fileVersion": "v0.0.14",
+    "releaseTag": "anotheroneofinventory-v0.0.14",
     "unicode": "📖",
-    "description": "もう一つのインベントリ画面を提供します。おまけ機能として、キーボード操作限定でクイックスロットを拡張します。",
+    "description": "もう一つのインベントリ画面を提供します。",
     "tags": [
       "inventory",
       "quickslot"
@@ -285,8 +288,8 @@
     "name": "Cube Opener",
     "file": "cubeopener",
     "extension": "ipf",
-    "fileVersion": "v0.0.8",
-    "releaseTag": "cubeopener-v0.0.8",
+    "fileVersion": "v0.0.9",
+    "releaseTag": "cubeopener-v0.0.9",
     "unicode": "📖",
     "description": "キューブを楽に開きます",
     "tags": [
@@ -298,8 +301,8 @@
     "name": "Small UI",
     "file": "smallui",
     "extension": "ipf",
-    "fileVersion": "v0.0.6",
-    "releaseTag": "smallui-v0.0.6",
+    "fileVersion": "v0.1.1",
+    "releaseTag": "smallui-v0.1.1",
     "unicode": "📖",
     "description": "小さいUIを提供します",
     "tags": [
@@ -311,11 +314,12 @@
     "name": "Buff Remain Visualizer",
     "file": "buffremainvisualizer",
     "extension": "ipf",
-    "fileVersion": "v0.0.4",
-    "releaseTag": "buffremainvisualizer-v0.0.4",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "buffremainvisualizer-v0.1.0",
     "unicode": "📖",
     "description": "バフの残り時間を可視化します 今のところプレイヤーのみの適用です  ",
     "tags": [
+      "ui",
       "buff"
     ]
   },
@@ -340,6 +344,7 @@
     "unicode": "📖",
     "description": "小さい経験値バーです",
     "tags": [
+      "ui",
       "gauge",
       "expbar"
     ]
@@ -356,5 +361,104 @@
       "ui",
       "status"
     ]
+  },
+  {
+    "name": "Yet Another Account Inventory",
+    "file": "yaaccountinventory",
+    "extension": "ipf",
+    "fileVersion": "v0.3.0",
+    "releaseTag": "yaaccountinventory-v0.3.0",
+    "unicode": "📖",
+    "description": "チーム倉庫を魔改造します",
+    "tags": [
+      "storage",
+      "inventory"
+    ]
   }
+  ,
+  {
+    "name": "AutoSave Money Reloaded",
+    "file": "autosavemoneyreloaded",
+    "extension": "ipf",
+    "fileVersion": "v2.1.0",
+    "releaseTag": "autosavemoneyreloaded-v2.1.0",
+    "unicode": "📖",
+    "description": "キャラ倉庫・チーム倉庫を開いたときに、指定した金額の出し入れと、アイテム入庫をします。設定は倉庫ウィンドウの上の方にボタンができます。",
+    "tags": [
+      "storage",
+      "warehouse"
+    ]
+  }
+  ,
+  {
+    "name": "SmallSummonedMonster",
+    "file": "smallsummonedmonster",
+    "extension": "ipf",
+    "fileVersion": "v0.0.6",
+    "releaseTag": "smallsummonedmonster-v0.0.6",
+    "unicode": "📖",
+    "description": "(他人の)召喚獣を常時小さくします",
+    "tags": [
+      "summon",
+      "monster",
+      "small"
+    ]
+  }
+  ,
+  {
+    "name": "FindPortalShop",
+    "file": "findportalshop",
+    "extension": "ipf",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "findportalshop-v0.0.3",
+    "unicode": "📖",
+    "description": "近くにあるポータルショップの一覧を表示します。",
+    "tags": [
+      "portal",
+      "shop"
+    ]
+  },
+  {
+    "name": "Buff Notifier",
+    "file": "buffnotifier",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "buffnotifier-v0.0.1",
+    "unicode": "📖",
+    "description": "バフ・デバフ切れ時に効果音を鳴らします",
+    "tags": [
+      "buff"
+    ]
+  }
+  ,
+  {
+    "name": "Overdosed Composition",
+    "file": "overdosedcomposition",
+    "extension": "ipf",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "overdosedcomposition-v0.1.0",
+    "unicode": "📖",
+    "description": "ジェム・カード強化の上限枚数を増やします。",
+    "tags": [
+      "card",
+      "gem",
+      "ui"
+    ]
+  },
+  {
+    "name": "Advanced Money Input",
+    "file": "advancedmoneyinput",
+    "extension": "ipf",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "advancedmoneyinput-v0.0.2",
+    "unicode": "📖",
+    "description": "入出金時に簡単に金額を入力できるようにします。  ",
+    "tags": [
+      "ui",
+      "money",
+      "silver",
+      "storage"
+    ]
+  }
+  
 ]

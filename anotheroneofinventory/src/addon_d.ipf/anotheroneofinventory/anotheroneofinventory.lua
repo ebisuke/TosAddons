@@ -218,7 +218,6 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
                 g.loaded = true
             end
             
-            acutil.setupHook(AOI_UPDATE_INVENTORY_EXP_ORB, "UPDATE_INVENTORY_EXP_ORB")
             acutil.setupHook(AOI_UPDATE_INVENTORY_TOGGLE_ITEM, "TOGGLE_ITEM_SLOT_INVEN_ON_MSG")
             acutil.setupHook(AOI_INVENTORY_UPDATE_ICONS,"INVENTORY_UPDATE_ICONS")
             addon:RegisterMsg('INV_ITEM_ADD', 'AOI_INVENTORY_ON_MSG');
@@ -246,7 +245,7 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
             ANOTHERONEOFINVENTORY_LOAD_SETTINGS()
             
            
-            ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
+            --ui.GetFrame("anotheroneofinventory"):SetSkinName("None")
 
             if(not g.settings.noshow)then
                 ui.GetFrame("anotheroneofinventory"):ShowWindow(1)
@@ -257,18 +256,26 @@ function ANOTHERONEOFINVENTORY_ON_INIT(addon, frame)
         end
     }
 end
-function ANOTHERONEOFINVENTORY_SHOW(frame)
-    frame = ui.GetFrame(g.framename)
-    frame:ShowWindow(1)
-    g.settings.noshow=false
-    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+function ANOTHERONEOFINVENTORY_OPEN(frame)
+    -- 開いてほしくないときは開かない
+    if(g.settings.noshow)then
+        frame = ui.GetFrame(g.framename)
+        frame:ShowWindow(0)
+    end
+
 end
-function ANOTHERONEOFINVENTORY_CLOSE(frame)
-    frame = ui.GetFrame(g.framename)
-    frame:ShowWindow(0)
-    g.settings.noshow=true
-    ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
-end
+-- function ANOTHERONEOFINVENTORY_DO_SHOW(frame)
+--     frame = ui.GetFrame(g.framename)
+--     frame:ShowWindow(1)
+--     g.settings.noshow=false
+--     ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+-- end
+-- function ANOTHERONEOFINVENTORY_DO_CLOSE(frame)
+--     frame = ui.GetFrame(g.framename)
+--     frame:ShowWindow(0)
+--     g.settings.noshow=true
+--     ANOTHERONEOFINVENTORY_SAVE_SETTINGS()
+-- end
 function ANOTHERONEOFINVENTORY_TOGGLE_FRAME(frame)
     g.settings.noshow=not (not (ui.IsFrameVisible(g.framename)==1))
     ui.ToggleFrame(g.framename)
@@ -303,59 +310,7 @@ function AOI_UPDATE_INVENTORY_TOGGLE_ITEM(frame)
     end
     return ret
 end
-function AOI_UPDATE_INVENTORY_EXP_ORB(frame, ctrl, num, str, time)
-    local ret = UPDATE_INVENTORY_EXP_ORB_OLD(frame, ctrl, num, str, time)
-    frame = ui.GetFrame(g.framename)
-    if (not AOI_ISINITIALIZED()) then
-        return
-    end
-    if ui.GetFrame("anotheroneofinventory"):IsVisible() == 0 or not g.initialized then
-        return ret;
-    end
-    local invenframe = ui.GetFrame("inventory")
 
-    
-    local itemGuid = invenframe:GetUserValue("EXP_ORB_EFFECT");
-    if itemGuid == "None" then
-        return ret;
-    end
-    
-    local slt = GET_CHILD_RECURSIVELY(frame, "aoi_slt")
-    AUTO_CAST(slt)
-    local gboxslot = GET_CHILD_RECURSIVELY(frame, "aoi_gboxslt")
-    AUTO_CAST(gboxslot)
-    if slt:GetHeight() == 0 then
-        return ret;
-    end
-    local iesid = nil
-    local slot
-    for i = 0, slt:GetSlotCount() - 1 do
-        slot = slt:GetSlotByIndex(i)
-        if slot ~= nil and slot:IsVisible() == 1 then
-            iesid = slt:GetIcon():GetInfo():GetIESID()
-            break
-        end
-    end
-    if (not iesid) then
-        return ret
-    end
-    
-    local offset = invenframe:GetUserConfig("EFFECT_DRAW_OFFSET");
-    if slot:GetDrawY() <= gboxslot:GetDrawY() or gboxslot:GetDrawY() + gboxslot:GetHeight() - offset <= slot:GetDrawY() then
-        return ret;
-    end
-    if slot:IsVisibleRecursively() == true then
-        slot:PlayUIEffect("I_sys_item_slot", 2.2, "Inventory_Exp_ORB", true);
-    end
-    return ret
-end
-function AOI_INVENTORY_UPDATE_ICONS(frame)
-    INVENTORY_UPDATE_ICONS_OLD(frame)
-    if (not AOI_ISINITIALIZED()) then
-        return
-    end
-    AOI_INV_REFRESH()
-end
 function AOI_INVENTORY_UPDATE_ICONS(frame)
     INVENTORY_UPDATE_ICONS_OLD(frame)
     if (not AOI_ISINITIALIZED()) then
@@ -370,12 +325,9 @@ function AOI_INIT()
             local frame = ui.GetFrame("anotheroneofinventory") or ui.GetFrame(g.framename)
             frame:Resize(g.settings.w, g.settings.h)
             frame:SetOffset(g.settings.x, g.settings.y)
-            frame:EnableMove(1)
-            frame:SetSkinName("chat_window")
-            frame:EnableHittestFrame(1)
+
             --frame:SetGravity(ui.LEFT, ui.BOTTOM)
-            frame:EnableResize(1)
-            frame:EnableHide(0)
+
             frame:SetLayerLevel(80)
             local slotgbox = frame:CreateOrGetControl("groupbox", "aoi_gboxslt", tabsize + 10, 25, 0, 0)
             tolua.cast(slotgbox, "ui::CGroupBox")
@@ -568,7 +520,7 @@ end
 function AOI_INVENTORY_ON_MSG(frame, msg, argStr, argNum)
     EBI_try_catch{
         try = function()
-            if (g.initialized == false) then
+            if (g.initialized ~= true) then
                 return
             end
             DBGOUT(msg)
@@ -830,9 +782,17 @@ function AOI_INV_REFRESH()
                         local useLv = TryGetProp(itemCls, "UseLv") or 1;
                         local rarity = TryGetProp(itemCls, "ItemGrade");
                         local itemLv = TryGetProp(itemCls, "ItemLv") or 1;
-                        local gemLv = itemObj.ItemExp or 0
+                        local gemLv = 0
+                        EBI_try_catch{
+                            try=function()
+                                gemLv=itemObj.ItemExp or 0
+                            end,
+                            catch=function(e)
+                            end
+                        }
                         g.invitems[#g.invitems + 1] = {
                             item = invItem,
+                            iesid=invItem:GetIESID(),
                             name = string.lower(dictionary.ReplaceDicIDInCompStr(itemCls.Name)),
                             amount = invItem.count,
                             level = math.max(useLv, itemLv, gemLv or 1),
@@ -909,6 +869,7 @@ function AOI_INV_REFRESH()
 end
 function AOI_INV_REFRESHENER()
     local frame = ui.GetFrame("anotheroneofinventory")
+    --session.BuildInvItemSortedList()
     local sortedList = session.GetInvItemSortedList();
     local invItemCount = #g.invitems
     local slotidx = g.invrefresheridx or 0
@@ -927,23 +888,28 @@ function AOI_INV_REFRESHENER()
             cancel = true
             break
         end
-        
-        local itemCls = GetIES(invItem:GetObject())
-        
-        
-        if (itemCls ~= nil) then
-            AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
-            slotidx = slotidx + 1
-            g.invrefresheridx = slotidx
-            g.invrefreshercount = g.invrefreshercount + 1
-            limit = limit - 1
-        
+        if(session.GetInvItemByGuid( g.invitems[i].iesid)==nil)then
+            --ignore
+        else
+
+            
+            local itemCls = GetIES(invItem:GetObject())
+            
+            
+            if (itemCls ~= nil) then
+                AOI_INV_SLOT_SETITEM(slot, invItem, itemCls)
+                slotidx = slotidx + 1
+                g.invrefresheridx = slotidx
+                g.invrefreshercount = g.invrefreshercount + 1
+                limit = limit - 1
+            
+            end
         end
-        
         g.invrefresher = i+1
         if (limit == 0) then
             break
         end
+    
     end
     if (g.invrefresher >= (invItemCount) or cancel) then
         g.invrefresh = false
@@ -1090,6 +1056,9 @@ end
 function AOI_ON_TIMER()
     EBI_try_catch{
         try = function()
+            if(g.initialized==false)then
+                return
+            end
             if (g.invrefresh) then
                 if (g.invrefreshcooldown > 0) then
                     g.invrefreshcooldown = g.invrefreshcooldown - 1
@@ -1243,7 +1212,7 @@ function AOI_CHECK_FRAME()
         "accountwarehouse",
         "itemcraft",
         "reinforce_by_mix",
-        "reinforce_by_mix_certific",
+        "reinforce_by_mix_certificate",
         "shop",
         "oblation_sell",
         "legendcardupgrade",
@@ -1255,6 +1224,14 @@ function AOI_CHECK_FRAME()
         "legendprefix",
         "itemdungeon",
         "guildgrowth",
+        "ark_composition",
+        "ark_relocation",
+        "itemoptionadd",
+        "itemoptionextract",
+        "itemoptionlegendextract",
+        "itemoptionrelease",
+        "itemoptionrelease_random",
+        "itemrullet",
     }
     for _, v in ipairs(frames) do
         if ui.IsFrameVisible(v) == 1 then

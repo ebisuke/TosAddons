@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uiframe name="overdosedcomposition" x="0" y="0" width="60" height="60">
+	<frame fasthide="true" layout_gravity="left top"/>
+	<input moveable="false" hittestframe="false"/>
+	<layer layerlevel="10"/>
+	<draw drawframe="false" drawtitlebarframe="false" drawtitlebar="false"/>
+	<option closebutton="false" hideable="false"/>
+
+	<controls>
+		<slot name="item" rect="0 0 60 60" margin="0 0 0 0" layout_gravity="center center" movepop="false" skin="None" draw="false" hittest="false"/>
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

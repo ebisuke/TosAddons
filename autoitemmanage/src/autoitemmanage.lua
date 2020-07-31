@@ -25,7 +25,8 @@ g.slotsize={48,48}
 g.logpath=string.format('../addons/%s/log.txt', addonNameLower)
 g.isediting=false
 g.editkeydown=false
-
+--GAMESTARTでも取っておくこと
+local LS=LIBSTORAGEHELPERV1_3
 --ライブラリ読み込み
 CHAT_SYSTEM("[AIM]loaded")
 local acutil  = require('acutil')
@@ -279,6 +280,7 @@ function AUTOITEMMANAGE_ON_INIT(addon, frame)
             addon:RegisterMsg('OPEN_DLG_ACCOUNTWAREHOUSE', 'AUTOITEMMANAGE_ON_OPEN_ACCOUNT_WAREHOUSE')
             addon:RegisterMsg('OPEN_DLG_WAREHOUSE', 'AUTOITEMMANAGE_ON_OPEN_WAREHOUSE')
             addon:RegisterMsg('OPEN_CAMP_UI', 'AUTOITEMMANAGE_ON_OPEN_CAMP_UI')
+            addon:RegisterMsg('GAME_START_3SEC', 'AUTOITEMMANAGE_GAME_START')
             addon:RegisterMsg('GAME_START_3SEC', 'AUTOITEMMANAGE_RESERVE_INIT')
             addon:RegisterMsg('TARGET_SET', 'AUTOITEMMANAGE_UPDATETARGET');
             addon:RegisterMsg('TARGET_CLEAR', 'AUTOITEMMANAGE_UPDATETARGET');
@@ -331,6 +333,9 @@ function AUTOITEMMANAGE_RESERVE_INIT(frame)
     
     
 
+end
+function AUTOITEMMANAGE_GAME_START()
+    LS=LIBSTORAGEHELPERV1_3
 end
 function  AUTOITEMMANAGE_ON_OPEN_CAMP_UI()
         --if (not g.foundasm) then
@@ -424,12 +429,14 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
             if(frame:IsVisible()==1)then
                 --アカウント倉庫モード
                 accountmode=true
+                LS.target=IT_ACCOUNT_WAREHOUSE
                 if(sett.refillenableaccountwarehouse==nil or sett.refillenableaccountwarehouse==0)then
                     DBGOUT('bye')
                     return
                 end                
             else
                 accountmode=false
+                LS.target=IT_WAREHOUSE
                 if(ui.GetFrame("camp_ui"):IsVisible()==1)then
                     frame= ui.GetFrame('camp_ui')
                     campmode=true
@@ -457,7 +464,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                             having = 0,
                             iesid=vv.iesid
                         }
-                        session.ResetItemList()
+                  
                         local invList = session.GetInvItemList()
                         FOR_EACH_INVENTORY(
                             invList,
@@ -502,60 +509,49 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                     end
                 end
                 DBGOUT('NOW' .. tostring(#withdrawlist))
-                local slotset = GET_CHILD_RECURSIVELY(frame, 'slotset')
-                AUTO_CAST(slotset)
+
+
                 local withdrawcounthp = 0
-                session.ResetItemList()
+                
                 local count = 0
                 local takeitems={}
                 for i,wd in ipairs(withdrawlist) do
                     
-                    
-                   
-                    for j = 0, slotset:GetSlotCount() - 1 do
-                        local slot = slotset:GetSlotByIndex(j)
-                        if (slot ~= nil) then
-                            local Icon = slot:GetIcon()
+                
+                    for iesid,invItem,obj in LS.getitemiter() do
 
-                            if (Icon ~= nil) then
+        
+                        --それはバンドル可能？
+                        if(obj.MaxStack<=1 and not EBI_IsNoneOrNil(wd.iesid) )then
+                            if (iesid == wd.iesid) then
+                                local withdrawcounthp = 1
+                                
+                                DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
+                                
+                                takeitems[#takeitems+1]={iesid=iesid,count=withdrawcounthp}
+                                count = count + 1
+                                DBGOUT('ADDB'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
+                                
+                            end
+                        else
 
-                                local iconInfo = Icon:GetInfo()
-                                local invItem 
-                                if(accountmode)then
-                                    invItem = session.GetEtcItemByGuid(IT_ACCOUNT_WAREHOUSE, iconInfo:GetIESID())
-                                else
-                                    invItem = session.GetEtcItemByGuid(IT_WAREHOUSE, iconInfo:GetIESID())
+                            if (obj.ClassID == wd.clsid) then
+                                local withdrawcounthp = wd.count - wd.having
+                                if (withdrawcounthp > invItem.count) then
+                                    withdrawcounthp = invItem.count
                                 end
-                                local obj = GetIES(invItem:GetObject())
-                                --それはバンドル可能？
-                                if(obj.MaxStack<=1 and not EBI_IsNoneOrNil(wd.iesid) )then
-                                    if (iconInfo:GetIESID() == wd.iesid) then
-                                        local withdrawcounthp = 1
-                                        
-                                        DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
-                                        session.AddItemID(iconInfo:GetIESID(), withdrawcounthp)
-                                        takeitems[#takeitems+1]={iesid=iconInfo:GetIESID(),count=withdrawcounthp}
-                                        count = count + 1
-                                        DBGOUT('ADDB'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
-                                        
-                                    end
-                                else
-
-                                    if (obj.ClassID == wd.clsid) then
-                                        local withdrawcounthp = wd.count - wd.having
-                                        if (withdrawcounthp > invItem.count) then
-                                            withdrawcounthp = invItem.count
-                                        end
-                                        if (withdrawcounthp > 0) then
-                                            DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
-                                            session.AddItemID(iconInfo:GetIESID(), withdrawcounthp)
-                                            takeitems[#takeitems+1]={iesid=iconInfo:GetIESID(),count=withdrawcounthp}
-                                            count = count + 1
-                                            DBGOUT('ADD'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
-                                        end
-                                    end
+                                if (withdrawcounthp > 0) then
+                                    DBGOUT(tostring(wd.clsid) .. ':' .. tostring(withdrawcounthp))
+                                    
+                                    takeitems[#takeitems+1]={iesid=iesid,count=withdrawcounthp}
+                                    count = count + 1
+                                    DBGOUT('ADD'..tostring(wd.clsid)..":"..tostring(withdrawcounthp))
                                 end
                             end
+                        end
+                        --limit
+                        if(#takeitems>=50)then
+                            break
                         end
                     end
                 end
@@ -565,11 +561,7 @@ function AUTOITEMMANAGE_WITHDRAW_FROM_WAREHOUSE()
                     else
                         if(accountmode)then
                             CHAT_SYSTEM(L_("Tsmsg"))
-                            item.TakeItemFromWarehouse_List(
-                                IT_ACCOUNT_WAREHOUSE,
-                                session.GetItemIDList(),
-                                frame:GetUserIValue('HANDLE')
-                            )
+                            LS.takeitems(takeitems)
                         else
                             local count=1
                             CHAT_SYSTEM(L_("Psmsg"))
@@ -599,7 +591,7 @@ function AUTOITEMMANAGE_FOREACH_TAKEITEM(iesid,count,campmode)
         DBGOUT("WAREHOUSEMODE")
         frame=ui.GetFrame("warehouse")
     end
-    item.TakeItemFromWarehouse(IT_WAREHOUSE, iesid, count, frame:GetUserIValue("HANDLE"));
+    LS.takeitem(iesid,count)
 end
 function AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
     AUTOITEMMANAGE_WITHDRAW_FROM_EACH_WAREHOUSE()
@@ -900,7 +892,7 @@ function AUTOITEMMANAGE_CHANGENUMBER(argnum)
             slo:SetNumberMode(1)
             slo:SetEnableEditTag(1);
             slo:SetMinNumber(1)
-            slo:SetMaxNumber(32767)
+            slo:SetMaxNumber(999999)
             slo:SetSkinName("None")
             slo:SetFontName('green_20_ol')
             slo:SetGravity(ui.RIGHT, ui.TOP);
@@ -1445,7 +1437,7 @@ function AUTOITEMMANAGE_ON_DROP(frame, ctrl)
 end
 function AUTOITEMMANAGE_CHANGECOUNT(frame, count, index,isstackable)
     g.editindex = index
-    local maxcount=32767
+    local maxcount=999999
     if(isstackable==false)then
         imcSound.PlaySoundEvent('button_click_big_2');
         ui.MsgBox(L_("ClassidWarn"),
