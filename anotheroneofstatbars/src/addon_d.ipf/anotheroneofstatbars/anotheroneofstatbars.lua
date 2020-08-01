@@ -762,13 +762,16 @@ end
 function AOS_RENDER()
     EBI_try_catch{
         try = function()
-            local frame = ui.GetFrame(g.framename)
-            local pic = frame:GetChild("pic")
-            if (pic) then
-                if (g.settings.style == nil or g.settings.style == 0) then
-                    AOS_RENDER_STYLEA()
-                elseif (g.settings.style == 1) then
-                    AOS_RENDER_STYLEB()
+            local stat = info.GetStat(session.GetMyHandle());
+            if (stat) then
+                local frame = ui.GetFrame(g.framename)
+                local pic = frame:GetChild("pic")
+                if (pic) then
+                    if (g.settings.style == nil or g.settings.style == 0) then
+                        AOS_RENDER_STYLEA()
+                    elseif (g.settings.style == 1) then
+                        AOS_RENDER_STYLEB()
+                    end
                 end
             end
         end,
