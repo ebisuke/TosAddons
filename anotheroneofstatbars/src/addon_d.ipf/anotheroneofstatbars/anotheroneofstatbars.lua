@@ -505,16 +505,15 @@ function AOS_CALC_POINT(actualval, minw, maxw, maxav)
 end
 function AOS_CALC_POINT_ANIMATED(widthval, remwidthval, actualval, actualmax, minw, maxw, maxav, speed)
     
-    local amax = math.min(maxw, actualmax * maxw / maxav)
+    local awmax = math.min(maxw, actualmax * maxw / maxav)
+    local amin = minw*maxav/maxw
     local valw
-    if (amax < minw) then
-        valw = math.min(maxw, actualval * minw / amax)
+    if (actualmax < amin) then
+        valw = math.min(minw, actualval * minw / actualmax)
     elseif (actualmax > maxav) then
         valw = math.min(maxw, actualval * maxw / actualmax)
-    
     else
         valw = math.min(maxw, actualval * maxw / maxav)
-    
     end
     
     if (widthval > valw) then
@@ -554,16 +553,15 @@ function AOS_CALC_POINT_ANIMATED(widthval, remwidthval, actualval, actualmax, mi
 end
 function AOS_CALC_POINT_SIMPLE_ANIMATED(widthval, actualval, actualmax, minw, maxw, maxav, speed)
     
-    local amax = math.min(maxw, actualmax * maxw / maxav)
+    local awmax = math.min(maxw, actualmax * maxw / maxav)
+    local amin = minw*maxav/maxw
     local valw
-    if (amax < minw) then
-        valw = math.min(maxw, actualval * minw / actualmax)
+    if (actualmax < amin) then
+        valw = math.min(minw, actualval * minw / actualmax)
     elseif (actualmax > maxav) then
         valw = math.min(maxw, actualval * maxw / actualmax)
-    
     else
         valw = math.min(maxw, actualval * maxw / maxav)
-    
     end
     
     if (widthval > valw) then
@@ -619,11 +617,11 @@ function AOS_ON_TIMER(frame)
             local speed = 0.3
             local speedslow = 0.05
             --HP
-            g.curhpw, g.remhpw = AOS_CALC_POINT_ANIMATED(g.curhpw, g.remhpw, stat.HP, stat.maxHP, minwidth, g.settings.maxlenhp, maxmaxhp, speed)
-            g.curshpw, g.remshpw = AOS_CALC_POINT_ANIMATED(g.curshpw, g.remshpw, stat.shield, stat.maxHP, minwidth, g.settings.maxlenhp, maxmaxhp, speed)
-            g.curspw, g.remspw = AOS_CALC_POINT_ANIMATED(g.curspw, g.remspw, stat.SP, stat.maxSP, minwidth, g.settings.maxlensp, maxmaxsp, speed)
-            g.curstaw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curstaw, stat.Stamina, stat.MaxStamina, minwidth, g.settings.maxlenstamina, maxmaxsta, speedslow)
-            g.curdurw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curdurw, g.durmin, g.durmax, minwidth, g.settings.maxlendur, maxmaxdur, speedslow)
+            g.curhpw, g.remhpw = AOS_CALC_POINT_ANIMATED(g.curhpw, g.remhpw, stat.HP, stat.maxHP, g.settings.minlenhp, g.settings.maxlenhp, maxmaxhp, speed)
+            g.curshpw, g.remshpw = AOS_CALC_POINT_ANIMATED(g.curshpw, g.remshpw, stat.shield, stat.maxHP,  g.settings.minlenhp, g.settings.maxlenhp, maxmaxhp, speed)
+            g.curspw, g.remspw = AOS_CALC_POINT_ANIMATED(g.curspw, g.remspw, stat.SP, stat.maxSP,  g.settings.minlensp, g.settings.maxlensp, maxmaxsp, speed)
+            g.curstaw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curstaw, stat.Stamina, stat.MaxStamina,  g.settings.minlenstamina, g.settings.maxlenstamina, maxmaxsta, speedslow)
+            g.curdurw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curdurw, g.durmin, g.durmax,  g.settings.minlendur, g.settings.maxlendur, maxmaxdur, speedslow)
             
             -- if (g.curhpw > curhpw) then
             --     --減少
@@ -762,13 +760,16 @@ end
 function AOS_RENDER()
     EBI_try_catch{
         try = function()
-            local frame = ui.GetFrame(g.framename)
-            local pic = frame:GetChild("pic")
-            if (pic) then
-                if (g.settings.style == nil or g.settings.style == 0) then
-                    AOS_RENDER_STYLEA()
-                elseif (g.settings.style == 1) then
-                    AOS_RENDER_STYLEB()
+            local stat = info.GetStat(session.GetMyHandle());
+            if (stat) then
+                local frame = ui.GetFrame(g.framename)
+                local pic = frame:GetChild("pic")
+                if (pic) then
+                    if (g.settings.style == nil or g.settings.style == 0) then
+                        AOS_RENDER_STYLEA()
+                    elseif (g.settings.style == 1) then
+                        AOS_RENDER_STYLEB()
+                    end
                 end
             end
         end,
@@ -803,16 +804,17 @@ end
 
 function AOS_DRAW_HPBAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp))
+    local len=math.max(math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp),g.settings.minlenhp)
+    local maxw = len
     local colw = stat.HP * maxw / stat.maxHP
-    local colsw = math.min(g.settings.maxlenhp, stat.shield * g.settings.maxlenhp / g.settings.maxhp)
+    local colsw = math.min(len, stat.shield * len / g.settings.maxhp)
     
     local curw = g.curhpw
     local fixhpw = curw
     local ox = 500 + 20 - 2
     local oy = 30 - 2
     if (g.fixhp) then
-        fixhpw = math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
+        fixhpw = math.max(0, math.min(len, g.fixhp * len / g.settings.maxhp))
     end
     if (stat.HP <= stat.maxHP * 0.3) then
         local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
@@ -859,7 +861,9 @@ function AOS_DRAW_HPBAR(frame, pic)
 end
 function AOS_DRAW_SPBAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp))
+    local len=math.max(math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp),g.settings.minlensp)
+    
+    local maxw = len
     local curw = g.curspw
     
     local colw = stat.SP * maxw / stat.maxSP
@@ -867,7 +871,7 @@ function AOS_DRAW_SPBAR(frame, pic)
     local ox = 500 - 20 + 2
     local oy = 30 - 2
     if (g.fixsp) then
-        fixspw = math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
+        fixspw = math.max(0, math.min(len, g.fixsp * len / g.settings.maxsp))
     end
     if (stat.SP <= stat.maxSP * 0.3) then
         local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
@@ -902,7 +906,9 @@ function AOS_DRAW_DURBAR(frame, pic)
     local durmin, durmax
     durmin = g.durmin
     durmax = g.durmax
-    local maxw = math.max(100, math.min(g.settings.maxlendur, durmax * g.settings.maxlendur / g.settings.maxdur))
+    local len=math.max(math.min(g.settings.maxlendur,durmax * g.settings.maxlendur / g.settings.maxdur),g.settings.minlendur)
+    
+    local maxw =len
     local curw = g.curdurw
     local ox = 500 - 20 + 2
     local oy = 40 + 4
@@ -926,7 +932,9 @@ function AOS_DRAW_DURBAR(frame, pic)
 end
 function AOS_DRAW_STAMINABAR(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(g.settings.maxlenstamina, stat.MaxStamina * g.settings.maxlenstamina / g.settings.maxstamina))
+    local len=math.max(math.min(g.settings.maxlenstamina,stat.MaxStamina  * g.settings.maxlenstamina / g.settings.maxstamina),g.settings.minlenstamina)
+    
+    local maxw =len
     local curw = g.curstaw
     
     local ox = 500 + 20 - 2
@@ -976,6 +984,7 @@ function AOS_DRAW_SPECIALSKILLBAR(frame, pic)
     if (curtime == nil) then
         return
     end
+    curtime=math.min(curtime,maxtime)
     local skillpercent = curtime * 100 / maxtime
     if (skillpercent >= 75) then
         local r = (skillpercent - 75) / 25.0
@@ -1079,9 +1088,10 @@ function AOS_RENDER_STYLEB()
 end
 function AOS_DRAW_HPBAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp))
+    local len=math.max(math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp),g.settings.minlenhp)
+    local maxw = len
     local colw = stat.HP * maxw / stat.maxHP
-    local colsw = math.min(g.settings.maxlenhp, stat.shield * g.settings.maxlenhp / g.settings.maxhp)
+    local colsw = math.min(len, stat.shield * len / g.settings.maxhp)
     
     local curw = g.curhpw
     local fixhpw = curw
@@ -1135,7 +1145,9 @@ function AOS_DRAW_HPBAR_B(frame, pic)
 end
 function AOS_DRAW_SPBAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp))
+    local len=math.max(math.min(g.settings.maxlensp, stat.maxSP * g.settings.maxlensp / g.settings.maxsp),g.settings.minlensp)
+    
+    local maxw = len
     local curw = g.curspw
     
     local colw = stat.SP * maxw / stat.maxSP
@@ -1178,7 +1190,9 @@ function AOS_DRAW_DURBAR_B(frame, pic)
     local durmin, durmax
     durmin = g.durmin
     durmax = g.durmax
-    local maxw = math.max(100, math.min(g.settings.maxlendur, durmax * g.settings.maxlendur / g.settings.maxdur))
+    local len=math.max(math.min(g.settings.maxlendur,durmax * g.settings.maxlendur / g.settings.maxdur),g.settings.minlendur)
+    
+    local maxw =len
     local curw = g.curdurw
     local ox = 40 + 20 - 5 + 5 - 15 + 1 - 15
     local oy = 50 - 20 - 5 - 5 + 15 + 15
@@ -1202,8 +1216,10 @@ function AOS_DRAW_DURBAR_B(frame, pic)
 end
 function AOS_DRAW_STAMINABAR_B(frame, pic)
     local stat = info.GetStat(session.GetMyHandle());
-    local maxw = math.max(100, math.min(g.settings.maxlenstamina, stat.MaxStamina * g.settings.maxlenstamina / g.settings.maxstamina))
-    local curw = g.curstaw
+    local len=math.max(math.min(g.settings.maxlenstamina,stat.MaxStamina  * g.settings.maxlenstamina / g.settings.maxstamina),g.settings.minlenstamina)
+    
+    local maxw =len
+       local curw = g.curstaw
     
     local ox = 40 + 15 + 5 - 15 + 1 - 15 - 15 - 10
     local oy = 50 - 20 - 5 - 5 + 15 + 15 + 15
