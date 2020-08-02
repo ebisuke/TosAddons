@@ -463,10 +463,10 @@
   ,
   {
     "name": "Merkabah Fix",
-    "file": "markabahfix",
+    "file": "merkabahfix",
     "extension": "ipf",
     "fileVersion": "v0.0.1",
-    "releaseTag": "markabahfix-v0.0.1",
+    "releaseTag": "merkabahfix-v0.0.1",
     "unicode": "📖",
     "description": "コンパニオン休眠状態でメルカバ等に乗れなくなる問題を修正します",
     "tags": [
