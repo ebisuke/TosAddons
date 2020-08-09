@@ -1,4 +1,4 @@
---libitemsearcher
+-- libitemsearcher
 
 local utf8_lc_uc = {
 	["a"] = "A",
