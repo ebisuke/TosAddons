@@ -1,3 +1,4 @@
+-- campchef
 --アドオン名（大文字）
 local addonName = "campchef"
 local addonNameLower = string.lower(addonName)
