@@ -317,20 +317,59 @@ function ITEMBUFFMACHINE_ENCHANTARMOR_DO_SELECT(groupName, index)
                             -- })
                             ITEMBUFFMACHINE_ADDTASK(
                                 function()
-                                    ITEMBUFFMACHINE_UNWEAR(equipItem:GetIESID(), equipItem.equipSpot)
+                                    ITEMBUFFMACHINE_UNWEAR(equipItem:GetIESID(),equipItem, equipItem.equipSpot)
                                 end
                             )
+
+                            
+                        end
+                    end
+                end
+            end
+            for i = 0, equiplist:Count() - 1 do
+                local equipItem = equiplist:GetEquipItemByIndex(i)
+                local spotName = item.GetEquipSpotName(equipItem.equipSpot);
+		    	if  spotName  ~=  nil  then
+                    local tempobj = equipItem:GetObject()
+                    if tempobj ~= nil then
+                        local obj = GetIES(tempobj)
+                        if ( item.IsNoneItem(obj.ClassID)==0  and  ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
+                            -- table.insert(g.equipList,{
+                            --     item=equipItem,
+                            --     obj=obj,
+                            -- })
+                        
 
                             ITEMBUFFMACHINE_ADDTASK(
                                 function()
                                     ITEMBUFFMACHINE_ENCHANT(equipItem:GetIESID(), optionList[index])
                                 end
                             )
+                          
+                        end
+                    end
+                end
+            end
+            for i = 0, equiplist:Count() - 1 do
+                local equipItem = equiplist:GetEquipItemByIndex(i)
+                local spotName = item.GetEquipSpotName(equipItem.equipSpot);
+		    	if  spotName  ~=  nil  then
+                    local tempobj = equipItem:GetObject()
+                    if tempobj ~= nil then
+                        local obj = GetIES(tempobj)
+                        if ( item.IsNoneItem(obj.ClassID)==0  and  ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
+                            -- table.insert(g.equipList,{
+                            --     item=equipItem,
+                            --     obj=obj,
+                            -- })
+                        
+
                             ITEMBUFFMACHINE_ADDTASK(
                                 function()
-                                    ITEMBUFFMACHINE_WEAR(equipItem:GetIESID(), equipItem.equipSpot)
+                                    ITEMBUFFMACHINE_WEAR(equipItem:GetIESID(),equipItem,equipItem.equipSpot)
                                 end
                             )
+                          
                         end
                     end
                 end
@@ -373,13 +412,13 @@ function ITEMBUFFMACHINE_DOTASK()
     }
 end
 
-function ITEMBUFFMACHINE_UNWEAR(equipItemIESID, equipSpot, attempt)
+function ITEMBUFFMACHINE_UNWEAR(equipItemIESID, invItem,equipSpot, attempt)
     EBI_try_catch {
         try = function()
-            session.ResetItemList()
-            
-            local equipItem = nil --session.GetEquipItemByGuid(equipItemIESID)
-
+            --session.ResetItemList()
+            --imcAddOn.BroadMsg("EQUIP_ITEM_LIST_GET")
+            --local equipItem = nil --session.GetEquipItemByGuid(equipItemIESID)
+            local equipItem=nil
             local equiplist = session.GetEquipItemList()
             for i = 0, equiplist:Count() - 1 do
                 local im = equiplist:GetEquipItemByIndex(i)
@@ -405,11 +444,14 @@ function ITEMBUFFMACHINE_UNWEAR(equipItemIESID, equipSpot, attempt)
                 end
                 return
             end
-            imcSound.PlaySoundEvent('inven_unequip')
-            local spot = equipSpot
+            
+            --local equipItem = GET_PC_ITEM_BY_GUID(equipItemIESID) --session.GetInvItemByGuid(equipItemIESID)
+   
+            --imcSound.PlaySoundEvent('inven_unequip')
+            local spot = equipItem.equipSpot
             item.UnEquip(spot)
             --ITEM_EQUIP_MSG(item.GetNoneItem(equipItem.equipSpot),equipItem,equipSpot)
-            ReserveScript('ITEMBUFFMACHINE_DOTASK()', 2)
+            ReserveScript('ITEMBUFFMACHINE_DOTASK()', 1)
             g.checker = function()
                 DBGOUT('CHK UNWEAR' .. tostring(session.GetInvItemByGuid(equipItemIESID)))
                 return session.GetInvItemByGuid(equipItemIESID)
@@ -423,22 +465,29 @@ end
 function ITEMBUFFMACHINE_ENCHANT(equipItemIESID, indexName, attempt)
     EBI_try_catch {
         try = function()
+            imcAddOn.BroadMsg("INV_ITEM_LIST_GET")
             local frame = ui.GetFrame('enchantarmoropen')
             local handle = frame:GetUserIValue('HANDLE')
             local skillName = frame:GetUserValue('GroupName')
+            --local equipItem = nil
             local equipItem = nil
-            session.ResetItemList()
-            local invItemList = session.GetInvItemList()
-            FOR_EACH_INVENTORY(
-                invItemList,
-                function(invItemList, invItem)
-                    if invItem ~= nil then
-                        if equipItem == nil and invItem:GetIESID() == equipItemIESID then
-                            equipItem = invItem
-                        end
+            session.BuildInvItemSortedList();
+            local invItemList = session.GetInvItemSortedList();
+            local invItemCount = invItemList:size();
+
+            for i = 0, invItemCount - 1 do
+                local invItem = invItemList:at(i);
+
+                if invItem ~= nil then
+                    if equipItem==nil and invItem:GetIESID()==equipItemIESID then
+                        equipItem=invItem
+
                     end
                 end
-            )
+            
+                
+            end
+
 
             if equipItem == nil then
                 attempt = attempt or 0
@@ -470,12 +519,13 @@ end
 function ITEMBUFFMACHINE_ITEMBUFF(equipItemIESID, attempt)
     EBI_try_catch {
         try = function()
+            --imcAddOn.BroadMsg("INV_ITEM_LIST_GET")
             local frame = ui.GetFrame('itembuffopen')
             local skillName = frame:GetUserValue('SKILLNAME')
             local handle = frame:GetUserValue('HANDLE')
             local equipItem = nil
-            session.ResetItemList()
-            -- local invItemList = session.GetInvItemList();
+           --session.ResetItemList()
+            -- local invItemList = session.GetInvItemSortedList();
             -- FOR_EACH_INVENTORY(invItemList,
             --     function(invItemList, invItem)
             --         if invItem ~= nil then
@@ -517,40 +567,47 @@ function ITEMBUFFMACHINE_EQUIP_ITEM_LIST()
     --     end
     -- end
 end
-function ITEMBUFFMACHINE_WEAR(equipItemIESID, equipSpot, attempt)
+function ITEMBUFFMACHINE_WEAR(equipItemIESID, invItem, attempt)
     EBI_try_catch {
         try = function()
-            --local equipItem = session.GetInvItemByGuid(equipItemIESID)
-            session.ResetItemList()
-            local equipItem = nil
-            local invItemList = session.GetInvItemList()
-            FOR_EACH_INVENTORY(
-                invItemList,
-                function(invItemList, invItem)
-                    if invItem ~= nil then
-                        if equipItem == nil and invItem:GetIESID() == equipItemIESID then
-                            equipItem = invItem
-                        end
-                    end
-                end
-            )
+            local equipItem = session.GetInvItemByGuid(equipItemIESID)
+            imcAddOn.BroadMsg("INV_ITEM_LIST_GET")
+            --local equipItem=nil
 
-            if equipItem == nil then
-                attempt = attempt or 0
-                attempt = attempt + 1
+            -- local idx=0
+            -- while true do
 
-                if attempt < g.retrylimit then
-                    ReserveScript(string.format('ITEMBUFFMACHINE_WEAR("%s","%s",%d)', equipItemIESID, equipSpot, attempt), 0.5)
-                else
-                    ui.SysMsg('問題が発生したのでキャンセルします：試行回数上限')
-                    ITEMBUFFMACHINE_CANCEL()
-                end
-                return
-            end
-            local spname = item.GetEquipSpotName(equipSpot)
-            ITEM_EQUIP_MSG(equipItem, spname)
-            ReserveScript('ITEMBUFFMACHINE_DOTASK()', 3)
+            --     local invItem = session.GetInvItem(idx);
 
+            --     if invItem ~= nil then
+            --         if equipItem==nil and invItem:GetIESID()==equipItemIESID then
+            --             equipItem=invItem
+
+            --         end
+            --     else
+            --         break
+            --     end
+            
+            --     idx=idx+1
+                
+            -- end
+
+            -- if equipItem == nil then
+            --     attempt = attempt or 0
+            --     attempt = attempt + 1
+
+            --     if attempt < g.retrylimit then
+            --         ReserveScript(string.format('ITEMBUFFMACHINE_WEAR("%s","%s",%d)', equipItemIESID, equipSpot, attempt), 0.5)
+            --     else
+            --         ui.SysMsg('問題が発生したのでキャンセルします：試行回数上限')
+            --         ITEMBUFFMACHINE_CANCEL()
+            --     end
+            --     return
+            -- end
+            --local spname = item.GetEquipSpotName(equipSpot)
+            ITEM_EQUIP_MSG(equipItem)
+            ReserveScript('ITEMBUFFMACHINE_DOTASK()', 1)
+            
             g.checker = function()
                 DBGOUT('CHK WEAR' .. tostring(session.GetEquipItemByGuid(equipItemIESID)))
                 return session.GetEquipItemByGuid(equipItemIESID)
