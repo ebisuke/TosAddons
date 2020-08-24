@@ -80,7 +80,10 @@ function ITEMBUFFMACHINE_ON_INIT(addon, frame)
             if not g.loaded then
                 g.loaded = true
             end
-            acutil.setupHook(ITEMBUFFMACHINE_ENCHANTAROR_STORE_OPEN, 'ENCHANTAROR_STORE_OPEN')
+            if(g.debug)then
+                acutil.setupHook(ITEMBUFFMACHINE_ENCHANTAROR_STORE_OPEN, 'ENCHANTAROR_STORE_OPEN')
+            end
+            --acutil.setupHook(ITEMBUFFMACHINE_ENCHANTAROR_STORE_OPEN, 'ENCHANTAROR_STORE_OPEN')
             acutil.setupHook(ITEMBUFFMACHINE_SQUIRE_ITEM_SUCCEED, 'SQUIRE_ITEM_SUCCEED')
             addon:RegisterMsg('INV_ITEM_ADD', 'ITEMBUFFMACHINE_EQUIP_ITEM_LIST')
             addon:RegisterMsg('INV_ITEM_REMOVE', 'ITEMBUFFMACHINE_EQUIP_ITEM_LIST')
@@ -430,14 +433,12 @@ function ITEMBUFFMACHINE_UNWEAR(equipItemIESID, invItem,equipSpot, attempt)
                         break
                     end
                 end
-
             end
             if equipItem==nil then
                 attempt=attempt or 0
                 attempt=attempt+1
                 if attempt<g.retrylimit then
                     ReserveScript(string.format('ITEMBUFFMACHINE_UNWEAR("%s",%d,%d)',equipItemIESID,equipSpot,attempt),0.5)
-
                 else
                     ui.SysMsg("問題が発生したのでキャンセルします：試行回数上限")
                     ITEMBUFFMACHINE_CANCEL()
