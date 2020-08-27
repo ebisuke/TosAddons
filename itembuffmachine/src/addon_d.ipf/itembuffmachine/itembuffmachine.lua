@@ -388,6 +388,7 @@ function ITEMBUFFMACHINE_CANCEL()
     g.task = {}
     g.working = false
     ui.SysMsg('キャンセルしました')
+    ui.SetEscapeScp('')
 end
 function ITEMBUFFMACHINE_ADDTASK(task)
     table.insert(g.task, task)

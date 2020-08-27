@@ -479,10 +479,10 @@
     "name": "Item Buff Machine",
     "file": "itembuffmachine",
     "extension": "ipf",
-    "fileVersion": "v0.0.4",
-    "releaseTag": "itembuffmachine-v0.0.4",
+    "fileVersion": "v0.0.5",
+    "releaseTag": "itembuffmachine-v0.0.5",
     "unicode": "📖",
-    "description": "エンチャントアーマー・装備メンテナンスを装備中のアイテムすべてに自動適用するアドオンです",
+    "description": "装備メンテナンスを装備中のアイテムすべてに自動適用するアドオンです",
     "tags": [
       "ui",
       "equip",
