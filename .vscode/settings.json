@@ -5,5 +5,8 @@
         "ReserveScript"
     ],
     "git.ignoreLimitWarning": true,
-    "LuaCoderAssist.format.lineWidth": 180
+    "LuaCoderAssist.format.lineWidth": 180,
+    "Lua.diagnostics.disable": [
+        113
+    ]
 }
