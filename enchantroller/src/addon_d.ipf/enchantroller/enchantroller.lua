@@ -26,6 +26,7 @@ g.groupCount = nil
 g.needs = nil
 g.needscount = 0
 g.attempts = -1
+g.go=false
 local OPTION_GROUP_PROP_LIST = {
     ItemRandomOptionGroupSTAT = {
         'STR',
@@ -238,7 +239,9 @@ function ENCHANTROLLER_CLEAR_ITEMRANDOMRESET_UI()
         AUTO_CAST(btn)
 
         btn:SetEnable(0)
+        
     end
+    g.frame:ShowWindow(0)
 end
 
 function ENCHANTROLLER_ITEMRANDOMRESET_CLOSE(frame)
@@ -502,6 +505,7 @@ function ENCHANTROLLER_CONFIRM()
 end
 
 function ENCHANTROLLER_EXECUTE()
+    g.go=true
     ui.SetEscapeScp('ENCHANTROLLER_CANCEL()')
     ENCHANTROLLER_DO_EXECUTE()
 end
@@ -564,12 +568,16 @@ function ENCHANTROLLER_DO_EXECUTE()
 end
 function ENCHANTROLLER_CANCEL()
     g.attempts = -1
+    g.go=false
     ui.SysMsg('Cancelled.')
     ui.SetEscapeScp('')
 end
 function ENCHANTROLLER_SUCCESS_RESET_RANDOM_OPTION()
     EBI_try_catch {
         try = function()
+            if g.go==false then
+                return
+            end
             if g.attempts == 0 then
                 ui.SysMsg('Max attempt has reached.')
                 ui.SetEscapeScp('')
