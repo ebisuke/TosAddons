@@ -115,18 +115,6 @@
     ]
   },
   {
-    "name": "Pseudo Forecast",
-    "file": "pseudoforecast",
-    "extension": "ipf",
-    "fileVersion": "v0.3.0",
-    "releaseTag": "pseudoforecast-v0.3.0",
-    "unicode": "📖",
-    "description": "Forecastを疑似体験できる",
-    "tags": [
-      "forecast"
-    ]
-  },
-  {
     "name": "Account Warehouse Wardrobe",
     "file": "awwardrobe",
     "extension": "ipf",
@@ -321,18 +309,6 @@
     "tags": [
       "ui",
       "buff"
-    ]
-  },
-  {
-    "name": "Pseudo Forecast For ITOS",
-    "file": "pseudoforecastitos",
-    "extension": "ipf",
-    "fileVersion": "v0.4.0",
-    "releaseTag": "pseudoforecastitos-v0.4.0",
-    "unicode": "📖",
-    "description": "Forecastを疑似体験できる ITOS用",
-    "tags": [
-      "forecast"
     ]
   },
   {
