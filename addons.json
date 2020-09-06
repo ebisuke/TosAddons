@@ -492,6 +492,21 @@
       "maintenance",
       "buff"
     ]
+  },
+  {
+    "name": "Enchant Roller",
+    "file": "enchantroller",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "enchantroller-v0.0.1",
+    "unicode": "📖",
+    "description": "アイテムオプションで指定したオプションが出るまでロールするアドオンです",
+    "tags": [
+      "ui",
+      "enchant",
+      "option",
+      "reidentify",
+      "item"
+    ]
   }
-  
 ]
