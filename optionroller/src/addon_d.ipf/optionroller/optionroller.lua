@@ -1,6 +1,6 @@
--- enchantroller
+-- optionroller
 --アドオン名（大文字）
-local addonName = 'enchantroller'
+local addonName = 'optionroller'
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -15,7 +15,7 @@ g.version = 0
 g.settings = {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ''
-g.framename = 'enchantroller'
+g.framename = 'optionroller'
 g.debug = false
 g.handle = nil
 g.interlocked = false
@@ -143,20 +143,20 @@ local function ERROUT(msg)
         end
     }
 end
-function ENCHANTROLLER_SAVE_SETTINGS()
-    --ENCHANTROLLER_SAVETOSTRUCTURE()
+function OPTIONROLLER_SAVE_SETTINGS()
+    --OPTIONROLLER_SAVETOSTRUCTURE()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 end
-function ENCHANTROLLER_SAVE_ALL()
-    ENCHANTROLLER_SAVETOSTRUCTURE()
-    ENCHANTROLLER_SAVE_SETTINGS()
+function OPTIONROLLER_SAVE_ALL()
+    OPTIONROLLER_SAVETOSTRUCTURE()
+    OPTIONROLLER_SAVE_SETTINGS()
     ui.MsgBox('保存しました')
 end
-function ENCHANTROLLER_SAVETOSTRUCTURE()
-    local frame = ui.GetFrame('enchantroller')
+function OPTIONROLLER_SAVETOSTRUCTURE()
+    local frame = ui.GetFrame('optionroller')
 end
 
-function ENCHANTROLLER_LOAD_SETTINGS()
+function OPTIONROLLER_LOAD_SETTINGS()
     DBGOUT('LOAD_SETTING')
     g.settings = {foods = {}}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
@@ -172,57 +172,57 @@ function ENCHANTROLLER_LOAD_SETTINGS()
         end
     end
 
-    ENCHANTROLLER_UPGRADE_SETTINGS()
-    ENCHANTROLLER_SAVE_SETTINGS()
-    ENCHANTROLLER_LOADFROMSTRUCTURE()
+    OPTIONROLLER_UPGRADE_SETTINGS()
+    OPTIONROLLER_SAVE_SETTINGS()
+    OPTIONROLLER_LOADFROMSTRUCTURE()
 end
 
-function ENCHANTROLLER_LOADFROMSTRUCTURE()
-    local frame = ui.GetFrame('enchantroller')
+function OPTIONROLLER_LOADFROMSTRUCTURE()
+    local frame = ui.GetFrame('optionroller')
 end
 
-function ENCHANTROLLER_UPGRADE_SETTINGS()
+function OPTIONROLLER_UPGRADE_SETTINGS()
     local upgraded = false
     return upgraded
 end
 
 --マップ読み込み時処理（1度だけ）
-function ENCHANTROLLER_ON_INIT(addon, frame)
+function OPTIONROLLER_ON_INIT(addon, frame)
     EBI_try_catch {
         try = function()
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-            --g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(ENCHANTROLLER_GETCID()))
+            --g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower,tostring(OPTIONROLLER_GETCID()))
             frame:ShowWindow(0)
 
             --ccするたびに設定を読み込む
             if not g.loaded then
                 g.loaded = true
             end
-            acutil.setupHook(ENCHANTROLLER_ITEM_RANDOMRESET_REG_TARGETITEM, 'ITEM_RANDOMRESET_REG_TARGETITEM')
-            acutil.setupHook(ENCHANTROLLER_ITEMRANDOMRESET_OPEN, 'ITEMRANDOMRESET_OPEN')
-            acutil.setupHook(ENCHANTROLLER_ITEMRANDOMRESET_CLOSE, 'ITEMRANDOMRESET_CLOSE')
-            acutil.setupHook(ENCHANTROLLER_CLEAR_ITEMRANDOMRESET_UI, 'CLEAR_ITEMRANDOMRESET_UI')
-            addon:RegisterMsg('MSG_SUCCESS_RESET_RANDOM_OPTION', 'ENCHANTROLLER_SUCCESS_RESET_RANDOM_OPTION')
+            acutil.setupHook(OPTIONROLLER_ITEM_RANDOMRESET_REG_TARGETITEM, 'ITEM_RANDOMRESET_REG_TARGETITEM')
+            acutil.setupHook(OPTIONROLLER_ITEMRANDOMRESET_OPEN, 'ITEMRANDOMRESET_OPEN')
+            acutil.setupHook(OPTIONROLLER_ITEMRANDOMRESET_CLOSE, 'ITEMRANDOMRESET_CLOSE')
+            acutil.setupHook(OPTIONROLLER_CLEAR_ITEMRANDOMRESET_UI, 'CLEAR_ITEMRANDOMRESET_UI')
+            addon:RegisterMsg('MSG_SUCCESS_RESET_RANDOM_OPTION', 'OPTIONROLLER_SUCCESS_RESET_RANDOM_OPTION')
 
             frame:ShowWindow(0)
-            --ENCHANTROLLER_INITFRAME(frame)
-            ENCHANTROLLER_LOAD_SETTINGS()
+            --OPTIONROLLER_INITFRAME(frame)
+            OPTIONROLLER_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function ENCHANTROLLER_ITEMRANDOMRESET_OPEN(frame)
+function OPTIONROLLER_ITEMRANDOMRESET_OPEN(frame)
     EBI_try_catch {
         try = function()
             ITEMRANDOMRESET_OPEN_OLD(frame)
             local frame = ui.GetFrame('itemrandomreset')
             local btn = frame:CreateOrGetControl('button', 'btnactivate', 20, 100, 120, 30)
             AUTO_CAST(btn)
-            btn:SetEventScript(ui.LBUTTONUP, 'ENCHANTROLLER_TOGGLEFRAME')
+            btn:SetEventScript(ui.LBUTTONUP, 'OPTIONROLLER_TOGGLEFRAME')
             btn:SetText('{ol}Auto Reroll')
             btn:SetEnable(0)
         end,
@@ -231,7 +231,7 @@ function ENCHANTROLLER_ITEMRANDOMRESET_OPEN(frame)
         end
     }
 end
-function ENCHANTROLLER_CLEAR_ITEMRANDOMRESET_UI()
+function OPTIONROLLER_CLEAR_ITEMRANDOMRESET_UI()
     CLEAR_ITEMRANDOMRESET_UI_OLD()
     local frame = ui.GetFrame('itemrandomreset')
     local btn = frame:GetChild('btnactivate')
@@ -244,12 +244,12 @@ function ENCHANTROLLER_CLEAR_ITEMRANDOMRESET_UI()
     g.frame:ShowWindow(0)
 end
 
-function ENCHANTROLLER_ITEMRANDOMRESET_CLOSE(frame)
+function OPTIONROLLER_ITEMRANDOMRESET_CLOSE(frame)
     ITEMRANDOMRESET_CLOSE_OLD(frame)
     local frame = ui.GetFrame(g.framename)
     frame:ShowWindow(0)
 end
-function ENCHANTROLLER_ITEM_RANDOMRESET_REG_TARGETITEM(frame, itemID)
+function OPTIONROLLER_ITEM_RANDOMRESET_REG_TARGETITEM(frame, itemID)
     ITEM_RANDOMRESET_REG_TARGETITEM_OLD(frame, itemID)
     if ui.CheckHoldedUI() == true then
         return
@@ -288,14 +288,14 @@ function ENCHANTROLLER_ITEM_RANDOMRESET_REG_TARGETITEM(frame, itemID)
     AUTO_CAST(btn)
 
     btn:SetEnable(1)
-    ENCHANTROLLER_ACTIVATE(invItem)
+    OPTIONROLLER_ACTIVATE(invItem)
 end
-function ENCHANTROLLER_ACTIVATE(invItem)
+function OPTIONROLLER_ACTIVATE(invItem)
     EBI_try_catch {
         try = function()
             local frame = g.frame
 
-            ENCHANTROLLER_INITFRAME(frame, invItem)
+            OPTIONROLLER_INITFRAME(frame, invItem)
         end,
         catch = function(error)
             ERROUT(error)
@@ -303,11 +303,11 @@ function ENCHANTROLLER_ACTIVATE(invItem)
     }
 end
 
-function ENCHANTROLLER_TOGGLEFRAME()
+function OPTIONROLLER_TOGGLEFRAME()
     ui.ToggleFrame(g.framename)
     local frame = ui.GetFrame(g.framename)
 end
-function ENCHANTROLLER_INITFRAME(frame, invItem)
+function OPTIONROLLER_INITFRAME(frame, invItem)
     EBI_try_catch {
         try = function()
             local frame = ui.GetFrame(g.framename)
@@ -390,7 +390,7 @@ function ENCHANTROLLER_INITFRAME(frame, invItem)
             btngo:SetOffset(0, 20)
             btngo:SetSkinName('base_btn')
             btngo:SetText('{ol}EXECUTE')
-            btngo:SetEventScript(ui.LBUTTONUP, 'ENCHANTROLLER_CONFIRM')
+            btngo:SetEventScript(ui.LBUTTONUP, 'OPTIONROLLER_CONFIRM')
 
             g.invItem = invItem
         end,
@@ -399,7 +399,7 @@ function ENCHANTROLLER_INITFRAME(frame, invItem)
         end
     }
 end
-function ENCHANTROLLER_CONFIRM()
+function OPTIONROLLER_CONFIRM()
     EBI_try_catch {
         try = function()
             local frame = ui.GetFrame(g.framename)
@@ -496,7 +496,7 @@ function ENCHANTROLLER_CONFIRM()
                 txt = txt .. 'Max Req Powders:{img icon_item_breakpowder_1 20 20}' .. nucle .. ' {img icon_item_breakpowder_2 20 20}' .. sierra .. '{nl}'
             end
             txt = txt .. '{nl}Do you want to do auto reroll?'
-            ui.MsgBox(txt, 'ENCHANTROLLER_EXECUTE()', 'None')
+            ui.MsgBox(txt, 'OPTIONROLLER_EXECUTE()', 'None')
         end,
         catch = function(error)
             ERROUT(error)
@@ -504,12 +504,12 @@ function ENCHANTROLLER_CONFIRM()
     }
 end
 
-function ENCHANTROLLER_EXECUTE()
+function OPTIONROLLER_EXECUTE()
     g.go=true
-    ui.SetEscapeScp('ENCHANTROLLER_CANCEL()')
-    ENCHANTROLLER_DO_EXECUTE()
+    ui.SetEscapeScp('OPTIONROLLER_CANCEL()')
+    OPTIONROLLER_DO_EXECUTE()
 end
-function ENCHANTROLLER_DO_EXECUTE()
+function OPTIONROLLER_DO_EXECUTE()
     EBI_try_catch {
         try = function()
             local invItem = g.invItem
@@ -553,7 +553,7 @@ function ENCHANTROLLER_DO_EXECUTE()
                 local itemCount = GetInvItemCount(ppc, materialCls.ClassName)
                 if(itemCount<materialItemCount)then
                     ui.SysMsg('Insufficient ingredients.')
-                    ENCHANTROLLER_CANCEL()
+                    OPTIONROLLER_CANCEL()
                     return;
                 end
                 --session.AddItemID(materialCls.ClassID, materialItemCount);
@@ -566,13 +566,13 @@ function ENCHANTROLLER_DO_EXECUTE()
         end
     }
 end
-function ENCHANTROLLER_CANCEL()
+function OPTIONROLLER_CANCEL()
     g.attempts = -1
     g.go=false
     ui.SysMsg('Cancelled.')
     ui.SetEscapeScp('')
 end
-function ENCHANTROLLER_SUCCESS_RESET_RANDOM_OPTION()
+function OPTIONROLLER_SUCCESS_RESET_RANDOM_OPTION()
     EBI_try_catch {
         try = function()
             if g.go==false then
@@ -627,7 +627,7 @@ function ENCHANTROLLER_SUCCESS_RESET_RANDOM_OPTION()
                     ui.SysMsg('Remain Attempt:' .. g.attempts)
                     g.attempts = g.attempts - 1
                     -- いくらでも早くできるが、まぁ
-                    ReserveScript('ENCHANTROLLER_DO_EXECUTE()', 1.5)
+                    ReserveScript('OPTIONROLLER_DO_EXECUTE()', 1.5)
                 end
             end
         end,
