@@ -487,10 +487,10 @@
   },
   {
     "name": "No challengemodenextdialog",
-    "file": "nochallengemodenextdialog",
+    "file": "ebinochallengemodenextdialog",
     "extension": "ipf",
     "fileVersion": "v0.0.1",
-    "releaseTag": "nochallengemodenextdialog-v0.0.1",
+    "releaseTag": "ebinochallengemodenextdialog-v0.0.1",
     "unicode": "📖",
     "description": "チャレンジモードで次の段階に進む際のダイアログを省略します。  ",
     "tags": [
