@@ -4,19 +4,10 @@ local addonName = "uimodeexpert"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
-
---アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
-_G['ADDONS'] = _G['ADDONS'] or {}
-_G['ADDONS'][author] = _G['ADDONS'][author] or {}
-_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
-local g = _G['ADDONS'][author][addonName]["g"]
-local v = _G['ADDONS'][author][addonName]["v"]
-
 local acutil = require('acutil')
 
 --ライブラリ読み込み
 
-local acutil = require('acutil')
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
@@ -59,10 +50,10 @@ local function ERROUT(msg)
 
 end
 
-g.v=g.v or {
-    hotkeyenablecount=0
-}
-g.f={
+UIMODEEXPERT=UIMODEEXPERT or {}
+local g=UIMODEEXPERT
+
+g=table.concat(g,{
     initialize=function(self)
     end,
     enableHotKey=function(self)
@@ -88,7 +79,8 @@ g.f={
         ui.GetFrame("uimodecommand"):ShowWindow(0)
 
     end
-}
+});
+UIMODEEXPERT=g;
 
 
 
@@ -106,8 +98,6 @@ function UIMODEEXPERT_ON_INIT(addon, frame)
                 g.loaded = true
             end
             addon:RegisterMsg('FPS_UPDATE', 'UIMODEEXPERT_FPS_UPDATE');
-            addon:RegisterMsg('BUFF_REMOVE', 'BUFFREMAINVISUALIZER_BUFF_ON_MSG');
-            addon:RegisterMsg('BUFF_UPDATE', 'BUFFREMAINVISUALIZER_BUFF_ON_MSG');
 
             g.frame:ShowWindow(0)
         end,
@@ -119,3 +109,6 @@ end
 function UIMODEEXPERT_FPS_UPDATE(frame)
     frame:ShowWindow(1)
 end
+
+
+UIMODEEXPERT=g
