@@ -1,20 +1,9 @@
---uimodeexpert
-local addonName = "uimodeexpert"
-local addonNameLower = string.lower(addonName)
---作者名
-local author = 'ebisuke'
-
---アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
-_G['ADDONS'] = _G['ADDONS'] or {}
-_G['ADDONS'][author] = _G['ADDONS'][author] or {}
-_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
-local g = _G['ADDONS'][author][addonName]["g"]
-local v = _G['ADDONS'][author][addonName]["v"]
+--uie_tip
 
 local acutil = require('acutil')
-
+local framename="uie_tip"
 --ライブラリ読み込み
-local acutil = require('acutil')
+
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
@@ -60,24 +49,23 @@ end
 
 
 --マップ読み込み時処理（1度だけ）
-function UIMODEINVENTORY_ON_INIT(addon, frame)
+function UIE_TIP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
-            frame = ui.GetFrame(g.framename)
-            g.addon = addon
-            g.frame = frame
-
-
-            --ccするたびに設定を読み込む
-            if not g.loaded then
-                
-                g.loaded = true
-            end
-
-            g.frame:ShowWindow(0)
+            frame = ui.GetFrame(framename)
+            frame:ShowWindow(0)
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
+
+
+UIMODEEXPERT=UIMODEEXPERT or {}
+local g=UIMODEEXPERT
+
+g=table.concat(g,{
+    
+});
+UIMODEEXPERT=g;

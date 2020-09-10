@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="uie_tip" x="0" y="0" width="600" height="60" create="open">
+	<frame fasthide="true" layout_gravity="left top"/>
+    <option closebutton="false" hideable="false" useimageitem="true"/>
+    <skin frameskin="None"/> 
+    <layer layerlevel="30"/>
+    <draw drawtitlebar="false" drawframe="true"/>
+    <input hittest="false" hittestframe="false" movable="true"/>
+	<controls>
+		<timer name="addontimer" rect="0 0 10 10"/>
+	</controls>
+</uiframe>

@@ -135,8 +135,8 @@ function TESTBOARD_ON_INIT(addon, frame)
             -- --ドラッグ
             -- frame:SetEventScript(ui.LBUTTONUP, "AFKMUTE_END_DRAG")
             --TESTBOARD_SHOW(g.frame)
-            TESTBOARD_GETFRAME_OLD=ui.GetFrame
-            ui.GetFrame=TESTBOARD_GETFRAME
+            --TESTBOARD_GETFRAME_OLD=ui.GetFrame
+            --ui.GetFrame=TESTBOARD_GETFRAME
 
             TESTBOARD_INIT()
             g.frame:ShowWindow(0)
@@ -216,7 +216,26 @@ function TESTBOARD_TEST()
             effect.PlayTextEffect(pc,"I_SYS_damage",'100');
             effect.PlayTextEffect(pc,"SHOW_DMG_SHIELD","100");
             effect.PlayTextEffect(pc,"I_SYS_heal2","100");
-
+            local objList, objCount = SelectObject(self, 300, 'ALL') 
+            CHAT_SYSTEM("Thaurge BEGIN")
+                    
+            for i = 1, objCount do
+                local enemyHandle = GetHandle(objList[i]);
+			    local enemy = world.GetActor(enemyHandle);
+                if objList[i].ClassName == 'pcskill_Warlock_DarkTheurge' then
+                    local enemyDestPos = enemy:GetArgPos(0);
+                    local enemyPos = enemy:GetPos();
+                    local distFromActor = imcMath.Vec3Dist(enemyPos, pos);
+                    CHAT_SYSTEM("Thaurge"..enemyHandle..":"..tostring(objList[i].Faction))
+                  
+                end
+                if objList[i].ClassID==150011 then
+                    ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(enemyHandle)
+                end
+                if objList[i].ClassID==150010 then
+                    ACCEPT_CHALLENGE_MODE(enemyHandle)
+                end
+		    end
         end,
         catch = function(error)
             ERROUT("FAIL:" .. tostring(error))
@@ -228,8 +247,4 @@ function TESTBOARD_TAKEDAMAGE()
 end
 function TESTBOARD_SCP()
     DBGOUT("scp")
-end
-function SYS_damage_their(arg)
-    CHAT_SYSTEM(""..arg)
-	return "111111"
 end
