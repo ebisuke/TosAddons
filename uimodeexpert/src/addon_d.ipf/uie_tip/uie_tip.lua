@@ -3,7 +3,7 @@
 local acutil = require('acutil')
 local framename="uie_tip"
 --ライブラリ読み込み
-
+local debug=false
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
@@ -18,7 +18,7 @@ local function DBGOUT(msg)
     
     EBI_try_catch{
         try = function()
-            if (g.debug == true) then
+            if (debug == true) then
                 CHAT_SYSTEM(msg)
                 
                 print(msg)
@@ -65,7 +65,5 @@ end
 UIMODEEXPERT=UIMODEEXPERT or {}
 local g=UIMODEEXPERT
 
-g=table.concat(g,{
-    
-});
+
 UIMODEEXPERT=g;
