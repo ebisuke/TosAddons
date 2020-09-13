@@ -288,8 +288,8 @@
     "name": "Cube Opener",
     "file": "cubeopener",
     "extension": "ipf",
-    "fileVersion": "v0.0.9",
-    "releaseTag": "cubeopener-v0.0.9",
+    "fileVersion": "v0.0.10",
+    "releaseTag": "cubeopener-v0.0.10",
     "unicode": "📖",
     "description": "キューブを楽に開きます",
     "tags": [

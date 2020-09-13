@@ -1,7 +1,7 @@
---uie_tip
+--uie_cursor
 
 local acutil = require('acutil')
-local framename="uie_tip"
+local framename="uie_cursor"
 --ライブラリ読み込み
 local debug=false
 function EBI_try_catch(what)
@@ -49,21 +49,37 @@ end
 
 
 --マップ読み込み時処理（1度だけ）
-function UIE_TIP_ON_INIT(addon, frame)
+function UIE_CURSOR_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
             frame = ui.GetFrame(framename)
             frame:ShowWindow(0)
+            frame:SetSkinName('none')
+            frame:SetGravity(ui.LEFT,ui.TOP)
+            local slot=frame:CreateOrGetControl("slot","slot1",0,0,0,0)
+            AUTO_CAST(slot)
+            slot:SetSkinName('invenslot_magic')
+            local timer=frame:GetChild("addontimer")
+            AUTO_CAST(timer)
+            timer:SetUpdateScript('UIE_CURSOR_ON_TICK')
+            timer:Start(0.01)
+            frame:SetLayerLevel(200)
+            
+            slot:SetBlink(0, 2.0, '77FFFFFF', 1)
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-
-
+function UIE_CURSOR_ON_TICK(frame)
+    local slot=frame:GetChild("slot1")
+    AUTO_CAST(slot)
+    slot:Resize(frame:GetWidth(),frame:GetHeight())
+end
 UIMODEEXPERT=UIMODEEXPERT or {}
 local g=UIMODEEXPERT
+
 
 
 UIMODEEXPERT=g;
