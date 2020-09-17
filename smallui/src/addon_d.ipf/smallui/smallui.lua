@@ -21,6 +21,7 @@ g.interlocked = false
 g.currentIndex = 1
 g.x = nil
 g.y = nil
+g.applyjoystick=false
 g.buffs = {}
 --ライブラリ読み込み
 CHAT_SYSTEM("[SU]loaded")
@@ -89,7 +90,7 @@ function SMALLUI_ON_INIT(addon, frame)
             addontimer:EnableHideUpdate(1)
             g.frame:ShowWindow(1)
             g.frame:SetOffset(0,0)
-            
+            g.applyjoystick=false
         end,
         catch = function(error)
             ERROUT(error)
@@ -161,7 +162,16 @@ function SMALLUI_APPLY()
                 SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
             end
             if(g.settings.resizequickslot)then
-                SMALLUI_SMALLIFY_QUICKSLOT()
+                if IsJoyStickMode() == 1 then
+                    if not g.applyjoystick then
+                        SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
+                    end
+                else
+                    SMALLUI_SMALLIFY_QUICKSLOT()
+                end
+              
+                
+               
             end
             -- if(g.settings.resizechat)then
             --     SMALLUI_SMALLIFY_CHATFRAME()
@@ -173,7 +183,113 @@ function SMALLUI_APPLY()
         end
     }
 end
+function SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
+    local frame = ui.GetFrame("joystickquickslot")
+    
+    local mul=0.75
+    local line = 280
+    local x
+    g.applyjoystick=true
+    
+    --addon supports
+    if ui.GetFrame('tpjoyext') then
+        local list={
+            "Set1",
+            "Set2",
+            "Set3",
+            "L1_slot_Set1",
+            "L2_slot_Set1",
+            "L1R1_slot_Set1",
+            "R1_slot_Set1",
+            "R2_slot_Set1",
+            "L1L2_slot_Set2",
+            "L2R1_slot_Set2",
+            "L2R2_slot_Set2",
+            "L1R2_slot_Set2",
+            "R1R2_slot_Set2",
 
+        }
+        
+        for _,v in ipairs(list) do
+            local ctrl=frame:GetChildRecursively(v)
+            local margin=ctrl:GetMargin()
+
+            ctrl:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
+            ctrl:Resize(ctrl:GetWidth()*mul,ctrl:GetHeight()*mul)
+        end
+        local ctrl=frame:GetChildRecursively("slot_bg")
+        ctrl:SetMargin(0,0,0,-350)
+        ctrl=frame:GetChildRecursively("rest_R2")
+        ctrl:SetMargin(280,0,0,-350)
+        ctrl=frame:GetChildRecursively("rest_L1")
+        ctrl:SetMargin(-275,0,0,-350)
+        ctrl=frame:GetChildRecursively("refreshBtn")
+        ctrl:SetMargin(-145,25,0,-350)
+        ctrl=frame:GetChildRecursively("L2R2")
+        ctrl:SetMargin(-100,55,0,0)
+        ctrl=frame:GetChildRecursively("L2R2_Set1")
+        ctrl:SetMargin(-33,50,0,0)
+        ctrl=frame:GetChildRecursively("L2R2_Set2")
+        ctrl:SetMargin(33,50,0,0)
+        for i=1,40 do
+            local name="slot"..i
+            local slot=frame:GetChildRecursively(name)
+            local margin=slot:GetMargin()
+            slot:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
+            slot:Resize(slot:GetWidth()*mul,slot:GetHeight()*mul)
+            
+        end
+        --frame:SetMargin(0,0,0,0)
+        --frame:SetGravity(ui.CENTER_HORZ,ui.BOTTOM)
+    else
+        local list={
+            "Set1",
+            "Set2",
+            "L1_slot_Set1",
+            "L2_slot_Set1",
+            "L1R1_slot_Set1",
+            "R1_slot_Set1",
+            "R2_slot_Set1",
+            "L1_slot_Set2",
+            "L2_slot_Set2",
+            "L1R1_slot_Set2",
+            "R1_slot_Set2",
+            "R2_slot_Set2",
+        }
+        for _,v in ipairs(list) do
+            local ctrl=frame:GetChildRecursively(v)
+            local margin=ctrl:GetMargin()
+
+            ctrl:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
+            ctrl:Resize(ctrl:GetWidth()*mul,ctrl:GetHeight()*mul)
+        end
+        local ctrl=frame:GetChildRecursively("slot_bg")
+        ctrl:SetMargin(0,0,0,-250)
+        ctrl=frame:GetChildRecursively("rest_R2")
+        ctrl:SetMargin(280,0,0,-250)
+        ctrl=frame:GetChildRecursively("rest_L1")
+        ctrl:SetMargin(-275,0,0,-250)
+        ctrl=frame:GetChildRecursively("refreshBtn")
+        ctrl:SetMargin(-145,100,0,-250)
+        ctrl=frame:GetChildRecursively("L2R2")
+        ctrl:SetMargin(-100,55,0,0)
+        ctrl=frame:GetChildRecursively("L2R2_Set1")
+        ctrl:SetMargin(-33,50,0,0)
+        ctrl=frame:GetChildRecursively("L2R2_Set2")
+        ctrl:SetMargin(33,50,0,0)
+        for i=1,40 do
+            local name="slot"..i
+            local slot=frame:GetChildRecursively(name)
+            local margin=slot:GetMargin()
+            slot:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
+            slot:Resize(slot:GetWidth()*mul,slot:GetHeight()*mul)
+            
+        end
+    end
+    JOYSTICK_QUICKSLOT_UPDATE_ALL_SLOT()
+    JOYSTICK_QUICKSLOT_REFRESH(40);
+
+end
 function SMALLUI_SMALLIFY_QUICKSLOT()
     local frame = ui.GetFrame("quickslotnexpbar")
     local sz = g.settings.quickslotsize
@@ -346,6 +462,13 @@ function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     SMALLUI_DO_SMALL_BUTTON(frame)
     ps=ps+sz
     frame = ui.GetFrame("minimized_guild_housing")
+    frame:SetMargin(0, ps, 0, 0)
+    SMALLUI_DO_SMALL_BUTTON(frame)
+    frame = ui.GetFrame("minimized_housing_promote_board")
+    frame:SetMargin(0, ps, 0, 0)
+    SMALLUI_DO_SMALL_BUTTON(frame)
+    ps=ps+sz
+    frame = ui.GetFrame("minimized_pvpmine_shop_button")
     frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
     ps=ps+sz
