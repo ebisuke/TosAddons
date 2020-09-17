@@ -230,10 +230,11 @@ g.uieHandlerControlTracer = {
                         local ph=cc:GetParent():GetHeight()
                         if cc:GetParent():GetParent() and  cc:GetParent():GetParent():GetClassString()~='ui::CFrame' then
                             local pp= cc:GetParent():GetParent()
-                            pw=math.min(pp:GetWidth()-px,math.min((pp:GetWidth()+w)-(x+px),pw))
-                            ph=math.min(pp:GetHeight()-py,math.min((pp:GetHeight()+h)-(y+px),ph))
+                            --pw=math.min(pp:GetWidth()-px,math.min((pp:GetWidth()+w)-(x+px),pw))
+                            --ph=math.min(pp:GetHeight()-py,math.min((pp:GetHeight()+h)-(y+px),ph))
                             
                         end
+                        
                         if (x+w>=0)and(y+h>=0)and(x<pw)and(y<ph) then
                             self.ctrls[#self.ctrls + 1] = cc
                             self.ctrlscount = self.ctrlscount + 1
