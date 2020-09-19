@@ -58,7 +58,7 @@ g.uieHandlerBase = {
     end,
     moveMouseToControl = function(self, ctrl)
         local pos = ctrl:GetTopParentFrame():FramePosToScreenPos(ctrl:GetGlobalX() , ctrl:GetGlobalY() )
-        g:moveMouse(pos.x, pos.y,ctrl:GetWidth(),ctrl:GetHeight())
+        g:moveMouse(pos.x, pos.y,ctrl:GetWidth(),ctrl:GetHeight(),ctrl)
     end,
     enter = function(self)
         g:disableHotKey()
@@ -99,7 +99,7 @@ g.uieHandlerGenericDialog = {
         end
         if ctrl then
             local pos = msgbox:FramePosToScreenPos(ctrl:GetGlobalX() , ctrl:GetGlobalY() )
-            g:moveMouse(pos.x, pos.y,ctrl:GetWidth(), ctrl:GetHeight() )
+            g:moveMouse(pos.x, pos.y,ctrl:GetWidth(), ctrl:GetHeight(),ctrl )
         end
     end,
     tick = function(self)
@@ -433,7 +433,34 @@ g.uieHandlerControlTracer = {
         return g.uieHandlerBase.RefPass
     end
 }
+g.uieHandlerUIEInventory = {
+    new = function(key, frame)
+        local self = inherit(g.uieHandlerUIEInventory, g.uieHandlerFrameBase, key, frame)
 
+        return self
+    end,
+
+    delayedenter = function(self)
+        g.uieHandlerFrameBase.delayedenter(self)
+        self:refresh()
+    end,
+    refresh = function(self)
+        g.uieHandlerFrameBase.refresh(self)
+
+    end,
+    moveMouse = function(self, idx)
+        if idx < self.ctrlscount then
+            local ctrl = self.ctrls[idx + 1]
+
+            self:moveMouseToControl(ctrl)
+        end
+    end,
+
+    tick = function(self)
+        
+        return g.uieHandlerBase.RefPass
+    end
+}
 g.uieHandlerInventoryBase = {
     new = function(key, frame)
         local self = inherit(g.uieHandlerInventoryBase, g.uieHandlerFrameBase, key, frame)

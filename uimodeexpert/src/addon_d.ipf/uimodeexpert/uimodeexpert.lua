@@ -164,6 +164,9 @@ g.enableHotKey = function(self)
     if (g._hotkeyenablecount == 0) then
         keyboard.EnableHotKey(true)
         self._mousemoveto = nil
+
+        ui.SetTopMostFrame()
+
         ui.GetFrame('uie_cursor'):ShowWindow(0)
     --ui.SetHoldUI(false);
     end
@@ -173,6 +176,9 @@ g.disableHotKey = function(self)
         keyboard.EnableHotKey(false)
         self._mousemoveto = nil
         local frame = ui.GetFrame('uie_cursor')
+       
+        ui.SetTopMostFrame()
+        
         frame:ShowWindow(0)
         if (g.isHighRes()) then
             frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
@@ -239,17 +245,20 @@ end
 g.onChangedCursor = function(self)
     imcSound.PlaySoundEvent('sys_mouseover_percussion_1')
 end
-g.moveMouse = function(self, x, y, w, h)
+g.moveMouse = function(self, x, y, w, h,ctrl)
     local frame = ui.GetFrame('uie_cursor')
     ui.GetFrame('uie_cursor'):ShowWindow(1)
-
-    if g.isHighRes() then
-        self._mousemoveto = {x = x / 2, y = y / 2, w = w, h = h, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
-        self._mousemoveto = {x = x / 2, y = y / 2, w = w, h = h, ox = mouse.GetX() / 2, oy = mouse.GetY() / 2, ow = 2, oh = 2, time = 0, maxtime = 5}
-    else
-        self._mousemoveto = {x = x, y = y, w = w, h = h, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
-        self._mousemoveto = {x = x, y = y, w = w, h = h, ox = mouse.GetX(), oy = mouse.GetY(), ow = 2, oh = 2, time = 0, maxtime = 5}
-    end
+    
+    ui.SetTopMostFrame(ui.GetFrame('uie_cursor'))
+    self._mousemoveto = {x = x, y = y, w = w, h = h,ctrl=ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
+        
+    -- if g.isHighRes() then
+    --     self._mousemoveto = {x = x / 2, y = y / 2, w = w, h = h,ctrl=ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
+    --     --self._mousemoveto = {x = x / 2, y = y / 2, w = w, h = h, ox = mouse.GetX() / 2, oy = mouse.GetY() / 2, ow = 2, oh = 2, time = 0, maxtime = 5}
+    -- else
+    --     self._mousemoveto = {x = x, y = y, w = w, h = h,ctrl=ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
+    --     --self._mousemoveto = {x = x, y = y, w = w, h = h, ox = mouse.GetX(), oy = mouse.GetY(), ow = 2, oh = 2, time = 0, maxtime = 5}
+    -- end
 end
 g.onCanceledCursor = function(self)
     imcSound.PlaySoundEvent('textballoon_open')
@@ -297,34 +306,77 @@ g.uieHandlerControlTracerGenerator = function(flags)
     end
 end
 g._registeredFrameHandlers = {
-    ['portal_seller'] = g.uieHandlerControlTracerGenerator(),
-    ['itembuffrepair'] = g.uieHandlerControlTracerGenerator(),
-    ['buffseller_target'] = g.uieHandlerControlTracerGenerator(),
-    ['appraisal_pc'] = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
-    ['fishing'] = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_SLOT),
-    ['fishing_item_bag'] = g.uieHandlerControlTracerGenerator(),
-    ['indunenter'] = g.uieHandlerControlTracerGenerator(),
-    ['camp_ui'] = g.uieHandlerControlTracerGenerator(),
-    ['camp_register'] = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
-    ['foodtable_ui'] = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_CHANGETAB_BYMENU),
-    ['bookitemread'] = g.uieHandlerControlTracerGenerator(),
-    ['warningmsgbox'] = g.uieHandlerControlTracerGenerator(),
-    ['itemdecompose'] = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
-    ['shop'] = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON),
-    ['induntheend'] = g.uieHandlerControlTracerGenerator(),
-    ['inputstring'] = g.uieHandlerControlTracerGenerator(),
-    ['dialogselect'] = function(...)
+    ['portal_seller'] = {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['itembuffrepair'] =  {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['buffseller_target'] = {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['appraisal_pc'] = {
+        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
+    },
+    ['fishing'] = {
+        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_SLOT)
+    },
+    ['fishing_item_bag'] = {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['indunenter'] = {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['camp_ui'] =  {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['camp_register'] = {
+        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
+    },
+    ['foodtable_ui'] = {
+        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_CHANGETAB_BYMENU)
+    }
+        ,
+    ['bookitemread'] =  {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['warningmsgbox'] =  {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['itemdecompose'] = {
+        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
+    },
+    ['shop'] = {
+        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON),
+    },
+    ['induntheend'] = {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['inputstring'] =  {
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['inventory'] =  {
+        overrider=true
+        generator=g.uieHandlerControlTracerGenerator(),
+    },
+    ['dialogselect'] = {
+        generator=
+            function(...)
+            return g.uieHandlerDummy.new(...)
+        end,
+    },
+    ['dialog'] = {
+        generator=
+        function(...)
         return g.uieHandlerDummy.new(...)
-    end,
-    ['dialog'] = function(...)
+    end}
+    ,
+    ['dialogillust'] ={
+generator=
+     function(...)
         return g.uieHandlerDummy.new(...)
-    end,
-    ['dialogillust'] = function(...)
-        return g.uieHandlerDummy.new(...)
-    end,
-    ['inventory'] = function(...)
-        return g.uieHandlerInventoryBase.new(...)
     end
+},
 }
 g._activeHandlers = {}
 UIMODEEXPERT = g
@@ -477,38 +529,48 @@ function UIMODEEXPERT_ON_TICK(frame)
             if g._mousemoveto then
                 local destpos = {x = g._mousemoveto.x, y = g._mousemoveto.y, w = g._mousemoveto.w, h = g._mousemoveto.h}
                 local curpos = {x = g._mousemoveto.ox, y = g._mousemoveto.oy, w = g._mousemoveto.ow, h = g._mousemoveto.oh}
-                local cursorframe = ui.GetFrame('uie_cursor')
-                cursorframe:ShowWindow(0)
-                -- cursorframe:Resize(curpos.w + (destpos.w - curpos.w) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5),
-                -- curpos.h + (destpos.h - curpos.h) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5))
+                if g._mousemoveto.ctrl then
+                    local ctrl=g._mousemoveto.ctrl
+                    destpos = {x = ctrl:GetGlobalX(), y = ctrl:GetGlobalY(), w = ctrl:GetWidth(), h = ctrl:GetHeight()}
+                end
 
-                -- cursorframe:SetOffset(
-                --         (curpos.x + (destpos.x - curpos.x) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5)),
-                --     (curpos.y + (destpos.y - curpos.y) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5)))
+                local cursorframe = ui.GetFrame('uie_cursor')
+
+                cursorframe:Resize(curpos.w + (destpos.w - curpos.w) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5),
+                curpos.h + (destpos.h - curpos.h) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5))
+
+                cursorframe:SetOffset(
+                        (curpos.x + (destpos.x - curpos.x) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5)),
+                    (curpos.y + (destpos.y - curpos.y) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5)))
 
                 local lx
 
                 local ly
-                if g.isHighRes() then
-                    lx =
-                        (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
-                        (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                    ly =
-                        (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
-                        (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                -- if g.isHighRes() then
+                --     lx =
+                --         (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
+                --         (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                --     ly =
+                --         (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
+                --         (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
 
-                    lx = lx * 2
-                    ly = ly * 2
-                else
-                    lx =
-                        curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
-                        (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                    ly =
-                        curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
-                        (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                end
-
-                mouse.SetPos(lx, ly)
+                --     lx = lx * 2
+                --     ly = ly * 2
+                -- else
+                --     lx =
+                --         curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                --         (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                --     ly =
+                --         curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                --         (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                -- end
+                lx =
+                    curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                    (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                ly =
+                    curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                    (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                --mouse.SetPos(lx, ly)
                 g._mousemoveto.time = g._mousemoveto.time + 1
                 if g._mousemoveto.time > g._mousemoveto.maxtime then
                     g._mousemoveto = nil
