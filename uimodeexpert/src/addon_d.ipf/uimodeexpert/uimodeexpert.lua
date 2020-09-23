@@ -5,7 +5,7 @@ local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
 local acutil = require('acutil')
-local debug = false
+local debug = true
 --ライブラリ読み込み
 
 function EBI_try_catch(what)
@@ -61,10 +61,12 @@ g.keydef = {
     MAIN = 0x0010,
     CANCEL = 0x0020,
     SUB = 0x0040,
-    MENU = 0x0080,
-    PAGEUP = 0x0100,
-    PAGEDOWN = 0x0200,
-    SYSMENU = 0x0400
+    TABLEFT = 0x0080,
+    TABRIGHT = 0x0100,
+    MENU = 0x0200,
+    PAGEUP = 0x0400,
+    PAGEDOWN = 0x0800,
+    SYSMENU = 0x1000
 }
 g._KeyboardFunctions = {
     [g.keydef.UP] = function(instance, fn)
@@ -80,7 +82,7 @@ g._KeyboardFunctions = {
         return instance[fn](instance, 'RIGHT')
     end,
     [g.keydef.MAIN] = function(instance, fn)
-        return instance[fn](instance, 'Z') or instance[fn](instance, 'SPACE') or instance[fn](instance, 'ENTER') or instance[fn](instance, 'PADENTER')
+        return instance[fn](instance, 'Z')
     end,
     [g.keydef.CANCEL] = function(instance, fn)
         return instance[fn](instance, 'X') or instance[fn](instance, 'ESCAPE')
@@ -90,6 +92,12 @@ g._KeyboardFunctions = {
     end,
     [g.keydef.MENU] = function(instance, fn)
         return instance[fn](instance, 'V')
+    end,
+    [g.keydef.TABLEFT] = function(instance, fn)
+        return instance[fn](instance, 'A')
+    end,
+    [g.keydef.TABRIGHT] = function(instance, fn)
+        return instance[fn](instance, 'S')
     end,
     [g.keydef.PAGEUP] = function(instance, fn)
         return instance[fn](instance, 'PRIOR')
@@ -109,10 +117,12 @@ g.key = {
     MAIN = 0x0010,
     CANCEL = 0x0020,
     SUB = 0x0040,
-    MENU = 0x0080,
-    PAGEUP = 0x0100,
-    PAGEDOWN = 0x0200,
-    SYSMENU = 0x0400,
+    TABLEFT = 0x0080,
+    TABRIGHT = 0x0100,
+    MENU = 0x0200,
+    PAGEUP = 0x0400,
+    PAGEDOWN = 0x0800,
+    SYSMENU = 0x1000,
     _repeattime = 10,
     _repeatinterval = 3,
     _timer = {},
@@ -176,9 +186,9 @@ g.disableHotKey = function(self)
         keyboard.EnableHotKey(false)
         self._mousemoveto = nil
         local frame = ui.GetFrame('uie_cursor')
-       
+
         ui.SetTopMostFrame()
-        
+
         frame:ShowWindow(0)
         if (g.isHighRes()) then
             frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
@@ -206,6 +216,12 @@ g.Enable = function(self, enable)
     self._isEnable = enable
     if not self._isEnable then
         self._msgBoxes = {}
+        for _, v in ipairs(self._activeHandlers) do
+            if v._overrider then
+                v._overrider:restore()
+            end
+        end
+
         self._activeHandlers = {}
         self._hotkeyenablecount = 0
         self:enableHotKey()
@@ -226,17 +242,44 @@ g.checkFrames = function(self)
             -- not registered
             local frame = ui.GetFrame(k)
             if frame and frame:IsVisible() == 1 then
-                handler = g._registeredFrameHandlers[k](k, frame)
+                DBGOUT('enter:' .. k)
+                local overrider = nil
+                if g._registeredFrameHandlers[k].overrider then
+                    local ret = g._registeredFrameHandlers[k].overrider(k, frame)
+                    overrider = ret
+                    if ret == false then
+                        --cancel operation
+                        return
+                    elseif ret then
+                        handler = ret:override()
+                        if not handler then
+                           
+                            handler = g._registeredFrameHandlers[k].generator(k, frame)
+                        end
+                    else
+                        handler = g._registeredFrameHandlers[k].generator(k, frame)
+                    end
+                else
+                    handler = g._registeredFrameHandlers[k].generator(k, frame)
+                end
                 local key = #g._activeHandlers + 1
+                handler._overrider = overrider
                 g._activeHandlers[key] = handler
                 handler:enter()
+
                 ReserveScript(string.format('UIMODEEXPERT_DELAYEDENTER(%d)', key, 0.1))
             end
         else
             --registered
             local frame = ui.GetFrame(k)
+
             if not frame or frame:IsVisible() == 0 then
+                DBGOUT('leave:' .. k)
                 handler:leave()
+                if handler._overrider then
+                    DBGOUT('restore:' .. k)
+                    handler._overrider:restore()
+                end
                 table.remove(g._activeHandlers, idx)
             end
         end
@@ -245,13 +288,13 @@ end
 g.onChangedCursor = function(self)
     imcSound.PlaySoundEvent('sys_mouseover_percussion_1')
 end
-g.moveMouse = function(self, x, y, w, h,ctrl)
+g.moveMouse = function(self, x, y, w, h, ctrl)
     local frame = ui.GetFrame('uie_cursor')
     ui.GetFrame('uie_cursor'):ShowWindow(1)
-    
+
     ui.SetTopMostFrame(ui.GetFrame('uie_cursor'))
-    self._mousemoveto = {x = x, y = y, w = w, h = h,ctrl=ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
-        
+    self._mousemoveto = {x = x, y = y, w = w, h = h, ctrl = ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
+
     -- if g.isHighRes() then
     --     self._mousemoveto = {x = x / 2, y = y / 2, w = w, h = h,ctrl=ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
     --     --self._mousemoveto = {x = x / 2, y = y / 2, w = w, h = h, ox = mouse.GetX() / 2, oy = mouse.GetY() / 2, ow = 2, oh = 2, time = 0, maxtime = 5}
@@ -270,10 +313,18 @@ g.triggerCloseMessageBox = function(self, keys)
     for _, v in ipairs(g._activeHandlers) do
         if v.key == keys then
             v:leave()
+            if v._overrider then
+                v._overrider:restore()
+            end
             self._msgBoxes[keys] = nil
             break
         end
     end
+end
+g.showOriginalInventory = function(self)
+    g._showInventory = 1
+    
+    ui.GetFrame('inventory'):ShowWindow(1)
 end
 g.isHighRes = function(self)
     return option.GetClientWidth() >= 3000
@@ -284,7 +335,7 @@ g.triggerShowMessageBox = function(self, msgbox, key, btncount, yesscp, noscp, e
             if not g._isEnable then
                 return
             end
-            
+
             self._msgBoxes[key] = msgbox
             --AUTO_CAST(msgbox)
             local handler = g.uieHandlerGenericDialog.new(key, btncount, yesscp, noscp, etcscp)
@@ -307,76 +358,121 @@ g.uieHandlerControlTracerGenerator = function(flags)
 end
 g._registeredFrameHandlers = {
     ['portal_seller'] = {
-        generator=g.uieHandlerControlTracerGenerator(),
+        generator = g.uieHandlerControlTracerGenerator()
     },
-    ['itembuffrepair'] =  {
-        generator=g.uieHandlerControlTracerGenerator(),
+    ['itembuffrepair'] = {
+        generator = g.uieHandlerControlTracerGenerator()
     },
     ['buffseller_target'] = {
-        generator=g.uieHandlerControlTracerGenerator(),
+        generator = g.uieHandlerControlTracerGenerator()
     },
     ['appraisal_pc'] = {
-        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
     },
     ['fishing'] = {
-        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_SLOT)
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_SLOT)
     },
     ['fishing_item_bag'] = {
-        generator=g.uieHandlerControlTracerGenerator(),
+        generator = g.uieHandlerControlTracerGenerator()
     },
     ['indunenter'] = {
-        generator=g.uieHandlerControlTracerGenerator(),
+        generator = g.uieHandlerControlTracerGenerator()
     },
-    ['camp_ui'] =  {
-        generator=g.uieHandlerControlTracerGenerator(),
+    ['camp_ui'] = {
+        generator = g.uieHandlerControlTracerGenerator()
     },
     ['camp_register'] = {
-        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
     },
     ['foodtable_ui'] = {
-        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_CHANGETAB_BYMENU)
-    }
-        ,
-    ['bookitemread'] =  {
-        generator=g.uieHandlerControlTracerGenerator(),
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_CHANGETAB_BYMENU)
     },
-    ['warningmsgbox'] =  {
-        generator=g.uieHandlerControlTracerGenerator(),
+    ['bookitemread'] = {
+        generator = g.uieHandlerControlTracerGenerator()
+    },
+    ['warningmsgbox'] = {
+        generator = g.uieHandlerControlTracerGenerator()
     },
     ['itemdecompose'] = {
-        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX),
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
     },
     ['shop'] = {
-        generator=g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON),
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
+    },
+    ['uie_menu_sub'] = {
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
     },
     ['induntheend'] = {
-        generator=g.uieHandlerControlTracerGenerator(),
+        generator = g.uieHandlerControlTracerGenerator()
     },
-    ['inputstring'] =  {
-        generator=g.uieHandlerControlTracerGenerator(),
+    ['inputstring'] = {
+        generator = g.uieHandlerControlTracerGenerator()
     },
-    ['inventory'] =  {
-        overrider=true
-        generator=g.uieHandlerControlTracerGenerator(),
+    ['inventory'] = {
+        overrider = function(k, frame)
+        
+                return g.over.uieCallbackedOverrider.new(
+                    'inventory',
+                    function(overrider)
+                        if g._showInventory==1 then
+                            g._showInventory = 2
+                            DBGOUT('rrr')
+                            return g.uieHandlerDummy.new(k, frame)
+                        else
+                            local inventory = ui.GetFrame('inventory')
+                            inventory:ShowWindow(0)
+                            DBGOUT('pass')
+                            local frame = ui.GetFrame('uie_inventory')
+                            ui.ToggleFrame('uie_inventory')
+                        end
+                        return g.uieHandlerDummyModal.new(k, frame)
+                    end,
+                    function(overrider)
+                    end
+                )
+            
+        end
+    },
+    ['uie_inventory'] = {
+        generator = function(...)
+            local frame = ui.GetFrame('uie_inventory')
+            return g.uieHandlerUIEInventory.new('uie_inventory', frame)
+        end,
+        overrider = function(k, frame)
+            return g.over.uieCallbackedOverriderDontCare.new(
+                'inventory',
+                function(overrider)
+                   
+                    local inventory = ui.GetFrame('inventory')
+                    inventory:ShowWindow(0)
+                    
+                end,
+                function(overrider)
+                    if g._showInventory==2 then
+                        g._showInventory=false
+                    else
+                    local inventory = ui.GetFrame('inventory')
+                    inventory:ShowWindow(0)
+                      end
+                end
+            )
+        end
     },
     ['dialogselect'] = {
-        generator=
-            function(...)
+        generator = function(...)
             return g.uieHandlerDummy.new(...)
-        end,
+        end
     },
     ['dialog'] = {
-        generator=
-        function(...)
-        return g.uieHandlerDummy.new(...)
-    end}
-    ,
-    ['dialogillust'] ={
-generator=
-     function(...)
-        return g.uieHandlerDummy.new(...)
-    end
-},
+        generator = function(...)
+            return g.uieHandlerDummy.new(...)
+        end
+    },
+    ['dialogillust'] = {
+        generator = function(...)
+            return g.uieHandlerDummy.new(...)
+        end
+    }
 }
 g._activeHandlers = {}
 UIMODEEXPERT = g
@@ -436,20 +532,20 @@ function UIMODEEXPERT_ON_INIT(addon, frame)
         end
     }
 end
-g.hasher=function(str)
-    local hash=6700417
-    for i=1,#str do
-        hash=hash*137+str:byte(i)
+g.hasher = function(str)
+    local hash = 6700417
+    for i = 1, #str do
+        hash = hash * 137 + str:byte(i)
     end
     return tostring(hash)
 end
 function UIMODEEXPERT_UI_MSGBOX(msgBoxStr, yesScp, noScp, ...)
     if g._isEnable then
-        local key=g.hasher(msgBoxStr)
+        local key = g.hasher(msgBoxStr)
 
-        local ret = ui.MsgBox_NonNested_OLD( msgBoxStr,"ABCDEFGH"..key, yesScp, noScp, ...)
+        local ret = ui.MsgBox_NonNested_OLD(msgBoxStr, 'ABCDEFGH' .. key, yesScp, noScp, ...)
         local tag = ui.ConvertScpArgMsgTag(msgBoxStr)
-        g:triggerShowMessageBox(ret, "ABCDEFGH"..key, 2, yesScp, noScp)
+        g:triggerShowMessageBox(ret, 'ABCDEFGH' .. key, 2, yesScp, noScp)
         return ret
     else
         local ret = ui.MsgBox_OLD(msgBoxStr, yesScp, noScp, ...)
@@ -504,6 +600,10 @@ function UIMODEEXPERT_ON_TICK(frame)
                 local ret = v:tick()
                 if ret == g.uieHandlerBase.RefEnd then
                     v:leave()
+                    if (v._overrider and v._overrider.restore) then
+                        v._overrider:restore()
+                    end
+                    DBGOUT('leavef:' .. k)
                     g._activeHandlers[k] = nil
                     k = #g._activeHandlers
                     if k > 0 then
@@ -530,18 +630,21 @@ function UIMODEEXPERT_ON_TICK(frame)
                 local destpos = {x = g._mousemoveto.x, y = g._mousemoveto.y, w = g._mousemoveto.w, h = g._mousemoveto.h}
                 local curpos = {x = g._mousemoveto.ox, y = g._mousemoveto.oy, w = g._mousemoveto.ow, h = g._mousemoveto.oh}
                 if g._mousemoveto.ctrl then
-                    local ctrl=g._mousemoveto.ctrl
+                    local ctrl = g._mousemoveto.ctrl
                     destpos = {x = ctrl:GetGlobalX(), y = ctrl:GetGlobalY(), w = ctrl:GetWidth(), h = ctrl:GetHeight()}
                 end
 
                 local cursorframe = ui.GetFrame('uie_cursor')
 
-                cursorframe:Resize(curpos.w + (destpos.w - curpos.w) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5),
-                curpos.h + (destpos.h - curpos.h) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5))
+                cursorframe:Resize(
+                    curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5),
+                    curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)
+                )
 
                 cursorframe:SetOffset(
-                        (curpos.x + (destpos.x - curpos.x) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5)),
-                    (curpos.y + (destpos.y - curpos.y) *math.pow(g._mousemoveto.time/g._mousemoveto.maxtime,0.5)))
+                    (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)),
+                    (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5))
+                )
 
                 local lx
 
@@ -571,9 +674,9 @@ function UIMODEEXPERT_ON_TICK(frame)
                     curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
                     (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
                 --mouse.SetPos(lx, ly)
-                g._mousemoveto.time = g._mousemoveto.time + 1
+                g._mousemoveto.time = math.min(g._mousemoveto.maxtime, g._mousemoveto.time + 1)
                 if g._mousemoveto.time > g._mousemoveto.maxtime then
-                    g._mousemoveto = nil
+                --g._mousemoveto = nil
                 end
             end
         end,

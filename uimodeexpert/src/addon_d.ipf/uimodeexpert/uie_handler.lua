@@ -172,8 +172,25 @@ g.uieHandlerFrameBase = {
         self.frame = frame
         return self
     end,
+    
     tick = function(self)
     end
+}
+g.uieHandlerDummyModal = {
+    new = function(key, frame)
+        local self = inherit(g.uieHandlerDummyModal, g.uieHandlerBase, key)
+        self.frame = frame
+        return self
+    end,
+    enter = function(self)
+        g:disableHotKey()
+    end,
+    tick = function(self)
+        return g.uieHandlerBase.RefPass
+    end,
+    leave = function(self)
+        g:enableHotKey()
+    end,
 }
 g.uieHandlerDummy = {
     new = function(key, frame)
@@ -282,7 +299,7 @@ g.uieHandlerControlTracer = {
             self:moveMouseToControl(ctrl)
         end
     end,
-    findAndChangeTab =function(self,ctrl)
+    findAndChangeTab =function(self,ctrl,dir)
         ctrl=ctrl or self.frame
         for i=0,ctrl:GetChildCount()-1 do
             local c=ctrl:GetChildByIndex(i)
@@ -434,9 +451,10 @@ g.uieHandlerControlTracer = {
     end
 }
 g.uieHandlerUIEInventory = {
-    new = function(key, frame)
+    new = function(key, frame,overrider)
         local self = inherit(g.uieHandlerUIEInventory, g.uieHandlerFrameBase, key, frame)
-
+        self.itemcursor=0
+        self.overrider=overrider
         return self
     end,
 
@@ -444,20 +462,222 @@ g.uieHandlerUIEInventory = {
         g.uieHandlerFrameBase.delayedenter(self)
         self:refresh()
     end,
+    leave = function(self)
+        local inv=g.inv.getUIEInventoryByFrameName(self.frame:GetName())
+        inv:hideToolTip()
+        g.uieHandlerFrameBase.leave(self)
+
+    end,
     refresh = function(self)
         g.uieHandlerFrameBase.refresh(self)
-
+        local inv=g.inv.getUIEInventoryByFrameName(self.frame:GetName())
+   
+        inv:generateList()
+        self:moveMouse()
+        local base=inv.base
+        local slotset=base:GetChildRecursively('slotset')
+        AUTO_CAST(slotset)
+        local itemcount=inv.itemcount
+        local slot
+          local cols=slotset:GetCol()
+        if itemcount>0 then 
+            slot=slotset:GetSlotByRowCol(math.floor(self.itemcursor/cols),self.itemcursor%cols)
+        else
+            inv:hideToolTip()
+            return
+        end
+        local Icon=slot:GetIcon()
+        local iconInfo = Icon:GetInfo();
+        self:updateToolTip()
     end,
-    moveMouse = function(self, idx)
-        if idx < self.ctrlscount then
-            local ctrl = self.ctrls[idx + 1]
+    updateToolTip=function(self)
+        local inv=g.inv.getUIEInventoryByFrameName(self.frame:GetName())
+        local base=inv.base
+        local slotset=base:GetChildRecursively('slotset')
+        AUTO_CAST(slotset)
+        local itemcount=inv.itemcount
+        local slot
+          local cols=slotset:GetCol()
+        if itemcount>0 then 
+            slot=slotset:GetSlotByRowCol(math.floor(self.itemcursor/cols),self.itemcursor%cols)
+        else
+            inv:hideToolTip()
+            return
+        end
+        local Icon=slot:GetIcon()
+        local iconInfo = Icon:GetInfo();
+        
+        local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
+        inv:showToolTip(invItem)
+    end,
+    moveMouse=function(self)
+        local inv=g.inv.getUIEInventoryByFrameName(self.frame:GetName())
+        local base=inv.base
+        local slotset=base:GetChildRecursively('slotset')
+        AUTO_CAST(slotset)
+        local cols=slotset:GetCol()
+        local itemcount=inv.itemcount
+        local slot=slotset:GetSlotByRowCol(math.floor(self.itemcursor/cols),self.itemcursor%cols)
+        if slot then
+            --g_invenTypeStrList
+            local inven = base:GetChildRecursively('gbox')
+            local parent = slot:GetParent()
+            local y 
+            AUTO_CAST(inven)
+            if parent then
+                
+                y = slot:GetY() + parent:GetY()
+            else
 
-            self:moveMouseToControl(ctrl)
+                y = slot:GetY()
+            end
+            local h = slot:GetHeight()
+            local scrolly = inven:GetScrollCurPos()
+            local scrollh = inven:GetHeight()
+            scrolly = math.min(y, math.max(scrolly, y - scrollh + h + 10))
+            inven:SetScrollPos(scrolly)
+            inven:UpdateGroupBox()
+            inven:ValidateControl()
+            inven:UpdateDataByScroll()
+
+            self:moveMouseToControl(slot)
         end
     end,
-
+    showInventory=function()
+        g:showOriginalInventory()
+    end,
     tick = function(self)
+        local inv=g.inv.getUIEInventoryByFrameName(self.frame:GetName())
+        local base=inv.base
+        local slotset=base:GetChildRecursively('slotset')
+        AUTO_CAST(slotset)
+        local cols=slotset:GetCol()
+        local itemcount=inv.itemcount
+
+
+        local slot
+        if itemcount>0 then 
+            slot=slotset:GetSlotByRowCol(math.floor(self.itemcursor/cols),self.itemcursor%cols)
+        end
+
+        if g.key:IsKeyPress(g.key.RIGHT) then
+            --down
+            self.itemcursor = self.itemcursor + 1
+            if self.itemcursor >= itemcount then
+                self.itemcursor = 0
+            end
+            self:moveMouse()
+            self:updateToolTip()
+            g:onChangedCursor()
+        end
+        if g.key:IsKeyPress(g.key.LEFT) then
+            --up
+            self.itemcursor = self.itemcursor - 1
+            if self.itemcursor < 0 then
+                self.itemcursor = itemcount - 1
+            end
+            self:moveMouse()
+            self:updateToolTip()
+            g:onChangedCursor()
+        end
+        if g.key:IsKeyPress(g.key.DOWN) then
+            --down
+            self.itemcursor = self.itemcursor + cols
+            if self.itemcursor >= itemcount then
+                self.itemcursor = 0
+            end
+            self:moveMouse()
+            self:updateToolTip()
+            g:onChangedCursor()
+        end
+        if g.key:IsKeyPress(g.key.UP) then
+            --up
+            self.itemcursor = self.itemcursor -cols
+            if self.itemcursor < 0 then
+                self.itemcursor = itemcount - 1
+            end
+            self:moveMouse()
+            self:updateToolTip()
+            g:onChangedCursor()
+        end
+        if g.key:IsKeyPress(g.key.PAGEDOWN) then
+            --down
+            self.itemcursor = self.itemcursor + 20
+            if self.itemcursor >= itemcount then
+                self.itemcursor = itemcount-1
+            end
+            self:moveMouse()
+            self:updateToolTip()
+            g:onChangedCursor()
+        end
+        if g.key:IsKeyPress(g.key.PAGEUP) then
+            --up
+            self.itemcursor = self.itemcursor -20
+            if self.itemcursor < 0 then
+                self.itemcursor = 0
+            end
+            self:moveMouse()
+            self:updateToolTip()
+            g:onChangedCursor()
+        end
+        if g.key:IsKeyDown(g.key.CANCEL) then
+            g:onCanceledCursor()
+            self.frame:ShowWindow(0)
+            return g.uieHandlerBase.RefEnd
+        end
+        if g.key:IsKeyDown(g.key.TABLEFT) or g.key:IsKeyDown(g.key.TABRIGHT) then
+            local dir
+            self.itemcursor=0
+            if g.key:IsKeyDown(g.key.TABLEFT) then
+                dir=-1
+            else
+                dir=1
+            end
+            local tab=base:GetChildRecursively('tab')
+            AUTO_CAST(tab)
+            local cnt=tab:GetItemCount()
+            local cur=tab:GetSelectItemIndex()
+            cur=(cur+dir)%cnt
+            if cur<0 then
+                cur=cnt-1
+            end
+            tab:ChangeTab(cur)
+            tab:SelectTab(cur)
+            
+            g:onDeterminedCursor()
+            return g.uieHandlerBase.RefRefresh
         
+        end
+        if g.key:IsKeyDown(g.key.MENU) then
+            
+            local menu
+            if slot then
+                menu=g.menu.uiePopupMenu.new(slot:GetGlobalX(),slot:GetGlobalY(),100)
+            else
+                menu= g.menu.uiePopupMenu.new(self.frame:GetGlobalX()+20,self.frame:GetGlobalY()+100)
+            end
+            menu:addMenu('{ol}使用する(RCLICK)')
+            menu:addMenu('{ol}LCLICK')
+            menu:addMenu('{ol}元のインベントリを表示（キー操作不可）',function() self:showInventory() end)
+            
+            return g.uieHandlerBase.RefPass
+        
+        end
+        if g.key:IsKeyDown(g.key.MAIN) or g.key:IsKeyDown(g.key.SUB) then
+            
+            local menu
+            if slot then
+                menu=g.menu.uiePopupMenu.new(slot:GetGlobalX(),slot:GetGlobalY(),100)
+            else
+                menu= g.menu.uiePopupMenu.new(self.frame:GetGlobalX()+20,self.frame:GetGlobalY()+100)
+            end
+            menu:addMenu('{ol}使用する(RCLICK)')
+            menu:addMenu('{ol}LCLICK')
+            menu:addMenu('{ol}元のインベントリを表示（キー操作不可）',function() self:showInventory() end)
+            
+            return g.uieHandlerBase.RefPass
+        
+        end
         return g.uieHandlerBase.RefPass
     end
 }
