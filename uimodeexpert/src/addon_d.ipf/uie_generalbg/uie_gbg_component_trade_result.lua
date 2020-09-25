@@ -66,9 +66,9 @@ g.gbg.uiegbgComponentTradeResult={
     initializeImpl=function(self,gbox)
         local y=0
 
-        local textdiff=gbox:CreateOrGetControl('richtext','txtdiff',0,150,150,40)
-        local textarrow=gbox:CreateOrGetControl('richtext','txtarrow',0,0,150,150)
-        local textremain=gbox:CreateOrGetControl('richtext','txtremain',0,190,150,30)
+        local textdiff=gbox:CreateOrGetControl('richtext','txtdiff',0,150,200,30)
+        local textarrow=gbox:CreateOrGetControl('richtext','txtarrow',0,0,200,150)
+        local textremain=gbox:CreateOrGetControl('richtext','txtremain',0,210,200,20)
 
         self:updateDiff('0')
         
@@ -78,22 +78,27 @@ g.gbg.uiegbgComponentTradeResult={
         local txtdiff=gbox:GetChild('txtdiff')
         local textarrow=gbox:GetChild('txtarrow')
         local textremain=gbox:GetChild('txtremain')
+
+        local price="0"
         if IsGreaterThanForBigNumber(diff,"0")==1 then
             --buy
             textarrow:SetText('{img white_left_arrow 150 150}')
             txtdiff:SetText('{s40}'..diff:gsub("%-",""))
+            price='-'..diff
         elseif IsGreaterThanForBigNumber("0",diff)==1 then
             --sell
             textarrow:SetText('{img white_right_arrow 150 150}')
             txtdiff:SetText('{s40}'..diff:gsub("%-",""))
+            price=diff:gsub('%-','')
         else
             txtdiff:SetText('{s40}0')
         end
-        local silverAmountStr = GET_TOTAL_MONEY_STR();
-        
-        textremain:SetText('{img icon_item_silver %d %d} {ol}{s18}')
+        local silverAmountStr = SumForBigNumberInt64(GET_TOTAL_MONEY_STR(),price);
+
+        textremain:SetText('{img icon_item_silver 20 20} {ol}{s18}'..silverAmountStr)
         txtdiff:SetGravity(ui.CENTER_HORZ,ui.TOP)
-    end
+        textremain:SetGravity(ui.CENTER_HORZ,ui.TOP)
+    end,
     hookmsgImpl=function(self,frame,msg,argStr,argNum)
         
     end

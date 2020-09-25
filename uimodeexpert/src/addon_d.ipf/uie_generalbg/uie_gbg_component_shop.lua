@@ -96,6 +96,18 @@ g.gbg.uiegbgComponentShop = {
         end
         
     end,
+    calcTotalValue=function(self)
+        local invItemList=self.invItemList
+        local total='0'
+        for k, v in ipairs(invItemList) do
+            if v.amount>0 then
+                local unit= GET_SHOPITEM_PRICE_TXT(v.item)
+                local price=MultForBigNumberInt64(unit,tostring(v.amount))
+                total=SumForBigNumberInt64(total,price)
+            end
+        end
+        return total
+    end,
     updateSlot = function(self, index)
         local inv = self.invItemList[index]
         local parentslot = inv.slot

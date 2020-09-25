@@ -67,14 +67,19 @@ g.gbg.uiegbgShop={
     initializeImpl=function(self,gbox)
 
         local inv=g.gbg.uiegbgComponentInventory.new(self,gbox,'inventory',false)
-        inv:initialize(gbox:GetWidth()/2+100,60,gbox:GetWidth()/2-120,gbox:GetHeight()-190)
+        inv:initialize(gbox:GetWidth()/2+140,60,gbox:GetWidth()/2-160,gbox:GetHeight()-190)
         self:addComponent(inv)
-        local shop=g.gbg.uiegbgComponentShop.new(self,gbox,'shop')
-        shop:initialize(60,60,gbox:GetWidth()/2-80,gbox:GetHeight()-190)
+        local shop=g.gbg.uiegbgComponentShop.new(self,gbox,'shop',function()
+            self:update()
+        end)
+        shop:initialize(60,60,gbox:GetWidth()/2-120,gbox:GetHeight()-190)
         self:addComponent(shop)
         local zeny=g.gbg.uiegbgComponentFund.new(self,gbox,'fund')
         zeny:initialize(gbox:GetWidth()-260,10,200,50)
         self:addComponent(zeny)
+        local trade=g.gbg.uiegbgComponentTradeResult.new(self,gbox,'trade',inv,shop)
+        trade:initialize(gbox:GetWidth()/2-100,100,200,250)
+        self:addComponent(trade)
         local under=g.gbg.uiegbgComponentUnderBtn.new(self,gbox,'under',{
             {
                 name="determine",
@@ -91,6 +96,11 @@ g.gbg.uiegbgShop={
         under:initialize(100,gbox:GetHeight()-140,gbox:GetWidth()-200,100)
         
         self:addComponent(under)
+    end,
+    update=function(self)
+        local shop=self:getComponent('shop')
+        local buy=shop:calcTotalValue()
+        
     end,
     adjustment=function(self)
     end

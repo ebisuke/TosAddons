@@ -122,6 +122,9 @@ g.gbg.uiegbgBase={
     addComponent=function(self,component)
         self.components[component.name]=component
     end,
+    getComponent=function(self,name)
+        return self.components[name]
+    end,
     hookmsg=function(self,frame, msg, argStr, argNum)
         self:hookmsgImpl(frame,msg,argStr,argNum)
         for _,v in ipairs(self.components) do   
@@ -149,8 +152,10 @@ g.gbg.uiegbgComponentBase={
         end
         local gbox=self.parent:CreateOrGetControl("groupbox",'gbox'..self.name,x,y,w,h)
         AUTO_CAST(gbox)
+        self.gbox=gbox
         self:initializeImpl(gbox)
         g.gbg._componentInstances[self.name] = self
+        
         return gbox
     end,
     initializeImpl=function(self,gbox)

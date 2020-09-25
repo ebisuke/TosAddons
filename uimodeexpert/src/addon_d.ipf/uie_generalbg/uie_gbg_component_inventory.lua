@@ -91,6 +91,9 @@ g.gbg.uiegbgComponentInventory={
             self:refreshInventory()
         end
     end,
+    setCustomEventScript=function(self,slot,invItem)
+        --override me
+    end,
     refreshInventory=function(self,gboxin)
         if not gboxin then
             gboxin=self.parent:GetChild('gboxin')
@@ -232,20 +235,31 @@ g.gbg.uiegbgComponentInventory={
                     INV_SLOT_UPDATE(ui.GetFrame('inventory'), invItem, parentslot)
                     
                     if not self.enableaccess then
-                        slot:SetEventScript(ui.RBUTTONDOWN, '');
+                        parentslot:SetEventScript(ui.RBUTTONDOWN, '');
 
    
-                        slot:SetEventScript(ui.RBUTTONDBLCLICK, '');
+                        parentslot:SetEventScript(ui.RBUTTONDBLCLICK, '');
                     
                     
-                        slot:SetEventScript(ui.LBUTTONDOWN, '');
+                        parentslot:SetEventScript(ui.LBUTTONDOWN, '');
 
                     end
+                    self:setCustomEventScript(parentslot,invItem)
                 end
             end
         end
 
     end
+    
+}
+
+g.gbg.uiegbgComponentShopInventory={
+    new=function(tab,parent,name,enableaccess)
+        local self=inherit(g.gbg.uiegbgComponentShopInventory,g.gbg.uiegbgComponentInventory,tab,parent,name,enableaccess)
+
+        return self
+    end,
+ 
     
 }
 

@@ -22,6 +22,8 @@ function UIE_DEBUG_RELOAD()
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_component_inventory.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_component_underbtn.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_component_fund.lua]])
+    dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_component_trade_result.lua]])
+    
     g.inv.inventories=inv
     g.inv.frame=ui.GetFrame('uie_inventory')
 end
