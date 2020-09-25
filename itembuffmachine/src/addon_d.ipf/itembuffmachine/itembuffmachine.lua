@@ -22,13 +22,15 @@ g.configurepattern = {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ''
 g.framename = 'itembuffmachine'
-g.debug = true
-g.retrylimit = 20
+g.debug = false
+
 g.addon = g.addon
-g.task = {}
-g.checker = nil
-g.checkattempts = 0
-g.retrier = nil
+g.items={}
+g.itemcursor=1
+g.issquire=false
+g.working=false
+g.squirewaitfornext=false
+g.enchantname=nil
 --ライブラリ読み込み
 CHAT_SYSTEM('[IBM]loaded')
 local acutil = require('acutil')
@@ -98,6 +100,7 @@ function ITEMBUFFMACHINE_ON_INIT(addon, frame)
             addon:RegisterMsg('EQUIP_ITEM_LIST_UPDATE', 'ITEMBUFFMACHINE_EQUIP_ITEM_LIST')
             addon:RegisterMsg('GAME_START_3SEC', 'ITEMBUFFMACHINE_ITEMBUFFOPEN_INIT')
             addon:RegisterMsg('FPS_UPDATE', 'ITEMBUFFMACHINE_FPS_UPDATE')
+            g.squirewaitfornext=false
         end,
         catch = function(error)
             ERROUT(error)
@@ -150,7 +153,7 @@ function ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON()
                 local tempobj = equipItem:GetObject()
                 if tempobj ~= nil then
                     local obj = GetIES(tempobj)
-                    if (ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj) == 1) then
+                    if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj) == 1) then
                         local checkFunc = _G['ITEMBUFF_NEEDITEM_' .. frame:GetUserValue('SKILLNAME')]
                         local name, cnt = checkFunc(pc, obj)
                         totalcnt = totalcnt + cnt
@@ -240,7 +243,7 @@ function ITEMBUFFMACHINE_ENCHANTARMOR_SELECT(groupName, index)
                 local tempobj = equipItem:GetObject()
                 if tempobj ~= nil then
                     local obj = GetIES(tempobj)
-                    if (ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
+                    if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
                         price = price + groupInfo.price
                     end
                 end
@@ -252,7 +255,7 @@ function ITEMBUFFMACHINE_ENCHANTARMOR_SELECT(groupName, index)
                 local msg = ScpArgMsg(optionList[index])
                 ui.MsgBox(
                     '「' .. msg .. '」' .. ScpArgMsg(optionList[index] .. '_DESC') .. '{nl} を適用しますか？{nl}{#FFFF00}{ol}費用:' .. tostring(price),
-                    string.format('ITEMBUFFMACHINE_ENCHANTARMOR_DO_SELECT("%s",%d)', groupName, index),
+                    string.format('ITEMBUFFMACHINE_ENCHANTARMOR_DO_SELECT(%d)', index),
                     'None'
                 )
             end
@@ -261,264 +264,113 @@ function ITEMBUFFMACHINE_ENCHANTARMOR_SELECT(groupName, index)
             ERROUT(error)
         end
     }
+
 end
 function ITEMBUFFMACHINE_ITEMBUFF_DO_SELECT()
-    EBI_try_catch {
-        try = function()
-            ui.SetEscapeScp('ITEMBUFFMACHINE_CANCEL()')
-            ui.SysMsg('開始します。キャンセルする場合はESCを押してください。')
-            g.working = true
-            g.task = {}
-            --g.equipList={}
+    g.items={}
+    local equiplist = session.GetEquipItemList()
+    for i = 0, equiplist:Count() - 1 do
+        local equipItem = equiplist:GetEquipItemByIndex(i)
+        local spotName = item.GetEquipSpotName(equipItem.equipSpot)
+        if spotName ~= nil then
+            local tempobj = equipItem:GetObject()
+            if tempobj ~= nil then
+                local obj = GetIES(tempobj)
+                local fn=ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp
 
-            local equiplist = session.GetEquipItemList()
-
-            for i = 0, equiplist:Count() - 1 do
-                local equipItem = equiplist:GetEquipItemByIndex(i)
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot)
-                if spotName ~= nil then
-                    local tempobj = equipItem:GetObject()
-                    if tempobj ~= nil then
-                        local obj = GetIES(tempobj)
-                        if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj) == 1) then
-                            ITEMBUFFMACHINE_ADDTASK(
-                                function()
-                                    ITEMBUFFMACHINE_UNWEAR(equipItem:GetIESID(), equipItem.equipSpot)
-                                end
-                            )
-                        end
-                    end
+                
+                if (item.IsNoneItem(obj.ClassID) == 0 and fn(obj) == 1) then
+                   g.items[#g.items+1] = equipItem:GetIESID()
                 end
             end
-            for i = 0, equiplist:Count() - 1 do
-                local equipItem = equiplist:GetEquipItemByIndex(i)
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot)
-                if spotName ~= nil then
-                    local tempobj = equipItem:GetObject()
-                    if tempobj ~= nil then
-                        local obj = GetIES(tempobj)
-                        if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj) == 1) then
-                            ITEMBUFFMACHINE_ADDTASK(
-                                function()
-                                    ITEMBUFFMACHINE_ITEMBUFF(equipItem:GetIESID())
-                                end
-                            )
-                        end
-                    end
-                end
-            end
-
-            for i = 0, equiplist:Count() - 1 do
-                local equipItem = equiplist:GetEquipItemByIndex(i)
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot)
-                if spotName ~= nil then
-                    local tempobj = equipItem:GetObject()
-                    if tempobj ~= nil then
-                        local obj = GetIES(tempobj)
-                        if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj) == 1) then
-                            ITEMBUFFMACHINE_ADDTASK(
-                                function()
-                                    ITEMBUFFMACHINE_WEAR(equipItem:GetIESID(), equipItem.equipSpot)
-                                end
-                            )
-                        end
-                    end
-                end
-            end
-
-            ITEMBUFFMACHINE_DOTASK()
-        end,
-        catch = function(error)
-            ERROUT(error)
         end
-    }
+    end
+    g.itemcursor=1
+    g.squirewaitfornext=false
+    g.working=true
+    ui.SetEscapeScp("ITEMBUFFMACHINE_CANCEL()")
+    ITEMBUFFMACHINE_UNWEAR(1)
 end
-function ITEMBUFFMACHINE_ENCHANTARMOR_DO_SELECT(groupName, index)
-    EBI_try_catch {
-        try = function()
-            ui.SetEscapeScp('ITEMBUFFMACHINE_CANCEL()')
-            ui.SysMsg('開始します。キャンセルする場合はESCを押してください。')
-            g.working = true
-            g.task = {}
-            --g.equipList={}
-            local baseInfo = session.autoSeller.GetShopBaseInfo(AUTO_SELL_ENCHANTERARMOR)
-            local optionList = GET_ENCHANTARMOR_OPTION(baseInfo.skillLevel)
-            local equiplist = session.GetEquipItemList()
-            for i = 0, equiplist:Count() - 1 do
-                local equipItem = equiplist:GetEquipItemByIndex(i)
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot)
-                if spotName ~= nil then
-                    local tempobj = equipItem:GetObject()
-                    if tempobj ~= nil then
-                        local obj = GetIES(tempobj)
-                        if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
-                            -- table.insert(g.equipList,{
-                            --     item=equipItem,
-                            --     obj=obj,
-                            -- })
-                            ITEMBUFFMACHINE_ADDTASK(
-                                function()
-                                    ITEMBUFFMACHINE_UNWEAR(equipItem:GetIESID(), equipItem.equipSpot)
-                                end
-                            )
-                        end
-                    end
-                end
-            end
-            for i = 0, equiplist:Count() - 1 do
-                local equipItem = equiplist:GetEquipItemByIndex(i)
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot)
-                if spotName ~= nil then
-                    local tempobj = equipItem:GetObject()
-                    if tempobj ~= nil then
-                        local obj = GetIES(tempobj)
-                        if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
-                            -- table.insert(g.equipList,{
-                            --     item=equipItem,
-                            --     obj=obj,
-                            -- })
+function ITEMBUFFMACHINE_ENCHANTARMOR_DO_SELECT(index)
+    g.items={}
+    g.itemcursor=1
+    local equiplist = session.GetEquipItemList()
+    for i = 0, equiplist:Count() - 1 do
+        local equipItem = equiplist:GetEquipItemByIndex(i)
+        local spotName = item.GetEquipSpotName(equipItem.equipSpot)
+        if spotName ~= nil then
+            local tempobj = equipItem:GetObject()
+            if tempobj ~= nil then
+                local obj = GetIES(tempobj)
+                local fn=ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor
 
-                            ITEMBUFFMACHINE_ADDTASK(
-                                function()
-                                    ITEMBUFFMACHINE_ENCHANT(equipItem:GetIESID(), optionList[index])
-                                end
-                            )
-                        end
-                    end
+                
+                if (item.IsNoneItem(obj.ClassID) == 0 and fn(obj) == 1) then
+                   g.items[#g.items+1] = equipItem:GetIESID()
                 end
             end
-            for i = 0, equiplist:Count() - 1 do
-                local equipItem = equiplist:GetEquipItemByIndex(i)
-                local spotName = item.GetEquipSpotName(equipItem.equipSpot)
-                if spotName ~= nil then
-                    local tempobj = equipItem:GetObject()
-                    if tempobj ~= nil then
-                        local obj = GetIES(tempobj)
-                        if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(obj) == 1) then
-                            -- table.insert(g.equipList,{
-                            --     item=equipItem,
-                            --     obj=obj,
-                            -- })
-
-                            ITEMBUFFMACHINE_ADDTASK(
-                                function()
-                                    ITEMBUFFMACHINE_WEAR(equipItem:GetIESID(), equipItem.equipSpot)
-                                end
-                            )
-                        end
-                    end
-                end
-            end
-            ITEMBUFFMACHINE_DOTASK()
-        end,
-        catch = function(error)
-            ERROUT(error)
         end
-    }
-end
-function ITEMBUFFMACHINE_CANCEL()
-    g.task = {}
-    g.working = false
-    ui.SysMsg('キャンセルしました')
-    ui.SetEscapeScp('')
-end
-function ITEMBUFFMACHINE_ADDTASK(task)
-    table.insert(g.task, task)
-end
-function ITEMBUFFMACHINE_DOTASK(retry)
-    EBI_try_catch {
-        try = function()
-            if g.working == false then
-            else
-                g.checker = nil
-                g.retrier = nil
-                if #g.task > 0 then
-                    local top = g.task[1]
-                    if not retry then
-                        table.remove(g.task, 1)
-                    end
-                    assert(pcall(top))
-                    DBGOUT('TOP')
-                else
-                    g.working = false
-                    ui.SetEscapeScp('')
-                    ui.SysMsg('おわりました')
-                end
-            end
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
+    end
+    g.enchantname=index
+    g.squirewaitfornext=false
+    g.working=true
+    ui.SetEscapeScp("ITEMBUFFMACHINE_CANCEL()")
+    ITEMBUFFMACHINE_UNWEAR(0)
 end
 
-function ITEMBUFFMACHINE_UNWEAR(equipItemIESID, equipSpot, attempt)
+
+
+function ITEMBUFFMACHINE_UNWEAR(squire)
     EBI_try_catch {
         try = function()
-            --session.ResetItemList()
-            --imcAddOn.BroadMsg("EQUIP_ITEM_LIST_GET")
+            local equipItemIESID=g.items[g.itemcursor]
             local equipItem = session.GetEquipItemByGuid(equipItemIESID)
 
-            if equipItem == nil then
-                attempt = attempt or 0
-                attempt = attempt + 1
 
-                if attempt < g.retrylimit then
-                    ReserveScript(string.format('ITEMBUFFMACHINE_UNWEAR("%s",%d,%d)', equipItemIESID, equipSpot, attempt), 0.5)
-                else
-                    ui.SysMsg('問題が発生したのでキャンセルします：試行回数上限')
-                    ITEMBUFFMACHINE_CANCEL()
-                end
-                return
-            end
-
-            --local equipItem = GET_PC_ITEM_BY_GUID(equipItemIESID) --session.GetInvItemByGuid(equipItemIESID)
-            local typ=equipItem.type;
-            --imcSound.PlaySoundEvent('inven_unequip')
             local spot = equipItem.equipSpot
             item.UnEquip(spot)
-
-            g.retrier = function()
-                item.UnEquip(spot)
+            g.itemcursor=g.itemcursor+1
+            if g.working then
+                if g.itemcursor>#g.items then
+                    g.itemcursor=1
+                    if squire==1 then
+                        ReserveScript('ITEMBUFFMACHINE_ITEMBUFF()',0.75)
+                    else
+                        ReserveScript('ITEMBUFFMACHINE_ENCHANT()',0.75)
+                    end
+                else
+                    ReserveScript(string.format('ITEMBUFFMACHINE_UNWEAR(%d)',squire),0.75)
+                end
             end
-            g.checker = function()
-                DBGOUT('CHK UNWEAR' .. tostring(session.GetInvItemByType(typ)))
-                local iv = session.GetInvItemByType(typ)
-                print(iv)
-                return iv ~= nil
-            end
-            g.checkattempts = 0
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function ITEMBUFFMACHINE_ENCHANT(equipItemIESID, indexName, attempt)
+function ITEMBUFFMACHINE_ENCHANT()
     EBI_try_catch {
         try = function()
-            --imcAddOn.BroadMsg("INV_ITEM_LIST_GET")
+            local equipItemIESID=g.items[g.itemcursor]
             local frame = ui.GetFrame('enchantarmoropen')
             local handle = frame:GetUserIValue('HANDLE')
             local skillName = frame:GetUserValue('GroupName')
             --local equipItem = nil
-            local equipItem = session.GetInvItemByGuid(equipItemIESID)
+            local baseInfo = session.autoSeller.GetShopBaseInfo(AUTO_SELL_ENCHANTERARMOR)
+            local optionList = GET_ENCHANTARMOR_OPTION(baseInfo.skillLevel)
 
-            if equipItem == nil then
-                attempt = attempt or 0
-                attempt = attempt + 1
-
-                if attempt < g.retrylimit then
-                    ReserveScript(string.format('ITEMBUFFMACHINE_ENCHANT("%s","%s",%d)', equipItemIESID, indexName, attempt), 0.5)
+            session.autoSeller.BuyEnchantBuff(handle, AUTO_SELL_ENCHANTERARMOR, optionList[g.enchantname], skillName, equipItemIESID)
+            g.itemcursor=g.itemcursor+1
+            if g.working then
+                if g.itemcursor>#g.items then
+                    g.itemcursor=1
+    
+                    ReserveScript('ITEMBUFFMACHINE_WEAR()',7)
+                
                 else
-                    ui.SysMsg('問題が発生したのでキャンセルします：試行回数上限')
-                    ITEMBUFFMACHINE_CANCEL()
+                    ReserveScript('ITEMBUFFMACHINE_ENCHANT()',7)
                 end
-                return
             end
-            session.autoSeller.BuyEnchantBuff(handle, AUTO_SELL_ENCHANTERARMOR, indexName, skillName, equipItemIESID)
-            DBGOUT('ENCHANT:' .. equipItemIESID)
-            ReserveScript('ITEMBUFFMACHINE_DOTASK()', 8)
         end,
         catch = function(error)
             ERROUT(error)
@@ -528,32 +380,30 @@ end
 function ITEMBUFFMACHINE_SQUIRE_ITEM_SUCCEED()
     SQUIRE_ITEM_SUCCEED_OLD()
     if g.working then
-        ReserveScript('ITEMBUFFMACHINE_DOTASK()', 1)
+        g.itemcursor=g.itemcursor+1
+        if g.itemcursor>#g.items then
+            g.itemcursor=1
+            g.squirewaitfornext=false
+            ReserveScript('ITEMBUFFMACHINE_WEAR()',1)
+        
+        else
+            ReserveScript('ITEMBUFFMACHINE_ITEMBUFF()',1)
+        end
     end
 end
-function ITEMBUFFMACHINE_ITEMBUFF(equipItemIESID, attempt)
+function ITEMBUFFMACHINE_ITEMBUFF()
     EBI_try_catch {
         try = function()
-            --imcAddOn.BroadMsg("INV_ITEM_LIST_GET")
+            local equipItemIESID=g.items[g.itemcursor]
             local frame = ui.GetFrame('itembuffopen')
             local skillName = frame:GetUserValue('SKILLNAME')
             local handle = frame:GetUserValue('HANDLE')
             local equipItem = nil
             equipItem = session.GetInvItemByGuid(equipItemIESID)
 
-            if equipItem == nil then
-                attempt = attempt or 0
-                attempt = attempt + 1
 
-                if attempt < g.retrylimit then
-                    ReserveScript(string.format('ITEMBUFFMACHINE_ITEMBUFF("%s",%d)', equipItemIESID, attempt), 0.5)
-                else
-                    ui.SysMsg('問題が発生したのでキャンセルします：試行回数上限')
-                    ITEMBUFFMACHINE_CANCEL()
-                end
-                return
-            end
             session.autoSeller.BuySquireBuff(handle, AUTO_SELL_SQUIRE_BUFF, skillName, equipItemIESID)
+            g.squirewaitfornext=true
         end,
         catch = function(error)
             ERROUT(error)
@@ -563,73 +413,32 @@ end
 function ITEMBUFFMACHINE_EQUIP_ITEM_LIST()
     ITEMBUFFMACHINE_CHECK()
 end
-function ITEMBUFFMACHINE_CHECK()
-    EBI_try_catch {
-        try = function()
-            if (g.working) then
-                if g.checker then
-                    local pc = GetMyPCObject()
-                    local invItemList = GetInvItemList(pc)
-                    DBGOUT('HOHGO')
-                    if g.checker() then
-                        DBGOUT('GOO')
-                        g.retrier = nil
-                        g.checker = nil
-                        ReserveScript('ITEMBUFFMACHINE_DOTASK()', 1.5)
-                    else
-                        if g.retrier then
-                            g.checkattempts = g.checkattempts + 1
-
-                            if g.checkattempts > 10 then
-                                ui.SysMsg('Failure')
-                                ITEMBUFFMACHINE_CANCEL()
-                                return
-                            else
-                                DBGOUT('retry')
-                                g.retrier()
-                            end
-                        end
-                    end
-                end
-            end
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
+function ITEMBUFFMACHINE_CANCEL(quiet)
+    if not quiet then
+        ui.SysMsg('Cancelled')
+    end
+    ui.SetEscapeScp('')
+    g.working=false
 end
-function ITEMBUFFMACHINE_WEAR(equipItemIESID, attempt)
+function ITEMBUFFMACHINE_WEAR()
     EBI_try_catch {
         try = function()
+            local equipItemIESID=g.items[g.itemcursor]
             local equipItem = session.GetInvItemByGuid(equipItemIESID)
 
-            if equipItem == nil then
-                attempt = attempt or 0
-                attempt = attempt + 1
-
-                if attempt < g.retrylimit then
-                    ReserveScript(string.format('ITEMBUFFMACHINE_WEAR("%s",nil,%d)', equipItemIESID, attempt), 0.5)
-                else
-                    ui.SysMsg('問題が発生したのでキャンセルします：試行回数上限')
-                    ITEMBUFFMACHINE_CANCEL()
-                end
-                return
-            end
-            local typ=equipItem.type;
             --local spname = item.GetEquipSpotName(equipSpot)
             ITEM_EQUIP_MSG(equipItem)
-          
-            --ReserveScript('ITEMBUFFMACHINE_DOTASK()', 1)
-            g.retrier = function()
-                local equipItem = session.GetInvItemByGuid(equipItemIESID)
-                item.Equip(equipItem.invIndex)
+            if g.working then
+                g.itemcursor=g.itemcursor+1
+                if g.itemcursor>#g.items then
+                    g.itemcursor=1
+            
+                    ReserveScript('ITEMBUFFMACHINE_CANCEL(true);ui.SysMsg("Completed")',0.75)
+                
+                else
+                    ReserveScript('ITEMBUFFMACHINE_WEAR()',0.75)
+                end
             end
-            g.checker = function()
-                DBGOUT('CHK WEAR IESID:' .. tostring( session.GetEquipItemByType(typ)))
-                return session.GetEquipItemByType(typ)
-            end
-            g.checkattempts = 0
-            packet.RequestItemList(IT_INVENTORY)
         end,
         catch = function(error)
             ERROUT(error)
