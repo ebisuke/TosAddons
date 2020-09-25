@@ -357,107 +357,18 @@ g.uieHandlerControlTracerGenerator = function(flags)
     end
 end
 g._registeredFrameHandlers = {
-    ['portal_seller'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['itembuffrepair'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['buffseller_target'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['appraisal_pc'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
-    },
-    ['fishing'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_SLOT)
-    },
-    ['fishing_item_bag'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['indunenter'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['camp_ui'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['camp_register'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
-    },
-    ['foodtable_ui'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_CHANGETAB_BYMENU)
-    },
+    
     ['bookitemread'] = {
         generator = g.uieHandlerControlTracerGenerator()
     },
     ['warningmsgbox'] = {
         generator = g.uieHandlerControlTracerGenerator()
     },
-    ['itemdecompose'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON | g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX)
-    },
-    ['shop'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
-    },
     ['uie_menu_sub'] = {
         generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
     },
-    ['induntheend'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['inputstring'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['inventory'] = {
-        overrider = function(k, frame)
-        
-                return g.over.uieCallbackedOverrider.new(
-                    'inventory',
-                    function(overrider)
-                        if g._showInventory==1 then
-                            g._showInventory = 2
-                            DBGOUT('rrr')
-                            return g.uieHandlerDummy.new(k, frame)
-                        else
-                            local inventory = ui.GetFrame('inventory')
-                            inventory:ShowWindow(0)
-                            DBGOUT('pass')
-                            local frame = ui.GetFrame('uie_inventory')
-                            ui.ToggleFrame('uie_inventory')
-                        end
-                        return g.uieHandlerDummyModal.new(k, frame)
-                    end,
-                    function(overrider)
-                    end
-                )
-            
-        end
-    },
-    ['uie_inventory'] = {
-        generator = function(...)
-            local frame = ui.GetFrame('uie_inventory')
-            return g.uieHandlerUIEInventory.new('uie_inventory', frame)
-        end,
-        overrider = function(k, frame)
-            return g.over.uieCallbackedOverriderDontCare.new(
-                'inventory',
-                function(overrider)
-                   
-                    local inventory = ui.GetFrame('inventory')
-                    inventory:ShowWindow(0)
-                    
-                end,
-                function(overrider)
-                    if g._showInventory==2 then
-                        g._showInventory=false
-                    else
-                    local inventory = ui.GetFrame('inventory')
-                    inventory:ShowWindow(0)
-                      end
-                end
-            )
-        end
-    },
+    
+    
     ['dialogselect'] = {
         generator = function(...)
             return g.uieHandlerDummy.new(...)

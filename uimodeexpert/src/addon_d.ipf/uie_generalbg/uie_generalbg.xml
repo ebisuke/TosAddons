@@ -1,0 +1,19 @@
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="uie_generalbg" x="0" y="0" width="1920" height="1080">
+	<frame stretch="true" fullwidth="true" fullheight="true" fasthide="false" layout_gravity="center center" margin="0 0 0 0" scale_align="center center" tooltipoverlap="true"/>
+	<skin frameskin="property_screenbg"/>
+	<input hittest="true"/>
+	<layer layerlevel="100"/>
+	<option hideable="true" closebutton="false"/>
+	<draw drawtitlebar="false"/>
+	<script OpenScp="UIE_GENERALBG_ON_OPEN"/>
+	<userconfig CardDefaultScale="1.0" CardDestScale="1.0" CardDestAngle="0" CardAnimSec="0.25" ResultCountPerPage="3" MaxOneLineCnt="3" StarTextWidth="15"/>
+	<controls>
+		<groupbox name="gb" rect="0 0 1600 900" margin="0 100 0 0" layout_gravity="center top" draw="false" hittestbox="false" resizebyparent="false" scrollbar="false" skin=""/>
+		<picture name="title_left_pic" rect="0 0 188 35" margin="50 50 0 0" layout_gravity="left top" image="frame_classguide_l"/>
+		<picture name="title_right_pic" rect="0 0 188 35" margin="550 50 0 0" layout_gravity="left top" image="frame_classguide_r"/>
+		<richtext name="title_text" rect="200 0 300 35" margin="0 100 0 0" layout_gravity="left top" textalign="center center" format="{@sti7}{s28}%s" param1="value" param1_def="" fixwidth="true" resizebytext="true" font="white_20_ol"/>
+		<button name="close_btn" rect="0 0 40 40" margin="0 30 30 0" layout_gravity="right top" clicksound="button_click_2" LBtnUpScp="UIE_GENERALBG_ON_CLOSE" image="testclose_button"/>
+		
+		</controls>
+</uiframe>
