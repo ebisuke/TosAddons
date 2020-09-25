@@ -479,8 +479,8 @@
     "name": "Item Buff Machine",
     "file": "itembuffmachine",
     "extension": "ipf",
-    "fileVersion": "v0.0.5",
-    "releaseTag": "itembuffmachine-v0.0.5",
+    "fileVersion": "v0.0.6",
+    "releaseTag": "itembuffmachine-v0.0.6",
     "unicode": "📖",
     "description": "装備メンテナンスを装備中のアイテムすべてに自動適用するアドオンです",
     "tags": [
