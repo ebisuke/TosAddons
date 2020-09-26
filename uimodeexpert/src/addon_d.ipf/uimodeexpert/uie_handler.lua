@@ -2,7 +2,7 @@
 
 local acutil = require('acutil')
 --ライブラリ読み込み
-local debug = true
+local debug = false
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then

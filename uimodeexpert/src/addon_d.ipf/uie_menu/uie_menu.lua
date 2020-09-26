@@ -69,13 +69,23 @@ end
 g.menu = {
     incriment = 1,
     uiePopupMenu = {
-        new = function(x, y, width, named)
+        new = function(x, y, width,heightperline,named)
             local self = {}
             setmetatable(self, {__index = g.menu.uiePopupMenu})
-            self.x = x
-            self.y = y
+            local defx= option.GetClientWidth()/2-width/2
+            local defy= option.GetClientHeight()/2-100
+            if g.isHighRes() then
+                defx= option.GetClientWidth()/4-width/2
+                defy= option.GetClientHeight()/4-100
+            else
+                defx= option.GetClientWidth()/2-width/2
+                defy= option.GetClientHeight()/2-100
+            end
+            self.x = x or defx
+            self.y = y or defy
             self.width = width
             self.height = 0
+            self.heightperline=heightperline or 20
             self.frame = nil
             self.menus = {}
             self.menucount = 0
@@ -102,12 +112,12 @@ g.menu = {
         end,
         addMenu = function(self, caption, callback, clickafterdispose)
             local frame = self.frame
-            local btn = frame:CreateOrGetControl('button', 'btn' .. self.menucount, 2, self.top, 20, 20)
+            local btn = frame:CreateOrGetControl('button', 'btn' .. self.menucount, 2, self.top, 20,   self.heightperline)
             AUTO_CAST(btn)
             --btn:EnableAutoResize(true,true)
             self.menucount = self.menucount + 1
             btn:SetSkinName('none')
-            btn:SetText(caption)
+            btn:SetText('{s24}{ol}'..caption)
 
             btn:SetEventScript(ui.LBUTTONUP, 'UIE_MENU_ONCLICKEDMENU')
             btn:SetEventScriptArgNumber(ui.LBUTTONUP, #self.menus + 1)

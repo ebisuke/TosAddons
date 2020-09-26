@@ -1,4 +1,4 @@
---uie_gbg_component_fund
+--uie_gbg_inventory
 
 
 local acutil = require('acutil')
@@ -53,29 +53,25 @@ end
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
+
 g.gbg=g.gbg or {}
-g.gbg.uiegbgComponentFund={
-    FLAG_SILVER=0x01,
-    FLAG_MERCINARYCOIN=0x02,
-    new=function(tab,parent,name,flags,size)
-        local self=inherit(g.gbg.uiegbgComponentFund,g.gbg.uiegbgComponentBase,tab,parent,name)
-        self.flags=flags or g.gbg.uiegbgComponentFund.FLAG_SILVER
-        self.size=size or 40
+
+g.gbg.uiegbgGroupMe={
+
+    new=function(frame,name,caption,initindex)
+        local MySession = session.GetMyHandle()
+        local CharName = info.GetName(MySession);
+        local self=inherit(g.gbg.uiegbgGroupMe,g.gbg.uiegbgGroupBase,frame,name,CharName,initindex)
+
+        self:addChild(g.gbg.uiegbgInventory.new(frame,'inventory',nil,self))
+        self:addChild(g.gbg.uiegbgStatus.new(frame,'status',nil,self))
         return self
     end,
     initializeImpl=function(self,gbox)
-        local y=0
-        gbox:EnableScrollBar(0)
-        if (self.flags&g.gbg.uiegbgComponentFund.FLAG_SILVER)~=0 then
-            local text=gbox:CreateOrGetControl('richtext','silver',0,y,100,0)
-            local silverAmountStr = GET_TOTAL_MONEY_STR();
-            text:SetText(string.format('{img icon_item_silver %d %d} {ol}{s%d}',self.size,self.size,math.ceil(self.size*3/4))..silverAmountStr)
-        end
+        
         
     end,
-    hookmsgImpl=function(self,frame,msg,argStr,argNum)
-        
-    end
-}
 
+
+}
 UIMODEEXPERT = g

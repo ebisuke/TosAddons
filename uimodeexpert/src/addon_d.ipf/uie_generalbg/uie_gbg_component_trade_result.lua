@@ -53,7 +53,7 @@ end
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
-
+g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentTradeResult={
 
     new=function(tab,parent,name,inventory,shop)
@@ -67,35 +67,44 @@ g.gbg.uiegbgComponentTradeResult={
         local y=0
 
         local textdiff=gbox:CreateOrGetControl('richtext','txtdiff',0,150,200,30)
-        local textarrow=gbox:CreateOrGetControl('richtext','txtarrow',0,0,200,150)
+        local textarrow=gbox:CreateOrGetControl('picture','txtarrow',0,0,200,150)
         local textremain=gbox:CreateOrGetControl('richtext','txtremain',0,210,200,20)
 
-        self:updateDiff('0')
+        self:updateBalance('0')
         
     end,
-    updateDiff=function(self,diff)
+    updateBalance=function(self,balance)
         local gbox=self.gbox
         local txtdiff=gbox:GetChild('txtdiff')
         local textarrow=gbox:GetChild('txtarrow')
         local textremain=gbox:GetChild('txtremain')
-
+        AUTO_CAST(textarrow)
         local price="0"
-        if IsGreaterThanForBigNumber(diff,"0")==1 then
+        if IsGreaterThanForBigNumber(balance,"0")==1 then
             --buy
-            textarrow:SetText('{img white_left_arrow 150 150}')
-            txtdiff:SetText('{s40}'..diff:gsub("%-",""))
-            price='-'..diff
-        elseif IsGreaterThanForBigNumber("0",diff)==1 then
+            textarrow:SetImage('white_left_arrow')
+            textarrow:SetEnableStretch(1)
+            textarrow:ShowWindow(1)
+            txtdiff:SetText('{s40}'..balance:gsub("%-",""))
+            price='-'..balance
+        elseif IsGreaterThanForBigNumber("0",balance)==1 then
             --sell
-            textarrow:SetText('{img white_right_arrow 150 150}')
-            txtdiff:SetText('{s40}'..diff:gsub("%-",""))
-            price=diff:gsub('%-','')
+            textarrow:SetImage('white_right_arrow')
+            textarrow:SetEnableStretch(1)
+            textarrow:ShowWindow(1)
+            txtdiff:SetText('{s40}'..balance:gsub("%-",""))
+            price=balance:gsub('%-','')
         else
+            textarrow:ShowWindow(0)
             txtdiff:SetText('{s40}0')
         end
         local silverAmountStr = SumForBigNumberInt64(GET_TOTAL_MONEY_STR(),price);
-
-        textremain:SetText('{img icon_item_silver 20 20} {ol}{s18}'..silverAmountStr)
+        if IsGreaterThanForBigNumber('0',silverAmountStr) then
+            textremain:SetText('{img icon_item_silver 20 20} {ol}{s18}{#FF0000}'..silverAmountStr)
+        else
+            textremain:SetText('{img icon_item_silver 20 20} {ol}{s18}{#FFFFFF}'..silverAmountStr)
+        end
+      
         txtdiff:SetGravity(ui.CENTER_HORZ,ui.TOP)
         textremain:SetGravity(ui.CENTER_HORZ,ui.TOP)
     end,

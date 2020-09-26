@@ -8,6 +8,7 @@
     "LuaCoderAssist.format.lineWidth": 180,
     "Lua.diagnostics.disable": [
         113,
+        611,
         611
     ]
 }

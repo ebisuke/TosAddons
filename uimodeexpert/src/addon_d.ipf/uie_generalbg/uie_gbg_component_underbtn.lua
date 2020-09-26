@@ -63,7 +63,7 @@ end
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
-
+g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentUnderBtn = {
     _instances = {},
     new = function(tab, parent, name, btns)

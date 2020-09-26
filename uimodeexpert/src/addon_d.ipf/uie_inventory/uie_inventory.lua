@@ -135,7 +135,7 @@ g.inv = {
             gboxtab:SetOffset(20, 70)
             gboxtab:Resize(base:GetWidth() - 30, base:GetHeight() - 100)
             local tab = gboxtab:GetChild('tab')
-            tab:SetOffset(0, 0)
+            tab:SetOffset(5, 5)
             tab:Resize(gboxtab:GetWidth(), gboxtab:GetHeight())
 
             local gbox = base:GetChild('gbox')
@@ -153,8 +153,8 @@ g.inv = {
                 gbox:Resize(base:GetWidth() - 20, base:GetHeight() - 180)
             end
             local slotset = gbox:GetChild('slotset')
-            slotset:SetOffset(0, 0)
-            slotset:Resize(gbox:GetWidth() - 20, gbox:GetHeight())
+            slotset:SetOffset(5,5)
+            slotset:Resize(gbox:GetWidth()-10, gbox:GetHeight()-10)
         end,
         showToolTip = function(self, invItem)
             if not self.enabletooltip then
