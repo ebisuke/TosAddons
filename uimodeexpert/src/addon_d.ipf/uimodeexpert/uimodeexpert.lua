@@ -53,8 +53,9 @@ g._mousemoveto = nil
 g._hotkeyenablecount = 0
 g._needToRefresh = 0
 g._isEnable = true
-g._activeFrames={}
-g._activeFrameCount=0
+g._activeFrames = {}
+g._activeFrameCount = 0
+g._activeHandlers={}
 g.keydef = {
     UP = 0x0001,
     DOWN = 0x0002,
@@ -171,16 +172,12 @@ g.key = {
 g.initialize = function(self)
 end
 g.enableHotKey = function(self)
-
     --obsolete
     -- g._hotkeyenablecount = g._hotkeyenablecount + 1
-
     -- if (g._hotkeyenablecount == 0) then
     --     keyboard.EnableHotKey(true)
     --     self._mousemoveto = nil
-
     --     ui.SetTopMostFrame()
-
     --     ui.GetFrame('uie_cursor'):ShowWindow(0)
     -- --ui.SetHoldUI(false);
     -- end
@@ -191,9 +188,7 @@ g.disableHotKey = function(self)
     --     keyboard.EnableHotKey(false)
     --     self._mousemoveto = nil
     --     local frame = ui.GetFrame('uie_cursor')
-
     --     ui.SetTopMostFrame()
-
     --     frame:ShowWindow(0)
     --     if (g.isHighRes()) then
     --         frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
@@ -202,7 +197,6 @@ g.disableHotKey = function(self)
     --         frame:SetOffset(option.GetClientWidth() / 2, option.GetClientHeight())
     --         frame:Resize(1, 1)
     --     end
-
     -- --ui.SetHoldUI(true);
     -- end
     -- g._hotkeyenablecount = g._hotkeyenablecount - 1
@@ -217,19 +211,20 @@ g.cleanupMessageBox = function(self)
         end
     end
 end
-g.attachHandler=function(handler)
+g.attachHandler = function(handler)
+
     local key = #g._activeHandlers + 1
     g._activeHandlers[key] = handler
+    
     handler:enter()
 
     ReserveScript(string.format('UIMODEEXPERT_DELAYEDENTER(%d)', key, 0.1))
 
-    if key==1 then
+    if key == 1 then
         local frame = ui.GetFrame('uie_cursor')
 
-        ui.SetTopMostFrame()
-
-        frame:ShowWindow(0)
+ 
+        frame:ShowWindow(1)
         if (g.isHighRes()) then
             frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
             frame:Resize(1, 1)
@@ -239,25 +234,47 @@ g.attachHandler=function(handler)
         end
     end
 end
-g.detachHandler=function(handler)
-    for k,v in ipairs(g._activeHandlers) do
+g.detachHandlerByFrame = function(frame)
+    local handler = nil
+    local idx
+    for kk, vv in ipairs(g._activeHandlers) do
+        if vv.frame == frame then
+            idx = kk
+            handler = vv
+            if handler then
+                g.detachHandler(handler)
+            end
+            
+        end
+    end
+    
+end
+g.detachHandler = function(handler)
+    
+    for k, v in ipairs(g._activeHandlers) do
         if v==handler then
             v:leave()
             if handler._overrider then
                 DBGOUT('restore:' .. k)
                 handler._overrider:restore()
             end
-            table.remove(g._activeHandlers, k)
+            DBGOUT('HOHO'..handler.key)
+            table.remove(g._activeHandlers,k)
+            break
         end
     end
-    if #g._activeHandlers==0 then
+  
+    if #g._activeHandlers == 0 then
+        --ui.SetHoldUI(false);
         keyboard.EnableHotKey(true)
         g._mousemoveto = nil
-
-        ui.SetTopMostFrame()
+        DBGOUT('DIED:')
+        --ui.SetTopMostFrame()
 
         ui.GetFrame('uie_cursor'):ShowWindow(0)
-    --ui.SetHoldUI(false);
+    else
+        DBGOUT('REMAIN:' .. #g._activeHandlers)
+      
     end
 end
 g.Enable = function(self, enable)
@@ -277,130 +294,137 @@ g.Enable = function(self, enable)
     end
 end
 g.checkFrames = function(self)
-    for k, v in pairs(g._registeredFrameHandlers) do
-        local handler = nil
-        local idx
-        for kk, vv in ipairs(g._activeHandlers) do
-            if vv.key == k then
-                idx = kk
-                handler = vv
-                break
-            end
-        end
-        if not handler then
-            -- not registered
-            local frame = ui.GetFrame(k)
-            if frame and frame:IsVisible() == 1 then
-                DBGOUT('enter:' .. k)
-                local overrider = nil
-                if g._registeredFrameHandlers[k].overrider then
-                    local ret = g._registeredFrameHandlers[k].overrider(k, frame)
-                    overrider = ret
-                    if ret == false then
-                        --cancel operation
-                        return
-                    elseif ret then
-                        handler = ret:override()
-                        if not handler then
-                           
+    EBI_try_catch {
+        try = function()
+            for k, v in pairs(g._registeredFrameHandlers) do
+                local handler = nil
+               
+                for kk, vv in ipairs(g._activeHandlers) do
+                    if vv.key == k then
+                       
+                        handler = vv
+                        break
+                    end
+                end
+                if not handler then
+                    -- not registered
+                    local frame = ui.GetFrame(k)
+                    if frame and frame:IsVisible() == 1 then
+                        DBGOUT('enter:' .. k)
+                        local overrider = nil
+                        if g._registeredFrameHandlers[k].overrider then
+                            local ret = g._registeredFrameHandlers[k].overrider(k, frame)
+                            overrider = ret
+                            if ret == false then
+                                --cancel operation
+                                return
+                            elseif ret then
+                                handler = ret:override()
+                                if not handler then
+                                    handler = g._registeredFrameHandlers[k].generator(k, frame)
+                                end
+                            else
+                                handler = g._registeredFrameHandlers[k].generator(k, frame)
+                            end
+                        else
                             handler = g._registeredFrameHandlers[k].generator(k, frame)
                         end
-                    else
-                        handler = g._registeredFrameHandlers[k].generator(k, frame)
+                        handler._overrider = overrider
+                        handler.key=k
+                        g.attachHandler(handler)
                     end
                 else
-                    handler = g._registeredFrameHandlers[k].generator(k, frame)
-                end
-                local key = #g._activeHandlers + 1
-                handler._overrider = overrider
-                g._activeHandlers[key] = handler
-                handler:enter()
+                    --registered
+                    local frame = ui.GetFrame(k)
 
-                ReserveScript(string.format('UIMODEEXPERT_DELAYEDENTER(%d)', key, 0.1))
-            end
-        else
-            --registered
-            local frame = ui.GetFrame(k)
+                    if not frame or frame:IsVisible() == 0 then
+                        DBGOUT('leave:' .. k)
+                        g.detachHandler(handler)
 
-            if not frame or frame:IsVisible() == 0 then
-                DBGOUT('leave:' .. k)
-                handler:leave()
-                if handler._overrider then
-                    DBGOUT('restore:' .. k)
-                    handler._overrider:restore()
-                end
-                table.remove(g._activeHandlers, idx)
-            end
-        end
-    end
-
-    --gbg
-    for k, v in pairs(g._registeredFrameGeneralbg) do
-        local gb = nil
-        local idx
-        for kk, vv in pairs(g._activeFrames) do
-            if kk == k then
-                idx = kk
-                gb = vv
-                break
-            end
-        end
-        if not gb then
-            -- not registered
-            local frame = ui.GetFrame(k)
-            if frame and frame:IsVisible() == 1 and (g._activeFrameCount == 0 or g._activeFramePriority>(v.priority or 0)) then
-                DBGOUT('gb enter:' .. k)
-                if g._activeFrameCount>0 then
-                    for _,vv in pairs(g._activeFrames) do
-                        vv:release()
-                        g._activeFrameCount=g._activeFrameCount-1
                     end
-                    g._activeFrames={}
-                    g.gbg.setActiveInstance(nil)
                 end
-                g.gbg.initialize()
-                local instance=v.class.new(ui.GetFrame('uie_generalbg'),k,nil,v.arg)
-                
-                instance:initialize()
-                
-                g.gbg.showFrame()
-                g.gbg.setActiveInstance(instance)
-                g._activeFrames[k]=instance
-                g._activeFrameCount=g._activeFrameCount+1
-                g._activeFramePriority=v.priority or 0
             end
-        else
-            --registered
-            local frame = ui.GetFrame(k)
 
-            if not frame or frame:IsVisible() == 0 then
-                DBGOUT('gb leave:' .. k)
-                gb:release()
-                g.gbg.hideFrame()
-                g._activeFrames[k]=nil
-                g._activeFrameCount=g._activeFrameCount-1
-                g.gbg.setActiveInstance(nil)
-                g._activeFramePriority=0
-            elseif ui.GetFrame('uie_generalbg'):IsVisible()==0 then
-                DBGOUT('gb leave3:' .. k)
-                gb:release()
-                g.gbg.hideFrame()
-                ui.GetFrame(k):ShowWindow(0)
-                g._activeFrames[k]=nil
-                g._activeFrameCount=g._activeFrameCount-1
-                g.gbg.setActiveInstance(nil)
-                g._activeFramePriority=0
-            elseif gb._isReleased then
-                DBGOUT('gb leave2:' .. k)
-                ui.GetFrame(k):ShowWindow(0)
-                g._activeFrames[k]=nil
-                g._activeFrameCount=g._activeFrameCount-1
-                g.gbg.setActiveInstance(nil)
-                g._activeFramePriority=0
+            --gbg
+            for k, v in pairs(g._registeredFrameGeneralbg) do
+                local gb = nil
+                local idx
+                for kk, vv in pairs(g._activeFrames) do
+                    if kk == k then
+                        idx = kk
+                        gb = vv
+                        break
+                    end
+                end
+                if not gb then
+                    -- not registered
+                    local frame = ui.GetFrame(k)
+                    if frame and frame:IsVisible() == 1 and  (g._activeFrameCount == 0 or g._activeFramePriority > (v.priority or 0)) then
+                        DBGOUT('gb enter:' .. k)
+                        if g._activeFrameCount > 0 then
+                            for _, vv in pairs(g._activeFrames) do
+                                 DBGOUT('gb enter:' .. k)
+                                vv:release()
+                                g._activeFrameCount = g._activeFrameCount - 1
+                            end
+                            g._activeFrames = {}
+                            g.gbg.setActiveInstance(nil)
+                        end
+                        --g.gbg.initialize()
+                        local instance = v.class.new(ui.GetFrame('uie_generalbg'), k, '', v.arg)
+
+                        instance:initialize()
+
+                        g.gbg.showFrame()
+                        g.gbg.setActiveInstance(instance)
+                        g._activeFrames[k] = instance
+                        g._activeFrameCount = g._activeFrameCount + 1
+                        g._activeFramePriority = v.priority or 0
+                    end
+                else
+                    --registered
+                    local frame = ui.GetFrame(k)
+                    
+                    if not frame or frame:IsVisible() == 0 then
+                        g._activeFrames[k] = nil
+                        g._activeFrameCount = g._activeFrameCount - 1
+                        DBGOUT('gb leave:' .. k .. idx)
+                        gb:release()
+                        DBGOUT('gb leaveaa2:' .. k .. idx)
+                        g.gbg.hideFrame()
+                        DBGOUT('gb leaveaa3:' .. k .. idx)
+                        
+                        g.gbg.setActiveInstance(nil)
+                        g._activeFramePriority = 0
+                        DBGOUT('gb leaveaa:' .. k .. idx)
+                    elseif ui.GetFrame('uie_generalbg'):IsVisible() == 0 then
+                        g._activeFrames[k] = nil
+                        g._activeFrameCount = g._activeFrameCount - 1
+                        DBGOUT('gb leave3:' .. k)
+                        gb:release()
+                        g.gbg.hideFrame()
+                        ui.GetFrame(k):ShowWindow(0)
+ 
+                        g.gbg.setActiveInstance(nil)
+                        g._activeFramePriority = 0
+                        DBGOUT('gb leaveaa3:' .. k .. idx)
+                    elseif gb._isReleased or gb._giveUp then
+                        g._activeFrames[k] = nil
+                        g._activeFrameCount = g._activeFrameCount - 1
+                        DBGOUT('gb leave2:' .. k)
+
+                        ui.GetFrame(k):ShowWindow(0)
+
+                        g.gbg.setActiveInstance(nil)
+                        g._activeFramePriority = 0
+                    end
+                end
             end
-           
+        end,
+        catch = function(error)
+            ERROUT(error)
         end
-    end
+    }
 end
 g.onChangedCursor = function(self)
     imcSound.PlaySoundEvent('sys_mouseover_percussion_1')
@@ -410,8 +434,8 @@ g.moveMouse = function(self, x, y, w, h, ctrl)
     ui.GetFrame('uie_cursor'):ShowWindow(1)
 
     ui.SetTopMostFrame(ui.GetFrame('uie_cursor'))
-    self._mousemoveto = {x = x, y = y, w = w, h = h, ctrl = ctrl, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
 
+    self._mousemoveto = {x = x, y = y, w = w, h = h, ctrl = nil, ox = frame:GetX(), oy = frame:GetY(), ow = frame:GetWidth(), oh = frame:GetHeight(), time = 0, maxtime = 5}
 end
 g.onCanceledCursor = function(self)
     imcSound.PlaySoundEvent('textballoon_open')
@@ -433,7 +457,7 @@ g.triggerCloseMessageBox = function(self, keys)
 end
 g.showOriginalInventory = function(self)
     g._showInventory = 1
-    
+
     ui.GetFrame('inventory'):ShowWindow(1)
 end
 g.isHighRes = function(self)
@@ -467,13 +491,11 @@ g.uieHandlerControlTracerGenerator = function(flags)
     end
 end
 g._registeredFrameGeneralbg = {
-    ['shop'] = {class=g.gbg.uiegbgShop,},
-    ['inventory'] = {class=g.gbg.uiegbgGroupMe,arg=1,priority=100},
-    ['status'] = {class=g.gbg.uiegbgGroupMe,arg=2},
-
+    ['shop'] = {class = g.gbg.uiegbgShop},
+    ['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
+    ['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2}
 }
 g._registeredFrameHandlers = {
-    
     ['bookitemread'] = {
         generator = g.uieHandlerControlTracerGenerator()
     },
@@ -483,8 +505,6 @@ g._registeredFrameHandlers = {
     ['uie_menu_sub'] = {
         generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
     },
-    
-    
     ['dialogselect'] = {
         generator = function(...)
             return g.uieHandlerDummy.new(...)
@@ -623,16 +643,18 @@ function UIMODEEXPERT_ON_TICK(frame)
             while #g._activeHandlers > 0 do
                 local k = #g._activeHandlers
                 local v = g._activeHandlers[k]
-                
-                local ret = v:tick()
-                if ret == g.uieHandlerBase.RefEnd then
-                    v:leave()
-                    if (v._overrider and v._overrider.restore) then
-                        v._overrider:restore()
-                    end
+                local ret 
+                if not v._giveup then
+                    ret =v:tick()
+                else
+                    ret=g.uieHandlerBase.RefEnd
+                end
+   
+                if ret == g.uieHandlerBase.RefEnd  then
                     DBGOUT('leavef:' .. k)
-                    local prevk=k
-                    table.remove( g._activeHandlers,k)
+                    local prevk = k
+                    g.detachHandler(v)
+                    --table.remove(g._activeHandlers, k)
                     k = #g._activeHandlers
                     if k > 0 and prevk ~= k then
                         g._activeHandlers[k]:refresh()
@@ -644,16 +666,10 @@ function UIMODEEXPERT_ON_TICK(frame)
                     g._needToRefresh = 10
                     break
                 else
-                    break;
+                    break
                 end
             end
 
-            --for k,v in pairs(g._activeHandlers) do
-            --    if v:tick()==false then
-            --         g._activeHandlers[k]:leave()
-            --       g._activeHandlers[k]=nil
-            --    end
-            --end
             g:cleanupMessageBox()
 
             if g._mousemoveto then
@@ -697,12 +713,12 @@ function UIMODEEXPERT_ON_TICK(frame)
                 --         curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
                 --         (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
                 -- end
-                lx =
-                    curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
-                    (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                ly =
-                    curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
-                    (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                -- lx =
+                --     curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                --     (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                -- ly =
+                --     curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                --     (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
                 --mouse.SetPos(lx, ly)
                 g._mousemoveto.time = math.min(g._mousemoveto.maxtime, g._mousemoveto.time + 1)
                 if g._mousemoveto.time > g._mousemoveto.maxtime then

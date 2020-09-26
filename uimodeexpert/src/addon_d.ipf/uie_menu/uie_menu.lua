@@ -69,7 +69,7 @@ end
 g.menu = {
     incriment = 1,
     uiePopupMenu = {
-        new = function(x, y, width,heightperline,named)
+        new = function(x, y, width,heightperline,named,cancelcallback)
             local self = {}
             setmetatable(self, {__index = g.menu.uiePopupMenu})
             local defx= option.GetClientWidth()/2-width/2
@@ -85,7 +85,7 @@ g.menu = {
             self.y = y or defy
             self.width = width
             self.height = 0
-            self.heightperline=heightperline or 20
+            self.heightperline=heightperline or 30
             self.frame = nil
             self.menus = {}
             self.menucount = 0
@@ -95,12 +95,17 @@ g.menu = {
             else
                 self.name = 'uie_menu_' .. g.menu.incriment
             end
+            self.cancelcallback=cancelcallback
             g.menu.incriment = g.menu.incriment + 1
             self:initialize()
             return self
         end,
         initialize = function(self)
-            local frame = ui.CreateNewFrame('uie_menu', self.name)
+            local frame
+            frame=ui.GetFrame(self.name)
+            if not frame then
+                frame = ui.CreateNewFrame('uie_menu', self.name)
+            end
             frame:SetSkinName('test_frame_midle')
             self.frameno = g.menu.incriment
 
@@ -122,8 +127,8 @@ g.menu = {
             btn:SetEventScript(ui.LBUTTONUP, 'UIE_MENU_ONCLICKEDMENU')
             btn:SetEventScriptArgNumber(ui.LBUTTONUP, #self.menus + 1)
             self.top = self.top + btn:GetHeight() + 2
-            local w = btn:GetWidth() + 5 + 5
-            frame:Resize(w, self.top + 5)
+            local w = math.max(self.width or 0,btn:GetWidth() + 5 + 5)
+            
             if clickafterdispose == nil then
                 clickafterdispose = true
             end
@@ -133,22 +138,37 @@ g.menu = {
                 clickafterdispose = clickafterdispose,
                 btn = btn
             }
-            local w = 10
+            local w = self.width or 10
             for _, v in ipairs(self.menus) do
-                w = math.max(v.btn:GetWidth())
+                w = math.max(w,v.btn:GetWidth())
             end
             for _, v in ipairs(self.menus) do
                 v.btn:SetGravity(ui.LEFT, ui.TOP)
                 v.btn:Resize(w, v.btn:GetHeight())
             end
+            frame:Resize(w, self.top + 5)
         end,
+
         dispose = function(self)
+            if self._isDisposed then
+                return
+            end
+            self._isDisposed=true
+            if self.cancelcallback and not self._selected then
+                assert(pcall(self.cancelcallback))
+            end
             if self.frame then
+               
+                g.detachHandlerByFrame(self.frame)
                 self.frame:ShowWindow(0)
-                ui.DestroyFrame(self.frame:GetName())
+                ui.DestroyFrame(self.name)
                 self.frame = nil
+                
+            else
+                ERROUT('no frame')
             end
             g.menu.uiePopupMenu.instances[self.name] = nil
+         
         end,
         instances = {}
     }
@@ -164,14 +184,32 @@ function UIE_MENU_ONCLICKEDMENU(frame, ctrl, argstr, argnum)
             local menuobj = g.menu.uiePopupMenu.instances[name]
             if menuobj then
                 local item = menuobj.menus[idx]
-             
-                if item.callback then
-                    
-                    pcall(item.callback, menuobj)
-                end
+                menuobj._selected=true
                 if item.clickafterdispose then
                     menuobj:dispose()
                 end
+                if item.callback then     
+                    assert(pcall(item.callback, menuobj))
+                end
+                
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function UIE_MENU_CLOSE(frame, ctrl, argstr, argnum)
+    EBI_try_catch {
+        try = function()
+            if not g._isEnable then
+                return
+            end
+            local idx = argnum
+            local name = frame:GetName()
+            local menuobj = g.menu.uiePopupMenu.instances[name]
+            if menuobj then
+                menuobj:dispose()
             end
         end,
         catch = function(error)

@@ -102,5 +102,33 @@ g.util.cloneControl=function(src,dest)
         end
     end
 end
+g.util.showItemToolTip=function(invItem,x,y)
+   
 
+
+    local obj = GetIES(invItem:GetObject())
+
+    local noTradeCnt = TryGetProp(obj, 'BelongingCount')
+    local itemFrame = ui.GetFrame("wholeitem");
+    
+    if not itemFrame then
+            itemFrame = ui.GetNewToolTip("wholeitem", "wholeitem");
+    end
+    UPDATE_ITEM_TOOLTIP(itemFrame, '', 0, 0, nil, obj, noTradeCnt)
+    itemFrame:RefreshTooltip();
+    itemFrame:ShowWindow(1);
+    itemFrame:SetOffset(x,y)
+    --ui.ToCenter(itemFrame);
+
+end
+g.util.hideItemToolTip=function()
+   
+    local itemFrame = ui.GetFrame("wholeitem");
+    
+    if itemFrame then
+            itemFrame:ShowWindow(0)
+    end
+
+
+end
 UIMODEEXPERT = g

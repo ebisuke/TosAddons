@@ -53,12 +53,19 @@ g.uieHandlerBase = {
     RefEnd = 0,
     RefRefresh = 2,
     new = function(key)
-        local self = {key = key}
+        local self = inherit(g.uieHandlerBase)
+        self.key=key
+        self._giveup=false
         return self
     end,
     moveMouseToControl = function(self, ctrl)
         local pos = ctrl:GetTopParentFrame():FramePosToScreenPos(ctrl:GetGlobalX() , ctrl:GetGlobalY() )
-        g:moveMouse(pos.x, pos.y,ctrl:GetWidth(),ctrl:GetHeight(),ctrl)
+        if g.isHighRes then
+            g:moveMouse(pos.x/2, pos.y/2,ctrl:GetWidth(),ctrl:GetHeight(),ctrl)
+        else
+            g:moveMouse(pos.x, pos.y,ctrl:GetWidth(),ctrl:GetHeight(),ctrl)
+        end
+        
     end,
     enter = function(self)
         g:disableHotKey()
@@ -71,7 +78,11 @@ g.uieHandlerBase = {
     end,
     leave = function(self)
         g:enableHotKey()
-    end
+    end,
+    giveUp=function(self)
+        --forced close
+        self._giveup=true
+    end,
 }
 g.uieHandlerGenericDialog = {
     new = function(key, btncount, yesscp, noscp, etcscp)

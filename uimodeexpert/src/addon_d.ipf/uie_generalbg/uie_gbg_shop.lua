@@ -58,19 +58,19 @@ g.gbg=g.gbg or {}
 g.gbg.uiegbgShop={
     new=function(frame,name,caption)
         local shopName = session.GetCurrentShopName()
-        local self=inherit(g.gbg.uiegbgShop,g.gbg.uiegbgBase,frame,name,caption or  'ショップ')
+        local self=inherit(g.gbg.uiegbgShop,g.gbg.uiegbgBase,frame,name,caption or 'ショップ')
         return self
     end,
     initializeImpl=function(self,gbox)
 
         local inv=g.gbg.uiegbgComponentShopInventory.new(self,gbox,'inventory',true,function()
             self:update()
-        end)
+        end,{x=60,y=30})
         inv:initialize(gbox:GetWidth()/2+140,60,gbox:GetWidth()/2-160,gbox:GetHeight()-190)
         self:addComponent(inv)
         local shop=g.gbg.uiegbgComponentShop.new(self,gbox,'shop',function()
             self:update()
-        end)
+        end,{x=gbox:GetWidth()/2+60,y=30})
         shop:initialize(60,60,gbox:GetWidth()/2-120,gbox:GetHeight()-190)
         self:addComponent(shop)
         local zeny=g.gbg.uiegbgComponentFund.new(self,gbox,'fund')
@@ -101,6 +101,8 @@ g.gbg.uiegbgShop={
         under:initialize(100,gbox:GetHeight()-140,gbox:GetWidth()-200,100)
         
         self:addComponent(under)
+
+        
     end,
     defaultHandlerImpl = function(self,key,frame)
         --override me
@@ -156,36 +158,71 @@ g.gbg.uiegbgShop={
         end
         item.BuyList();
     end,
-
+    reset=function(self)
+        local inv =self:getComponent('inventory')
+        local shop =self:getComponent('shop')
+        
+        inv:reset();
+        shop:reset();
+    end,
 }
 g.uieHandlergbgShop = {
     new = function(key, frame,gbg)
         local self = inherit(g.uieHandlergbgShop, g.uieHandlergbgBase, key,frame,gbg)
-       
+        self.endo=false
         return self
     end,
     delayedenter = function(self)
-        g.uieHandlergbgBase.delayedenter(self)
-        local menu=g.menu.uiePopupMenu.new(nil,nil,200)
+        self:refresh()
+    end,
+    refresh = function(self)
+        g.uieHandlergbgBase.refresh(self)
+        if self.menu then
+            self.menu:dispose()
+            self.menu=nil
+        end
+        self.menu=g.menu.uiePopupMenu.new(nil,100,400,40,nil,function()
+            self.gbg:close()
+
+
+        end)
+        local menu=self.menu
         menu:addMenu('{ol}かごを空にする',function()
-            self.gbg:adjustment()
+            self.gbg:reset()
         end,false)
         menu:addMenu('{ol}買う',function()
-            
+            self.gbg:getComponent('shop'):attachDefaultHandler()
         end)
         menu:addMenu('{ol}売る',function()
-
+            self.gbg:getComponent('inventory'):attachDefaultHandler()
         end)
         
         menu:addMenu('{ol}精算',function()
             self.gbg:adjustment()
             self.gbg:close()
+            
         end)
         menu:addMenu('{ol}キャンセル',function()
             self.gbg:close()
+           
         end)
     end,
+    leave=function(self)
+        
+        if self.menu then
+            self.menu:dispose()
+            self.menu=nil
+        end
+    end,
     tick = function(self)
+        if self.endo then
+            if self.menu then
+                self.menu:dispose()
+                self.menu=nil
+            end
+            return g.uieHandlerBase.RefEnd
+        end
+
         return g.uieHandlerBase.RefPass
     end
 }

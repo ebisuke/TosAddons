@@ -33,3 +33,4 @@ wsl ipf -c 9 tmp.ipf $aswslpath
 cp -Force tmp.ipf ../bin/$prefix$addonname"-"$emoji"-"$version".ipf"
 mv -Force tmp.ipf ../bin/$addonname"-"$version".ipf"
 cd ../
+rm -Force -Recurse obj/

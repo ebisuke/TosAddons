@@ -52,7 +52,9 @@ UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
 g.gbg = g.gbg or {}
+
 g.gbg.initialize = function()
+    print('INITD')
     local frame = ui.GetFrame(framename)
     local gbox = frame:GetChild('gboxbody')
     gbox:RemoveAllChild()
@@ -66,6 +68,26 @@ g.gbg.initialize = function()
         v:release()
     end
     g.gbg._attached = {}
+    g.gbg._componentInstances = {}
+end
+
+g.gbg.release = function()
+    print('RELEASED')
+    local frame = ui.GetFrame(framename)
+    local gbox = frame:GetChild('gboxbody')
+    gbox:RemoveAllChild()
+    local tab = frame:GetChild('tabmain')
+    AUTO_CAST(tab)
+    tab:ClearItemAll()
+    for _, v in ipairs(g.gbg._attached) do
+        v:release()
+    end
+    for _, v in ipairs(g.gbg._componentInstances) do
+        v:release()
+    end
+    g.gbg._attached = {}
+    g.gbg._componentInstances = {}
+    
 end
 g.gbg._activeInstance=nil
 g.gbg._attached = {}
@@ -97,6 +119,8 @@ g.gbg.uiegbgBase = {
         self.caption = caption
         self.components = {}
         self.parentgbg = nil
+        self._attachedHandler=nil
+        self._isReleased = false
         return self
     end,
     initialize = function(self)
@@ -109,7 +133,7 @@ g.gbg.uiegbgBase = {
             g.gbg.SetTitle(self.caption)
         end
         self:initializeImpl(gbox)
-        local handler = self:defaultHandler(self.frame:GetName(),self.frame,self)
+        local handler = self:defaultHandler(self.name,self.frame,self)
         if handler and not self.parentgbg then
             self:attachHandler(handler)
         end
@@ -124,9 +148,7 @@ g.gbg.uiegbgBase = {
     end,
     release = function(self)
         self:releaseImpl()
-        if self._attachedHandler then
-            g.detachHandler(self._attachedHandler)
-        end
+        self:detachHandler()
         self._isReleased = true
     end,
     releaseImpl = function(self)
@@ -148,6 +170,9 @@ g.gbg.uiegbgBase = {
         --override me
     end,
     close = function(self)
+        --print(self.frame:GetName())
+        DBGOUT('rrr')
+        self:release()
         self.frame:ShowWindow(0)
     end,
     defaultHandler = function(self,key,frame)
@@ -157,13 +182,25 @@ g.gbg.uiegbgBase = {
         --override me
         return g.uieHandlergbgBase.new(key,frame,self)
     end,
+    attachDefaultHandler=function(self)
+        local handler=self:defaultHandler(self.frame:GetName(),self.frame)
+        
+        self:attachHandler(handler)
+   
+    end,
     attachHandler = function(self, instance)
+        if self._attachedHandler then
+           self:detachHandler()
+        end
         g.attachHandler(instance)
+        
         self._attachedHandler = instance
     end,
-    detachHandler = function(self, instance)
-        g.detachHandler(instance)
+    detachHandler = function(self)
+ 
+        g.detachHandler(self._attachedHandler)
         self._attachedHandler = nil
+    
     end,
     isVisible = function(self)
         return self.gbox:IsVisible() == 1
@@ -186,7 +223,8 @@ g.gbg.uiegbgBase = {
     end,
     hideImpl = function(self)
         --override me
-    end
+    end,
+
 }
 g.gbg.uiegbgGroupBase = {
     new = function(frame, name, caption,initindex)
@@ -215,10 +253,6 @@ g.gbg.uiegbgGroupBase = {
         end
 
         
-        --local handler = self:defaultHandler()
-        --if handler then
-        --    self:attachHandler(handler)
-        --end
         for k, v in ipairs(self._children) do
             print(''..self._initindex)
             if self._initindex==k then
@@ -231,11 +265,7 @@ g.gbg.uiegbgGroupBase = {
         tab:ChangeTab(self._initindex-1)
         self:postInitializeImpl(nil)
     end,
-    release = function(self)
-        self:releaseImpl()
-    
-        self._isReleased = true
-    end,
+  
     addChild = function(self, child)
         self._children[#self._children + 1] = child
         child.parentgbg = self
@@ -253,7 +283,7 @@ g.gbg.uiegbgGroupBase = {
 
 g.gbg.uiegbgComponentBase = {
     new = function(tab, parent, name)
-        local self = inherit(g.gbg.uiegbgBase)
+        local self = inherit(g.gbg.uiegbgComponentBase ,g.gbg.uiegbgBase,parent:GetTopParentFrame(),name,nil)
         self.tab = tab
         self.parent = parent
         self.name = name
@@ -275,46 +305,30 @@ g.gbg.uiegbgComponentBase = {
         
         return gbox
     end,
-    initializeImpl = function(self, gbox)
-        -- override me
-        --self:hookmsgImpl(frame, msg, argStr, argNum)
-    end,
-    release = function(self)
-        self:releaseImpl()
-        if self._attachedHandler then
-            g.detachHandler(self._attachedHandler)
-        end
-        self._isReleased = true
-    end,
-    releaseImpl = function(self)
-        --override me
-    end,
     hookmsg = function(self, frame, msg, argStr, argNum)
     end,
     hookmsgImpl = function(self, frame, msg, argStr, argNum)
         --override me
     end,
-    attachHandler = function(self, instance)
-        g.attachHandler(instance)
-        self._attachedHandler = instance
-    end,
-    detachHandler = function(self, instance)
-        g.detachHandler(instance)
-        self._attachedHandler = nil
-    end
+
 }
 
 g.uieHandlergbgBase = {
     new = function(key, frame,gbg)
         local self = inherit(g.uieHandlergbgBase, g.uieHandlerFrameBase, key,frame)
         self.gbg=gbg
+       
         return self
     end,
     leave=function(self)
+        if not self.gbg.parent then
+            self.gbg:close()
+        end
         --self.gbg:close()
     end,
     tick = function(self)
-    end
+    end,
+ 
 }
 UIMODEEXPERT = g
 
@@ -420,6 +434,7 @@ function UIE_GENERALBG_ON_OPEN(frame)
     EBI_try_catch {
         try = function()
             frame = ui.GetFrame(framename)
+           
         end,
         catch = function(error)
             ERROUT(error)
@@ -431,6 +446,11 @@ function UIE_GENERALBG_OPEN()
     frame:ShowWindow(1)
     UIE_GENERALBG_INIT()
 end
-function UIE_GENERALBG_ON_CLOSE(frame)
+function UIE_GENERALBG_CLOSE(frame)
     frame:ShowWindow(0)
+end
+
+function UIE_GENERALBG_ON_CLOSE(frame)
+    g.gbg.release()
+
 end

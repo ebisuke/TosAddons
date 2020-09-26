@@ -63,11 +63,12 @@ local inventory_filters = {
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
-g.gbg=g.gbg or {}
+g.gbg = g.gbg or {}
 g.gbg.uiegbgComponentInventory = {
-    new = function(tab, parent, name, enableaccess)
-        local self = inherit(g.gbg.uiegbgComponentInventory, g.gbg.uiegbgComponentBase, tab, parent, name)
+    new = function(tab, parent, name, enableaccess,tooltipxy)
+        local self = inherit(g.gbg.uiegbgComponentInventory, g.gbg.uiegbgComponentBase, tab, parent, name,tooltipxy)
         self.enableaccess = enableaccess or true
+        self.tooltipxy=tooltipxy
         return self
     end,
     initializeImpl = function(self, gbox)
@@ -92,6 +93,9 @@ g.gbg.uiegbgComponentInventory = {
     end,
     setCustomEventScript = function(self, slot, inv)
         --override me
+    end,
+    defaultHandlerImpl = function(self, key, frame)
+        return g.uieHandlergbgComponentInventory.new(key, frame, self,self.tooltipxy)
     end,
     refreshInventory = function(self, gboxin)
         if not gboxin then
@@ -161,6 +165,7 @@ g.gbg.uiegbgComponentInventory = {
         local slotsize = 48
         local cnt = 0
         local col = math.floor((gboxin:GetWidth() - 20) / slotsize)
+        self.col = col
         self.invItemList = invItemList
         for k, v in ipairs(invItemList) do
             local invItem = v.item
@@ -258,9 +263,10 @@ g.gbg.uiegbgComponentInventory = {
 }
 
 g.gbg.uiegbgComponentShopInventory = {
-    new = function(tab, parent, name, enableaccess, updatecallback)
-        local self = inherit(g.gbg.uiegbgComponentShopInventory, g.gbg.uiegbgComponentInventory, tab, parent, name, enableaccess)
+    new = function(tab, parent, name, enableaccess, updatecallback,tooltipxy)
+        local self = inherit(g.gbg.uiegbgComponentShopInventory, g.gbg.uiegbgComponentInventory, tab, parent, name, enableaccess,tooltipxy)
         self.updatecallback = updatecallback
+        
         return self
     end,
     initializeImpl = function(self, gbox)
@@ -270,6 +276,9 @@ g.gbg.uiegbgComponentShopInventory = {
     reset = function(self)
         self.sell = {}
         self:refreshInventory()
+    end,
+    defaultHandlerImpl = function(self, key, frame)
+        return g.uieHandlergbgComponentInventory.new(key, frame, self,self.tooltipxy)
     end,
     setCustomEventScript = function(self, slot, inv)
         slot:SetEventScript(ui.RBUTTONUP, 'UIE_GBG_SHOPINVENTORY_RBUTTON')
@@ -281,44 +290,45 @@ g.gbg.uiegbgComponentShopInventory = {
     end,
     sellItem = function(self, index, amount)
         local inv = self.invItemList[index]
-        local invitem=inv.item
+        local invitem = inv.item
         if true == invitem.isLockState then
-            ui.SysMsg(ClMsg("MaterialItemIsLock"));
-            return;
+            ui.SysMsg(ClMsg('MaterialItemIsLock'))
+            return
         end
-    
-        local itemobj = GetIES(invitem:GetObject());
-        local itemProp = geItemTable.GetPropByName(itemobj.ClassName);
+
+        local itemobj = GetIES(invitem:GetObject())
+        local itemProp = geItemTable.GetPropByName(itemobj.ClassName)
         if itemProp:IsEnableShopTrade() == false then
-            ui.SysMsg(ClMsg("CannoTradeToNPC"));
-            return;
+            ui.SysMsg(ClMsg('CannoTradeToNPC'))
+            return
         end
-    
-        if itemobj.MarketCategory == "Housing_Furniture" or itemobj.MarketCategory == "PHousing_Furniture" or itemobj.MarketCategory == "PHousing_Wall" or itemobj.MarketCategory == "PHousing_Carpet" then
-            ui.SysMsg(ClMsg("Housing_Cant_Sell_This_Item"));
-            return;
+
+        if
+            itemobj.MarketCategory == 'Housing_Furniture' or itemobj.MarketCategory == 'PHousing_Furniture' or itemobj.MarketCategory == 'PHousing_Wall' or
+                itemobj.MarketCategory == 'PHousing_Carpet'
+         then
+            ui.SysMsg(ClMsg('Housing_Cant_Sell_This_Item'))
+            return
         end
-        
-        
-        
-        inv.amount=inv.amount or 0
+
+        inv.amount = inv.amount or 0
         inv.amount = math.min(inv.item.count, inv.amount + amount)
         self:updateSlot(index)
         if self.updatecallback then
             self.updatecallback()
         end
     end,
-    calcTotalValue=function(self)
-        local invItemList=self.invItemList
-        local total='0'
+    calcTotalValue = function(self)
+        local invItemList = self.invItemList
+        local total = '0'
         for k, v in ipairs(invItemList) do
-            if  v.amount and v.amount>0 then
-                local itemcls = GetIES(v.item:GetObject());
-                local itemProp = geItemTable.GetPropByName(itemcls.ClassName);
-       
-                local unit= tostring(geItemTable.GetSellPrice(itemProp))
-                local price=MultForBigNumberInt64(unit,tostring(v.amount))
-                total=SumForBigNumberInt64(total,price)
+            if v.amount and v.amount > 0 then
+                local itemcls = GetIES(v.item:GetObject())
+                local itemProp = geItemTable.GetPropByName(itemcls.ClassName)
+
+                local unit = tostring(geItemTable.GetSellPrice(itemProp))
+                local price = MultForBigNumberInt64(unit, tostring(v.amount))
+                total = SumForBigNumberInt64(total, price)
             end
         end
         return total
@@ -397,14 +407,205 @@ g.gbg.uiegbgComponentShopInventory = {
         txtcount:EnableHitTest(0)
     end
 }
+g.uieHandlergbgComponentInventory = {
+    new = function(key, frame, gbg, tooltipxy)
+        local self = inherit(g.uieHandlergbgComponentInventory, g.uieHandlergbgBase, key, frame, gbg)
+        self.tooltipxy = tooltipxy
+        self.cursor = 0
+        return self
+    end,
+    delayedenter = function(self)
+        self:moveMouseToControl(self.gbg.invItemList[self.cursor + 1].slot)
+    end,
+    moveMouse = function(self)
+        EBI_try_catch {
+            try = function()
+                local slot = self.gbg.invItemList[self.cursor + 1].slot
+                local item = self.gbg.invItemList[self.cursor + 1].item
+                if slot then
+                    --g_invenTypeStrList
+                    local inven = self.gbg.gbox:GetChild('gboxin')
+                    local parent = slot:GetParent()
+                    local y
+                    AUTO_CAST(inven)
+                    if parent then
+                        y = slot:GetY() + parent:GetY()
+                    else
+                        y = slot:GetY()
+                    end
+                    local h = slot:GetHeight()
+                    local scrolly = inven:GetScrollCurPos()
+                    local scrollh = inven:GetHeight()
+                    scrolly = math.min(y, math.max(scrolly, y - scrollh + h + 10))
+                    inven:SetScrollPos(scrolly)
+                    inven:UpdateGroupBox()
+                    inven:ValidateControl()
+                    inven:UpdateDataByScroll()
 
+                    self:moveMouseToControl(slot)
+                    g.util.showItemToolTip(item, self.tooltipxy.x, self.tooltipxy.y)
+                end
+            end,
+            catch = function(error)
+                ERROUT(error)
+            end
+        }
+    end,
+    tick = function(self)
+        local count = #self.gbg.invItemList
+        if count > 0 then
+            if g.key:IsKeyPress(g.key.RIGHT) then
+                --down
+                self.cursor = self.cursor + 1
+                if self.cursor >= count then
+                    self.cursor = 0
+                end
+                self:moveMouse()
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyPress(g.key.LEFT) then
+                --up
+                self.cursor = self.cursor - 1
+                if self.cursor < 0 then
+                    self.cursor = count - 1
+                end
+                self:moveMouse()
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyPress(g.key.DOWN) then
+                --down
+                self.cursor = self.cursor + self.gbg.col
+                if self.cursor >= count then
+                    self.cursor = 0
+                end
+                self:moveMouse()
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyPress(g.key.UP) then
+                --up
+                self.cursor = self.cursor - self.gbg.col
+                if self.cursor < 0 then
+                    self.cursor = count - 1
+                end
+                self:moveMouse()
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyDown(g.key.CANCEL) then
+                g:onCanceledCursor()
+                return g.uieHandlerBase.RefEnd
+            end
+
+            if g.key:IsKeyDown(g.key.MAIN) or g.key:IsKeyDown(g.key.SUB) then
+                local scp
+                local idx = self.cursor
+                local ctrl = self.gbg.invItemList[self.cursor + 1].slot
+
+                if ctrl:GetClassString() == 'ui::CButton' or ctrl:GetClassString() == 'ui::CCheckBox' or ctrl:GetClassString() == 'ui::CSlot' then
+                    local evt
+                    if g.key:IsKeyDown(g.key.MAIN) then
+                        evt = ui.LBUTTONUP
+                        scp = ctrl:GetEventScript(evt)
+                        if not scp then
+                            evt = ui.LBUTTONDOWN
+                            scp = ctrl:GetEventScript(evt)
+                            if not scp then
+                                evt = ui.LBUTTONPRESSED
+                                scp = ctrl:GetEventScript(evt)
+                                if not scp then
+                                --none
+                                end
+                            end
+                        end
+                    elseif g.key:IsKeyDown(g.key.SUB) then
+                        evt = ui.RBUTTONUP
+                        scp = ctrl:GetEventScript(evt)
+                        if not scp then
+                            evt = ui.RBUTTONDOWN
+                            scp = ctrl:GetEventScript(evt)
+                            if not scp then
+                                evt = ui.RBUTTONPRESSED
+                                scp = ctrl:GetEventScript(evt)
+                                if not scp then
+                                --none
+                                end
+                            end
+                        end
+                    end
+
+                    local scpnum = ctrl:GetEventScriptArgNumber(evt)
+                    local scpstr = ctrl:GetEventScriptArgString(evt)
+
+                    if scp and ctrl:IsEnable() == 1 then
+                        local r, s = load('return (' .. scp .. ')')
+                        g:onDeterminedCursor()
+                        if r then
+                            --print(scp)
+                            local parent = ctrl:GetParent()
+                            local ctrlset
+
+                            while parent do
+                                if parent:GetClassString() == 'ui::CControlSet' then
+                                    ctrlset = parent
+
+                                    break
+                                end
+                                parent = parent:GetParent()
+                            end
+
+                            if ctrlset then
+                                pcall(r(), ctrlset, ctrl, scpstr, scpnum)
+                            else
+                                pcall(r(), ctrl:GetTopParentFrame(), ctrl, scpstr, scpnum)
+                            end
+                        end
+                    end
+                end
+                if ctrl:GetClassString() == 'ui::CCheckBox' then
+                    if ctrl:IsChecked() == 1 then
+                        ctrl:SetCheck(0)
+                    else
+                        ctrl:SetCheck(1)
+                    end
+                end
+                if ctrl:GetClassString() == 'ui::CSlot' then
+                    if g.key:IsKeyDown(g.key.MAIN) then
+                        local parent = ctrl:GetParent()
+                        if parent:GetClassString() == 'ui::CSlotSet' then
+                            AUTO_CAST(parent)
+
+                            if ctrl:IsSelected() == 1 then
+                                ctrl:Select(0)
+                            else
+                                ctrl:Select(1)
+                            end
+                            parent:MakeSelectionList()
+                            parent:Invalidate()
+                        else
+                            if ctrl:IsSelected() == 1 then
+                                ctrl:Select(0)
+                            else
+                                ctrl:Select(1)
+                            end
+                        end
+                    end
+                end
+                return g.uieHandlerBase.RefRefresh
+            end
+        end
+        return g.uieHandlerBase.RefPass
+    end,
+    leave = function(self)
+        g.uieHandlergbgBase.leave(self)
+        g.util.hideItemToolTip()
+    end
+}
 UIMODEEXPERT = g
 function UIE_GBG_SHOPINVENTORY_RBUTTON(frame, ctrl, argstr, argnum)
     EBI_try_catch {
         try = function()
             local self = g.gbg.getComponentInstanceByName(argstr)
             self:sellItem(argnum, 1)
-            imcSound.PlaySoundEvent('button_inven_click_item');
+            imcSound.PlaySoundEvent('button_inven_click_item')
         end,
         catch = function(error)
             ERROUT(error)
@@ -414,7 +615,7 @@ end
 function UIE_GBG_SHOPINVENTORY_LBUTTON(frame, ctrl, argstr, argnum)
     local self = g.gbg.getComponentInstanceByName(argstr)
     self:sellItem(argnum, -1)
-    imcSound.PlaySoundEvent('button_inven_click_item');
+    imcSound.PlaySoundEvent('button_inven_click_item')
 end
 
 function UIE_GBG_INVENTORY_FILTER(invItem, filtername)

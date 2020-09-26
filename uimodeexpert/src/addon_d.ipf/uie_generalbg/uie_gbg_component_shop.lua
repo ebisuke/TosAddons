@@ -65,11 +65,12 @@ UIMODEEXPERT = UIMODEEXPERT or {}
 local g = UIMODEEXPERT
 g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentShop = {
-    new = function(tab, parent, name, updatecallback)
-        local self = inherit(g.gbg.uiegbgComponentShop, g.gbg.uiegbgComponentBase, tab, parent, name)
+    new = function(tab, parent, name, updatecallback,tooltipxy)
+        local self = inherit(g.gbg.uiegbgComponentShop, g.gbg.uiegbgComponentBase, tab, parent, name,tooltipxy)
         self.updatecallback = updatecallback
         self.buy = {}
         self.col=3
+        self.tooltipxy=tooltipxy
         return self
     end,
     initializeImpl = function(self, gbox)
@@ -104,6 +105,10 @@ g.gbg.uiegbgComponentShop = {
             self.updatecallback()
         end
         
+    end,
+    defaultHandlerImpl=function(self,key,frame)
+        
+        return g.uieHandlergbgComponentShop.new(key,frame,self,self.tooltipxy)
     end,
     calcTotalValue=function(self)
         local invItemList=self.invItemList
@@ -289,35 +294,81 @@ g.gbg.uiegbgComponentShop = {
     end
 }
 g.uieHandlergbgComponentShop = {
-    new = function(key, frame,gbg)
+    new = function(key, frame,gbg,tooltipxy)
         local self = inherit(g.uieHandlergbgComponentShop, g.uieHandlergbgBase, key,frame,gbg)
+        self.tooltipxy=tooltipxy
         self.cursor=0
         return self
     end,
     delayedenter = function(self)
         
+        self:moveMouse()
     end,
     moveMouse=function(self)
-        self:moveMouseToControl(self.gbg.invItemList[self.cursor+1].slot)
+        local slot=self.gbg.invItemList[self.cursor+1].slot
+        local item=self.gbg.invItemList[self.cursor+1].item
+        if slot then
+            --g_invenTypeStrList
+            local inven = self.gbg.gbox:GetChild('gboxin')
+            local parent = slot:GetParent()
+            local y 
+            AUTO_CAST(inven)
+            if parent then
+                
+                y = slot:GetY() + parent:GetY()
+            else
+
+                y = slot:GetY()
+            end
+            local h = slot:GetHeight()
+            local scrolly = inven:GetScrollCurPos()
+            local scrollh = inven:GetHeight()
+            scrolly = math.min(y, math.max(scrolly, y - scrollh + h + 10))
+            inven:SetScrollPos(scrolly)
+            inven:UpdateGroupBox()
+            inven:ValidateControl()
+            inven:UpdateDataByScroll()
+           
+            self:moveMouseToControl(slot)
+            g.util.showItemToolTip(item,self.tooltipxy.x,self.tooltipxy.y)
+        end
     end,
     tick = function(self)
-        
-        if #self.gbg.invItemList > 0 then
+        local count=#self.gbg.invItemList
+        if count > 0 then
             
             if g.key:IsKeyPress(g.key.RIGHT) then
                 --down
-                self.ctrlscursor = self.ctrlscursor + 1
-                if self.ctrlscursor >= self.ctrlscount then
-                    self.ctrlscursor = 0
+                self.cursor = self.cursor + 1
+                if self.cursor >= count then
+                    self.cursor = 0
                 end
                 self:moveMouse()
                 g:onChangedCursor()
             end
             if g.key:IsKeyPress(g.key.LEFT) then
                 --up
-                self.ctrlscursor = self.ctrlscursor - 1
-                if self.ctrlscursor < 0 then
-                    self.ctrlscursor = self.ctrlscount - 1
+                self.cursor = self.cursor - 1
+                if self.cursor < 0 then
+                    self.cursor = count - 1
+                end
+                self:moveMouse()
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyPress(g.key.DOWN) then
+                --down
+                self.cursor = self.cursor + self.gbg.col
+                if self.cursor >= count then
+                    self.cursor = 0
+                end
+                self:moveMouse()
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyPress(g.key.UP) then
+                --up
+                self.cursor = self.cursor - self.gbg.col
+                if self.cursor < 0 then
+                    self.cursor = count - 1
                 end
                 self:moveMouse()
                 g:onChangedCursor()
@@ -425,6 +476,30 @@ g.uieHandlergbgComponentShop = {
             end
         end
         return g.uieHandlerBase.RefPass
+    end,
+    updateToolTip=function(self)
+        local inv=g.inv.getUIEInventoryByFrameName(self.frame:GetName())
+        local base=inv.base
+        local slotset=base:GetChildRecursively('slotset')
+        AUTO_CAST(slotset)
+        local itemcount=inv.itemcount
+        local slot
+          local cols=slotset:GetCol()
+        if itemcount>0 then 
+            slot=slotset:GetSlotByRowCol(math.floor(self.itemcursor/cols),self.itemcursor%cols)
+        else
+            inv:hideToolTip()
+            return
+        end
+        local Icon=slot:GetIcon()
+        local iconInfo = Icon:GetInfo();
+        
+        local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
+        inv:showToolTip(invItem)
+    end,
+    leave=function(self)
+        g.uieHandlergbgBase.leave(self)
+        g.util.hideItemToolTip()
     end
 }
 UIMODEEXPERT = g
