@@ -63,10 +63,10 @@ g.gbg.uiegbgInventory={
     end,
     initializeImpl=function(self,gbox)
 
-        local inv=g.gbg.uiegbgComponentInventory.new(self,gbox,'inventory',{x=gbox:GetWidth()/2+60,y=30})
+        local inv=g.gbg.uiegbgComponentInventory.new(self,'inventory',{x=gbox:GetWidth()/2+60,y=30})
         inv:initialize(60,60,gbox:GetWidth()/2-60,gbox:GetHeight()-160)
         self:addComponent(inv)
-        local zeny=g.gbg.uiegbgComponentFund.new(self,gbox,'fund')
+        local zeny=g.gbg.uiegbgComponentFund.new(self,'fund')
         zeny:initialize(gbox:GetWidth()-260,20,200,40)
         self:addComponent(zeny)
     end,

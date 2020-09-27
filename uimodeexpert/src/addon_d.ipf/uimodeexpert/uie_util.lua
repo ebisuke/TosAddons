@@ -121,6 +121,17 @@ g.util.showItemToolTip=function(invItem,x,y)
     --ui.ToCenter(itemFrame);
 
 end
+g.util.isNilOrNoneOrWhitespace=function(str)
+    if str==nil then
+        return true
+    else
+        local mod=string.gsub(str,' *',''):lower()
+        if mod=='' or mod=='none' then
+            return true
+        end
+    end
+    return false
+end
 g.util.hideItemToolTip=function()
    
     local itemFrame = ui.GetFrame("wholeitem");

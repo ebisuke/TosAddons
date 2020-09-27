@@ -57,8 +57,8 @@ g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentFund={
     FLAG_SILVER=0x01,
     FLAG_MERCINARYCOIN=0x02,
-    new=function(tab,parent,name,flags,size)
-        local self=inherit(g.gbg.uiegbgComponentFund,g.gbg.uiegbgComponentBase,tab,parent,name)
+    new=function(parentgbg,name,flags,size)
+        local self=inherit(g.gbg.uiegbgComponentFund,g.gbg.uiegbgComponentBase,parentgbg,name)
         self.flags=flags or g.gbg.uiegbgComponentFund.FLAG_SILVER
         self.size=size or 40
         return self

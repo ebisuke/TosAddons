@@ -65,8 +65,8 @@ UIMODEEXPERT = UIMODEEXPERT or {}
 local g = UIMODEEXPERT
 g.gbg = g.gbg or {}
 g.gbg.uiegbgComponentInventoryBase = {
-    new = function(tab, parent, name, option)
-        local self = inherit(g.gbg.uiegbgComponentInventoryBase, g.gbg.uiegbgComponentBase, tab, parent, name)
+    new = function( parentgbg, name, option)
+        local self = inherit(g.gbg.uiegbgComponentInventoryBase, g.gbg.uiegbgComponentBase, parentgbg, name)
         self.option=option or {
         }
         self.option.enableaccess=self.option.enableaccess or true
@@ -663,12 +663,13 @@ g.uieHandlergbgComponentInventory = {
                         ctrl:SetCheck(1)
                     end
                 end
-                if ctrl:GetClassString() == 'ui::CSlot' then
+                if ctrl:GetClassString() == 'ui::CSlot'  then
                     if g.key:IsKeyDown(g.key.MAIN) then
                         local parent = ctrl:GetParent()
                         if parent:GetClassString() == 'ui::CSlotSet' then
+                            
                             AUTO_CAST(parent)
-
+                           
                             if ctrl:IsSelected() == 1 then
                                 ctrl:Select(0)
                             else

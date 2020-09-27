@@ -147,6 +147,7 @@ g.gbg.uiegbgBase = {
     postInitializeImpl = function(self, gbox)
         -- override me
     end,
+
     release = function(self)
         self:releaseImpl()
         self:detachHandler()
@@ -250,9 +251,9 @@ g.gbg.uiegbgGroupBase = {
         local frame = ui.GetFrame(framename)
         local tab = frame:GetChild('tabmain')
         AUTO_CAST(tab)
-    
+        tab:ClearItemAll()
         for k,v in ipairs(self._children) do
-            tab:AddItem(v.caption)
+            tab:AddItem('{ol}{s32}'..v.caption)
         end
 
         
@@ -269,9 +270,12 @@ g.gbg.uiegbgGroupBase = {
 
        
         self:postInitializeImpl()
+        
+    end,
+    lazyInitializeImpl = function(self, gbox)
+        -- override me
         self:attachDefaultHandler()
     end,
-  
     addChild = function(self, child)
         self._children[#self._children + 1] = child
         child.parentgbg = self
@@ -290,10 +294,10 @@ g.gbg.uiegbgGroupBase = {
 }
 
 g.gbg.uiegbgComponentBase = {
-    new = function(tab, parent, name)
-        local self = inherit(g.gbg.uiegbgComponentBase ,g.gbg.uiegbgBase,parent:GetTopParentFrame(),name,nil)
-        self.tab = tab
-        self.parent = parent
+    new = function(parentgbg, name)
+        local self = inherit(g.gbg.uiegbgComponentBase ,g.gbg.uiegbgBase,parentgbg.frame,name,nil)
+        self.parentgbg = parentgbg
+        self.parent=parentgbg.gbox
         self.name = name
         return self
     end,
@@ -337,8 +341,24 @@ g.uieHandlergbgBase = {
         --self.gbg:close()
     end,
     tick = function(self)
+        --if not self._plzimplement then
+        --    ERROUT('please implement uieHandlergbgBase.tick')
+        --    self._plzimplement =true
+        --end
+        if self.parentgbg then
+            --pass
+
+            return g.uieHandlerBase.RefRefresh
+        end
+        return self:gbgTick()
     end,
- 
+    gbgTick = function(self)
+        if not self._plzimplement then
+           ERROUT('please implement uieHandlergbgBase.gbgTick')
+           self._plzimplement =true
+        end
+        return g.uieHandlerBase.RefPass
+    end,
 }
 UIMODEEXPERT = g
 
@@ -386,9 +406,9 @@ function UIE_GENERALBG_INIT()
             gbox:Resize(frame:GetWidth(), frame:GetHeight() - 200)
             gbox:EnableScrollBar(0)
             gbox:SetOffset(0, 200)
-            local tab = frame:CreateOrGetControl('tab', 'tabmain', 0, 100, 1920, 50)
+            local tab = frame:CreateOrGetControl('tab', 'tabmain', 0, 100, 1920, 60)
             AUTO_CAST(tab)
-            tab:Resize(frame:GetWidth() - 100, 50)
+            tab:Resize(frame:GetWidth() - 100, 80)
 
             tab:SetOffset(60, 150)
             --tab:

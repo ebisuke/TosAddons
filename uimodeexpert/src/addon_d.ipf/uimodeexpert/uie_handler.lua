@@ -250,7 +250,7 @@ g.uieHandlerControlTracer = {
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX) ~= 0 and (cc:GetClassString() == 'ui::CCheckBox')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOT) ~= 0 and (cc:GetClassString() == 'ui::CSlot')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet')) or
-                        (gbgname and gbgintrusive==0)
+                        (not g.util.isNilOrNoneOrWhitespace(gbgname) and gbgintrusive==0)
                  then
                     AUTO_CAST(cc)
                     local x=cc:GetX()
@@ -375,7 +375,7 @@ g.uieHandlerControlTracer = {
                 if ctrl:GetClassString() == 'ui::CGroupBox' then
                     local gbgname=ctrl:GetUserValue('gbg_name')
                     local gbgintrusive=ctrl:GetUserIValue('gbg_intrusive')
-                    if gbgname and gbgintrusive==0 then
+                    if gbgname~='' and gbgintrusive==0 then
                         local gbg=g.gbg.getComponentInstanceByName(gbgname)
                         if gbg then
                             gbg:attachDefaultHandler()

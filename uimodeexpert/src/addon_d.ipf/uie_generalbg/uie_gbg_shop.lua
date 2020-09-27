@@ -65,7 +65,9 @@ g.gbg.uiegbgShop={
 
         local inv=g.gbg.uiegbgComponentShopInventory.new(self,gbox,'inventory',function()
             self:update()
-        end,{tooltipxy={x=60,y=30}})
+        end,{
+            tooltipxy={x=60,y=30}
+            })
         inv:initialize(gbox:GetWidth()/2+140,60,gbox:GetWidth()/2-160,gbox:GetHeight()-250)
         self:addComponent(inv)
         local shop=g.gbg.uiegbgComponentShop.new(self,gbox,'shop',function()
@@ -214,7 +216,7 @@ g.uieHandlergbgShop = {
             self.menu=nil
         end
     end,
-    tick = function(self)
+    gbgTick = function(self)
         if self.endo then
             if self.menu then
                 self.menu:dispose()

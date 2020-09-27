@@ -66,8 +66,8 @@ local g = UIMODEEXPERT
 g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentUnderBtn = {
     _instances = {},
-    new = function(tab, parent, name, btns,freeze)
-        local self = inherit(g.gbg.uiegbgComponentUnderBtn, g.gbg.uiegbgComponentBase, tab, parent, name)
+    new = function(parentgbg, name, btns,freeze)
+        local self = inherit(g.gbg.uiegbgComponentUnderBtn, g.gbg.uiegbgComponentBase, parentgbg, name)
         self.btns = btns
         self.freeze=freeze
         return self

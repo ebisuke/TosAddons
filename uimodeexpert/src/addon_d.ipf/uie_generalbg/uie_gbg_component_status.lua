@@ -57,8 +57,8 @@ local g = UIMODEEXPERT
 g.gbg=g.gbg or {}
 
 g.gbg.uiegbgComponentStatus = {
-    new = function(tab, parent, name)
-        local self = inherit(g.gbg.uiegbgComponentStatus, g.gbg.uiegbgComponentBase, tab, parent, name)
+    new = function(parentgbg, name)
+        local self = inherit(g.gbg.uiegbgComponentStatus, g.gbg.uiegbgComponentBase, parentgbg, name)
         
         return self
     end,

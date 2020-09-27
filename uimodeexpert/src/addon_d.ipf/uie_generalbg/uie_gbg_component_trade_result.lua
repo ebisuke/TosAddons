@@ -56,8 +56,8 @@ local g = UIMODEEXPERT
 g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentTradeResult={
 
-    new=function(tab,parent,name,inventory,shop)
-        local self=inherit(g.gbg.uiegbgComponentTradeResult,g.gbg.uiegbgComponentBase,tab,parent,name)
+    new=function(parentgbg,name,inventory,shop)
+        local self=inherit(g.gbg.uiegbgComponentTradeResult,g.gbg.uiegbgComponentBase,parentgbg,name)
         self.inventory=inventory
         self.shop=shop
         
@@ -75,6 +75,7 @@ g.gbg.uiegbgComponentTradeResult={
     end,
     updateBalance=function(self,balance)
         local gbox=self.gbox
+        gbox:EnableScrollBar(0)
         local txtdiff=gbox:GetChild('txtdiff')
         local textarrow=gbox:GetChild('txtarrow')
         local textremain=gbox:GetChild('txtremain')

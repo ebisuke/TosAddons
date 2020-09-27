@@ -352,7 +352,7 @@ g.detachHandler = function(handler)
                 DBGOUT('restore:' .. k)
                 handler._overrider:restore()
             end
-            DBGOUT('detach' .. handler.key)
+            DBGOUT('detach' .. (handler.key or '(nil)'))
 
             break
         end
@@ -478,14 +478,15 @@ g.checkFrames = function(self)
                         end
                         --g.gbg.initialize()
                         local instance = v.class.new(ui.GetFrame('uie_generalbg'), k, '', v.arg)
-
-                        instance:initialize()
-
-                        g.gbg.showFrame()
                         g.gbg.setActiveInstance(instance)
                         g._activeFrames[k] = instance
                         g._activeFrameCount = g._activeFrameCount + 1
                         g._activeFramePriority = v.priority or 0
+                        instance:initialize()
+
+                        g.gbg.showFrame()
+                      
+                       
                     end
                 else
                     --registered
@@ -603,8 +604,8 @@ g.uieHandlerControlTracerGenerator = function(flags)
 end
 g._registeredFrameGeneralbg = {
     ['shop'] = {class = g.gbg.uiegbgShop},
-    ['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
-    ['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
+    --['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
+    --['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
     ['fishing'] = {class = g.gbg.uiegbgFishing}
 }
 g._registeredFrameHandlers = {

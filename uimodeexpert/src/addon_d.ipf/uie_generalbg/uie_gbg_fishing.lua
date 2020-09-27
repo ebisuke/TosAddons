@@ -69,16 +69,16 @@ g.gbg.uiegbgFishing={
         label:SetText('{ol}{s30}'..g.tr('chooseabait'))
         label:SetGravity(ui.CENTER_HORZ,ui.TOP)
         
-        local under=g.gbg.uiegbgComponentUnderBtn.new(self,gbox,'under',{
+        local under=g.gbg.uiegbgComponentUnderBtn.new(self,'under',{
             {
                 name="cancel",
                 caption=g.tr('cancel'),
                 callback=function() self:close() end,
             }
         })
-        local inv=g.gbg.uiegbgComponentInventory.new(self,gbox,'bait',{
+        local inv=g.gbg.uiegbgComponentInventory.new(self,'bait',{
             tooltipxy={x=0,y=100},
-            selectable=true,
+    
             filter=function(invItem)
                 local itemObj = GetIES(invItem:GetObject());
                 if IS_PASTE_BAIT_ITEM(itemObj.ClassID) == 1 then

@@ -1,6 +1,7 @@
---uie_gbg_status
-local acutil = require('acutil')
+--uie_gbg_portal
 
+
+local acutil = require('acutil')
 
 --ライブラリ読み込み
 local debug = false
@@ -55,18 +56,19 @@ local g = UIMODEEXPERT
 
 g.gbg=g.gbg or {}
 
-g.gbg.uiegbgStatus={
+g.gbg.uiegbgPortal={
     new=function(frame,name,caption)
-        local self=inherit(g.gbg.uiegbgStatus,g.gbg.uiegbgBase,frame,name,caption or  g.tr('status'))
+        local self=inherit(g.gbg.uiegbgInventory,g.gbg.uiegbgBase,frame,name,caption or g.tr('portalshop') )
         return self
     end,
     initializeImpl=function(self,gbox)
 
-        local status=g.gbg.uiegbgComponentStatus.new(self,'status')
-        status:initialize(100,50,gbox:GetWidth()-200,gbox:GetHeight()-100)
+     
+        local zeny=g.gbg.uiegbgComponentFund.new(self,'fund')
+        zeny:initialize(gbox:GetWidth()-260,20,200,40)
+        self:addComponent(zeny)
+
         
-        self:addComponent(status)
     end,
 }
-
 UIMODEEXPERT = g

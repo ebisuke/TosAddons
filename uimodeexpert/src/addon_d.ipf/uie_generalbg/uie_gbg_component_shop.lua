@@ -65,8 +65,8 @@ UIMODEEXPERT = UIMODEEXPERT or {}
 local g = UIMODEEXPERT
 g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentShop = {
-    new = function(tab, parent, name, updatecallback,option)
-        local self = inherit(g.gbg.uiegbgComponentShop, g.gbg.uiegbgComponentBase, tab, parent, name)
+    new = function(parentgbg, name, updatecallback,option)
+        local self = inherit(g.gbg.uiegbgComponentShop, g.gbg.uiegbgComponentBase, parentgbg, name)
         self.updatecallback = updatecallback
         self.buy = {}
         self.col=3
@@ -331,7 +331,9 @@ g.uieHandlergbgComponentShop = {
             inven:UpdateDataByScroll()
            
             self:moveMouseToControl(slot)
-            g.util.showItemToolTip(item,self.tooltipxy.x,self.tooltipxy.y)
+            if self.option.tooltipxy then
+                --g.util.showItemToolTip(item,self.tooltipxy.x,self.tooltipxy.y)
+            end
         end
     end,
     tick = function(self)
@@ -451,28 +453,28 @@ g.uieHandlergbgComponentShop = {
                         ctrl:SetCheck(1)
                     end
                 end
-                if ctrl:GetClassString() == 'ui::CSlot' then
-                    if g.key:IsKeyDown(g.key.MAIN) then
-                        local parent = ctrl:GetParent()
-                        if parent:GetClassString()=='ui::CSlotSet' then
-                            AUTO_CAST(parent)
+                -- if ctrl:GetClassString() == 'ui::CSlot' then
+                --     if g.key:IsKeyDown(g.key.MAIN) then
+                --         local parent = ctrl:GetParent()
+                --         if parent:GetClassString()=='ui::CSlotSet' then
+                --             AUTO_CAST(parent)
                             
-                            if ctrl:IsSelected() == 1 then
-                                ctrl:Select(0)
-                            else
-                                ctrl:Select(1)
-                            end
-                            parent:MakeSelectionList()
-                            parent:Invalidate()
-                        else
-                            if ctrl:IsSelected() == 1 then
-                                ctrl:Select(0)
-                            else
-                                ctrl:Select(1)
-                            end
-                        end
-                    end
-                end
+                --             if ctrl:IsSelected() == 1 then
+                --                 ctrl:Select(0)
+                --             else
+                --                 ctrl:Select(1)
+                --             end
+                --             parent:MakeSelectionList()
+                --             parent:Invalidate()
+                --         else
+                --             if ctrl:IsSelected() == 1 then
+                --                 ctrl:Select(0)
+                --             else
+                --                 ctrl:Select(1)
+                --             end
+                --         end
+                --     end
+                -- end
                 return g.uieHandlerBase.RefRefresh
             end
         end
@@ -522,13 +524,13 @@ function UIE_GBG_COMPONENT_SHOP_LCLICK(frame, ctrl, argstr, argnum)
     EBI_try_catch {
         try = function()
             local self = g.gbg.getComponentInstanceByName(argstr)
-            if keyboard.IsKeyPressed('LSHIFT') then
-                local shopItem=self.gbg.invItemList[argnum].item
+            if keyboard.IsKeyPressed('LSHIFT')==1 then
+                local shopItem=self.invItemList[argnum].item
 
                 local itemPrice = shopItem.price * shopItem.count;
                 local buyableCnt = math.floor(tonumber(GET_TOTAL_MONEY_STR()) / itemPrice);
                 local titleText = ScpArgMsg("INPUT_CNT_D_D", "Auto_1", 1, "Auto_2", buyableCnt);
-                INPUT_NUMBER_BOX(frame:GetTopParentFrame(), titleText, "EXEC_SHOP_SLOT_BUY", 1, 1, UIE_GBG_COMPONENT_SHOP_EXEC_SHOP_SLOT_BUY, argnum, argstr, 1)
+                INPUT_NUMBER_BOX(frame:GetTopParentFrame(), titleText, "UIE_GBG_COMPONENT_SHOP_EXEC_SHOP_SLOT_BUY", 1, 1, UIE_GBG_COMPONENT_SHOP_EXEC_SHOP_SLOT_BUY, argnum, argstr, 1)
             else
                 self:buyItem(argnum, -1)
                 imcSound.PlaySoundEvent("button_inven_click_item");
