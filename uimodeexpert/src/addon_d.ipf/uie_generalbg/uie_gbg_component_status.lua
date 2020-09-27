@@ -74,16 +74,66 @@ g.gbg.uiegbgComponentStatus = {
         gboxleft:SetSkinName('bg')
         local text=gboxleft:CreateOrGetControl('richtext','textlabel1',5,5,100,20)
         text:SetText('{ol}{s24}Basic Status')
+
+        local oy=40
+        
+        local pc = GetMyPCObject();
+        local mx=0
+        local colors={
+            STR="FF7777",
+            CON="FFFF77",
+            INT="77FF77",
+            MNA="77FFFF",
+            DEX="7777FF",
+            
+        }
+
+        for i = 0, STAT_COUNT - 1 do
+            local typeStr = GetStatTypeStr(i);
+            local textstr=gboxleft:CreateOrGetControl('richtext','textstr'..typeStr,5,oy,100,50)
+            textstr:SetText('{ol}{s40}{#'..colors[typeStr]..'}'..typeStr)
+            
+            local textstrr=gboxleft:CreateOrGetControl('richtext','textstrr'..typeStr,5,oy,100,50)
+            
+            local avg = session.GetStatAvg(i) + pc[typeStr];
+            local add = pc[typeStr .. "_ADD"];
+            local total = pc[typeStr ];
+            local point = pc[typeStr.. "_STAT"];
+            local base = total - add - point;
+            mx=math.max(total,mx)
+            textstrr:SetText(string.format('{ol}{s40}{#%s}%d{s28}(%d+%d+%d)',colors[typeStr],total,base,add,point))
+            textstrr:SetGravity(ui.RIGHT,ui.TOP)
+            local gauge=gboxleft:CreateOrGetControl('gauge','gauge'..typeStr,5,oy+50,gboxleft:GetWidth(),10)
+            
+            oy=oy+textstrr:GetHeight()+20
+            
+        end
+        for i = 0, STAT_COUNT - 1 do
+            local typeStr = GetStatTypeStr(i);
+  
+            local avg = session.GetStatAvg(i) + pc[typeStr];
+            local add = pc[typeStr .. "_ADD"];
+            local total = pc[typeStr ];
+            local point = pc[typeStr.. "_STAT"];
+            local base = total - add - point;
+
+            local gauge=gboxleft:GetChild('gauge'..typeStr)
+            AUTO_CAST(gauge)
+            gauge:SetMaxPoint(mx)
+            gauge:SetCurPoint(total)
+            gauge:SetBarColor(tonumber('FF'..colors[typeStr],16))
+        end
+     
         local gboxcenter=gbox:CreateOrGetControl('groupbox','gboxcenter',400,0,500,gbox:GetHeight())
         gboxcenter:SetSkinName('bg')
         local text2=gbox:CreateOrGetControl('richtext','textlabel2',400,0,60,20)
         text2:SetText('{ol}{s24}Property')
         local gboxprop=gbox:CreateOrGetControl('groupbox','gboxprop',400,80,500,gbox:GetHeight()-80)
-        local expup=gboxprop:CreateOrGetControl('groupbox','expupGBox',0,0,80,0)
+        local expup=gboxprop:CreateOrGetControl('groupbox','expupGBox',0,0,gboxprop:GetWidth()-80,80)
         local expupbuff=expup:CreateOrGetControl('groupbox','expupBuffBox',80,0,gboxprop:GetWidth()-80,0)
-        local textotal=expup:CreateOrGetControl('richtext','totalExpUpValueText',400,20,100,20)
+        local textotal=expup:CreateOrGetControl('richtext','totalExpUpValueText',0,20,100,20)
         AUTO_CAST(textotal)
-        textotal:SetFormat('{ol}{s20}Total EXPUP:+%s%%')
+        textotal:SetFormat('{ol}{s20}Total EXPUP:+%s%')
         textotal:AddParamInfo('value', '0');
         local texlike=gbox:CreateOrGetControl('richtext','loceCountText',400,40,100,20)
         AUTO_CAST(texlike)

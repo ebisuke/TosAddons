@@ -63,8 +63,8 @@ g.gbg.uiegbgGroupMe={
         local CharName = info.GetName(MySession);
         local self=inherit(g.gbg.uiegbgGroupMe,g.gbg.uiegbgGroupBase,frame,name,CharName,initindex)
 
-        self:addChild(g.gbg.uiegbgInventory.new(frame,'inventory',nil,self))
-        self:addChild(g.gbg.uiegbgStatus.new(frame,'status',nil,self))
+        self:addChild(g.gbg.uiegbgInventory.new(frame,'gp_inventory',nil,self))
+        self:addChild(g.gbg.uiegbgStatus.new(frame,'gp_status',nil,self))
         return self
     end,
     initializeImpl=function(self,gbox)

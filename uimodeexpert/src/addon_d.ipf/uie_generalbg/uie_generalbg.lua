@@ -61,13 +61,11 @@ g.gbg.initialize = function()
     local tab = frame:GetChild('tabmain')
     AUTO_CAST(tab)
     tab:ClearItemAll()
-    for _, v in ipairs(g.gbg._attached) do
-        v:release()
-    end
+
     for _, v in ipairs(g.gbg._componentInstances) do
         v:release()
     end
-    g.gbg._attached = {}
+
     g.gbg._componentInstances = {}
 end
 
@@ -79,18 +77,16 @@ g.gbg.release = function()
     local tab = frame:GetChild('tabmain')
     AUTO_CAST(tab)
     tab:ClearItemAll()
-    for _, v in ipairs(g.gbg._attached) do
-        v:release()
-    end
+
     for _, v in ipairs(g.gbg._componentInstances) do
         v:release()
     end
-    g.gbg._attached = {}
+
     g.gbg._componentInstances = {}
     
 end
 g.gbg._activeInstance=nil
-g.gbg._attached = {}
+
 g.gbg._componentInstances = {}
 
 
@@ -136,6 +132,7 @@ g.gbg.uiegbgBase = {
         self:initializeImpl(gbox)
         local handler = self:defaultHandler(self.name,self.frame,self)
         if handler and not self.parentgbg then
+           
             self:attachHandler(handler)
         end
         self:postInitializeImpl(gbox)
@@ -164,16 +161,16 @@ g.gbg.uiegbgBase = {
     end,
     hookmsg = function(self, frame, msg, argStr, argNum)
         self:hookmsgImpl(frame, msg, argStr, argNum)
-        for _, v in ipairs(self.components) do
-            v:hookmsg(frame, msg, argStr, argNum)
-        end
+        -- for _, v in ipairs(self.components) do
+        --     v:hookmsg(frame, msg, argStr, argNum)
+        -- end
     end,
     hookmsgImpl = function(self, frame, msg, argStr, argNum)
         --override me
     end,
     close = function(self)
-        --print(self.frame:GetName())
-        DBGOUT('rrr')
+        print('UA'..self.frame:GetName())
+       
         self:release()
         self.frame:ShowWindow(0)
     end,
@@ -210,7 +207,7 @@ g.gbg.uiegbgBase = {
         return self.gbox:IsVisible() == 1
     end,
     show = function(self)
-        self:attachHandler(self:defaultHandler())
+        self:attachDefaultHandler()
         self.gbox:ShowWindow(1)
         self:showImpl()
     end,
@@ -219,7 +216,7 @@ g.gbg.uiegbgBase = {
     end,
     hide = function(self)
         if self._attachedHandler then
-            self:detachHandler(self._attachedHandler)
+            self:detachHandler()
         end
         self.gbox:ShowWindow(0)
         
@@ -234,7 +231,8 @@ g.gbg.uiegbgGroupBase = {
     new = function(frame, name, caption,initindex)
         local self = inherit(g.gbg.uiegbgGroupBase, g.gbg.uiegbgBase, frame, name, caption)
         self._children = {}
-        self._initindex=initindex
+        self._initindex=initindex or 1
+        
         return self
     end,
     initialize = function(self)
@@ -258,7 +256,7 @@ g.gbg.uiegbgGroupBase = {
 
         
         for k, v in ipairs(self._children) do
-            print(''..self._initindex)
+           
             if self._initindex==k then
                 v:show()
             else
@@ -268,14 +266,12 @@ g.gbg.uiegbgGroupBase = {
         tab:SelectTab(self._initindex-1)
         tab:ChangeTab(self._initindex-1)
 
+      
        
         self:postInitializeImpl()
-        
-    end,
-    lazyInitializeImpl = function(self, gbox)
-        -- override me
         self:attachDefaultHandler()
     end,
+
     addChild = function(self, child)
         self._children[#self._children + 1] = child
         child.parentgbg = self
@@ -314,12 +310,19 @@ g.gbg.uiegbgComponentBase = {
         gbox:SetUserValue('gbg_name',self.name)
         gbox:SetUserValue('gbg_intrusive',0)
         self:initializeImpl(gbox)
+        print('COMP'..self.name)
         g.gbg._componentInstances[self.name] = self
 
         
         return gbox
     end,
+    release=function(self)
+        g.gbg.uiegbgBase.release(self)
+        print('REL')
+        g.gbg._componentInstances[self.name] = nil
+    end,
     hookmsg = function(self, frame, msg, argStr, argNum)
+        self:hookmsgImpl(frame,msg,argStr,argNum)
     end,
     hookmsgImpl = function(self, frame, msg, argStr, argNum)
         --override me
@@ -335,9 +338,10 @@ g.uieHandlergbgBase = {
         return self
     end,
     leave=function(self)
-        if not self.gbg.parent then
-            self.gbg:close()
-        end
+        g.uieHandlerFrameBase.leave(self)
+        --if not self.gbg.parent then
+        --    self.gbg:close()
+        --end
         --self.gbg:close()
     end,
     tick = function(self)
@@ -376,20 +380,27 @@ g.uieHandlergbgComponentTracer = {
         self.flags = flags or g.uieHandlergbgComponentTracer.FLAG_ENABLE_BUTTON
         return self
     end,
+    enter=function(self)
+        g.uieHandlergbgBase.enter(self)
+    end,
+    delayedenter = function(self)
+        g.uieHandlergbgBase.delayedenter(self)
+        self:refresh()
+    end,
     findButtonsRecurse = function(self, ctrl)
         for i = 0, ctrl:GetChildCount() - 1 do
             local cc = ctrl:GetChildByIndex(i)
             local gbgname=ctrl:GetUserValue('gbg_name')
-            local gbgintrusive=ctrl:GetUserIValue('gbg_name')
-
+            local gbgintrusive=ctrl:GetUserIValue('gbg_intrusive')
+            
 
             if cc:IsVisible() == 1 and cc:GetName():lower()~='colse' and cc:GetName():lower()~='close' then
                 if
                     ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON) ~= 0 and (cc:GetClassString() == 'ui::CButton')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX) ~= 0 and (cc:GetClassString() == 'ui::CCheckBox')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOT) ~= 0 and (cc:GetClassString() == 'ui::CSlot')) or
-                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet')) or
-                        (not g.util.isNilOrNoneOrWhitespace(gbgname) and gbgintrusive==0)
+                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet'))
+                        --or (g.util.isNilOrNoneOrWhitespace(gbgname) and gbgintrusive==0)
                  then
                     AUTO_CAST(cc)
                     local x=cc:GetX()
@@ -428,7 +439,9 @@ g.uieHandlergbgComponentTracer = {
     end,
 
     gbgTick = function(self)
+        
         if (self.ctrlscount > 0) then
+           
             if g.key:IsKeyPress(g.key.DOWN) or g.key:IsKeyPress(g.key.RIGHT) then
                 --down
                 self.ctrlscursor = self.ctrlscursor + 1
@@ -572,7 +585,7 @@ g.uieHandlergbgComponentTracer = {
         g.uieHandlergbgBase.refresh(self)
         self.ctrls = {}
         self.ctrlscount = 0
-        self.frame = ui.GetFrame(self.framename)
+
         self:findButtonsRecurse(self.frame)
 
         self.ctrlscursor = math.min(self.ctrlscount-1, self.ctrlscursor)
@@ -609,6 +622,10 @@ function UIE_GENERALBG_ON_INIT(addon, frame)
             addon:RegisterMsg('INV_ITEM_CHANGE_COUNT', 'UIE_GENERALBG_HOOK')
             addon:RegisterMsg('INV_ITEM_REMOVE', 'UIE_GENERALBG_HOOK')
             addon:RegisterMsg('INV_ITEM_LIST_GET', 'UIE_GENERALBG_HOOK')
+            addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_LIST", "UIE_GENERALBG_HOOK");
+            addon:RegisterMsg("CABINET_ITEM_LIST", "UIE_GENERALBG_HOOK");
+            
+            addon:RegisterOpenOnlyMsg("ACCOUNT_WAREHOUSE_VIS", "UIE_GENERALBG_HOOK");
             UIE_GENERALBG_INIT(frame)
         end,
         catch = function(error)
@@ -628,7 +645,9 @@ function UIE_GENERALBG_ON_OPEN(frame)
     }
 end
 function UIE_GENERALBG_HOOK(frame, msg, argStr, argNum)
-    for _, v in ipairs(g.gbg._attached) do
+       
+    for _, v in pairs(g.gbg._componentInstances) do
+
         v:hookmsg(frame, msg, argStr, argNum)
     end
 end
@@ -686,10 +705,10 @@ function UIE_GENERALBG_TEST()
         try = function()
             UIE_GENERALBG_INIT()
             local frame = ui.GetFrame(framename)
-            frame:ShowWindow(1)
             local aa = g.gbg.uiegbgShop.new(frame, 'shop')
             aa:initialize()
             g.gbg.attach(aa)
+            g.gbg.showFrame()
         end,
         catch = function(error)
             ERROUT(error)

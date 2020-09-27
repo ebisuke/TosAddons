@@ -63,25 +63,25 @@ g.gbg.uiegbgShop={
     end,
     initializeImpl=function(self,gbox)
 
-        local inv=g.gbg.uiegbgComponentShopInventory.new(self,gbox,'inventory',function()
+        local inv=g.gbg.uiegbgComponentShopInventory.new(self,'inventory',function()
             self:update()
         end,{
             tooltipxy={x=60,y=30}
             })
         inv:initialize(gbox:GetWidth()/2+140,60,gbox:GetWidth()/2-160,gbox:GetHeight()-250)
         self:addComponent(inv)
-        local shop=g.gbg.uiegbgComponentShop.new(self,gbox,'shop',function()
+        local shop=g.gbg.uiegbgComponentShop.new(self,'shop',function()
             self:update()
         end,{x=gbox:GetWidth()/2+60,y=30})
         shop:initialize(60,60,gbox:GetWidth()/2-120,gbox:GetHeight()-250)
         self:addComponent(shop)
-        local zeny=g.gbg.uiegbgComponentFund.new(self,gbox,'fund')
+        local zeny=g.gbg.uiegbgComponentFund.new(self,'fund')
         zeny:initialize(gbox:GetWidth()-260,10,200,50)
         self:addComponent(zeny)
-        local trade=g.gbg.uiegbgComponentTradeResult.new(self,gbox,'trade',inv,shop)
+        local trade=g.gbg.uiegbgComponentTradeResult.new(self,'trade',inv,shop)
         trade:initialize(gbox:GetWidth()/2-75,75,150,200)
         self:addComponent(trade)
-        local under=g.gbg.uiegbgComponentUnderBtn.new(self,gbox,'under',{
+        local under=g.gbg.uiegbgComponentUnderBtn.new(self,'under',{
             {
                 name="clear",
                 caption='空にする',
@@ -210,7 +210,7 @@ g.uieHandlergbgShop = {
         end)
     end,
     leave=function(self)
-        
+        g.uieHandlergbgBase.leave(self)
         if self.menu then
             self.menu:dispose()
             self.menu=nil

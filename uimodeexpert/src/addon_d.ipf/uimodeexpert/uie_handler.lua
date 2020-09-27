@@ -227,7 +227,6 @@ g.uieHandlerControlTracer = {
     FLAG_ENABLE_SLOT = 0x00000004,
     FLAG_ENABLE_SLOTSET = 0x00000008,
     FLAG_ENABLE_NUMUPDOWN = 0x00000010,
-    FLAG_CHANGETAB_BYMENU = 0x00001000,
     new = function(key, frame, flags)
         local self = inherit(g.uieHandlerControlTracer, g.uieHandlerFrameBase, key, frame)
         self.ctrls = {}

@@ -48,18 +48,7 @@ local function inherit(class, super, ...)
     setmetatable(class, {__index = super})
     return self
 end
-local inventory_filters = {
-    --{name = "Fav", text = "★", tooltip = "Favorites", imagename = "uie_favorites", original = nil},
-    --{name = 'All', text = 'All', tooltip = 'All', imagename = 'uie_all', original = 'All'},
-    {rank = 0, name = 'Prm', text = 'Prm', tooltip = 'Premium', imagename = 'uie_premium', original = 'Premium'},
-    {rank = 1, name = 'Equ', text = 'Equ', tooltip = 'Equip', imagename = 'uie_equip', original = 'Equip'},
-    {rank = 2, name = 'Spl', text = 'Spl', tooltip = 'Consume Item', imagename = 'uie_consume', original = 'Consume'},
-    {rank = 3, name = 'Crd', text = 'Crd', tooltip = 'Card', imagename = 'uie_card', original = 'Card'},
-    {rank = 4, name = 'Gem', text = 'Gem', tooltip = 'Gem', imagename = 'uie_gem', original = 'Gem'},
-    {rank = 5, name = 'Etc', text = 'Etc', tooltip = 'Etc', imagename = 'uie_etc', original = 'Etc'},
-    {rank = 6, name = 'Rcp', text = 'Rcp', tooltip = 'Recipe', imagename = 'uie_recipe', original = 'Recipe'},
-    {rank = 7, name = 'Hou', text = 'Hou', tooltip = 'Housing', imagename = 'uie_housing', original = 'Housing'}
-}
+
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
@@ -87,15 +76,21 @@ g.gbg.uiegbgComponentInventoryBase = {
         AUTO_CAST(gboxtab)
         gboxtab:EnableScrollBar(0)
         gboxtab:SetSkinName('bg')
+      
         --create tabs
-        for k, v in ipairs(inventory_filters) do
+        for k, v in ipairs(g.util.inventory_filters) do
             local btn = gboxtab:CreateOrGetControl('button', 'btn' .. v.name, 0, 35 * (k - 1), 25, 25)
             btn:SetSkinName('none')
         end
+        
         --create inven)
         self:refreshInventory(gboxin)
     end,
-
+    hookmsgImpl = function(self, frame, msg, argStr, argNum)
+        if msg == 'INV_ITEM_ADD' or msg == 'INV_ITEM_CHANGE_COUNT' or msg == 'INV_ITEM_REMOVE' or msg == 'INV_ITEM_LIST_GET' then
+            self:refreshInventory()
+        end
+    end,
     setCustomEventScript = function(self, slot, inv)
         --override me
     end,
@@ -103,7 +98,7 @@ g.gbg.uiegbgComponentInventoryBase = {
         return g.uieHandlergbgComponentInventory.new(key, frame, self,self.option.tooltipxy)
     end,
     getItemList=function(self)
-        local items=self:getItemListImpl()
+        local items,nosort=self:getItemListImpl()
         if self.option.filter then
             local filtered={}
             for _,v in ipairs(items) do
@@ -113,10 +108,11 @@ g.gbg.uiegbgComponentInventoryBase = {
             end
             return filtered
         end
-        return items
+        return items,nosort
     end,
     getItemListImpl=function(self)
         --override me
+        return {},false
     end,
     getSelectedItems=function(self)
         if not self.option.selectable then
@@ -142,22 +138,24 @@ g.gbg.uiegbgComponentInventoryBase = {
 
         gboxin:RemoveAllChild()
         
-        local invItemList=self:getItemList()
+        local invItemList,nosort=self:getItemList()
+        if not nosort then
+            
+            table.sort(
+                invItemList,
+                function(a, b)
+                    if a.rank ~= b.rank then
+                        if a.rank==nil or b.rank==nil then
 
-        table.sort(
-            invItemList,
-            function(a, b)
-                if a.rank ~= b.rank then
-                    if a.rank==nil or b.rank==nil then
-
-                        return false
+                            return false
+                        end
+                        return a.rank < b.rank
+                    else
+                        return a.item.type < b.item.type
                     end
-                    return a.rank < b.rank
-                else
-                    return a.item.type < b.item.type
                 end
-            end
-        )
+            )
+        end
         -- slotset:SetColRow(9, math.ceil(invItemCount / 2))
         -- slotset:SetSpc(0, 0)
         -- local slotsize = 48
@@ -177,6 +175,7 @@ g.gbg.uiegbgComponentInventoryBase = {
         local col = math.floor((gboxin:GetWidth() - 20) / slotsize)
         self.col = col
         self.invItemList = invItemList
+       
         for k, v in ipairs(invItemList) do
             local invItem = v.item
 
@@ -297,8 +296,8 @@ g.gbg.uiegbgComponentInventoryBase = {
     end
 }
 g.gbg.uiegbgComponentCustomInventory = {
-    new = function(tab, parent, name,custominvenfunc, option)
-        local self = inherit(g.gbg.uiegbgComponentCustomInventory, g.gbg.uiegbgComponentInventoryBase, tab, parent, name,option)
+    new = function(parentgbg, name,custominvenfunc, option)
+        local self = inherit(g.gbg.uiegbgComponentCustomInventory, g.gbg.uiegbgComponentInventoryBase,  parentgbg, name,option)
         self.custominvenfunc=custominvenfunc
         return self
     end,
@@ -308,8 +307,8 @@ g.gbg.uiegbgComponentCustomInventory = {
     end,
 }
 g.gbg.uiegbgComponentInventory = {
-    new = function(tab, parent, name, option)
-        local self = inherit(g.gbg.uiegbgComponentInventory, g.gbg.uiegbgComponentInventoryBase, tab, parent, name,option)
+    new = function(parentgbg, name, option)
+        local self = inherit(g.gbg.uiegbgComponentInventory, g.gbg.uiegbgComponentInventoryBase,  parentgbg, name,option)
 
         return self
     end,
@@ -327,6 +326,7 @@ g.gbg.uiegbgComponentInventory = {
         local invItemCount = sortedList:size()
         local invItemList = {}
         local index_count = 1
+        
         for i = 0, invItemCount - 1 do
             local invItem = sortedList:at(i)
             if invItem ~= nil then
@@ -340,7 +340,7 @@ g.gbg.uiegbgComponentInventory = {
                     end
                     local typeStr = GET_INVENTORY_TREEGROUP(baseidcls)
                     local rank = 0
-                    for _, v in ipairs(inventory_filters) do
+                    for _, v in ipairs(g.util.inventory_filters) do
                         if v.original == typeStr then
                             rank = v.rank
                         end
@@ -359,8 +359,8 @@ g.gbg.uiegbgComponentInventory = {
 }
 
 g.gbg.uiegbgComponentShopInventory = {
-    new = function(tab, parent, name,  updatecallback,option)
-        local self = inherit(g.gbg.uiegbgComponentShopInventory, g.gbg.uiegbgComponentInventory, tab, parent, name, option)
+    new = function( parentgbg, name,  updatecallback,option)
+        local self = inherit(g.gbg.uiegbgComponentShopInventory, g.gbg.uiegbgComponentInventory, parentgbg, name, option)
         self.updatecallback = updatecallback
         
         return self
@@ -673,6 +673,10 @@ g.uieHandlergbgComponentInventory = {
                             if ctrl:IsSelected() == 1 then
                                 ctrl:Select(0)
                             else
+                                if self.option.singleselect then
+                                        parent:ClearSelectedSlot()
+                                
+                                end
                                 ctrl:Select(1)
                             end
                             parent:MakeSelectionList()

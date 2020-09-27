@@ -48,6 +48,7 @@ end
 
 UIMODEEXPERT = UIMODEEXPERT or {}
 local g = UIMODEEXPERT
+
 g.framename = 'uimodeexpert'
 g._mousemoveto = nil
 g._hotkeyenablecount = 0
@@ -109,7 +110,7 @@ g._KeyboardFunctions = {
         return instance[fn](instance, 'NEXT')
     end,
     [g.keydef.SYSMENU] = function(instance, fn)
-        return instance[fn](instance, ']')
+        return instance[fn](instance, 'RBRACKET')
     end
 }
 g._JoystickFunctions = {
@@ -177,7 +178,7 @@ g.key = {
         return keyboard.IsKeyPressed(rawkey) == 1
     end,
     _JotStickIsKeyPress = function(self, rawkey)
-        return keyboard.IsKeyPressed(rawkey) == 1
+        return  joystick.IsKeyPressed(rawkey) == 1
     end,
     Tick = function(self)
         if IsJoyStickMode() == 1 then
@@ -271,33 +272,33 @@ g.initialize = function(self)
 end
 g.enableHotKey = function(self)
     --obsolete
-    -- g._hotkeyenablecount = g._hotkeyenablecount + 1
-    -- if (g._hotkeyenablecount == 0) then
-    --     keyboard.EnableHotKey(true)
-    --     self._mousemoveto = nil
-    --     ui.SetTopMostFrame()
-    --     ui.GetFrame('uie_cursor'):ShowWindow(0)
-    -- --ui.SetHoldUI(false);
-    -- end
+    g._hotkeyenablecount = g._hotkeyenablecount + 1
+    if (g._hotkeyenablecount == 0) then
+        keyboard.EnableHotKey(true)
+        self._mousemoveto = nil
+        ui.SetTopMostFrame()
+        ui.GetFrame('uie_cursor'):ShowWindow(0)
+    --ui.SetHoldUI(false);
+    end
 end
 g.disableHotKey = function(self)
     --obsolete
-    -- if (g._hotkeyenablecount == 0) then
-    --     keyboard.EnableHotKey(false)
-    --     self._mousemoveto = nil
-    --     local frame = ui.GetFrame('uie_cursor')
-    --     ui.SetTopMostFrame()
-    --     frame:ShowWindow(0)
-    --     if (g.isHighRes()) then
-    --         frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
-    --         frame:Resize(1, 1)
-    --     else
-    --         frame:SetOffset(option.GetClientWidth() / 2, option.GetClientHeight())
-    --         frame:Resize(1, 1)
-    --     end
-    -- --ui.SetHoldUI(true);
-    -- end
-    -- g._hotkeyenablecount = g._hotkeyenablecount - 1
+    if (g._hotkeyenablecount == 0) then
+        keyboard.EnableHotKey(false)
+        self._mousemoveto = nil
+        local frame = ui.GetFrame('uie_cursor')
+        ui.SetTopMostFrame()
+        frame:ShowWindow(0)
+        if (g.isHighRes()) then
+            frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
+            frame:Resize(1, 1)
+        else
+            frame:SetOffset(option.GetClientWidth() / 2, option.GetClientHeight())
+            frame:Resize(1, 1)
+        end
+    --ui.SetHoldUI(true);
+    end
+    g._hotkeyenablecount = g._hotkeyenablecount - 1
 end
 
 g.cleanupMessageBox = function(self)
@@ -316,10 +317,12 @@ g.attachHandler = function(handler)
     handler:enter()
 
     ReserveScript(string.format('UIMODEEXPERT_DELAYEDENTER(%d)', key, 0.1))
-
+    DBGOUT('attach' .. (handler.key or '(nil)')..key)
     if key == 1 then
+        DBGOUT('freeze')
         local frame = ui.GetFrame('uie_cursor')
-
+        --ui.SetHoldUI(true);
+        --keyboard.EnableHotKey(false)
         frame:ShowWindow(1)
         if (g.isHighRes()) then
             frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
@@ -338,7 +341,10 @@ g.detachHandlerByFrame = function(frame)
             idx = kk
             handler = vv
             if handler then
+                DBGOUT('detachframe ' .. kk)
+
                 g.detachHandler(handler)
+                break
             end
         end
     end
@@ -359,8 +365,8 @@ g.detachHandler = function(handler)
     end
 
     if #g._activeHandlers == 0 then
-        --ui.SetHoldUI(false);
-        keyboard.EnableHotKey(true)
+        -- ui.SetHoldUI(false);
+        --keyboard.EnableHotKey(true)
         g._mousemoveto = nil
         DBGOUT('DIED:')
         --ui.SetTopMostFrame()
@@ -477,7 +483,7 @@ g.checkFrames = function(self)
                             g.gbg.setActiveInstance(nil)
                         end
                         --g.gbg.initialize()
-                        local instance = v.class.new(ui.GetFrame('uie_generalbg'), k, '', v.arg)
+                        local instance = v.class.new(ui.GetFrame('uie_generalbg'), k, nil, v.arg)
                         g.gbg.setActiveInstance(instance)
                         g._activeFrames[k] = instance
                         g._activeFrameCount = g._activeFrameCount + 1
@@ -602,52 +608,7 @@ g.uieHandlerControlTracerGenerator = function(flags)
         return g.uieHandlerControlTracer.new(key, frame, flags or g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON, ...)
     end
 end
-g._registeredFrameGeneralbg = {
-    ['shop'] = {class = g.gbg.uiegbgShop},
-    --['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
-    --['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
-    ['fishing'] = {class = g.gbg.uiegbgFishing},
-    ['portal_seller']={class=g.gbg.uiegbgPortal}
-}
-g._registeredFrameHandlers = {
-    ['bookitemread'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['warningmsgbox'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['worldmap'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['worldmap2_mainmap'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
-    ['worldmap2_submap'] = {
-        generator = g.uieHandlerControlTracerGenerator()
-    },
 
-    ['uie_menu_sub'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
-    },
-    ['fishing_item_bag'] = {
-        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
-    },
-    ['dialogselect'] = {
-        generator = function(...)
-            return g.uieHandlerDummy.new(...)
-        end
-    },
-    ['dialog'] = {
-        generator = function(...)
-            return g.uieHandlerDummy.new(...)
-        end
-    },
-    ['dialogillust'] = {
-        generator = function(...)
-            return g.uieHandlerDummy.new(...)
-        end
-    }
-}
 g._activeHandlers = {}
 UIMODEEXPERT = g
 
@@ -757,6 +718,17 @@ function UIMODEEXPERT_ON_TICK(frame)
         try = function()
             if not g._isEnable then
                 return
+            end
+        
+            if g.key:IsKeyDown(g.key.SYSMENU) then
+                DBGOUT('add')
+                if ui.GetFrame('uie_generalbg'):IsVisible()==0 then
+                    local gp=g.gbg.uiegbgGroupMe.new(ui.GetFrame('uie_generalbg'), 'me',nil)
+                    gp:initialize()
+                    g.gbg.setActiveInstance(gp)
+                  
+                    g.gbg.showFrame()
+                end
             end
             g:checkFrames()
             g.key:Tick()
@@ -887,3 +859,53 @@ function UIMODEEXPERT_PROCESS_COMMAND(command)
 
     CHAT_SYSTEM(string.format('[%s] Invalid Command', addonName))
 end
+
+g._registeredFrameGeneralbg = {
+    ['shop'] = {class = g.gbg.uiegbgShop},
+    --['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
+    --['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
+    ['fishing'] = {class = g.gbg.uiegbgFishing},
+    ['portal_seller']={class=g.gbg.uiegbgPortal},
+    ['itembuffrepair']={class=g.gbg.uiegbgRepair}
+}
+g._registeredFrameHandlers = {
+    ['bookitemread'] = {
+        generator = g.uieHandlerControlTracerGenerator()
+    },
+    ['warningmsgbox'] = {
+        generator = g.uieHandlerControlTracerGenerator()
+    },
+    -- ['worldmap'] = {
+    --     generator = g.uieHandlerControlTracerGenerator()
+    -- },
+    -- ['worldmap2_mainmap'] = {
+    --     generator = g.uieHandlerControlTracerGenerator()
+    -- },
+    -- ['worldmap2_submap'] = {
+    --     generator = g.uieHandlerControlTracerGenerator()
+    -- },
+
+    ['uie_menu_sub'] = {
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
+    },
+    ['fishing_item_bag'] = {
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
+    },
+    ['dialogselect'] = {
+        generator = function(...)
+            return g.uieHandlerDummy.new(...)
+        end
+    },
+    ['dialog'] = {
+        generator = function(...)
+            return g.uieHandlerDummy.new(...)
+        end
+    },
+    ['dialogillust'] = {
+        generator = function(...)
+            return g.uieHandlerDummy.new(...)
+        end
+    }
+}
+
+UIMODEEXPERT=g

@@ -48,18 +48,7 @@ local function inherit(class, super, ...)
     setmetatable(class, {__index = super})
     return self
 end
-local inventory_filters = {
-    --{name = "Fav", text = "★", tooltip = "Favorites", imagename = "uie_favorites", original = nil},
-    --{name = 'All', text = 'All', tooltip = 'All', imagename = 'uie_all', original = 'All'},
-    {rank = 0, name = 'Prm', text = 'Prm', tooltip = 'Premium', imagename = 'uie_premium', original = 'Premium'},
-    {rank = 1, name = 'Equ', text = 'Equ', tooltip = 'Equip', imagename = 'uie_equip', original = 'Equip'},
-    {rank = 2, name = 'Spl', text = 'Spl', tooltip = 'Consume Item', imagename = 'uie_consume', original = 'Consume'},
-    {rank = 3, name = 'Crd', text = 'Crd', tooltip = 'Card', imagename = 'uie_card', original = 'Card'},
-    {rank = 4, name = 'Gem', text = 'Gem', tooltip = 'Gem', imagename = 'uie_gem', original = 'Gem'},
-    {rank = 5, name = 'Etc', text = 'Etc', tooltip = 'Etc', imagename = 'uie_etc', original = 'Etc'},
-    {rank = 6, name = 'Rcp', text = 'Rcp', tooltip = 'Recipe', imagename = 'uie_recipe', original = 'Recipe'},
-    {rank = 7, name = 'Hou', text = 'Hou', tooltip = 'Housing', imagename = 'uie_housing', original = 'Housing'}
-}
+
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
