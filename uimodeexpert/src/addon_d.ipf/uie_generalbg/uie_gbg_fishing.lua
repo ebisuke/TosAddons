@@ -78,7 +78,7 @@ g.gbg.uiegbgFishing={
         })
         local inv=g.gbg.uiegbgComponentInventory.new(self,'bait',{
             tooltipxy={x=0,y=100},
-    
+            selectable=true,
             filter=function(invItem)
                 local itemObj = GetIES(invItem:GetObject());
                 if IS_PASTE_BAIT_ITEM(itemObj.ClassID) == 1 then

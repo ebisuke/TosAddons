@@ -30,7 +30,7 @@ function UIE_DEBUG_RELOAD()
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_status.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_component_status.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_fishing.lua]])
-    
+    dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_portal.lua]])
     g.inv.inventories=inv
     g.inv.frame=ui.GetFrame('uie_inventory')
 end

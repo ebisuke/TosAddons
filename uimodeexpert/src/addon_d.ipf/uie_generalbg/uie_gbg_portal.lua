@@ -58,7 +58,7 @@ g.gbg=g.gbg or {}
 
 g.gbg.uiegbgPortal={
     new=function(frame,name,caption)
-        local self=inherit(g.gbg.uiegbgInventory,g.gbg.uiegbgBase,frame,name,caption or g.tr('portalshop') )
+        local self=inherit(g.gbg.uiegbgPortal,g.gbg.uiegbgBase,frame,name,caption or g.tr('portalshop') )
         return self
     end,
     initializeImpl=function(self,gbox)
@@ -68,7 +68,59 @@ g.gbg.uiegbgPortal={
         zeny:initialize(gbox:GetWidth()-260,20,200,40)
         self:addComponent(zeny)
 
-        
+        local pframe = ui.GetFrame('portal_seller');
+        local groupName = pframe:GetUserValue('GroupName');
+        local itemCount = session.autoSeller.GetCount(groupName);
+        for i = 0, itemCount - 1 do
+            local itemInfo = session.autoSeller.GetByIndex(groupName, i);
+            local propValue = itemInfo:GetArgStr();
+            local portalInfoList = StringSplit(propValue, "@"); -- portalPos@openedTime
+            local portalPosList = StringSplit(portalInfoList[1], "#"); -- zoneName#x#y#z
+    
+            -- name
+            local pc = GetMyPCObject();
+            local mapName = portalPosList[1];
+            local mapCls = GetClass('Map', mapName);
+            local x, y, z = portalPosList[2], portalPosList[3], portalPosList[4];
+            local isValid = ui.IsImageExist(mapName);
+            if isValid == false then
+                world.PreloadMinimap(mapName);
+            end
+            local w=(gbox:GetWidth()-100)/itemCount
+            local ww=350
+            local h=600
+            local ingbox=gbox:CreateOrGetControl('groupbox','gboxportal'..i,w*(i-1)+gbox:GetWidth()/2-ww/2,50,ww,h);
+            AUTO_CAST(ingbox)
+            local title=ingbox:CreateOrGetControl('richtext','title',10,10,ww-20,60)
+            title:SetText(mapCls.Name)
+            local map=ingbox:CreateOrGetControl('picture','map',10,10+60,300,60)
+            AUTO_CAST(map)
+            map:SetImage(mapName)
+            local mark=ingbox:CreateOrGetControl('picture','mark',10,10+60,40,40)
+            AUTO_CAST(mark)
+            mark:SetImage('trasuremapmark')
+            mark:SetEnableStretch(1)
+
+            local price=ingbox:CreateOrGetControl('button','price',10,10+60+300,ww-20,60)
+            local itemName, cnt = ITEMBUFF_NEEDITEM_Sage_PortalShop(pc, mapName);
+            local cost = cnt * itemInfo.price;     
+            price:SetText(g.util.generateSilverString(cost,40))
+        end
+    end,
+    defaultHandlerImpl = function(self, key, frame)
+        return g.uieHandlergbgComponentTracer.new(key, frame, self)
     end,
 }
+-- g.gbg.uiegbgComponentPortal = {
+--     new = function(parentgbg, name, selectcallback)
+--         local self = inherit(g.gbg.uiegbgComponentPortal, g.gbg.uiegbgComponentBase, parentgbg, name)
+--         self.selectcallback = selectcallback
+--         return self
+--     end,
+--     initializeImpl=function(self,gbox)
+
+        
+
+--     end,
+-- }
 UIMODEEXPERT = g

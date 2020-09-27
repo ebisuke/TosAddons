@@ -606,7 +606,8 @@ g._registeredFrameGeneralbg = {
     ['shop'] = {class = g.gbg.uiegbgShop},
     --['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
     --['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
-    ['fishing'] = {class = g.gbg.uiegbgFishing}
+    ['fishing'] = {class = g.gbg.uiegbgFishing},
+    ['portal_seller']={class=g.gbg.uiegbgPortal}
 }
 g._registeredFrameHandlers = {
     ['bookitemread'] = {
@@ -615,6 +616,16 @@ g._registeredFrameHandlers = {
     ['warningmsgbox'] = {
         generator = g.uieHandlerControlTracerGenerator()
     },
+    ['worldmap'] = {
+        generator = g.uieHandlerControlTracerGenerator()
+    },
+    ['worldmap2_mainmap'] = {
+        generator = g.uieHandlerControlTracerGenerator()
+    },
+    ['worldmap2_submap'] = {
+        generator = g.uieHandlerControlTracerGenerator()
+    },
+
     ['uie_menu_sub'] = {
         generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
     },

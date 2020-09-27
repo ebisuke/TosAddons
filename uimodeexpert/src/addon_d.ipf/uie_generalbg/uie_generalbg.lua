@@ -360,6 +360,242 @@ g.uieHandlergbgBase = {
         return g.uieHandlerBase.RefPass
     end,
 }
+g.uieHandlergbgComponentTracer = {
+    FLAG_ENABLE_BUTTON = 0x00000001,
+    FLAG_ENABLE_CHECKBOX = 0x00000002,
+    FLAG_ENABLE_SLOT = 0x00000004,
+    FLAG_ENABLE_SLOTSET = 0x00000008,
+    FLAG_ENABLE_NUMUPDOWN = 0x00000010,
+    FLAG_CHANGETAB_BYMENU = 0x00001000,
+    new = function(key, frame,gbg,flags)
+        local self = inherit(g.uieHandlergbgComponentTracer, g.uieHandlergbgBase, key,frame,gbg)
+
+        self.ctrls = {}
+        self.ctrlscursor = 0
+        self.ctrlscount = 0
+        self.flags = flags or g.uieHandlergbgComponentTracer.FLAG_ENABLE_BUTTON
+        return self
+    end,
+    findButtonsRecurse = function(self, ctrl)
+        for i = 0, ctrl:GetChildCount() - 1 do
+            local cc = ctrl:GetChildByIndex(i)
+            local gbgname=ctrl:GetUserValue('gbg_name')
+            local gbgintrusive=ctrl:GetUserIValue('gbg_name')
+
+
+            if cc:IsVisible() == 1 and cc:GetName():lower()~='colse' and cc:GetName():lower()~='close' then
+                if
+                    ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON) ~= 0 and (cc:GetClassString() == 'ui::CButton')) or
+                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX) ~= 0 and (cc:GetClassString() == 'ui::CCheckBox')) or
+                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOT) ~= 0 and (cc:GetClassString() == 'ui::CSlot')) or
+                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet')) or
+                        (not g.util.isNilOrNoneOrWhitespace(gbgname) and gbgintrusive==0)
+                 then
+                    AUTO_CAST(cc)
+                    local x=cc:GetX()
+                    local y=cc:GetY()
+                    local w=cc:GetWidth()
+                    local h=cc:GetHeight()
+                    if cc:GetParent():GetClassString()~='ui::CFrame' then 
+                        local p=cc:GetParent()
+                        local px=cc:GetParent():GetX()
+                        local py=cc:GetParent():GetY()
+                        local pw=cc:GetParent():GetWidth()
+                        local ph=cc:GetParent():GetHeight()
+                        if cc:GetParent():GetParent() and  cc:GetParent():GetParent():GetClassString()~='ui::CFrame' then
+                            local pp= cc:GetParent():GetParent()
+                            --pw=math.min(pp:GetWidth()-px,math.min((pp:GetWidth()+w)-(x+px),pw))
+                            --ph=math.min(pp:GetHeight()-py,math.min((pp:GetHeight()+h)-(y+px),ph))
+                            
+                        end
+                        
+                        if (x+w>=0)and(y+h>=0)and(x<pw)and(y<ph) then
+                            self.ctrls[#self.ctrls + 1] = cc
+                            self.ctrlscount = self.ctrlscount + 1
+                        end
+                    else
+                        
+                        self.ctrls[#self.ctrls + 1] = cc
+                        self.ctrlscount = self.ctrlscount + 1
+                        
+                    end
+                   
+                else
+                    self:findButtonsRecurse(cc)
+                end
+            end
+        end
+    end,
+
+    gbgTick = function(self)
+        if (self.ctrlscount > 0) then
+            if g.key:IsKeyPress(g.key.DOWN) or g.key:IsKeyPress(g.key.RIGHT) then
+                --down
+                self.ctrlscursor = self.ctrlscursor + 1
+                if self.ctrlscursor >= self.ctrlscount then
+                    self.ctrlscursor = 0
+                end
+                self:moveMouse(self.ctrlscursor)
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyPress(g.key.UP) or g.key:IsKeyPress(g.key.LEFT) then
+                --up
+                self.ctrlscursor = self.ctrlscursor - 1
+                if self.ctrlscursor < 0 then
+                    self.ctrlscursor = self.ctrlscount - 1
+                end
+                self:moveMouse(self.ctrlscursor)
+                g:onChangedCursor()
+            end
+            if g.key:IsKeyDown(g.key.CANCEL) then
+                g:onCanceledCursor()
+                self.frame:ShowWindow(0)
+                return g.uieHandlerBase.RefEnd
+            end
+            if g.key:IsKeyDown(g.key.MENU) then
+               if (self.flags & g.uieHandlerControlTracer.FLAG_CHANGETAB_BYMENU)~=0 then
+                    self:findAndChangeTab()
+                    g:onDeterminedCursor()
+                    return g.uieHandlerBase.RefRefresh
+               end
+
+            end
+            if g.key:IsKeyDown(g.key.MAIN) or g.key:IsKeyDown(g.key.SUB) then
+                local scp
+                local idx = self.ctrlscursor
+                local ctrl = self.ctrls[idx + 1]
+                if ctrl:GetClassString() == 'ui::CGroupBox' then
+                    local gbgname=ctrl:GetUserValue('gbg_name')
+                    local gbgintrusive=ctrl:GetUserIValue('gbg_intrusive')
+                    if gbgname~='' and gbgintrusive==0 then
+                        local gbg=g.gbg.getComponentInstanceByName(gbgname)
+                        if gbg then
+                            gbg:attachDefaultHandler()
+                        end
+                    end
+                end
+                if ctrl:GetClassString() == 'ui::CButton' or ctrl:GetClassString() == 'ui::CCheckBox' or ctrl:GetClassString() == 'ui::CSlot' then
+                    local evt
+                    if g.key:IsKeyDown(g.key.MAIN) then
+                        evt = ui.LBUTTONUP
+                        scp = ctrl:GetEventScript(evt)
+                        if not scp then
+                            evt = ui.LBUTTONDOWN
+                            scp = ctrl:GetEventScript(evt)
+                            if not scp then
+                                evt = ui.LBUTTONPRESSED
+                                scp = ctrl:GetEventScript(evt)
+                                if not scp then
+                                --none
+                                end
+                            end
+                        end
+                    elseif g.key:IsKeyDown(g.key.SUB) then
+                        evt = ui.RBUTTONUP
+                        scp = ctrl:GetEventScript(evt)
+                        if not scp then
+                            evt = ui.RBUTTONDOWN
+                            scp = ctrl:GetEventScript(evt)
+                            if not scp then
+                                evt = ui.RBUTTONPRESSED
+                                scp = ctrl:GetEventScript(evt)
+                                if not scp then
+                                --none
+                                end
+                            end
+                        end
+                    end
+
+                    local scpnum = ctrl:GetEventScriptArgNumber(evt)
+                    local scpstr = ctrl:GetEventScriptArgString(evt)
+
+                    if scp and ctrl:IsEnable()==1 then
+                        local r, s = load('return (' .. scp .. ')')
+                        g:onDeterminedCursor()
+                        if r then
+                            --print(scp)
+                            local parent = ctrl:GetParent()
+                            local ctrlset
+
+                            while parent do
+                                if parent:GetClassString() == 'ui::CControlSet' then
+                                    ctrlset = parent
+
+                                    break
+                                end
+                                parent = parent:GetParent()
+                            end
+
+                            if ctrlset then
+                                pcall(r(), ctrlset, ctrl, scpstr, scpnum)
+                            else
+                                pcall(r(), ctrl:GetTopParentFrame(), ctrl, scpstr, scpnum)
+                            end
+                        end
+                    end
+                end
+                if ctrl:GetClassString() == 'ui::CCheckBox' then
+                    if ctrl:IsChecked() == 1 then
+                        ctrl:SetCheck(0)
+                    else
+                        ctrl:SetCheck(1)
+                    end
+                end
+                if ctrl:GetClassString() == 'ui::CSlot' then
+                    if g.key:IsKeyDown(g.key.MAIN) then
+                        local parent = ctrl:GetParent()
+                        if parent:GetClassString()=='ui::CSlotSet' then
+                            AUTO_CAST(parent)
+                            
+                            if ctrl:IsSelected() == 1 then
+                                ctrl:Select(0)
+                            else
+                                ctrl:Select(1)
+                            end
+                            parent:MakeSelectionList()
+                            parent:Invalidate()
+                        else
+                            if ctrl:IsSelected() == 1 then
+                                ctrl:Select(0)
+                            else
+                                ctrl:Select(1)
+                            end
+                        end
+                    end
+                end
+                return g.uieHandlerBase.RefRefresh
+            end
+        end
+        return g.uieHandlerBase.RefPass
+    end,
+    refresh = function(self)
+        g.uieHandlergbgBase.refresh(self)
+        self.ctrls = {}
+        self.ctrlscount = 0
+        self.frame = ui.GetFrame(self.framename)
+        self:findButtonsRecurse(self.frame)
+
+        self.ctrlscursor = math.min(self.ctrlscount-1, self.ctrlscursor)
+        table.sort(
+            self.ctrls,
+            function(a, b)
+                if a:GetGlobalY() == b:GetGlobalY() then
+                    return a:GetGlobalX() < b:GetGlobalX()
+                end
+                return a:GetGlobalY() < b:GetGlobalY()
+            end
+        )
+        self:moveMouse(self.ctrlscursor)
+    end,
+    moveMouse = function(self, idx)
+        if idx < self.ctrlscount then
+            local ctrl = self.ctrls[idx + 1]
+
+            self:moveMouseToControl(ctrl)
+        end
+    end,
+
+}
 UIMODEEXPERT = g
 
 --マップ読み込み時処理（1度だけ）

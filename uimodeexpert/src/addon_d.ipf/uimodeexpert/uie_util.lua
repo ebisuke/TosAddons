@@ -139,7 +139,9 @@ g.util.hideItemToolTip=function()
     if itemFrame then
             itemFrame:ShowWindow(0)
     end
-
-
+end
+g.util.generateSilverString=function(price,size)
+    size=size or 20
+    return string.format('{img icon_item_silver %d %d} {ol}{s%d} %s',size,size,size,tostring(price))
 end
 UIMODEEXPERT = g
