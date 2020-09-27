@@ -66,33 +66,38 @@ local g = UIMODEEXPERT
 g.gbg=g.gbg or {}
 g.gbg.uiegbgComponentUnderBtn = {
     _instances = {},
-    new = function(tab, parent, name, btns)
+    new = function(tab, parent, name, btns,freeze)
         local self = inherit(g.gbg.uiegbgComponentUnderBtn, g.gbg.uiegbgComponentBase, tab, parent, name)
         self.btns = btns
-
+        self.freeze=freeze
         return self
     end,
     initializeImpl = function(self, gbox)
+        if not self.freeze then
+            gbox:Resize(gbox:GetWidth()-120,120)
+            gbox:SetMargin(40,0,40,80)
+            gbox:SetGravity(ui.CENTER_HORZ,ui.BOTTOM)
+        end
         local gboxin = gbox:CreateOrGetControl('groupbox', 'gboxin', 0, 0, 0, 0)
 
         AUTO_CAST(gboxin)
         local x = 0
         for k, v in ipairs(self.btns) do
-            local btn = gboxin:CreateOrGetControl('button', 'btn' .. v.name, x, 0, v.width or 100, 40)
+            local btn = gboxin:CreateOrGetControl('button', 'btn' .. v.name, x, 0, v.width or 200, 80)
             AUTO_CAST(btn)
             if v.skin then
                 btn:SetSkinName(v.skin)
             end
 
-            btn:SetText(v.caption)
+            btn:SetText('{ol}{s30}'..v.caption)
             btn:SetEventScript(ui.LBUTTONUP, 'UIE_GENERALBG_COMPONENT_UNDERBTN_LCLICK')
             btn:SetEventScriptArgString(ui.LBUTTONUP, self.name)
             btn:SetEventScriptArgNumber(ui.LBUTTONUP, k)
-            x=x+btn:GetWidth()+(v.space or 10)
+            x=x+btn:GetWidth()+(v.space or 30)
         end
 
         gboxin:AutoSize(1)
-        gboxin:SetGravity(ui.RIGHT,ui.CENTER_VERT)
+        gboxin:SetGravity(ui.CENTER_HORZ,ui.CENTER_VERT)
         g.gbg.uiegbgComponentUnderBtn._instances[self.name] = self
     end
 }

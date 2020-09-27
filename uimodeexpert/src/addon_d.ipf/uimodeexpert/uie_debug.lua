@@ -12,6 +12,7 @@ function UIE_DEBUG_RELOAD()
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uimodeexpert/uimodeexpert.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uimodeexpert/uie_overrider.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uimodeexpert/uie_util.lua]])
+
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_tip/uie_tip.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_cursor/uie_cursor.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_inventory/uie_inventory.lua]])
@@ -28,6 +29,7 @@ function UIE_DEBUG_RELOAD()
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_dummy.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_status.lua]])
     dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_component_status.lua]])
+    dofile([[E:/ToSProject/TosAddons/uimodeexpert/src/addon_d.ipf/uie_generalbg/uie_gbg_fishing.lua]])
     
     g.inv.inventories=inv
     g.inv.frame=ui.GetFrame('uie_inventory')

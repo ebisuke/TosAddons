@@ -55,7 +55,7 @@ g._needToRefresh = 0
 g._isEnable = true
 g._activeFrames = {}
 g._activeFrameCount = 0
-g._activeHandlers={}
+g._activeHandlers = {}
 g.keydef = {
     UP = 0x0001,
     DOWN = 0x0002,
@@ -112,6 +112,47 @@ g._KeyboardFunctions = {
         return instance[fn](instance, ']')
     end
 }
+g._JoystickFunctions = {
+    [g.keydef.UP] = function(instance, fn)
+        return instance[fn](instance, 'JOY_UP')
+    end,
+    [g.keydef.DOWN] = function(instance, fn)
+        return instance[fn](instance, 'JOY_DOWN')
+    end,
+    [g.keydef.LEFT] = function(instance, fn)
+        return instance[fn](instance, 'JOY_LEFT')
+    end,
+    [g.keydef.RIGHT] = function(instance, fn)
+        return instance[fn](instance, 'JOY_RIGHT')
+    end,
+    [g.keydef.MAIN] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_2')
+    end,
+    [g.keydef.CANCEL] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_1')
+    end,
+    [g.keydef.SUB] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_3')
+    end,
+    [g.keydef.MENU] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_4')
+    end,
+    [g.keydef.TABLEFT] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_7')
+    end,
+    [g.keydef.TABRIGHT] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_8')
+    end,
+    [g.keydef.PAGEUP] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_5')
+    end,
+    [g.keydef.PAGEDOWN] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_6')
+    end,
+    [g.keydef.SYSMENU] = function(instance, fn)
+        return instance[fn](instance, 'JOY_BTN_8') and instance[fn](instance, 'JOY_BTN_5')
+    end
+}
 g.key = {
     UP = 0x0001,
     DOWN = 0x0002,
@@ -135,38 +176,95 @@ g.key = {
     _KeyboardIsKeyPress = function(self, rawkey)
         return keyboard.IsKeyPressed(rawkey) == 1
     end,
+    _JotStickIsKeyPress = function(self, rawkey)
+        return keyboard.IsKeyPressed(rawkey) == 1
+    end,
     Tick = function(self)
-        for k, v in pairs(g._KeyboardFunctions) do
-            if not v(g.key, '_KeyboardIsKeyPress') then
-                g.key._timer[k] = nil
-            else
-                if g.key._timer[k] ~= nil then
-                    g.key._timer[k] = g.key._timer[k] + 1
+        if IsJoyStickMode() == 1 then
+            for k, v in pairs(g._JoystickFunctions) do
+                if not v(g.key, '_JotStickIsKeyPress') then
+                    g.key._timer[k] = nil
                 else
-                    g.key._timer[k] = 0
+                    if g.key._timer[k] ~= nil then
+                        g.key._timer[k] = g.key._timer[k] + 1
+                    else
+                        g.key._timer[k] = 0
+                    end
+                end
+            end
+        else
+            for k, v in pairs(g._KeyboardFunctions) do
+                if not v(g.key, '_KeyboardIsKeyPress') then
+                    g.key._timer[k] = nil
+                else
+                    if g.key._timer[k] ~= nil then
+                        g.key._timer[k] = g.key._timer[k] + 1
+                    else
+                        g.key._timer[k] = 0
+                    end
                 end
             end
         end
     end,
     IsKeyDown = function(self, key)
-        local keyfn = g._KeyboardFunctions[key]
+        if IsJoyStickMode() == 1 then
+            local keyfn = g._JoystickFunctions[key]
 
-        if keyfn and keyfn(g.key, '_KeyboardIsKeyDown') then
-            return true
-        end
-        return false
-    end,
-    IsKeyPress = function(self, key)
-        local keyfn = g._KeyboardFunctions[key]
+            if keyfn and keyfn(g.key, '_JotStickIsKeyPress') then
+                if g.key._timer[key] == nil or g.key._timer[key] == 0 then
+                    return true
+                end
+                return false
+            end
+            return false
+        else
+            local keyfn = g._KeyboardFunctions[key]
 
-        if keyfn and keyfn(g.key, '_KeyboardIsKeyPress') then
-            if g.key._timer[key] == nil or g.key._timer[key] == 0 then
-                return true
-            elseif (g.key._timer[key] >= g.key._repeattime) and (g.key._timer[key] - g.key._repeattime) % g.key._repeatinterval == 0 then
+            if keyfn and keyfn(g.key, '_KeyboardIsKeyDown') then
                 return true
             end
+            return false
         end
-        return false
+    end,
+    --key repeat
+    IsKeyPress = function(self, key)
+        if IsJoyStickMode() == 1 then
+            local keyfn = g._JoystickFunctions[key]
+            if keyfn and keyfn(g.key, '_JotStickIsKeyPress') then
+                if g.key._timer[key] == nil or g.key._timer[key] == 0 then
+                    return true
+                elseif (g.key._timer[key] >= g.key._repeattime) and (g.key._timer[key] - g.key._repeattime) % g.key._repeatinterval == 0 then
+                    return true
+                end
+            end
+        else
+            local keyfn = g._KeyboardFunctions[key]
+
+            if keyfn and keyfn(g.key, '_KeyboardIsKeyPress') then
+                if g.key._timer[key] == nil or g.key._timer[key] == 0 then
+                    return true
+                elseif (g.key._timer[key] >= g.key._repeattime) and (g.key._timer[key] - g.key._repeattime) % g.key._repeatinterval == 0 then
+                    return true
+                end
+            end
+            return false
+        end
+    end,
+    --always
+    IsKeyPressed = function(self, key)
+        if IsJoyStickMode() == 1 then
+            local keyfn = g._JoystickFunctions[key]
+            if keyfn and keyfn(g.key, '_JotStickIsKeyPress') then
+                return true
+            end
+        else
+            local keyfn = g._KeyboardFunctions[key]
+
+            if keyfn and keyfn(g.key, '_KeyboardIsKeyPress') then
+                return true
+            end
+            return false
+        end
     end
 }
 g.initialize = function(self)
@@ -212,10 +310,9 @@ g.cleanupMessageBox = function(self)
     end
 end
 g.attachHandler = function(handler)
-
     local key = #g._activeHandlers + 1
     g._activeHandlers[key] = handler
-    
+
     handler:enter()
 
     ReserveScript(string.format('UIMODEEXPERT_DELAYEDENTER(%d)', key, 0.1))
@@ -223,7 +320,6 @@ g.attachHandler = function(handler)
     if key == 1 then
         local frame = ui.GetFrame('uie_cursor')
 
- 
         frame:ShowWindow(1)
         if (g.isHighRes()) then
             frame:SetOffset(option.GetClientWidth() / 4, option.GetClientHeight() / 2)
@@ -244,26 +340,24 @@ g.detachHandlerByFrame = function(frame)
             if handler then
                 g.detachHandler(handler)
             end
-            
         end
     end
-    
 end
 g.detachHandler = function(handler)
-    
     for k, v in ipairs(g._activeHandlers) do
-        if v==handler then
+        if v == handler then
+            table.remove(g._activeHandlers, k)
             v:leave()
             if handler._overrider then
                 DBGOUT('restore:' .. k)
                 handler._overrider:restore()
             end
-            DBGOUT('HOHO'..handler.key)
-            table.remove(g._activeHandlers,k)
+            DBGOUT('detach' .. handler.key)
+
             break
         end
     end
-  
+
     if #g._activeHandlers == 0 then
         --ui.SetHoldUI(false);
         keyboard.EnableHotKey(true)
@@ -274,7 +368,6 @@ g.detachHandler = function(handler)
         ui.GetFrame('uie_cursor'):ShowWindow(0)
     else
         DBGOUT('REMAIN:' .. #g._activeHandlers)
-      
     end
 end
 g.Enable = function(self, enable)
@@ -298,10 +391,10 @@ g.checkFrames = function(self)
         try = function()
             for k, v in pairs(g._registeredFrameHandlers) do
                 local handler = nil
-               
+
                 for kk, vv in ipairs(g._activeHandlers) do
                     if vv.key == k then
-                       
+
                         handler = vv
                         break
                     end
@@ -344,7 +437,20 @@ g.checkFrames = function(self)
                     end
                 end
             end
+            for k, v in pairs(g._activeHandlers) do
+                local handler = v
 
+                
+                    --registered
+                if v.key then
+                    local frame = ui.GetFrame(v.key)
+
+                    if not frame or frame:IsVisible() == 0 then
+                        DBGOUT('leave:' .. v.key)
+                        g.detachHandler(handler)
+                    end
+                end
+            end
             --gbg
             for k, v in pairs(g._registeredFrameGeneralbg) do
                 local gb = nil
@@ -359,11 +465,11 @@ g.checkFrames = function(self)
                 if not gb then
                     -- not registered
                     local frame = ui.GetFrame(k)
-                    if frame and frame:IsVisible() == 1 and  (g._activeFrameCount == 0 or g._activeFramePriority > (v.priority or 0)) then
-                        DBGOUT('gb enter:' .. k)
+                    if frame and frame:IsVisible() == 1 and (g._activeFrameCount == 0 or g._activeFramePriority > (v.priority or 0)) then
+                        DBGOUT('gb enter:' .. k..'/'..(v.priority or 0))
                         if g._activeFrameCount > 0 then
-                            for _, vv in pairs(g._activeFrames) do
-                                 DBGOUT('gb enter:' .. k)
+                            for kk, vv in pairs(g._activeFrames) do
+                                DBGOUT('gb enter kick:' .. kk..'/'.. g._activeFramePriority)
                                 vv:release()
                                 g._activeFrameCount = g._activeFrameCount - 1
                             end
@@ -384,7 +490,7 @@ g.checkFrames = function(self)
                 else
                     --registered
                     local frame = ui.GetFrame(k)
-                    
+
                     if not frame or frame:IsVisible() == 0 then
                         g._activeFrames[k] = nil
                         g._activeFrameCount = g._activeFrameCount - 1
@@ -393,7 +499,7 @@ g.checkFrames = function(self)
                         DBGOUT('gb leaveaa2:' .. k .. idx)
                         g.gbg.hideFrame()
                         DBGOUT('gb leaveaa3:' .. k .. idx)
-                        
+
                         g.gbg.setActiveInstance(nil)
                         g._activeFramePriority = 0
                         DBGOUT('gb leaveaa:' .. k .. idx)
@@ -404,7 +510,7 @@ g.checkFrames = function(self)
                         gb:release()
                         g.gbg.hideFrame()
                         ui.GetFrame(k):ShowWindow(0)
- 
+
                         g.gbg.setActiveInstance(nil)
                         g._activeFramePriority = 0
                         DBGOUT('gb leaveaa3:' .. k .. idx)
@@ -425,6 +531,9 @@ g.checkFrames = function(self)
             ERROUT(error)
         end
     }
+end
+g.setCursorMode = function(mode)
+    g._cursormode = mode
 end
 g.onChangedCursor = function(self)
     imcSound.PlaySoundEvent('sys_mouseover_percussion_1')
@@ -484,7 +593,9 @@ g.triggerShowMessageBox = function(self, msgbox, key, btncount, yesscp, noscp, e
     }
 end
 g._msgBoxes = {}
-
+g.tr = function(translateStr)
+    return translateStr
+end
 g.uieHandlerControlTracerGenerator = function(flags)
     return function(key, frame, ...)
         return g.uieHandlerControlTracer.new(key, frame, flags or g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON, ...)
@@ -493,7 +604,8 @@ end
 g._registeredFrameGeneralbg = {
     ['shop'] = {class = g.gbg.uiegbgShop},
     ['inventory'] = {class = g.gbg.uiegbgGroupMe, arg = 1, priority = 100},
-    ['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2}
+    ['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
+    ['fishing'] = {class = g.gbg.uiegbgFishing}
 }
 g._registeredFrameHandlers = {
     ['bookitemread'] = {
@@ -503,6 +615,9 @@ g._registeredFrameHandlers = {
         generator = g.uieHandlerControlTracerGenerator()
     },
     ['uie_menu_sub'] = {
+        generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
+    },
+    ['fishing_item_bag'] = {
         generator = g.uieHandlerControlTracerGenerator(g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON)
     },
     ['dialogselect'] = {
@@ -643,14 +758,14 @@ function UIMODEEXPERT_ON_TICK(frame)
             while #g._activeHandlers > 0 do
                 local k = #g._activeHandlers
                 local v = g._activeHandlers[k]
-                local ret 
+                local ret
                 if not v._giveup then
-                    ret =v:tick()
+                    ret = v:tick()
                 else
-                    ret=g.uieHandlerBase.RefEnd
+                    ret = g.uieHandlerBase.RefEnd
                 end
-   
-                if ret == g.uieHandlerBase.RefEnd  then
+
+                if ret == g.uieHandlerBase.RefEnd then
                     DBGOUT('leavef:' .. k)
                     local prevk = k
                     g.detachHandler(v)
@@ -682,44 +797,48 @@ function UIMODEEXPERT_ON_TICK(frame)
 
                 local cursorframe = ui.GetFrame('uie_cursor')
 
-                cursorframe:Resize(
-                    curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5),
-                    curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)
-                )
-
-                cursorframe:SetOffset(
-                    (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)),
-                    (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5))
-                )
-
                 local lx
 
                 local ly
-                -- if g.isHighRes() then
-                --     lx =
-                --         (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
-                --         (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                --     ly =
-                --         (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
-                --         (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-
-                --     lx = lx * 2
-                --     ly = ly * 2
-                -- else
-                --     lx =
-                --         curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
-                --         (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                --     ly =
-                --         curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
-                --         (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                -- end
+                if g.isHighRes() then
+                    --lx = lx *2
+                    --ly = ly *2
+                    lx =
+                        (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
+                        (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                    ly =
+                        (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) +
+                        (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                else
+                    lx =
+                        curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                        (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                    ly =
+                        curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
+                        (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
+                end
                 -- lx =
                 --     curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
                 --     (curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
                 -- ly =
                 --     curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5) +
                 --     (curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)) / 2.0
-                --mouse.SetPos(lx, ly)
+
+                if g._cursormode then
+                    mouse.SetPos(lx, ly)
+                    cursorframe:Resize(0, 0)
+                    cursorframe:SetOffset(lx, ly)
+                else
+                    cursorframe:Resize(
+                        curpos.w + (destpos.w - curpos.w) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5),
+                        curpos.h + (destpos.h - curpos.h) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)
+                    )
+
+                    cursorframe:SetOffset(
+                        (curpos.x + (destpos.x - curpos.x) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5)),
+                        (curpos.y + (destpos.y - curpos.y) * math.pow(g._mousemoveto.time / g._mousemoveto.maxtime, 0.5))
+                    )
+                end
                 g._mousemoveto.time = math.min(g._mousemoveto.maxtime, g._mousemoveto.time + 1)
                 if g._mousemoveto.time > g._mousemoveto.maxtime then
                 --g._mousemoveto = nil

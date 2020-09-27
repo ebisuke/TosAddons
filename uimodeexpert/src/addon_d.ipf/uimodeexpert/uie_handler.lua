@@ -97,6 +97,7 @@ g.uieHandlerGenericDialog = {
     end,
     enter = function(self)
         self:moveMouse(0)
+        g.setCursorMode(true)
     end,
     moveMouse = function(self, idx)
         local ctrl
@@ -175,6 +176,7 @@ g.uieHandlerGenericDialog = {
         return g.uieHandlerBase.RefEnd
     end,
     leave = function(self)
+        g.setCursorMode(false)
     end
 }
 g.uieHandlerFrameBase = {
@@ -238,12 +240,17 @@ g.uieHandlerControlTracer = {
     findButtonsRecurse = function(self, ctrl)
         for i = 0, ctrl:GetChildCount() - 1 do
             local cc = ctrl:GetChildByIndex(i)
+            local gbgname=ctrl:GetUserValue('gbg_name')
+            local gbgintrusive=ctrl:GetUserIValue('gbg_name')
+
+
             if cc:IsVisible() == 1 and cc:GetName():lower()~='colse' and cc:GetName():lower()~='close' then
                 if
                     ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_BUTTON) ~= 0 and (cc:GetClassString() == 'ui::CButton')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX) ~= 0 and (cc:GetClassString() == 'ui::CCheckBox')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOT) ~= 0 and (cc:GetClassString() == 'ui::CSlot')) or
-                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet'))
+                        ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet')) or
+                        (gbgname and gbgintrusive==0)
                  then
                     AUTO_CAST(cc)
                     local x=cc:GetX()
@@ -365,7 +372,16 @@ g.uieHandlerControlTracer = {
                 local scp
                 local idx = self.ctrlscursor
                 local ctrl = self.ctrls[idx + 1]
-
+                if ctrl:GetClassString() == 'ui::CGroupBox' then
+                    local gbgname=ctrl:GetUserValue('gbg_name')
+                    local gbgintrusive=ctrl:GetUserIValue('gbg_intrusive')
+                    if gbgname and gbgintrusive==0 then
+                        local gbg=g.gbg.getComponentInstanceByName(gbgname)
+                        if gbg then
+                            gbg:attachDefaultHandler()
+                        end
+                    end
+                end
                 if ctrl:GetClassString() == 'ui::CButton' or ctrl:GetClassString() == 'ui::CCheckBox' or ctrl:GetClassString() == 'ui::CSlot' then
                     local evt
                     if g.key:IsKeyDown(g.key.MAIN) then

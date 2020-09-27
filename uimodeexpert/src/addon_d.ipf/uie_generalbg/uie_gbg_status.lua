@@ -57,7 +57,7 @@ g.gbg=g.gbg or {}
 
 g.gbg.uiegbgStatus={
     new=function(frame,name,caption)
-        local self=inherit(g.gbg.uiegbgStatus,g.gbg.uiegbgBase,frame,name,caption or  'ステータス')
+        local self=inherit(g.gbg.uiegbgStatus,g.gbg.uiegbgBase,frame,name,caption or  g.tr('status'))
         return self
     end,
     initializeImpl=function(self,gbox)

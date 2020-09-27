@@ -58,7 +58,7 @@ g.gbg=g.gbg or {}
 
 g.gbg.uiegbgInventory={
     new=function(frame,name,caption)
-        local self=inherit(g.gbg.uiegbgInventory,g.gbg.uiegbgBase,frame,name,caption or 'インベントリ' )
+        local self=inherit(g.gbg.uiegbgInventory,g.gbg.uiegbgBase,frame,name,caption or g.tr('inventory') )
         return self
     end,
     initializeImpl=function(self,gbox)

@@ -64,20 +64,29 @@ UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
 g.gbg = g.gbg or {}
-g.gbg.uiegbgComponentInventory = {
-    new = function(tab, parent, name, enableaccess,tooltipxy)
-        local self = inherit(g.gbg.uiegbgComponentInventory, g.gbg.uiegbgComponentBase, tab, parent, name,tooltipxy)
-        self.enableaccess = enableaccess or true
-        self.tooltipxy=tooltipxy
+g.gbg.uiegbgComponentInventoryBase = {
+    new = function(tab, parent, name, option)
+        local self = inherit(g.gbg.uiegbgComponentInventoryBase, g.gbg.uiegbgComponentBase, tab, parent, name)
+        self.option=option or {
+        }
+        self.option.enableaccess=self.option.enableaccess or true
+        self.option.filter= self.option.filter or nil
+        self.option.tooltipxy=self.option.tooltipxy or nil
+        self.option.selectable=self.option.selectable or false
+        self.option.singleselect=self.option.singleselect or true
+        self.option.slotsize=self.option.slotsize or 48
+        self.option.onrclicked= self.option.onrclicked or nil
         return self
     end,
     initializeImpl = function(self, gbox)
         gbox:SetSkinName('bg')
+        
         local gboxin = gbox:CreateOrGetControl('groupbox', 'gboxin', 0, 0, gbox:GetWidth() - 25, gbox:GetHeight())
         local gboxtab = gbox:CreateOrGetControl('groupbox', 'gboxtab', gbox:GetWidth() - 25, 0, 25, gbox:GetHeight())
         AUTO_CAST(gboxin)
         AUTO_CAST(gboxtab)
-
+        gboxtab:EnableScrollBar(0)
+        gboxtab:SetSkinName('bg')
         --create tabs
         for k, v in ipairs(inventory_filters) do
             local btn = gboxtab:CreateOrGetControl('button', 'btn' .. v.name, 0, 35 * (k - 1), 25, 25)
@@ -86,16 +95,43 @@ g.gbg.uiegbgComponentInventory = {
         --create inven)
         self:refreshInventory(gboxin)
     end,
-    hookmsgImpl = function(self, frame, msg, argStr, argNum)
-        if msg == 'INV_ITEM_ADD' or msg == 'INV_ITEM_CHANGE_COUNT' or msg == 'INV_ITEM_REMOVE' or msg == 'INV_ITEM_LIST_GET' then
-            self:refreshInventory()
-        end
-    end,
+
     setCustomEventScript = function(self, slot, inv)
         --override me
     end,
     defaultHandlerImpl = function(self, key, frame)
-        return g.uieHandlergbgComponentInventory.new(key, frame, self,self.tooltipxy)
+        return g.uieHandlergbgComponentInventory.new(key, frame, self,self.option.tooltipxy)
+    end,
+    getItemList=function(self)
+        local items=self:getItemListImpl()
+        if self.option.filter then
+            local filtered={}
+            for _,v in ipairs(items) do
+                if self.option.filter(v.item) then
+                    filtered[#filtered+1] = v
+                end
+            end
+            return filtered
+        end
+        return items
+    end,
+    getItemListImpl=function(self)
+        --override me
+    end,
+    getSelectedItems=function(self)
+        if not self.option.selectable then
+            ERROUT('option.selectable is false.Must be true!')
+            return {}
+        end
+        local selected={}
+        for _,v in ipairs(self.invItemList) do
+            local slot=v.slot
+
+            if slot:IsSelected()==1 then
+                selected[#selected+1] = v
+            end
+        end
+        return selected
     end,
     refreshInventory = function(self, gboxin)
         if not gboxin then
@@ -105,43 +141,17 @@ g.gbg.uiegbgComponentInventory = {
         local iframe = ui.GetFrame('inventory')
 
         gboxin:RemoveAllChild()
-        session.BuildInvItemSortedList()
+        
+        local invItemList=self:getItemList()
 
-        local sortedList = session.GetInvItemSortedList()
-        local invItemCount = sortedList:size()
-        local invItemList = {}
-        local index_count = 1
-        for i = 0, invItemCount - 1 do
-            local invItem = sortedList:at(i)
-            if invItem ~= nil then
-                local itemCls = GetIES(invItem:GetObject())
-                if itemCls ~= nil and item.IsNoneItem(itemCls.ClassID) == 0 and itemCls.MarketCategory ~= 'None' then
-                    local baseidcls = GET_BASEID_CLS_BY_INVINDEX(invItem.invIndex)
-
-                    local titleName = baseidcls.ClassName
-                    if baseidcls.MergedTreeTitle ~= 'NO' then
-                        titleName = baseidcls.MergedTreeTitle
-                    end
-                    local typeStr = GET_INVENTORY_TREEGROUP(baseidcls)
-                    local rank = 0
-                    for _, v in ipairs(inventory_filters) do
-                        if v.original == typeStr then
-                            rank = v.rank
-                        end
-                    end
-                    invItemList[index_count] = {
-                        rank = rank,
-                        item = invItem
-                    }
-
-                    index_count = index_count + 1
-                end
-            end
-        end
         table.sort(
             invItemList,
             function(a, b)
                 if a.rank ~= b.rank then
+                    if a.rank==nil or b.rank==nil then
+
+                        return false
+                    end
                     return a.rank < b.rank
                 else
                     return a.item.type < b.item.type
@@ -162,7 +172,7 @@ g.gbg.uiegbgComponentInventory = {
         local slotidx = 0
         local oy = 0
         local slotset = nil
-        local slotsize = 48
+        local slotsize = self.option.slotsize
         local cnt = 0
         local col = math.floor((gboxin:GetWidth() - 20) / slotsize)
         self.col = col
@@ -197,9 +207,21 @@ g.gbg.uiegbgComponentInventory = {
                         slotset:SetSpc(0, 0)
 
                         slotset:SetSlotSize(slotsize, slotsize)
-                        slotset:EnableDrag(1)
-                        slotset:EnableDrop(1)
-                        slotset:EnablePop(1)
+                        if not self.option.enableaccess or  self.option.selectable then
+                            slotset:EnableDrag(0)
+                            slotset:EnableDrop(0)
+                            slotset:EnablePop(0)
+                        else
+
+                            slotset:EnableDrag(0)
+                            slotset:EnableDrop(0)
+                            slotset:EnablePop(0)
+                        end
+                        if self.option.selectable then
+                            slotset:EnableSelection(1)
+                        else
+                            slotset:EnableSelection(0)
+                        end
                         --slotset:SetSkinName('slot')
                         slotset:CreateSlots()
                         slotidx = 0
@@ -213,7 +235,7 @@ g.gbg.uiegbgComponentInventory = {
                     invItemList[k].slot = parentslot
                     invItemList[k].index = k
                     self:updateSlot(k)
-                    if not self.enableaccess then
+                    if not self.option.enableaccess or  self.option.selectable then
                         parentslot:SetEventScript(ui.RBUTTONDOWN, 'None')
 
                         parentslot:SetEventScript(ui.RBUTTONDBLCLICK, 'None')
@@ -223,12 +245,23 @@ g.gbg.uiegbgComponentInventory = {
 
                         parentslot:SetEventScript(ui.LBUTTONUP, 'None')
                     end
+                    if self.option.enableaccess and  self.option.onrclicked then
+                        parentslot:SetEventScript(ui.RBUTTONUP, 'UIE_GBG_COMPONENTINVENTORYBASE_ON_RCLICK')
+                        parentslot:SetEventScriptArgString(ui.RBUTTONUP, self.name)
+                        parentslot:SetEventScriptArgNumber(ui.RBUTTONUP, k)
+                    end
                     self:setCustomEventScript(parentslot, invItemList[k])
 
                     slotidx = slotidx + 1
                 end
             end
         end
+        if self.option.singleselect then
+            ui.EnableSlotMultiSelect(0);
+        else
+            ui.EnableSlotMultiSelect(1);
+        end
+            
     end,
     updateSlot = function(self, index)
         local iframe = ui.GetFrame('inventory')
@@ -253,18 +286,81 @@ g.gbg.uiegbgComponentInventory = {
         local iconImgName = GET_ITEM_ICON_IMAGE(itemobj)
         local itemType = invItem.type
 
-        parentslot:EnableDrag(0)
-        parentslot:EnableDrop(0)
-        parentslot:EnablePop(0)
+       
         parentslot:SetColorTone('FFFFFFFF')
 
         INV_SLOT_UPDATE(ui.GetFrame('inventory'), invItem, parentslot)
+
+        parentslot:EnableDrag(0)
+        parentslot:EnableDrop(0)
+        parentslot:EnablePop(0)
     end
+}
+g.gbg.uiegbgComponentCustomInventory = {
+    new = function(tab, parent, name,custominvenfunc, option)
+        local self = inherit(g.gbg.uiegbgComponentCustomInventory, g.gbg.uiegbgComponentInventoryBase, tab, parent, name,option)
+        self.custominvenfunc=custominvenfunc
+        return self
+    end,
+    getItemListImpl=function(self)
+        --override me
+        return self.custominvenfunc()
+    end,
+}
+g.gbg.uiegbgComponentInventory = {
+    new = function(tab, parent, name, option)
+        local self = inherit(g.gbg.uiegbgComponentInventory, g.gbg.uiegbgComponentInventoryBase, tab, parent, name,option)
+
+        return self
+    end,
+
+    hookmsgImpl = function(self, frame, msg, argStr, argNum)
+        if msg == 'INV_ITEM_ADD' or msg == 'INV_ITEM_CHANGE_COUNT' or msg == 'INV_ITEM_REMOVE' or msg == 'INV_ITEM_LIST_GET' then
+            self:refreshInventory()
+        end
+    end,
+    getItemListImpl=function(self)
+        --override me
+        session.BuildInvItemSortedList()
+
+        local sortedList = session.GetInvItemSortedList()
+        local invItemCount = sortedList:size()
+        local invItemList = {}
+        local index_count = 1
+        for i = 0, invItemCount - 1 do
+            local invItem = sortedList:at(i)
+            if invItem ~= nil then
+                local itemCls = GetIES(invItem:GetObject())
+                if itemCls ~= nil and item.IsNoneItem(itemCls.ClassID) == 0 and itemCls.MarketCategory ~= 'None' then
+                    local baseidcls = GET_BASEID_CLS_BY_INVINDEX(invItem.invIndex)
+
+                    local titleName = baseidcls.ClassName
+                    if baseidcls.MergedTreeTitle ~= 'NO' then
+                        titleName = baseidcls.MergedTreeTitle
+                    end
+                    local typeStr = GET_INVENTORY_TREEGROUP(baseidcls)
+                    local rank = 0
+                    for _, v in ipairs(inventory_filters) do
+                        if v.original == typeStr then
+                            rank = v.rank
+                        end
+                    end
+                    invItemList[index_count] = {
+                        rank = rank,
+                        item = invItem
+                    }
+
+                    index_count = index_count + 1
+                end
+            end
+        end
+        return invItemList
+    end,
 }
 
 g.gbg.uiegbgComponentShopInventory = {
-    new = function(tab, parent, name, enableaccess, updatecallback,tooltipxy)
-        local self = inherit(g.gbg.uiegbgComponentShopInventory, g.gbg.uiegbgComponentInventory, tab, parent, name, enableaccess,tooltipxy)
+    new = function(tab, parent, name,  updatecallback,option)
+        local self = inherit(g.gbg.uiegbgComponentShopInventory, g.gbg.uiegbgComponentInventory, tab, parent, name, option)
         self.updatecallback = updatecallback
         
         return self
@@ -278,7 +374,7 @@ g.gbg.uiegbgComponentShopInventory = {
         self:refreshInventory()
     end,
     defaultHandlerImpl = function(self, key, frame)
-        return g.uieHandlergbgComponentInventory.new(key, frame, self,self.tooltipxy)
+        return g.uieHandlergbgComponentInventory.new(key, frame, self,self.option.tooltipxy)
     end,
     setCustomEventScript = function(self, slot, inv)
         slot:SetEventScript(ui.RBUTTONUP, 'UIE_GBG_SHOPINVENTORY_RBUTTON')
@@ -618,6 +714,17 @@ function UIE_GBG_SHOPINVENTORY_LBUTTON(frame, ctrl, argstr, argnum)
     imcSound.PlaySoundEvent('button_inven_click_item')
 end
 
+function UIE_GBG_COMPONENTINVENTORYBASE_ON_RCLICK(frame, ctrl, argstr, argnum)
+    EBI_try_catch {
+        try = function()
+            local self = g.gbg.getComponentInstanceByName(argstr)
+            self.option.onrclicked(self.invItemList[argnum])
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
 function UIE_GBG_INVENTORY_FILTER(invItem, filtername)
     return EBI_try_catch {
         try = function()

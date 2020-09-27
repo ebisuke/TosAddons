@@ -85,18 +85,18 @@ g.gbg.uiegbgComponentTradeResult={
             textarrow:SetImage('white_left_arrow')
             textarrow:SetEnableStretch(1)
             textarrow:ShowWindow(1)
-            txtdiff:SetText('{s40}'..balance:gsub("%-",""))
+            txtdiff:SetText('{s32}'..balance:gsub("%-",""))
             price='-'..balance
         elseif IsGreaterThanForBigNumber("0",balance)==1 then
             --sell
             textarrow:SetImage('white_right_arrow')
             textarrow:SetEnableStretch(1)
             textarrow:ShowWindow(1)
-            txtdiff:SetText('{s40}'..balance:gsub("%-",""))
+            txtdiff:SetText('{s32}'..balance:gsub("%-",""))
             price=balance:gsub('%-','')
         else
             textarrow:ShowWindow(0)
-            txtdiff:SetText('{s40}0')
+            txtdiff:SetText('{s32}0')
         end
         local silverAmountStr = SumForBigNumberInt64(GET_TOTAL_MONEY_STR(),price);
         if IsGreaterThanForBigNumber('0',silverAmountStr) then

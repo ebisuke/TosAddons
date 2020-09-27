@@ -129,6 +129,7 @@ g.gbg.uiegbgBase = {
         local gbox = framegbox:CreateOrGetControl('groupbox', 'gbox' .. self.name, 0, 0, framegbox:GetWidth(), framegbox:GetHeight())
         self.gbox = gbox
         AUTO_CAST(gbox)
+
         if self.caption and not self.parentgbg then
             g.gbg.SetTitle(self.caption)
         end
@@ -198,8 +199,10 @@ g.gbg.uiegbgBase = {
     end,
     detachHandler = function(self)
  
-        g.detachHandler(self._attachedHandler)
-        self._attachedHandler = nil
+        if  self._attachedHandler  then
+            g.detachHandler(self._attachedHandler)
+            self._attachedHandler = nil
+        end
     
     end,
     isVisible = function(self)
@@ -263,7 +266,10 @@ g.gbg.uiegbgGroupBase = {
         end
         tab:SelectTab(self._initindex-1)
         tab:ChangeTab(self._initindex-1)
-        self:postInitializeImpl(nil)
+
+       
+        self:postInitializeImpl()
+        self:attachDefaultHandler()
     end,
   
     addChild = function(self, child)
@@ -274,8 +280,10 @@ g.gbg.uiegbgGroupBase = {
         for k, v in ipairs(self._children) do
             if k==index then
                 v:show()
+                v:attachDefaultHandler()
             else
                 v:hide()
+                v:detachHandler()
             end
         end
     end,
@@ -299,6 +307,8 @@ g.gbg.uiegbgComponentBase = {
         local gbox = self.parent:CreateOrGetControl('groupbox', 'gbox' .. self.name, x, y, w, h)
         AUTO_CAST(gbox)
         self.gbox = gbox
+        gbox:SetUserValue('gbg_name',self.name)
+        gbox:SetUserValue('gbg_intrusive',0)
         self:initializeImpl(gbox)
         g.gbg._componentInstances[self.name] = self
 
