@@ -152,6 +152,12 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
     return EBI_try_catch{
         try = function()
             
+            -- yai
+
+            local yaiframe=ui.GetFrame('yaireplacement')
+            if  yaiframe and yaiframe:IsVisible()==1 then
+                return;
+            end
             
             local invitem = GET_SLOT_ITEM(object);
             if invitem == nil then

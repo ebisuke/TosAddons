@@ -36,7 +36,7 @@ function JUMPCANCELLER_ON_INIT(addon, frame)
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             addon:RegisterMsg('FPS_UPDATE', 'JUMPCANCELLER_SHOWWINDOW');
             timer:SetUpdateScript("JUMPCANCELLER_WATCHKEY");
-            timer:Start(0.00)
+            timer:Start(0.01)
             JUMPCANCELLER_LOAD_SETTINGS()
         end,
         catch = function(error)
@@ -67,12 +67,12 @@ end
 function JUMPCANCELLER_WATCHKEY()
     EBI_try_catch{
         try=function()
-
+            
             local frame=ui.GetFrame("jumpcanceller");
             --入力方法チェック
-            if(imcinput.HotKey.IsDown("Jump"))then
+            if(imcinput.HotKey.IsDown("Jump")==true)then
                 --ON
-
+               
                 --バフが含まれるかチェック
                 local handle = session.GetMyHandle();
                 for i = 0, info.GetBuffCount(handle) - 1 do
@@ -81,6 +81,7 @@ function JUMPCANCELLER_WATCHKEY()
                     if skill then
                         --スキルを行使する
                         control.Skill(skill.clsid);
+         
                     end
                     --ごにょごにょ
                     if  g.settings and g.settings.XXXX then

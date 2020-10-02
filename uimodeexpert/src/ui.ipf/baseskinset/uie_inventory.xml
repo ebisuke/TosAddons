@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="uie_inventory">
+		<image name="uie_all" file="\skin\uie_all.tga" imgrect="0 0 20 20"/>
+		<image name="uie_card" file="\skin\uie_card.tga" imgrect="0 0 20 20"/>
+		<image name="uie_consume" file="\skin\uie_consume.tga" imgrect="0 0 20 20"/>
+		<image name="uie_equip" file="\skin\uie_equip.tga" imgrect="0 0 20 20"/>
+		<image name="uie_etc" file="\skin\uie_etc.tga" imgrect="0 0 20 20"/>
+		<image name="uie_favorites" file="\skin\uie_favorites.tga" imgrect="0 0 20 20"/>
+		<image name="uie_find" file="\skin\uie_find.tga" imgrect="0 0 20 20"/>
+		<image name="uie_gem" file="\skin\uie_gem.tga" imgrect="0 0 20 20"/>
+		<image name="uie_premium" file="\skin\uie_premium.tga" imgrect="0 0 20 20"/>
+		<image name="uie_recipe" file="\skin\uie_recipe.tga" imgrect="0 0 20 20"/>
+		<image name="uie_timelimited" file="\skin\uie_timelimited.tga" imgrect="0 0 20 20"/>
+		<image name="uie_quest" file="\skin\uie_quest.tga" imgrect="0 0 20 20"/>
+		<image name="uie_ingredients" file="\skin\uie_ingredients.tga" imgrect="0 0 20 20"/>
+		<image name="uie_listview" file="\skin\uie_listview.tga" imgrect="0 0 20 20"/>
+		<image name="uie_gridview" file="\skin\uie_gridview.tga" imgrect="0 0 20 20"/>
+		<image name="uie_transparent" file="\skin\uie_transparent.tga" imgrect="0 0 20 20"/>
+		
+	</imagelist>
+	<skinlist category="slots">
+	<skin name="uie_invenslot_none" texture="\skin\uie_transparent.tga">
+		<img name="slot" imgrect="0 0 20 20"/>
+		<img name="mouseon" imgrect="0 0 20 20"/>
+		<img name="cooltime" imgrect="0 0 20 20"/>
+		<img name="selected" imgrect="0 0 20 20"/>
+	</skin>
+</skinlist>
+</skinset>
