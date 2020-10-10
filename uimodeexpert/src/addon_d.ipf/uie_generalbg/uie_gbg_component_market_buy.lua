@@ -1,5 +1,4 @@
---uie_gbg_component_shop
-
+--uie_gbg_component_market_buy
 local acutil = require('acutil')
 
 --ライブラリ読み込み
@@ -48,162 +47,197 @@ local function inherit(class, super, ...)
     setmetatable(class, {__index = super})
     return self
 end
-
+local function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
 UIMODEEXPERT = UIMODEEXPERT or {}
 
 local g = UIMODEEXPERT
-g.gbg=g.gbg or {}
-g.gbg.uiegbgComponentShop = {
-    new = function(parentgbg, name, updatecallback,option)
-        local self = inherit(g.gbg.uiegbgComponentShop, g.gbg.uiegbgComponentBase, parentgbg, name)
-        self.updatecallback = updatecallback
-        self.buy = {}
-        self.col=3
-        self.option=option
-        self.option.tooltipxy=self.option.tooltipxy or nil
+g.gbg = g.gbg or {}
+
+
+g.gbg.uiegbgComponentMarketBuy = {
+    new = function( parentgbg, name,option)
+        local self = inherit(g.gbg.uiegbgComponentMarketBuy, g.gbg.uiegbgComponentInventory, parentgbg, name, option)
+        self.option=self.option or {}
+        self.option.onclicked=self.option.onclicked or nil
+        self._searchoption=nil
+        self._searchpage=0
+        self.marketItems={}
         return self
     end,
     initializeImpl = function(self, gbox)
-        gbox:SetSkinName('bg')
-        local gboxin = gbox:CreateOrGetControl('groupbox', 'gboxin', 0, 0, gbox:GetWidth() - 25, gbox:GetHeight())
-        local gboxtab = gbox:CreateOrGetControl('groupbox', 'gboxtab', gbox:GetWidth() - 25, 0, 25, gbox:GetHeight())
-        AUTO_CAST(gboxin)
-        AUTO_CAST(gboxtab)
+        g.gbg.uiegbgComponentInventory.initializeImpl(self, gbox)
 
-        --create tabs
-        for k, v in ipairs(g.util.inventory_filters) do
-            local btn = gboxtab:CreateOrGetControl('button', 'btn' .. v.name, 0, 35 * (k - 1), 25, 25)
-            btn:SetSkinName('none')
-        end
-        --create inven
-        self:refreshShop(gboxin)
     end,
-    hookmsgImpl = function(self, frame, msg, argStr, argNum)
-    end,
-    reset=function(self)
+    reset = function(self)
+      
 
-        self:refreshShop()
-        if self.updatecallback then
-            self.updatecallback()
-        end
+        self:disposeIES()
+        self:refreshInventory()
     end,
-    buyItem = function(self, index, amount)
-        local inv = self.invItemList[index]
-        inv.amount = math.max(0, inv.amount + amount)
-        self:updateSlot(index)
-        if self.updatecallback then
-            self.updatecallback()
-        end
-        imcSound.PlaySoundEvent("button_inven_click_item");
+    releaseImpl=function(self)
+        self:disposeIES()
     end,
-    defaultHandlerImpl=function(self,key,frame)
+    disposeIES=function(self)
+        for _,v in ipairs(self.marketItems) do
+            DestroyIES(v.ies)
+        end
+        UIE_GENERALBG_TOOLTIP_GUID={}
+        self.marketItems={}
+    end,
+    setCustomEventScript = function(self, slot, inv)
+        slot:SetEventScript(ui.LBUTTONUP, 'UIE_GBG_MARKETBUY_LBUTTON')
+        slot:SetEventScriptArgNumber(ui.LBUTTONUP, inv.index)
+        slot:SetEventScriptArgString(ui.LBUTTONUP, self.name)
+    end,
+    search=function(self,option)
+        self._searchoption=option
+        session.market.ClearItems();
+        session.market.ClearRecipeSearchList();
         
-        return g.uieHandlergbgComponentShop.new(key,frame,self,self.option.tooltipxy)
+        self:startRetrieveMarketItems(0)
     end,
-    calcTotalValue=function(self)
-        local invItemList=self.invItemList
-        local total='0'
-        for k, v in ipairs(invItemList) do
-            if v.amount and v.amount>0 then
-                local unit= GET_SHOPITEM_PRICE_TXT(v.item)
-                local price=MultForBigNumberInt64(unit,tostring(v.amount))
-                total=SumForBigNumberInt64(total,price)
+    startRetrieveMarketItems=function(self,page)
+        local name= self._searchoption.name
+        local parentname=nil
+        local concatname=name
+
+        if  self._searchoption.parent then
+            local parent=self._searchoption.parent
+            while parent.parent do
+                parent=parent.parent
             end
-        end
-        return total
-    end,
-    updateSlot = function(self, index)
-        local inv = self.invItemList[index]
-        local parentslot = inv.slot
-        local txtprice = parentslot:GetChild('price')
-        local txtname = parentslot:GetChild('name')
-        local itemCls = GetClassByType(inv.item:GetIDSpace(), inv.item.type)
-        if inv.amount > 0 then
-            txtname:SetText('{ol}{#FFFF00} ' .. GET_SHOPITEM_TXT(inv.item, itemCls))
-            txtprice:SetText(string.format(' {img icon_item_silver 20 20}{#FFFF00} {ol}%s x%d', GET_SHOPITEM_PRICE_TXT(inv.item), inv.amount))
+            parentname=parent
+            concatname=parentname
+            concatname=parentname..'_'..name
         else
-            txtname:SetText('{ol}' .. GET_SHOPITEM_TXT(inv.item, itemCls))
-            txtprice:SetText(string.format(' {img icon_item_silver 20 20} {ol}%s', GET_SHOPITEM_PRICE_TXT(inv.item)))
+            concatname=name..'_ShowAll'
         end
+     
+        self._searchpage=page
+        local itemCntPerPage=GET_MARKET_SEARCH_ITEM_COUNT(name)
+        local maxPage = math.ceil(session.market.GetTotalCount() / itemCntPerPage);
+        local curPage = session.market.GetCurPage();
+        if page==0 or  curPage<maxPage-1 then
+         
+            g.util.namedReserveScript('market_buy',function()
+                print('SEARCH!'..page..concatname..itemCntPerPage)
+                MarketSearch(page + 1, 0, '',concatname, {}, {},itemCntPerPage);	
+            end,0.6)
+        end
+      
     end,
-    refreshShop = function(self, gboxin)
+    getItemListImpl=function(self)
+        --override me
+        local invItemList=  self.marketItems
+        return deepcopy(invItemList),true
+    end,
+    updateItemListMarket=function(self)
+
+        local mySession = session.GetMySession();
+        local cid = mySession:GetCID();
+        local count = session.market.GetItemCount();
+        for i = 0 , count - 1 do
+            local marketItem = session.market.GetItemByIndex(i);
+            local itemCls = GetClassByType('Item', marketItem.itemType)
+            local baseidcls = GetClassByNumProp('inven_baseid', 'BaseID', GetInvenBaseID(itemCls.ClassID))
+
+            local titleName = baseidcls.ClassName
+            if baseidcls.MergedTreeTitle ~= 'NO' then
+                titleName = baseidcls.MergedTreeTitle
+            end
+            local typeStr = GET_INVENTORY_TREEGROUP(baseidcls)
+            local rank = 0
+            for _, v in ipairs(g.util.inventory_filters) do
+                if v.original == typeStr then
+                    rank = v.rank
+                end
+            end
+            local itemObj=GetIES(marketItem:GetObject())
+            
+            self.marketItems[#self.marketItems+1]={
+                item=marketItem,
+                clsid=marketItem.itemType,
+                ies=CloneIES(GetIES(marketItem:GetObject())),
+                rank=rank,
+                guid=marketItem:GetMarketGuid(),
+                price=marketItem:GetSellPrice(),
+                count=marketItem.count,
+                props=TryGetProp(itemObj,'BasicTooltipProp')
+            }
+            UIE_GENERALBG_TOOLTIP_GUID[marketItem:GetMarketGuid()]=self.marketItems[#self.marketItems]
+        end
+
+        self:refreshInventory()
+    end,  
+    refreshInventory = function(self, gboxin)
         if not gboxin then
             gboxin = self.gbox:GetChild('gboxin')
         end
-        self.invItemList = {}
-        local shopItemList = session.GetShopItemList()
-        local sframe = ui.GetFrame('shop')
+
+        local iframe = ui.GetFrame('inventory')
 
         gboxin:RemoveAllChild()
-        local sortedList = session.GetShopItemList()
+        
+        local invItemList,nosort=self:getItemList()
+        if not nosort then
+            
+            table.sort(
+                invItemList,
+                function(a, b)
+                    if a.rank ~= b.rank then
+                        if a.rank==nil or b.rank==nil then
 
-        local invItemCount = shopItemList:Count()
-        local invItemList = {}
-        local index_count = 1
-        for i = 0, invItemCount - 1 do
-            local invItem = sortedList:PtrAt(i)
-            if invItem ~= nil then
-                local itemCls = GetClassByType(invItem:GetIDSpace(), invItem.type)
-                if itemCls ~= nil and item.IsNoneItem(itemCls.ClassID) == 0 and itemCls.MarketCategory ~= 'None' then
-                    local baseidcls = GetClassByNumProp('inven_baseid', 'BaseID', GetInvenBaseID(itemCls.ClassID))
-
-                    local titleName = baseidcls.ClassName
-                    if baseidcls.MergedTreeTitle ~= 'NO' then
-                        titleName = baseidcls.MergedTreeTitle
-                    end
-                    local typeStr = GET_INVENTORY_TREEGROUP(baseidcls)
-                    local rank = 0
-                    for _, v in ipairs(g.util.inventory_filters) do
-                        if v.original == typeStr then
-                            rank = v.rank
+                            return false
+                        end
+                        return a.rank < b.rank
+                    else
+                        if a.clsid == b.clsid then
+                            if a.price == b.price then
+                                return IsGreaterThanForBigNumber(b.price,a.price) 
+                            else
+                                return a.guid < b.guid
+                            end
+                        else
+                            return a.clsid < b.clsid
                         end
                     end
-                    invItemList[index_count] = {
-                        rank = rank,
-                        item = invItem,
-                        amount = 0
-                    }
-
-                    index_count = index_count + 1
                 end
-            end
+            )
         end
-        table.sort(
-            invItemList,
-            function(a, b)
-                if a.rank ~= b.rank then
-                    return a.rank < b.rank
-                else
-                    return a.item.type < b.item.type
-                end
-            end
-        )
-        -- slotset:SetColRow(9, math.ceil(invItemCount / 2))
-        -- slotset:SetSpc(0, 0)
-        -- local slotsize = 48
 
-        -- slotset:SetSlotSize(slotwidth, slotsize)
-        -- slotset:EnableDrag(1)
-        -- slotset:EnableDrop(1)
-        -- slotset:EnablePop(1)
-        -- --slotset:SetSkinName('slot')
-        -- slotset:CreateSlots()
         local treename = nil
         local slotidx = 0
         local oy = 0
         local slotset = nil
-        local slotsize = 48
+        local slotsize = self.option.slotsize
         local cnt = 0
-        local col = self.col
-
+        local col =6
+        self.col = col
+        self.invItemList = invItemList
+        local beginidx=0
         for k, v in ipairs(invItemList) do
             local invItem = v.item
 
             if invItem ~= nil then
-                local itemCls = GetClassByType(invItem:GetIDSpace(), invItem.type)
-                if itemCls ~= nil and item.IsNoneItem(itemCls.ClassID) == 0 and itemCls.MarketCategory ~= 'None' then
-                    local baseidcls = GetClassByNumProp('inven_baseid', 'BaseID', GetInvenBaseID(itemCls.ClassID))
+                local itemObj = v.ies
+                local itemCls = GetClassByType('Item', v.clsid)
 
+                if itemCls ~= nil and item.IsNoneItem(itemCls.ClassID) == 0 and itemCls.MarketCategory ~= 'None' then
+              
+                    local baseidcls = GetClassByNumProp('inven_baseid', 'BaseID', GetInvenBaseID(itemCls.ClassID))
                     local titleName = baseidcls.ClassName
                     if baseidcls.MergedTreeTitle ~= 'NO' then
                         titleName = baseidcls.MergedTreeTitle
@@ -215,21 +249,37 @@ g.gbg.uiegbgComponentShop = {
                         if slotset then
                             slotset:Invalidate()
                             slotset:EnableAutoResize(true, true)
+                            slotset:SetSlotCount(slotidx)
+                            slotset:SetUserValue('count',slotidx)
                             oy = oy + slotset:GetHeight() + 5
                         end
                         local rich = gboxin:CreateOrGetControl('richtext', 'category' .. treename, 0, oy, gboxin:GetWidth(), 30)
                         rich:SetText('{@stb42}' .. treename)
                         oy = oy + 30 + 5
-                        slotset = gboxin:CreateOrGetControl('slotset', 'slotset' .. treename, 0, oy, gboxin:GetWidth(), 0)
+                        slotset = gboxin:CreateOrGetControl('slotset', 'slotset' .. treename, 0, oy, gboxin:GetWidth()-20, 0)
                         AUTO_CAST(slotset)
                         slotset:SetColRow(col, 1)
                         slotset:SetSpc(0, 0)
-                        slotset:SetSlotSize(gboxin:GetWidth() / col, slotsize)
-                        slotset:EnableDrag(1)
-                        slotset:EnableDrop(1)
-                        slotset:EnablePop(1)
 
+                        slotset:SetSlotSize(slotset:GetWidth()/col, slotsize)
+                        if not self.option.enableaccess or  self.option.selectable then
+                            slotset:EnableDrag(0)
+                            slotset:EnableDrop(0)
+                            slotset:EnablePop(0)
+                        else
+
+                            slotset:EnableDrag(0)
+                            slotset:EnableDrop(0)
+                            slotset:EnablePop(0)
+                        end
+                        if self.option.selectable then
+                            slotset:EnableSelection(1)
+                        else
+                            slotset:EnableSelection(0)
+                        end
+                        --slotset:SetSkinName('slot')
                         slotset:CreateSlots()
+                        beginidx=beginidx+slotidx
                         slotidx = 0
                     end
                     cnt = cnt + 1
@@ -237,55 +287,135 @@ g.gbg.uiegbgComponentShop = {
                         slotset:ExpandRow()
                         cnt = 0
                     end
-
                     local parentslot = slotset:GetSlotByIndex(slotidx)
-                    AUTO_CAST(parentslot)
-
-                    local childslot = parentslot:CreateOrGetControl('slot', 'child', 5, 0, slotsize, slotsize)
-                    AUTO_CAST(childslot)
-
-                    local icon = CreateIcon(childslot)
-                    local picon = CreateIcon(parentslot)
-                    local imageName = invItem:GetIcon()
-                    icon:Set(imageName, 'SHOPITEM', invItem, 0)
-                    SET_SHOP_ITEM_TOOLTIP(picon, invItem)
-                    childslot:EnableHitTest(0)
-                    local itemType = invItem.type
-                    --icon:Set('uie_transparent', 'Item', itemType, 0,"0", invItem.count)
-                    icon:Resize(0, 0)
-                    parentslot:EnableDrag(0)
-                    parentslot:EnableDrop(0)
-                    parentslot:EnablePop(0)
-                    parentslot:SetColorTone('FFFFFFFF')
-                    parentslot:SetSkinName('slot')
-                    parentslot:SetEventScript(ui.RBUTTONUP, 'UIE_GBG_COMPONENT_SHOP_RCLICK')
-                    parentslot:SetEventScriptArgNumber(ui.RBUTTONUP, k)
-                    parentslot:SetEventScriptArgString(ui.RBUTTONUP, self.name)
-                    parentslot:SetEventScript(ui.LBUTTONUP, 'UIE_GBG_COMPONENT_SHOP_LCLICK')
-                    parentslot:SetEventScriptArgNumber(ui.LBUTTONUP, k)
-                    parentslot:SetEventScriptArgString(ui.LBUTTONUP, self.name)
-                    local txtname = parentslot:CreateOrGetControl('richtext', 'name', slotsize + 5, 0, 10, 20)
-                    txtname:SetGravity(ui.RIGHT, ui.TOP)
-                    txtname:SetText('{ol}' .. GET_SHOPITEM_TXT(invItem, itemCls))
-                    txtname:EnableHitTest(false)
-                    txtname:SetMargin(5, 5, 20, 5)
-                    local txtprice = parentslot:CreateOrGetControl('richtext', 'price', slotsize + 5, parentslot:GetHeight() - 20, 10, 20)
-                    txtprice:SetGravity(ui.RIGHT, ui.BOTTOM)
-                    txtprice:SetMargin(5, 5, 20, 5)
-                    txtprice:SetText(string.format(' {img icon_item_silver 20 20} {ol}%s', GET_SHOPITEM_PRICE_TXT(invItem)))
-                    txtprice:EnableHitTest(false)
                     invItemList[k].slot = parentslot
-                    invItemList[k].index=k
+                    invItemList[k].index = k-1
+                    invItemList[k].slotset=slotset
+                    invItemList[k].indexinslotset=slotidx
+                    invItemList[k].beginindexinslotset=beginidx
+                    
+                    self:updateSlot(k)
+                    if not self.option.enableaccess or  self.option.selectable then
+                        parentslot:SetEventScript(ui.RBUTTONDOWN, 'None')
+
+                        parentslot:SetEventScript(ui.RBUTTONDBLCLICK, 'None')
+
+                        parentslot:SetEventScript(ui.LBUTTONDOWN, 'None')
+                        parentslot:SetEventScript(ui.RBUTTONUP, 'None')
+
+                        parentslot:SetEventScript(ui.LBUTTONUP, 'None')
+                    end
+                    if self.option.enableaccess and  self.option.onrclicked then
+                        parentslot:SetEventScript(ui.RBUTTONUP, 'UIE_GBG_COMPONENTMARKET_ON_RCLICK')
+                        parentslot:SetEventScriptArgString(ui.RBUTTONUP, self.name)
+                        parentslot:SetEventScriptArgNumber(ui.RBUTTONUP, k)
+                    end
+                    self:setCustomEventScript(parentslot, invItemList[k])
+
                     slotidx = slotidx + 1
                 end
             end
         end
-        self.invItemList = invItemList
+     
+            
+    end,
+    updateSlot = function(self, index)
+        local inv=self.invItemList[index]
+
+        local frame = ui.GetFrame('inventory')
+        local slot =inv.slot
+        local invItem = inv.item
+        AUTO_CAST(slot)
+        local slotsize=self.option.slotsize
+
+        local childslot=slot:CreateOrGetControl('slot','child',0,0,slotsize,slotsize)
+        AUTO_CAST(childslot)
+        local icon = CreateIcon(childslot)
+        local itemobj =  inv.ies
+        local picon = CreateIcon(slot)
+        local textname=slot:CreateOrGetControl('richtext','textname',slotsize,0,slot:GetWidth(),20)
+        textname:EnableHitTest(0)
+        textname:SetText('{ol}'..itemobj.Name)
+        local textprice=slot:CreateOrGetControl('richtext','textprice',slotsize,0,slot:GetWidth(),20)
+        textprice:EnableHitTest(0)
+        local priceStr = inv.price
+        textprice:SetText(g.util.generateSilverString(GetMonetaryString(priceStr)))
+        textprice:SetGravity(ui.LEFT,ui.BOTTOM)
+
+        slot:EnableDrag(0)
+        slot:EnableDrop(0)
+        slot:EnablePop(0)
+        slot:SetColorTone('FFFFFFFF')
+        childslot:EnableHitTest(0)
+        childslot:EnableDrag(0)
+        childslot:EnableDrop(0)
+        childslot:EnablePop(0)
+        childslot:SetColorTone('FFFFFFFF')
+        --childslot:EnableHitTest(0)
+
+        local img =	GET_EQUIP_ITEM_IMAGE_NAME(itemobj, "TooltipImage");
+        if itemobj.GroupName == "Card" or itemobj.GroupName == "Recipe" then
+            img = itemobj.Icon
+        end
+        local itemName = GET_FULL_NAME(itemobj);
+        local properties = inv.props
+        SET_SLOT_IMG(childslot, img);
+        local props=properties
+        local baseCls = GetClassByType('Item', inv.clsid);
+        if IS_SKILL_SCROLL_ITEM(baseCls) == 0 then -- 스킬 스크롤이 아니면
+
+
+            picon:SetTooltipType('wholeitem');
+			picon:SetTooltipArg('uie_market', inv.clsid,inv.guid);
+
+        else
+            local skillType, level = GetSkillScrollProperty(props);
+            picon:SetTooltipType('skill');
+            picon:SetTooltipArg("Level", skillType, level);
+
+        end
+    
+        --SET_ITEM_TOOLTIP_ALL_TYPE(icon, invItem, itemobj.ClassName, "market", inv.clsid,inv.guid);	
+        -- if IS_SKILL_SCROLL_ITEM_BYNAME( itemobj.ClassName) == true then
+        --     local obj = itemobj;
+        --     SET_TOOLTIP_SKILLSCROLL(picon, obj, nil, "market");
+        -- else
+        --     picon:SetTooltipType('wholeitem');
+        --     if nil ~= "market" and nil ~=  inv.clsid and nil ~= inv.guid then			
+        --         picon:SetTooltipArg("market",  inv.clsid, inv.guid);
+        --     end
+        -- end
+        SET_SLOT_BG_BY_ITEMGRADE(slot, itemobj.ItemGrade)
+        SET_SLOT_STYLESET(childslot, itemobj,0)
+        childslot:SetSkinName('None')
+        
+        -- 아이커 종류 표시	
+        SET_SLOT_ICOR_CATEGORY(childslot, itemobj);
+        if itemobj.MaxStack > 1 then
+            local font = '{s16}{ol}{b}';
+            if 100000 <= inv.count then	-- 6자리 수 폰트 크기 조정
+                font = '{s14}{ol}{b}';
+            end
+            SET_SLOT_COUNT_TEXT(childslot, inv.count, font);
+        end
+        
+    end,
+    defaultHandlerImpl = function(self, key, frame)
+        return g.uieHandlergbgComponentMarketBuy.new(key, frame, self,self.tooltipxy)
+    end,
+    hookmsgImpl = function(self, frame, msg, argStr, argNum)
+        if msg == 'MARKET_ITEM_LIST' then
+            print('hook')
+            self:updateItemListMarket()
+            --next 
+            self:startRetrieveMarketItems( self._searchpage+1)
+            
+        end
     end,
 }
-g.uieHandlergbgComponentShop = {
+g.uieHandlergbgComponentMarketBuy = {
     new = function(key, frame,gbg,tooltipxy)
-        local self = inherit(g.uieHandlergbgComponentShop, g.uieHandlergbgBase, key,frame,gbg)
+        local self = inherit(g.uieHandlergbgComponentMarketBuy, g.uieHandlergbgBase, key,frame,gbg)
         self.tooltipxy=tooltipxy
         self.cursor=0
         return self
@@ -515,43 +645,3 @@ g.uieHandlergbgComponentShop = {
     end
 }
 UIMODEEXPERT = g
-
-function UIE_GBG_COMPONENT_SHOP_RCLICK(frame, ctrl, argstr, argnum)
-    EBI_try_catch {
-        try = function()
-            local self = g.gbg.getComponentInstanceByName(argstr)
-            
-            self:buyItem(argnum, 1)
-            imcSound.PlaySoundEvent("button_inven_click_item");
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
-function UIE_GBG_COMPONENT_SHOP_LCLICK(frame, ctrl, argstr, argnum)
-    EBI_try_catch {
-        try = function()
-            local self = g.gbg.getComponentInstanceByName(argstr)
-            if keyboard.IsKeyPressed('LSHIFT')==1 then
-                local shopItem=self.invItemList[argnum].item
-
-                local itemPrice = shopItem.price * shopItem.count;
-                local buyableCnt = math.floor(tonumber(GET_TOTAL_MONEY_STR()) / itemPrice);
-                local titleText = ScpArgMsg("INPUT_CNT_D_D", "Auto_1", 1, "Auto_2", buyableCnt);
-                INPUT_NUMBER_BOX(frame:GetTopParentFrame(), titleText, "UIE_GBG_COMPONENT_SHOP_EXEC_SHOP_SLOT_BUY", 1, 1, UIE_GBG_COMPONENT_SHOP_EXEC_SHOP_SLOT_BUY, argnum, argstr, 1)
-            else
-                self:buyItem(argnum, -1)
-                imcSound.PlaySoundEvent("button_inven_click_item");
-            end
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
-function  UIE_GBG_COMPONENT_SHOP_EXEC_SHOP_SLOT_BUY(frame, ret,argStr, argNum)
-    local self = g.gbg.getComponentInstanceByName(argstr)
-    local shopItem=self.gbg.invItemList[argNum].item
-    self:buyItem(argNum, ret)
-end

@@ -127,13 +127,13 @@ g._JoystickFunctions = {
         return instance[fn](instance, 'JOY_RIGHT')
     end,
     [g.keydef.MAIN] = function(instance, fn)
-        return instance[fn](instance, 'JOY_BTN_2')
+        return instance[fn](instance, 'JOY_BTN_3')
     end,
     [g.keydef.CANCEL] = function(instance, fn)
-        return instance[fn](instance, 'JOY_BTN_1')
+        return instance[fn](instance, 'JOY_BTN_2')
     end,
     [g.keydef.SUB] = function(instance, fn)
-        return instance[fn](instance, 'JOY_BTN_3')
+        return instance[fn](instance, 'JOY_BTN_1')
     end,
     [g.keydef.MENU] = function(instance, fn)
         return instance[fn](instance, 'JOY_BTN_4')
@@ -601,7 +601,12 @@ g.triggerShowMessageBox = function(self, msgbox, key, btncount, yesscp, noscp, e
 end
 g._msgBoxes = {}
 g.tr = function(translateStr)
-    return translateStr
+    if g._translationtable[translateStr] then
+        return g._translationtable[translateStr].ja
+    else
+
+        return translateStr
+    end
 end
 g.uieHandlerControlTracerGenerator = function(flags)
     return function(key, frame, ...)
@@ -866,7 +871,9 @@ g._registeredFrameGeneralbg = {
     --['status'] = {class = g.gbg.uiegbgGroupMe, arg = 2},
     ['fishing'] = {class = g.gbg.uiegbgFishing},
     ['portal_seller']={class=g.gbg.uiegbgPortal},
-    ['itembuffrepair']={class=g.gbg.uiegbgRepair}
+    ['buffseller_target']={class=g.gbg.uiegbgSpellBuffShop},
+    ['itembuffrepair']={class=g.gbg.uiegbgRepair},
+    ['market']={class=g.gbg.uiegbgGroupMarket}
 }
 g._registeredFrameHandlers = {
     ['bookitemread'] = {

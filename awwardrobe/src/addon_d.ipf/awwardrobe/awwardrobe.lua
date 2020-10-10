@@ -11,12 +11,55 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local LS= LIBSTORAGEHELPERV1_3
 --設定ファイル保存先
-g.version = 0
+local TAB_EQUIP=0
+local TAB_CARD=1
+local slotsetnames={
+    'ATKcard_slotset',
+    'DEFcard_slotset',
+    'UTILcard_slotset',
+    'STATcard_slotset',
+    'LEGcard_slotset',
+}
+--- Iterate over the sorted elements from an iterable.
+--
+-- A custom `key` function can be supplied, and it will be applied to each
+-- element being compared to obtain a sorting key, which will be the values
+-- used for comparisons when sorting. The `reverse` flag can be set to sort
+-- the elements in descending order.
+--
+-- Note that `iterable` must be consumed before sorting, so the returned
+-- iterator runs in *O(n)* memory space. Sorting is done internally using
+-- `table.sort`.
+--
+-- @tparam coroutine iterable An iterator.
+-- @tparam[opt] function key Function used to retrieve the sorting key used
+--   to compare elements.
+-- @tparam[opt] boolean reverse Whether to yield the elements in reverse
+--   (descending) order. If not supplied, defaults to `false`.
+-- @treturn coroutine An iterator over the sorted elements.
+--
+local function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
-
+g.tab_aw=TAB_EQUIP
+g.tab_config=TAB_EQUIP
+g.max_cards=13  --カードの最大値
 g.framename = "awwardrobe"
-g.debug = false
+g.debug = true
 g.interlocked = false
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.reservedscript={}
@@ -38,6 +81,7 @@ g.effectingspot = {
     SHIRT = true, --上半身
 	ARK = true    --アーク
 }
+
 AWWARDROBE_TBL={}
 local translationtable={
 
@@ -75,6 +119,12 @@ local translationtable={
     alertwithdraw={jp="[AWW]倉庫・インベントリから装備します",  eng="[AWW]Withdraw and wear equips."},
     alertunwear={jp="[AWW]全部脱ぎます",  eng="[AWW]Unwear equips."},
     alertplzselect={jp="[AWW]装備セットを選択してください",  eng="[AWW]Please select an equipment set."},
+    alertstart={jp="[AWW]開始しました",  eng="[AWW]Started."},
+    tabequip={jp="装備",  eng="Equip"},
+    tabcard={jp="カード",  eng="Card"},
+    dlgcarddetach={jp="カードを取り外しますか？費用は自動的にチーム倉庫から引き出されます。{nl}費用:%d",  eng="Do you want to remove cards?{nl}Cost:%d"},
+    dlgcardattach={jp="既存のカードを取り外し、設定したカードを取り付けますか？費用は自動的にチーム倉庫から引き出されます。{nl}費用:%d",  eng="Do you want to remove the existing card and install the configured card?{nl}Cost:%d"},
+    insufficientsilver={jp="シルバーが足りません。",  eng="Insufficient silver."},
 }
 local function EP12()
     if(option.GetCurrentCountry()~="Japanese")then
@@ -138,12 +188,18 @@ function AWWARDROBE_DEFAULTSETTINGS()
         version = g.version,
         wardrobe = {
         },
+        wardrobecard={
+
+        },
+        defaultname = nil,
         defaultname = nil
     }
+
 end
 function AWWARDROBE_DEFAULTPERSONALSETTINGS()
     return {
         version = g.version,
+        defaultname = nil,
         defaultname = nil
     }
 end
@@ -151,7 +207,7 @@ end
 if (not g.loaded) then
     --シンタックス用に残す
     g.settings = {
-        version,
+        version=nil,
         --有効/無効
         enable = false,
         --フレーム表示場所
@@ -236,6 +292,7 @@ end
 function AWWARDROBE_SORTING()
     AWWARDROBE_DBGOUT("SORT")
     table.sort( g.settings.wardrobe,AWWARDROBE_COMPARE)
+    table.sort( g.settings.wardrobecard,AWWARDROBE_COMPARE)
       
 end
 function AWWARDROBE_LOAD_SETTINGS()
@@ -309,6 +366,19 @@ function AWWARDROBE_UPGRADE_SETTINGS()
         CHAT_SYSTEM("[AWW]Settings Verup 1->2")
         upgraded=true;
     end
+    if(g.settings.version==2)then
+        -- 配列化する
+        local tbl = {}
+    
+        g.settings.wardrobecard={
+            {name=L_("defaultvalue"),data={}}
+        }
+        AWWARDROBE_SORTING()
+      
+        g.settings.version=3
+        CHAT_SYSTEM("[AWW]Settings Verup 2->3")
+        upgraded=true;
+    end
     return upgraded
 end
 function AWWARDROBE_UPGRADE_PERSONALSETTINGS()
@@ -321,6 +391,12 @@ function AWWARDROBE_UPGRADE_PERSONALSETTINGS()
     if(g.personalsettings.version==1)then
         g.personalsettings.version=2
         CHAT_SYSTEM("[AWW]PersonalSettings Verup 1->2")
+        upgraded=true
+    end
+    if(g.personalsettings.version==2)then
+        g.personalsettings.version=3
+        g.personalsettings.defaultnamecard=L_("defaultvalue")
+        CHAT_SYSTEM("[AWW]PersonalSettings Verup 2->3")
         upgraded=true
     end
     return upgraded
@@ -386,18 +462,14 @@ function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
         local btnawwdeposit
         local btnawwconfig
         local cbwardrobe
-        
-        if(EP12())then
-            btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 135, 180, 70, 30)
-            btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 215, 180, 70, 30)
-            btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 295, 180, 70, 30)
-            cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 135, 160, 250, 20)
-        else
-            btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 110, 120, 70, 30)
-            btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 190, 120, 70, 30)
-            btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 350, 120, 70, 30)
-            cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 110, 100, 250, 20)
-        end
+        local btnregister
+
+        btnawwwithdraw = frame:CreateOrGetControl("button", "btnawwwithdraw", 135, 180, 70, 30)
+        btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 215, 180, 70, 30)
+        btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 295, 180, 70, 30)
+        cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 135, 160, 250, 20)
+        btnregister=   frame:CreateOrGetControl("button", "btntab", 75, 155, 50, 30)
+
         tolua.cast(cbwardrobe, "ui::CDropList")
         btnawwwithdraw:SetText(L_("btnawwwithdraw"))
         btnawwwithdraw:SetTextTooltip(L_("tipbtnawwwithdraw"))
@@ -408,7 +480,10 @@ function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
         btnawwconfig:SetText(L_("btnawwconfig"))
         btnawwconfig:SetTextTooltip(L_("tipbtnawwconfig"))
         btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
-
+       
+        btnregister:SetText(L_("tabequip"))
+        btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_AW_ON_TAB")
+        g.tab_aw=TAB_EQUIP
         cbwardrobe:SetSkinName("droplist_normal")
         cbwardrobe:SetTextTooltip(L_("tipcbwardrobe"))
         AWWARDROBE_UPDATE_DROPBOXAW()
@@ -422,88 +497,433 @@ function AWWARDROBE_END_DRAG()
     g.settings.position.y = g.frame:GetY()
     AWWARDROBE_SAVE_SETTINGS()
 end
-function AWWARDROBE_ON_CHANGE()
-    AWWARDROBE_try(function()
-        local awframe = ui.GetFrame("accountwarehouse")
-        --選択しているものを取得
-        local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
-        local selected = cbwardrobe:GetSelItemIndex()+1
-        local tbl = g.settings.wardrobe[selected]
-        if(tbl)then
-            g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
-            AWWARDROBE_DBGOUT(selected)
-            AWWARDROBE_SAVE_SETTINGS()
-                    --UNWEAR
-            AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl.data)
-        else
-            ui.SysMsg(L_("alertplzselect"))
-        end
-    end)
-end
+-- function AWWARDROBE_ON_CHANGE()
+--     AWWARDROBE_try(function()
+--         local awframe = ui.GetFrame("accountwarehouse")
+--         --選択しているものを取得
+--         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
+--         local selected = cbwardrobe:GetSelItemIndex()+1
+--         local tbl = g.settings.wardrobe[selected]
+--         if(tbl)then
+--             g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
+--             AWWARDROBE_DBGOUT(selected)
+--             AWWARDROBE_SAVE_SETTINGS()
+--                     --UNWEAR
+--             AWWARDROBE_CHANGE_MATCHED(ui.GetFrame(g.framename), tbl.data)
+--         else
+--             ui.SysMsg(L_("alertplzselect"))
+--         end
+--     end)
+-- end
 function AWWARDROBE_ON_DEPOSIT()
     AWWARDROBE_try(function()
         local awframe = ui.GetFrame("accountwarehouse")
         --選択しているものを取得
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
         local selected = cbwardrobe:GetSelItemIndex()+1
-        local tbl = g.settings.wardrobe[selected]
-        if(tbl)then
-            g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
-            AWWARDROBE_DBGOUT(selected)
-            AWWARDROBE_SAVE_SETTINGS()
-            --UNWEAR
-            AWWARDROBE_UNWEAR_MATCHED(ui.GetFrame(g.framename), tbl.data)
-        else
-            ui.SysMsg(L_("alertplzselect"))
+        
+        if g.tab_aw==TAB_EQUIP then
+            local tbl = g.settings.wardrobe[selected]
+
+            if(tbl)then
+                g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
+                AWWARDROBE_DBGOUT(selected)
+                AWWARDROBE_SAVE_SETTINGS()
+                --UNWEAR
+                AWWARDROBE_UNWEAR_MATCHED(ui.GetFrame(g.framename), tbl.data)
+            else
+                ui.SysMsg(L_("alertplzselect"))
+            end
+        elseif g.tab_aw==TAB_CARD then
+            local tbl = g.settings.wardrobecard[selected]
+
+            if(tbl)then
+                g.personalsettings.defaultnamecard =  g.settings.wardrobecard[selected].name
+                AWWARDROBE_SAVE_SETTINGS()
+                --WEAR
+                
+                --AWWARDROBE_DETACH_CARDS(ui.GetFrame(g.framename), tbl.data)
+                ui.MsgBox(string.format(L_('dlgcarddetach'),AWWARDROBE_CALCULATE_SILVER_DETACH(tbl.data)),
+                string.format('AWWARDROBE_DETACH_CARDS(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected))
+            else
+                ui.SysMsg(L_("alertplzselect"))
+            end
         end
+           
+    
     end)
 end
+
 function AWWARDROBE_ON_WITHDRAW()
     AWWARDROBE_try(function()
         local awframe = ui.GetFrame("accountwarehouse")
         --選択しているものを取得
         local cbwardrobe = GET_CHILD(awframe, "cbwardrobe", "ui::CDropList")
         local selected = cbwardrobe:GetSelItemIndex()+1
-        local tbl = g.settings.wardrobe[selected]
-        if(tbl)then
-            g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
+        if g.tab_aw==TAB_EQUIP then
+                local tbl = g.settings.wardrobe[selected]
+                if(tbl)then
+                
+
+                    g.personalsettings.defaultname =  g.settings.wardrobe[selected].name
+                    AWWARDROBE_SAVE_SETTINGS()
+                    --WEAR
+                    AWWARDROBE_WEAR_MATCHED(ui.GetFrame(g.framename), tbl.data)
+
+                else
+                    ui.SysMsg(L_("alertplzselect"))
+                end
+                
+        elseif g.tab_aw==TAB_CARD then
+            local tbl = g.settings.wardrobecard[selected]
+            if(tbl)then
+            g.personalsettings.defaultnamecard =  g.settings.wardrobecard[selected].name
             AWWARDROBE_SAVE_SETTINGS()
             --WEAR
-            AWWARDROBE_WEAR_MATCHED(ui.GetFrame(g.framename), tbl.data)
-        else
-            ui.SysMsg(L_("alertplzselect"))
+            --AWWARDROBE_ATTACH_CARDS(ui.GetFrame(g.framename), tbl.data)
+            ui.MsgBox(string.format(L_('dlgcardattach'),AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl.data)),
+            string.format('AWWARDROBE_ATTACH_CARDS(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected))
+            
+            else
+                ui.SysMsg(L_("alertplzselect"))
+            end
         end
+                    
+
     end)
 end
 
+function AWWARDROBE_GET_CARDDATABYINDEX(index)
+    return g.settings.wardrobecard[index].data
+end
+function AWWARDROBE_DETACH_CARDS(frame, tbl)
+       AWWARDROBE_try(function()
+        local delay = 0
+        local awframe = ui.GetFrame("accountwarehouse")
+        
+        local items = {}
+        if(AWWARDROBE_INTERLOCK())then
+        
+            ui.SysMsg(L_("alertworkingothers"))
+            return
+        end
+        if (awframe:IsVisible() == 0) then
+            
+            ui.SysMsg(L_("alertopenaw"))
+            return
+        end
+        ui.SysMsg(L_("alertstart"))
+        
+        AWWARDROBE_INTERLOCK(true)
+        local needzeny,todetach=AWWARDROBE_CALCULATE_SILVER_DETACH(tbl)
+        local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+        local cnt, visItemList = GET_INV_ITEM_COUNT_BY_PROPERTY( { { Name = 'ClassName', Value = MONEY_NAME } }, false, itemList);
+        local visItem = visItemList[1];
 
+        local accountsilver='0'
+        if visItem==nil or GETMYPCLEVEL()>=15 and true == session.loginInfo.IsPremiumState(ITEM_TOKEN) then
+            accountsilver=visItem:GetAmountStr()
+        end
 
+        local zeny=SumForBigNumberInt64(GET_TOTAL_MONEY_STR(),accountsilver)
+        --足りる?
+        if IsGreaterThanForBigNumber(needzeny,zeny)==1 then
+            ui.SysMsg(L_("insufficientsilver"))
+            return
+        end
+
+        --DO
+        ui.SysMsg(L_("alertstart"))
+        AWWARDROBE_INTERLOCK(true)
+
+        --費用を引き出す
+        if IsGreaterThanForBigNumber(needzeny,accountsilver)==1 then
+            accountsilver=needzeny
+        end
+        if IsGreaterThanForBigNumber(accountsilver,'0')==1 then
+            ReserveScript(string.format([[AWWARDROBE_TAKESILVER('%s')]],needzeny),delay)
+            delay=delay+0.5
+        end
+        for i=1,g.max_cards do
+            for k,v in pairs(todetach) do
+        
+                --カードを外す
+                local cardInfo = equipcard.GetCardInfo(i);
+                if cardInfo and v and v.count>0 and v.clsid==cardInfo:GetCardID() and v.lv==cardInfo.cardLv then
+                    AWWARDROBE_DBGOUT('UNEQ'..i)
+                    ReserveScript(string.format([[pc.ReqExecuteTx_NumArgs("SCR_TX_UNEQUIP_CARD_SLOT", tostring(%d)..' 1');]],i-1),delay)
+                    delay=delay+0.5
+                    todetach[k].count=todetach[k].count-1
+
+                    break
+                end
+        
+            end
+        end
+        --預ける
+        for _,v in pairs(tbl) do
+            if v and v.clsid~=0 then
+            ReserveScript(string.format([[AWWARDROBE_DEPOSITCARD(%d,%d)]],v.clsid,v.lv),delay)
+                delay=delay+0.6
+            end
+        end
+        ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
+    end)
+end
+function AWWARDROBE_TAKESILVER(silver)
+    local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+    
+    local cnt, visItemList = GET_INV_ITEM_COUNT_BY_PROPERTY( { { Name = 'ClassName', Value = MONEY_NAME } }, false, itemList);
+    local visItem = visItemList[1];
+    session.ResetItemList();
+    
+    session.AddItemIDWithAmount(visItem:GetIESID(), silver);
+    local frame=ui.GetFrame('accountwarehouse')
+    item.TakeItemFromWarehouse_List(IT_ACCOUNT_WAREHOUSE, session.GetItemIDList(), frame:GetUserIValue("HANDLE"));
+end
+function AWWARDROBE_DEPOSITCARD(clsid,lv)
+    local invItem=AWWARDROBE_FINDINVITEMBYTYPEANDLEVEL(clsid,lv)
+    if(invItem~=nil and true ~= invItem.isLockState)then
+        AWWARDROBE_DEPOSITITEM(invItem:GetIESID())
+    end
+end
+function AWWARDROBE_FINDINVITEMBYTYPEANDLEVEL(clsid,lv)
+    AWWARDROBE_DBGOUT(''..clsid..'/'..lv)
+    local invItemList=session.GetInvItemList()
+    local guidList = invItemList:GetGuidList();
+    local cnt = guidList:Count();
+    for i = 0, cnt - 1 do
+        local guid = guidList:Get(i);
+        local invItem=invItemList:GetItemByGuid(guid)
+       
+        if invItem.type==clsid then
+            AWWARDROBE_DBGOUT('pp'..invItem.type)
+            local elv=GET_ITEM_LEVEL_EXP(GetIES(invItem:GetObject()))
+            AWWARDROBE_DBGOUT(''..invItem.type..'-/'..elv)
+            if elv==lv then 
+                AWWARDROBE_DBGOUT('GUID'..tostring(guid))
+                return invItem
+            end
+        end
+    end
+    AWWARDROBE_DBGOUT('nil')
+    return nil
+end
+
+function AWWARDROBE_ATTACH_CARDS(frame, tbl)
+    AWWARDROBE_try(function()
+        local delay = 0
+        local awframe = ui.GetFrame("accountwarehouse")
+        
+        local items = {}
+        if(AWWARDROBE_INTERLOCK())then
+        
+            ui.SysMsg(L_("alertworkingothers"))
+            return
+        end
+        if (awframe:IsVisible() == 0) then
+            
+            ui.SysMsg(L_("alertopenaw"))
+            return
+        end
+
+        local needzeny,toattach=AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl)
+        local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+        local cnt, visItemList = GET_INV_ITEM_COUNT_BY_PROPERTY( { { Name = 'ClassName', Value = MONEY_NAME } }, false, itemList);
+        local visItem = visItemList[1];
+
+        local accountsilver='0'
+        if visItem~=nil and GETMYPCLEVEL()>=15 and true == session.loginInfo.IsPremiumState(ITEM_TOKEN) then
+            accountsilver=visItem:GetAmountStr()
+        end
+
+        local zeny=SumForBigNumberInt64(GET_TOTAL_MONEY_STR(),accountsilver)
+        --足りる?
+        if IsGreaterThanForBigNumber(needzeny,zeny)==1 then
+            ui.SysMsg(L_("insufficientsilver"))
+            return
+        end
+        
+        ui.SysMsg(L_("alertstart"))
+        AWWARDROBE_INTERLOCK(true)
+ --費用を引き出す
+        if IsGreaterThanForBigNumber(needzeny,accountsilver)==1 then
+            accountsilver=needzeny
+        end
+        if IsGreaterThanForBigNumber(accountsilver,'0')==1 then
+            ReserveScript(string.format([[AWWARDROBE_TAKESILVER('%s')]],needzeny),delay)
+            delay=delay+0.5
+        end
+
+        --引き出す
+        local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+        local guidList = itemList:GetGuidList();
+        local sortedGuidList = itemList:GetSortedGuidList();    
+        local sortedCnt = sortedGuidList:Count();    
+        local items={}
+        local toattachcopy=deepcopy(toattach)
+        for i = 0, sortedCnt - 1 do
+            local guid = sortedGuidList:Get(i)
+            local invItem = itemList:GetItemByGuid(guid)
+            local obj = GetIES(invItem:GetObject());
+            
+            if obj.ClassName ~= MONEY_NAME then
+                for k,v in pairs(toattachcopy) do
+                    AWWARDROBE_DBGOUT('POPO'..v.clsid..'/'..invItem.type)
+                    if v.count>0 and v.clsid~=0 and v.clsid==invItem.type and GET_ITEM_LEVEL_EXP(GetIES(invItem:GetObject()))==v.lv  then
+                        items[#items+1] = {
+                            iesid=invItem:GetIESID(),
+                            count=1
+                        }
+                        toattachcopy[k].count=toattachcopy[k].count-1
+                        break
+                    end
+                end
+            end
+
+        end
+        LS.takeitems(items);
+
+        local currentcards={}
+        local detach=deepcopy(toattach)
+        --取り外し
+        for i=1,g.max_cards do
+            local cardInfo = equipcard.GetCardInfo(i);
+            if cardInfo then
+                currentcards[i]={
+                    clsid=cardInfo:GetCardID(),
+                    lv=cardInfo.cardLv,
+                    original=true
+                }
+            end
+        end
+        for k,v in pairs(detach) do
+           
+            if detach[k].count>0  then
+                for i=1,g.max_cards do
+                    local kk=i
+                    local vv= currentcards[kk]
+                    if vv~=nil and v.clsid ~=0 and v.clsid==vv.clsid and v.lv==vv.lv and vv.original  then
+                        currentcards[kk]=  {
+                            clsid=v.clsid,
+                            lv=v.lv,
+                            original=false
+                        }
+                        AWWARDROBE_DBGOUT('detach '..i)
+                        ReserveScript(string.format([[pc.ReqExecuteTx_NumArgs("SCR_TX_UNEQUIP_CARD_SLOT", tostring(%d)..' 1')]],i-1),delay)
+                        delay=delay+0.6
+                        detach[k].count=detach[k].count-1
+                        
+                    end
+                end
+            end
+        end
+        delay=delay+2
+        --取り付け
+        for k,v in pairs(toattach) do 
+            for i=1,v.count do
+                if v and v.clsid~=0 then
+                    AWWARDROBE_DBGOUT('hooo')
+                    ReserveScript(string.format([[AWWARDROBE_DO_INSERT(%d,%d)]],v.clsid,v.lv),delay)
+                    delay=delay+0.6
+                end
+            end
+        end
+        ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
+    end)
+end
+function AWWARDROBE_DO_INSERT(clsid,lv)
+    AWWARDROBE_DBGOUT('hooo4')
+    local invItem =AWWARDROBE_FINDINVITEMBYTYPEANDLEVEL(clsid,lv);
+    AWWARDROBE_DBGOUT('hooo3')
+    if invItem then
+        AWWARDROBE_DBGOUT('hooo2')
+        AWWARDROBE_INSERTCARD(invItem:GetIESID())
+    else
+        AWWARDROBE_DBGOUT('hooaao2')
+    end
+end
+function AWWARDROBE_INSERTCARD(iesid)
+
+    local invItem=session.GetInvItemByGuid(iesid)
+    local cardObj = GetClassByType("Item", invItem.type)
+    if cardObj == nil then
+        AWWARDROBE_DBGOUT('Fail')
+        return
+    end
+    if cardObj.CardGroupName == "REINFORCE_CARD" then
+        ui.SysMsg(ClMsg("LegendReinforceCard_Not_Equip"));
+        return
+    end
+    local groupNameStr = cardObj.CardGroupName
+    local groupSlotIndex=1
+    local max=MONSTER_CARD_SLOT_COUNT_PER_TYPE
+    if groupNameStr == 'ATK' then
+        groupSlotIndex = groupSlotIndex + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+    elseif groupNameStr == 'DEF' then
+        groupSlotIndex = groupSlotIndex + (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+    elseif groupNameStr == 'UTIL' then
+        groupSlotIndex = groupSlotIndex + (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+    elseif groupNameStr == 'STAT' then
+        groupSlotIndex = groupSlotIndex + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+    elseif groupNameStr == 'LEG' then
+        groupSlotIndex = groupSlotIndex + (4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        max=1
+    -- leg 카드는 slotindex = 12, 13번째 슬롯
+    end
+    local candidate=nil
+    local lessercandidate=nil
+    for idx=groupSlotIndex,groupSlotIndex+max-1 do
+        local cardInfo = equipcard.GetCardInfo(idx);
+        if cardInfo == nil then
+            candidate=idx
+            break
+        else
+            if cardInfo:GetCardID()==invItem.type and cardInfo.cardLv==GET_ITEM_LEVEL_EXP(invItem) then
+
+            else
+              
+            end
+        end
+    end
+    candidate=candidate or lessercandidate
+   
+    if candidate then
+        AWWARDROBE_DBGOUT('INSERT'..candidate..'/'..invItem.type)
+        local argStr = string.format("%d#%s", candidate-1, iesid);
+        pc.ReqExecuteTx("SCR_TX_EQUIP_CARD_SLOT", argStr);
+    end
+end
 
 function AWWARDROBE_INITIALIZE_FRAME()
     
     local frame = ui.GetFrame(g.framename);
     
-    frame:Resize(600, 550)
+    frame:Resize(900, 550)
     frame:GetChild("gbox_Equipped"):ShowWindow(1)
+    frame:GetChild("mainGbox"):ShowWindow(1)
+    frame:GetChild("mainGbox"):SetOffset(0, 110)
+    frame:GetChild("mainGbox"):SetGravity(ui.LEFT,ui.TOP)
+    frame:GetChild("mainGbox"):SetVisible(0)
     frame:GetChild("gbox_Equipped"):SetOffset(10, 110)
     frame:GetChild("gbox_Dressed"):ShowWindow(1)
     frame:GetChild("gbox_Dressed"):SetOffset(280, 120)
-    -- local btnmappa=frame:CreateOrGetControl("button","btnmappa",20,300,50,50)
-    -- btnmappa:SetText("全脱がし")
-    -- btnmappa:SetEventScript(ui.LBUTTONDOWN,"AWWARDROBE_UNWEARALL")
-    local btnregister = frame:CreateOrGetControl("button", "btnregister", 300, 240, 200, 40)
+
+
+    
+    local btnregister = frame:CreateOrGetControl("button", "btnregister", 550, 240, 200, 40)
     btnregister:SetText(L_("btnregister"))
-    btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_REGISTER_CURRENTEQUIP")
+    btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_REGISTER_CURRENT")
     
-    local btnclear = frame:CreateOrGetControl("button", "btnclear", 300, 300, 200, 40)
+    local btnclear = frame:CreateOrGetControl("button", "btnclear", 550, 300, 200, 40)
     btnclear:SetText(L_("btnclear"))
-    btnclear:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CLEARALLEQUIPS")
+    btnclear:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CLEARALL")
     
-    local btnsave = frame:CreateOrGetControl("button", "btnsave", 300, 360, 130, 40)
+    local btnsave = frame:CreateOrGetControl("button", "btnsave", 550, 360, 130, 40)
     btnsave:SetText(L_("btnsave"))
     btnsave:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN")
     
-    local btndelete = frame:CreateOrGetControl("button", "btndelete", 440, 360, 130, 40)
+    local btndelete = frame:CreateOrGetControl("button", "btndelete", 690, 360, 130, 40)
     btndelete:SetText(L_("btndelete"))
     btndelete:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN")
     
@@ -513,11 +933,30 @@ function AWWARDROBE_INITIALIZE_FRAME()
     tolua.cast(cbwardrobe, "ui::CDropList")
     cbwardrobe:SetSkinName("droplist_normal")
     cbwardrobe:SetSelectedScp("AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST")
+
+    local btntab
+    btntab=   frame:CreateOrGetControl("button", "btntab", 70, 75, 60, 30)
+    btntab:SetText(L_("tabequip"))
+    btntab:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CONFIG_ON_TAB")
+
     local ebname = frame:CreateOrGetControl("edit", "ebname", 20, 430, 250, 30)
     ebname:SetFontName("white_18_ol")
     ebname:SetSkinName("test_weight_skin")
     frame:CreateOrGetControl("richtext", "label2", 20, 400, 80, 20):SetText(L_("labelsettingsname"))
     
+
+    for _,v in pairs(slotsetnames) do
+        local slotset=frame:GetChildRecursively(v)
+        AUTO_CAST(slotset)
+        slotset:EnableDrag(0)
+        slotset:EnablePop(0)
+        slotset:EnableDrop(1)
+        
+    end
+
+
+
+
     for k, _ in pairs(g.effectingspot) do
         
         local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
@@ -528,9 +967,12 @@ function AWWARDROBE_INITIALIZE_FRAME()
         
         slot:EnableDrag(0)
     end
-    
+    g.tab_config=TAB_EQUIP
+
+    AWWARDROBE_CLEARALLCARDS(frame)
     AWWARDROBE_UPDATE_DROPBOX()
     AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, true)
+
 end
 function AWWARDROBE_UPDATE_DROPBOX()
     AWWARDROBE_try(function()
@@ -544,11 +986,19 @@ function AWWARDROBE_UPDATE_DROPBOX()
         local count = 0
         local selectindex = nil
         AWWARDROBE_DBGOUT("def" .. tostring(g.settings.defaultname))
-
-        for k, d in pairs(g.settings.wardrobe) do
+        local wardrobe;
+        local defaultname;
+        if g.tab_config==TAB_EQUIP then
+            wardrobe=g.settings.wardrobe
+            defaultname= g.settings.defaultname
+        elseif g.tab_config==TAB_CARD then
+            wardrobe=g.settings.wardrobecard
+            defaultname= g.settings.defaultnamecard
+        end
+        for k, d in pairs(wardrobe) do
             if(k~=L_("defaultvalue"))then
                 cbwardrobe:AddItem(count+1, d.name)
-                if (d.name == g.settings.defaultname) then
+                if (d.name == defaultname) then
                     selectindex = count
                 end
                 count = count + 1
@@ -559,7 +1009,7 @@ function AWWARDROBE_UPDATE_DROPBOX()
             cbwardrobe:SelectItem(selectindex)
         end
         cbwardrobe:Invalidate()
-    
+        AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame,true)
     end)
 end
 
@@ -573,11 +1023,20 @@ function AWWARDROBE_UPDATE_DROPBOXAW()
                 acbwardrobe:ClearItems()
                 local count = 0
                 local selectindex = nil
-                AWWARDROBE_DBGOUT("def" .. tostring(g.personalsettings.defaultname))
-                for k, d in pairs(g.settings.wardrobe) do
+
+                local wardrobe
+                local defaultname
+                if g.tab_aw==TAB_EQUIP then
+                    wardrobe=g.settings.wardrobe
+                    defaultname=g.personalsettings.defaultname
+                elseif g.tab_aw==TAB_CARD then
+                    wardrobe=g.settings.wardrobecard
+                    defaultname=g.personalsettings.defaultnamecard
+                end
+                for k, d in pairs(wardrobe) do
                     if(k~=L_("defaultvalue"))then
                         acbwardrobe:AddItem(count+1, d.name)
-                        if (d.name == g.personalsettings.defaultname) then
+                        if (d.name == defaultname) then
                             AWWARDROBE_DBGOUT("match"..tostring(count+1))
                             selectindex = count
                         end
@@ -599,21 +1058,42 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
             AWWARDROBE_DBGOUT("out")
             local cbwardrobe = GET_CHILD(frame, "cbwardrobe", "ui::CDropList")
             local key = cbwardrobe:GetSelItemIndex()
-            if (key~="" and not g.settings.wardrobe[key+1]) then
-                ui.SysMsg(string.format(L_("alertnosettings"),key));
-                return
+           
+            local wardrobe
+            local defaultname
+            if g.tab_config==TAB_EQUIP then
+                wardrobe=g.settings.wardrobe
+                g.personalsettings.defaultname = wardrobe[key+1].name
+                local sound = not (shutup == true)
+                if (key~="" and not g.settings.wardrobe[key+1]) then
+                    ui.SysMsg(string.format(L_("alertnosettings"),key));
+                    return
+                end
+                
+                if(key=="")then
+                    AWWARDROBE_CLEARALLEQUIPS(frame)
+                else
+                    AWWARDROBE_LOADEQFROMSTRUCTURE(g.settings.wardrobe[key+1].data, sound)
+                end
+            elseif g.tab_config==TAB_CARD then
+                wardrobe=g.settings.wardrobecard
+                g.personalsettings.defaultnamecard = wardrobe[key+1].name
+                if (key~="" and not g.settings.wardrobecard[key+1]) then
+                    ui.SysMsg(string.format(L_("alertnosettings"),key));
+                    return
+                end
+                
+                if(key=="")then
+                    AWWARDROBE_CLEARALLCARDS(frame)
+                else
+                    AWWARDROBE_LOADCARDFROMSTRUCTURE(g.settings.wardrobecard[key+1].data)
+                end
             end
+  
             
-            g.settings.defaultname = g.settings.wardrobe[key+1].name
-            
-            local sound = not (shutup == true)
-            if(key=="")then
-                AWWARDROBE_CLEARALLEQUIPS(frame)
-            else
-                AWWARDROBE_LOADEQFROMSTRUCTURE(g.settings.wardrobe[key+1].data, sound)
-            end
+           
             local ebname = GET_CHILD(frame, "ebname", "ui::CEditControl")
-            ebname:SetText(g.settings.wardrobe[key+1].name)
+            ebname:SetText(wardrobe[key+1].name)
     end)
 end
 
@@ -628,23 +1108,41 @@ function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
                 return
             end
             --現在の設定を保存
-            local table = AWWARDROBE_SAVEEQTOSTRUCTURE()
-            g.settings.wardrobe = g.settings.wardrobe or {}
-            g.settings.defaultname = curname
+            if g.tab_config==TAB_EQUIP then
+                local table = AWWARDROBE_SAVEEQTOSTRUCTURE()
+                g.settings.wardrobe = g.settings.wardrobe or {}
+                g.settings.defaultname = curname
 
-            --インデックス探索
-            local fault=true
-            for i=1,#g.settings.wardrobe do
-                if(g.settings.wardrobe[i].name==curname) then
-                    g.settings.wardrobe[i] = {name=curname,data=table}
-                    fault=false
-                    break
+                --インデックス探索
+                local fault=true
+                for i=1,#g.settings.wardrobe do
+                    if(g.settings.wardrobe[i].name==curname) then
+                        g.settings.wardrobe[i] = {name=curname,data=table}
+                        fault=false
+                        break
+                    end
+                end
+                if(fault==true)then
+                    g.settings.wardrobe[#g.settings.wardrobe+1]= {name=curname,data=table}
+                end
+            elseif g.tab_config==TAB_CARD then
+                local table = AWWARDROBE_SAVECARDTOSTRUCTURE()
+                g.settings.wardrobecard = g.settings.wardrobecard or {}
+                g.settings.defaultnamecard = curname
+
+                --インデックス探索
+                local fault=true
+                for i=1,#g.settings.wardrobecard do
+                    if(g.settings.wardrobecard[i].name==curname) then
+                        g.settings.wardrobecard[i] = {name=curname,data=table}
+                        fault=false
+                        break
+                    end
+                end
+                if(fault==true)then
+                    g.settings.wardrobecard[#g.settings.wardrobecard+1]= {name=curname,data=table}
                 end
             end
-            if(fault==true)then
-                g.settings.wardrobe[#g.settings.wardrobe+1]= {name=curname,data=table}
-            end
-           
             --ソート
             AWWARDROBE_SORTING()
             ui.SysMsg(string.format(L_("alertsettingssaved"),curname));
@@ -694,6 +1192,30 @@ function AWWARDROBE_LOADEQFROMSTRUCTURE(table, enableeffect)
         imcSound.PlaySoundEvent('inven_equip');
     end
 end
+function AWWARDROBE_LOADCARDFROMSTRUCTURE(table)
+    local frame = ui.GetFrame(g.framename)
+    --一旦クリア
+    AWWARDROBE_CLEARALLCARDS(frame)
+    local cnt=1
+    for i=1,5 do
+        local max=3
+        if i==5 then
+            --legendcard
+            max=1
+        end
+        for j=1,max do
+            local slotset=frame:GetChildRecursively(slotsetnames[i])
+            AUTO_CAST(slotset)
+            local slot=slotset:GetSlotByIndex(j-1)
+            if table[cnt] and table[cnt].clsid~=0 then
+                AWWARDROBE_SETSLOT_CARD(slot,table[cnt].clsid,table[cnt].lv)
+            end
+
+            cnt=cnt+1
+        end
+    end
+  
+end
 function AWWARDROBE_SAVEEQTOSTRUCTURE()
     local tbl = {}
     local frame = ui.GetFrame(g.framename)
@@ -703,6 +1225,31 @@ function AWWARDROBE_SAVEEQTOSTRUCTURE()
         local iesid = slot:GetUserValue("iesid")
         if (not EBI_IsNoneOrNil(iesid)) then
             tbl[k] = {clsid = clsid, iesid = iesid}
+        end
+    end
+    return tbl
+end
+function AWWARDROBE_SAVECARDTOSTRUCTURE()
+    local tbl = {}
+    local frame = ui.GetFrame(g.framename)
+    local cnt=1
+    for i=1,5 do
+        local max=3
+        if i==5 then
+            --legendcard
+            max=1
+        end
+        for j=1,max do
+            local slotset=frame:GetChildRecursively(slotsetnames[i])
+            AUTO_CAST(slotset)
+            local slot=slotset:GetSlotByIndex(j-1)
+            
+            
+            tbl[#tbl+1] = {
+                clsid=tonumber(slot:GetUserValue("clsid") or '0') or 0,
+                lv=tonumber(slot:GetUserValue("lv") or '0') or 0,
+            }
+            cnt=cnt+1
         end
     end
     return tbl
@@ -719,7 +1266,7 @@ function AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN(frame)
             else
                 if(curname==L_("defaultvalue")) then
                     ui.SysMsg(string.format(L_("alertcantdelete"),curname));
-                elseif (g.settings.wardrobe[curindex]) then
+                elseif (g.tab_config==TAB_EQUIP and g.settings.wardrobe[curindex]) then
                     g.settings.wardrobe[curindex].name=nil
                     --詰める
                     local tbl={}
@@ -730,6 +1277,18 @@ function AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN(frame)
                         end
                     end
                     g.settings.wardrobe=tbl
+                    ui.SysMsg(string.format(L_("alertdeletesettings"),curname));
+                elseif (g.tab_config==TAB_CARD and g.settings.wardrobecard[curindex]) then
+                    g.settings.wardrobecard[curindex].name=nil
+                    --詰める
+                    local tbl={}
+                    for k,d in ipairs(g.settings.wardrobecard) do
+                        if(d.name~=nil)then
+                            tbl[#tbl+1]=d
+                            AWWARDROBE_DBGOUT("BBB")
+                        end
+                    end
+                    g.settings.wardrobecard=tbl
                     ui.SysMsg(string.format(L_("alertdeletesettings"),curname));
                 else
                     ui.SysMsg(string.format(L_("alertnosettings"),curname));
@@ -746,6 +1305,22 @@ function AWWARDROBE_SLOT_ON_RBUTTONDOWN(frame, ctrl, argstr, argnum)
     AWWARDROBE_try(function()
             
             AWWARDROBE_CLEAREQUIP(frame, argstr)
+            imcSound.PlaySoundEvent('inven_unequip');
+            AWWARDROBE_PLAYSLOTANIMATION(frame, argstr)
+    end)
+end
+function AWWARDROBE_CARD_SLOT_ON_RBUTTONDOWN(frame, slot, argstr, argnum)
+    --現在の装備を登録
+    AWWARDROBE_try(function()
+            AUTO_CAST(slot)
+            slot:ClearIcon()
+            slot:SetMaxSelectCount(0)
+            slot:SetText('')
+            slot:RemoveAllChild()
+            slot:SetUserValue('clsid', nil)
+            slot:SetUserValue('iesid', nil)
+            slot:SetUserValue('lv', nil)
+        
             imcSound.PlaySoundEvent('inven_unequip');
             AWWARDROBE_PLAYSLOTANIMATION(frame, argstr)
     end)
@@ -801,8 +1376,44 @@ function AWWARDROBE_SLOT_ON_DROP(frame, ctrl, argstr, argnum)
             end
             
             AWWARDROBE_SETSLOT(slot, invItem)
+            local equipSound = "sys_armor_equip_new";
             imcSound.PlaySoundEvent(equipSound);
             AWWARDROBE_PLAYSLOTANIMATION(frame, argstr)
+    end)
+end
+function AWWARDROBE_SLOT_CARD_ON_DROP(frame, ctrl, argstr, argnum)
+    --ドロップされた装備を登録
+    AWWARDROBE_try(function()
+            --AWWARDROBE_CLEAREQUIP(frame,argstr)
+            local liftIcon = ui.GetLiftIcon()
+            local liftframe = ui.GetLiftFrame():GetTopParentFrame()
+            local slot = tolua.cast(ctrl, 'ui::CSlot')
+           
+            local iconInfo = liftIcon:GetInfo()
+            local invItem = AWWARDROBE_ACQUIRE_ITEM_BY_GUID(iconInfo:GetIESID())
+     
+			local cardObj = GetClassByType("Item", invItem.type)
+            if cardObj == nil then
+                return
+            end
+            if cardObj.CardGroupName == "REINFORCE_CARD" then
+                ui.SysMsg(ClMsg("LegendReinforceCard_Not_Equip"));
+                return
+            end
+            local parentSlotSet = slot:GetParent()
+            if parentSlotSet == nil then
+                return
+            end
+            local cardGroupName_slotset = cardObj.CardGroupName .. 'card_slotset'
+            if parentSlotSet:GetName() ~= cardGroupName_slotset then
+                --같은 card group 에 착용해야합니다 메세지 띄워줘야해
+                ui.SysMsg(ClMsg("ToEquipSameCardGroup"));
+                return
+            end
+            local equipSound = "sys_armor_equip_new";
+            imcSound.PlaySoundEvent(equipSound);
+            AWWARDROBE_SETSLOT_CARD_AS_INV(slot, invItem)
+
     end)
 end
 function AWWARDROBE_SETSLOT(slot, invItem)
@@ -812,9 +1423,63 @@ function AWWARDROBE_SETSLOT(slot, invItem)
     AWWARDROBE_DBGOUT("I" .. tostring(invItem:GetIESID()))
     
     slot:SetUserValue("clsid", tostring(GetIES(invItem:GetObject()).ClassID))
-    slot:SetUserValue("iesid", tostring(invItem:GetIESID()))
 
 
+end
+function AWWARDROBE_SETSLOT_CARD_AS_INV(slot, invItem)
+
+
+   
+    local lv = GET_ITEM_LEVEL_EXP(GetIES(invItem:GetObject()));
+    AWWARDROBE_SETSLOT_CARD(slot,invItem.type,lv)
+end
+function AWWARDROBE_SETSLOT_CARD(slot, clsid,lv)
+
+    
+    local slotidx=slot:GetSlotIndex()
+
+    local cardObj=GetClassByType('Item',clsid)
+    if cardObj then
+        slot:SetUserValue("clsid", tostring(clsid))
+        slot:SetUserValue("lv", tostring(lv))
+
+        local groupNameStr = cardObj.CardGroupName
+        local groupSlotIndexOriginal = slot:GetSlotIndex()
+        local groupSlotIndex
+        if groupNameStr == 'ATK' then
+            groupSlotIndex = groupSlotIndexOriginal + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif groupNameStr == 'DEF' then
+            groupSlotIndex = groupSlotIndexOriginal + (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif groupNameStr == 'UTIL' then
+            groupSlotIndex = groupSlotIndexOriginal + (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif groupNameStr == 'STAT' then
+            groupSlotIndex = groupSlotIndexOriginal + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif groupNameStr == 'LEG' then
+            groupSlotIndex = groupSlotIndexOriginal + (4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        -- leg 카드는 slotindex = 12, 13번째 슬롯
+        end
+
+        local moncardGbox = GET_CHILD_RECURSIVELY(slot:GetTopParentFrame(), groupNameStr .. 'cardGbox');
+        local card_slotset = GET_CHILD(moncardGbox, groupNameStr .. "card_slotset");
+
+        local card_labelset = GET_CHILD(moncardGbox, groupNameStr .. "card_labelset");
+        if card_slotset ~= nil and card_labelset then
+            CARD_SLOT_SET(card_slotset, card_labelset, groupSlotIndexOriginal , clsid, lv, 0);
+            local icon=slot:GetIcon()
+            icon:SetTextTooltip('{ol}{s24}'..cardObj.Name..' {img star_mark 24 24}'..tostring(lv))
+            icon:SetPosTooltip(0,0)
+            slot:EnableDrag(0)
+            slot:EnablePop(0)
+            slot:EnableDrop(1)
+            slot:SetPosTooltip(0, 0);
+            slot:SetEventScript(ui.RBUTTONUP, "AWWARDROBE_CARD_SLOT_RBTNUP_ITEM_INFO");
+            slot:SetEventScript(ui.MOUSEMOVE, "None");
+            slot:SetEventScriptArgNumber(ui.MOUSEMOVE, 0);
+            slot:SetEventScript(ui.LOST_FOCUS, "None");
+        end;
+    else
+    
+    end
 end
 function AWWARDROBE_GETCID()
     return info.GetCID(session.GetMyHandle())
@@ -981,6 +1646,161 @@ function AWWARDROBE_INTERLOCK(state)
     return g.interlocked
 end
 
+function AWWARDROBE_CALCULATE_SILVER_DETACH(tbl)
+    local current={}
+    local silver=0
+    local todetach={}
+    --すでに装着済みをカウント
+    for i = 1, MAX_NORMAL_MONSTER_CARD_SLOT_COUNT + LEGEND_CARD_SLOT_COUNT do
+        local cardInfo = equipcard.GetCardInfo(i);
+        if cardInfo ~= nil then
+            local key=tostring(cardInfo:GetCardID()..'#'..tostring(cardInfo.cardLv))
+            current[key]=current[key] or 0
+            current[key]=current[key]+1
+        end
+    end
+    for k,v in pairs(tbl) do
+        if v and v.clsid ~= 0 then
+            --装着済みがあればカウント
+            local key=tostring(v.clsid)..'#'..tostring(v.lv)
+            local cardObj = GetClassByType("Item", v.clsid);
+            if current[key] and current[key]>0 then
+
+                silver=silver+CALC_NEED_SILVER(cardObj, v.lv)
+                current[key]=current[key]-1
+                if  todetach[key] then
+                    todetach[key].count=todetach[key].count+1
+                else
+    
+                    todetach[key]={
+                        count=1,
+                        clsid=v.clsid,
+                        lv=v.lv
+                        
+                    }
+    
+                end
+ 
+            end
+        end
+    end
+    return silver,todetach
+end
+function AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl)
+    local toattach={}
+    local silver=0
+    local current={}
+    --装着したいカードをカウント
+    for k,v in pairs(tbl) do
+        if v and v.clsid ~= 0 then
+           
+            local key=tostring(v.clsid)..'#'..tostring(v.lv)
+            if  toattach[key] then
+                toattach[key].count=toattach[key].count+1
+            else
+
+                toattach[key]={
+                    count=1,
+                    clsid=v.clsid,
+                    lv=v.lv
+                    
+                }
+
+            end
+            
+
+        end
+    end
+    local slotemptyness={
+        ATK={1,1,1},
+        DEF={1,1,1},
+        UTIL={1,1,1},
+        STAT={1,1,1},
+        LEG={1},
+        
+    }
+     --すでに装着済みをカウント
+     for i = 1, MAX_NORMAL_MONSTER_CARD_SLOT_COUNT + LEGEND_CARD_SLOT_COUNT do
+        local cardInfo = equipcard.GetCardInfo(i);
+        if cardInfo ~= nil then
+            local key=tostring(cardInfo:GetCardID())..'#'..tostring(cardInfo.cardLv)
+            AWWARDROBE_DBGOUT('CARD'..key)
+            current[key]=
+            current[key] or 0
+            current[key]=
+            current[key]+1
+            local cardObj = GetClassByType("Item", cardInfo:GetCardID())
+
+            local localidx=i
+            if cardObj.CardGroupName=='ATK' then
+                localidx=i-0
+            elseif cardObj.CardGroupName=='DEF' then
+                localidx=i-3
+            elseif cardObj.CardGroupName=='UTIL' then
+                localidx=i-6
+            elseif cardObj.CardGroupName=='STAT' then
+                localidx=i-9
+            else
+                localidx=i-12
+            end
+            slotemptyness[cardObj.CardGroupName][localidx]=0
+        end
+    end
+    
+    for k,v in pairs(tbl) do
+        if v and v.clsid ~= 0 then
+            --すでに装着済みなら除外
+            local key=tostring(v.clsid)..'#'..tostring(v.lv)
+            local cardObj = GetClassByType("Item", v.clsid);
+            AWWARDROBE_DBGOUT('CUR'..key)
+            if current[key] and current[key]>0 then
+                if  toattach[key] then
+                    if (toattach[key].count>0) then
+                        toattach[key].count=toattach[key].count-1
+                    end
+                    if toattach[key].count==0 then
+                        toattach[key]=nil
+                    end
+                    tbl[k].filled=true
+                    current[key]=current[key]-1
+                    AWWARDROBE_DBGOUT('found')
+                end
+            end
+        end
+    end
+    local toattach_forsilver=deepcopy(toattach)
+    
+    --スロットがあいているならシルバーの計算からは除外
+    for k,v in pairs(tbl) do
+        if v and v.clsid ~= 0 and not v.filled then
+
+            local cardObj = GetClassByType("Item", v.clsid);
+            for kk,vv in ipairs(slotemptyness[cardObj.CardGroupName]) do
+                if vv==1 then
+                    local key=tostring(v.clsid)..'#'..tostring(v.lv)
+                    slotemptyness[cardObj.CardGroupName][kk]=0
+                    if (toattach_forsilver[key].count>0) then
+                        toattach_forsilver[key].count=toattach_forsilver[key].count-1
+                    end
+                    if toattach_forsilver[key].count==0 then
+                        toattach_forsilver[key]=nil
+                    end
+                    tbl[k].filled=true
+                    break
+                end
+            end
+        end
+    end
+    --最後に計算
+    for k,v in pairs(toattach_forsilver) do
+        if v and v.clsid ~= 0 and v.count ~= 0 then
+            AWWARDROBE_DBGOUT(''..v.clsid..'.'..v.lv)
+            local cardObj = GetClassByType("Item", v.clsid);
+            silver=silver+CALC_NEED_SILVER(cardObj, v.lv)*v.count
+        end
+    end
+    return silver,toattach
+end
 
 function AWWARDROBE_WEAR_MATCHED(frame, tbl)
     AWWARDROBE_try(function()
@@ -1173,20 +1993,7 @@ function AWWARDROBE_WEAPONSWAP_ITEM_DROP(spot,guid)
 		SET_SLOT_ITEM_IMAGE(slot, invItem);
 	end
 end
--- function AWWARDROBE_LOCKITEM(itemguid, state)
 
---     --unlock
---     local itemobj = session.GetInvItemByGuid(itemguid)
---     if(itemobj==nil)then
---         itemobj=session.GetEquipItemByGuid(itemguid)
---     end
---     if(itemobj~=nil)then
---         if (itemobj.isLockState == true) then
---             session.inventory.SendLockItem(itemguid,state)
---         end
---     end
-
--- end
 function AWWARDROBE_DEPOSITITEM(itemguid)
     AWWARDROBE_try(function()
  
@@ -1258,6 +2065,108 @@ function AWWARDROBE_UNWEAR(equipSpot)
     imcSound.PlaySoundEvent('inven_unequip');
     local spot = equipSpot;
     item.UnEquip(spot);
+end
+function AWWARDROBE_REGISTER_CURRENT(frame)
+    if g.tab_config==TAB_EQUIP then
+        AWWARDROBE_REGISTER_CURRENTEQUIP(frame)
+    elseif g.tab_config==TAB_CARD then
+        AWWARDROBE_REGISTER_CURRENTCARD(frame)
+    end
+end
+function AWWARDROBE_REGISTER_CURRENTEQUIP(frame)
+    --現在の装備を登録
+    AWWARDROBE_try(function()
+            --先にクリア
+            AWWARDROBE_CLEARALLEQUIPS(frame)
+            local equipItemList = session.GetEquipItemList();
+            local items = {}
+            for i = 0, equipItemList:Count() - 1 do
+                local equipItem = equipItemList:GetEquipItemByIndex(i)
+                --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
+                --CHAT_SYSTEM("GO")
+                local spname = item.GetEquipSpotName(equipItem.equipSpot);
+                if spname~="RH" and spname ~= "LH" and equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingspot[spname] then
+                    --登録
+                    local slot = GET_CHILD_RECURSIVELY(frame, spname, "ui::CSlot")
+                    AWWARDROBE_SETSLOT(slot, equipItem)
+                    AWWARDROBE_PLAYSLOTANIMATION(frame, spname)
+                end
+                --左手右手用設定
+                local rh1 = quickslot.GetSwapWeaponGuid(2);
+                local lh1 = quickslot.GetSwapWeaponGuid(3);
+                local rh2 = quickslot.GetSwapWeaponGuid(0);
+                local lh2 = quickslot.GetSwapWeaponGuid(1);
+
+                if rh1~=nil then
+                    local item=GET_ITEM_BY_GUID(rh1);
+                    if item ~= nil then
+                        local quickspname="RH"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+                if lh1~=nil then
+                    local item=GET_ITEM_BY_GUID(lh1);
+                    if item ~= nil then
+                        local quickspname="LH"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+                if rh2~=nil then
+                    local item=GET_ITEM_BY_GUID(rh2);
+                    if item ~= nil then
+                        local quickspname="RH2"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+                if lh2~=nil then
+                    local item=GET_ITEM_BY_GUID(lh2);
+                    if item ~= nil then
+                        local quickspname="LH2"
+                        local slot = GET_CHILD_RECURSIVELY(frame, quickspname, "ui::CSlot")
+                        AWWARDROBE_SETSLOT(slot, item)
+                        AWWARDROBE_PLAYSLOTANIMATION(frame, quickspname)
+                    end
+                end
+            end
+            imcSound.PlaySoundEvent('inven_equip');
+    end)
+end
+function AWWARDROBE_REGISTER_CURRENTCARD(frame)
+    --現在の装備を登録
+    AWWARDROBE_try(function()
+            --先にクリア
+            AWWARDROBE_CLEARALLCARDS(frame)
+            
+            local items = {}
+            local cnt=1
+            for i=1,5 do
+               
+                local max=3
+                if i==5 then
+                    max=1
+                end
+    
+                local slotset=frame:GetChildRecursively(slotsetnames[i])
+                AUTO_CAST(slotset)
+                for slotidx=0,max-1 do
+                    local slot=slotset:GetSlotByIndex(slotidx)
+                    local cardInfo = equipcard.GetCardInfo(cnt)
+                    cnt=cnt+1
+                    if cardInfo then
+                   
+                        AWWARDROBE_SETSLOT_CARD(slot,cardInfo:GetCardID(),cardInfo.cardLv)
+                    end
+                end
+               
+            end
+            imcSound.PlaySoundEvent('inven_equip');
+    end)
 end
 function AWWARDROBE_REGISTER_CURRENTEQUIP(frame)
     --現在の装備を登録
@@ -1340,11 +2249,81 @@ function AWWARDROBE_CLEAREQUIP(frame, spname)
     
     end)
 end
+function AWWARDROBE_CLEARALL(frame)
+    if g.tab_config==TAB_EQUIP then
+        AWWARDROBE_CLEARALLEQUIPS(frame)
+    elseif g.tab_config==TAB_CARD then
+        AWWARDROBE_CLEARALLCARDS(frame)
+    end
+end
 function AWWARDROBE_CLEARALLEQUIPS(frame)
     
     
     for k, _ in pairs(g.effectingspot) do
         AWWARDROBE_CLEAREQUIP(frame, k)
+    end
+
+end
+function AWWARDROBE_CLEARCARD(frame,slotIndex)
+    local groupnames={
+        'ATK',
+        'DEF',
+        'UTIL',
+        'STAT',
+        'LEG',
+    }
+	local groupNameStr = groupnames[math.floor((slotIndex-1)/3)+1]
+	local cardGroupName=groupNameStr
+	local groupSlotIndex = slotIndex
+	if cardGroupName == 'ATK' then
+		groupSlotIndex = slotIndex - (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+	elseif cardGroupName == 'DEF' then
+		groupSlotIndex = slotIndex - (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+	elseif cardGroupName == 'UTIL' then
+		groupSlotIndex = slotIndex - (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+	elseif cardGroupName == 'STAT' then
+		groupSlotIndex = slotIndex - (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+	elseif cardGroupName == 'LEG' then
+		groupSlotIndex = slotIndex - (4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+	end
+   
+	local gBox = GET_CHILD_RECURSIVELY(frame, groupNameStr .. 'cardGbox');
+	local card_slotset = GET_CHILD(gBox, groupNameStr .. "card_slotset");
+    local card_labelset = GET_CHILD(gBox, groupNameStr .. "card_labelset");
+    AWWARDROBE_DBGOUT(''..tostring(card_slotset)..':'.. tostring(card_labelset) .. "card_labelset")
+	if card_slotset ~= nil and card_labelset ~= nil then
+		local slot = card_slotset:GetSlotByIndex(groupSlotIndex - 1);
+		if slot ~= nil then
+			slot:ClearIcon();
+		end;
+        
+		local slot_label = card_labelset:GetSlotByIndex(groupSlotIndex - 1);
+		if slot_label ~= nil then
+			local icon_label = CreateIcon(slot_label)
+			if cardGroupName == 'ATK' then
+				icon_label : SetImage('red_cardslot1')
+			elseif cardGroupName == 'DEF' then
+				icon_label : SetImage('blue_cardslot1')
+			elseif cardGroupName == 'UTIL' then
+				icon_label : SetImage('purple_cardslot1')
+			elseif cardGroupName == 'STAT' then
+				icon_label : SetImage('green_cardslot1')
+			elseif cardGroupName == 'LEG' then
+				icon_label : SetImage('legendopen_cardslot')
+			end
+        end;
+        slot:SetUserValue('clsid',nil)
+        slot:SetUserValue('lv',nil)
+    
+	end;
+ 
+end
+function AWWARDROBE_CLEARALLCARDS(frame)
+    
+    -- normal cards
+    for i=1,13 do
+        AWWARDROBE_CLEARCARD(frame,i)
+        
     end
 
 end
@@ -1383,6 +2362,83 @@ function AWWARDROBE_PROCESS_COMMAND(command)
 end
 function AWWARDROBE_CLOSE()
     ui.GetFrame(g.framename):ShowWindow(0)
+end
 
---AUTOITEMMANAGE_SAVE_SETTINGS()
+function AWWARDROBE_AW_ON_TAB(frame,ctrl)
+    if g.tab_aw==TAB_EQUIP then
+        g.tab_aw=TAB_CARD
+    else
+        g.tab_aw=TAB_EQUIP
+    end
+    local tabcfg= g.tab_aw
+    local tabctrl=ctrl
+
+    
+    if tabcfg==TAB_EQUIP then
+        tabctrl:SetText(L_('tabequip'))
+    else
+        tabctrl:SetText(L_('tabcard'))
+    end
+    AWWARDROBE_UPDATE_DROPBOXAW()
+end
+function AWWARDROBE_CONFIG_ON_TAB(frame,ctrl)
+     if g.tab_config==TAB_EQUIP then
+        g.tab_config=TAB_CARD
+    else
+        g.tab_config=TAB_EQUIP
+    end
+    local tabcfg= g.tab_config
+    local tabctrl=ctrl
+    local equip=frame:GetChildRecursively('gbox_Equipped')
+    local equip2=frame:GetChildRecursively('gbox_Dressed')
+    local card=frame:GetChildRecursively('mainGbox')
+    
+    
+    if tabcfg==TAB_EQUIP then
+        tabctrl:SetText(L_('tabequip'))
+        equip:ShowWindow(1)
+        equip2:ShowWindow(1)
+        card:ShowWindow(0)
+        
+
+    else
+        tabctrl:SetText(L_('tabcard'))
+        equip:ShowWindow(0)
+        equip2:ShowWindow(0)
+        card:ShowWindow(1)
+        
+    end
+    AWWARDROBE_UPDATE_DROPBOX()
+end
+
+function AWWARDROBE_CARD_SLOT_RBTNUP_ITEM_INFO(frame,slot,argstr,argnum)
+    AWWARDROBE_try(function()
+        frame=ui.GetFrame('awwardrobe')
+        local icon = slot:GetIcon();		
+        if icon == nil then		
+            return;		
+        end;
+
+        local parentSlotSet = slot:GetParent()
+        if parentSlotSet == nil then
+            return
+        end 
+
+        local slotIndex = slot:GetSlotIndex()
+
+        if parentSlotSet:GetName() == 'ATKcard_slotset' then
+            slotIndex = slotIndex + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif parentSlotSet : GetName() == 'DEFcard_slotset' then
+            slotIndex = slotIndex + (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif parentSlotSet : GetName() == 'UTILcard_slotset' then
+            slotIndex = slotIndex + (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif parentSlotSet : GetName() == 'STATcard_slotset' then
+            slotIndex = slotIndex + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        elseif parentSlotSet : GetName() == 'LEGcard_slotset' then
+            slotIndex = slotIndex + (4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+        end
+        
+        AWWARDROBE_CLEARCARD(frame,slotIndex+1)
+        
+    end)
 end

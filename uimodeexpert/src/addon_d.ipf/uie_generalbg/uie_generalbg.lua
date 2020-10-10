@@ -255,6 +255,11 @@ g.gbg.uiegbgGroupBase = {
         end
 
         
+       
+        tab:SelectTab(self._initindex-1)
+        tab:ChangeTab(self._initindex-1)
+
+        self:attachDefaultHandler()
         for k, v in ipairs(self._children) do
            
             if self._initindex==k then
@@ -263,13 +268,8 @@ g.gbg.uiegbgGroupBase = {
                 v:hide()
             end
         end
-        tab:SelectTab(self._initindex-1)
-        tab:ChangeTab(self._initindex-1)
-
-      
-       
         self:postInitializeImpl()
-        self:attachDefaultHandler()
+   
     end,
 
     addChild = function(self, child)
@@ -286,7 +286,23 @@ g.gbg.uiegbgGroupBase = {
                 v:detachHandler()
             end
         end
+        local frame = ui.GetFrame(framename)
+        local tab = frame:GetChild('tabmain')
+        AUTO_CAST(tab)
+        tab:SelectTab(index)
+        tab:ChangeTab(index)
     end,
+    getCurrrentTabIndex=function(self)
+        local frame = ui.GetFrame(framename)
+        local tab = frame:GetChild('tabmain')
+        AUTO_CAST(tab)
+        return tab:GetSelectItemIndex()
+
+    end,
+    getChildCount=function(self)
+        
+        return #self._children
+    end
 }
 
 g.gbg.uiegbgComponentBase = {
@@ -304,21 +320,23 @@ g.gbg.uiegbgComponentBase = {
             w = self.parent:GetWidth()
             h = self.parent:GetHeight()
         end
-        local gbox = self.parent:CreateOrGetControl('groupbox', 'gbox' .. self.name, x, y, w, h)
+        local gbox = self.parent:CreateOrGetControl('groupbox', 'gboxcomp' .. self.name, x, y, w, h)
+
         AUTO_CAST(gbox)
         self.gbox = gbox
         gbox:SetUserValue('gbg_name',self.name)
         gbox:SetUserValue('gbg_intrusive',0)
         self:initializeImpl(gbox)
-        print('COMP'..self.name)
+
         g.gbg._componentInstances[self.name] = self
 
+        
         
         return gbox
     end,
     release=function(self)
         g.gbg.uiegbgBase.release(self)
-        print('REL')
+
         g.gbg._componentInstances[self.name] = nil
     end,
     hookmsg = function(self, frame, msg, argStr, argNum)
@@ -353,6 +371,36 @@ g.uieHandlergbgBase = {
             --pass
 
             return g.uieHandlerBase.RefRefresh
+        else
+            
+        end
+        --topmost
+        if g.key:IsKeyPress(g.key.TABLEFT) then
+            -- 100
+            local idx=self.gbg:getCurrrentTabIndex()-1
+            if idx<0 then
+                idx=self.gbg:getChildCount()-1
+            end
+            self.gbg:showChild(idx+1)
+            imcSound.PlaySoundEvent('item_insert');
+            return g.uieHandlerBase.RefRefresh
+        end
+        if g.key:IsKeyPress(g.key.TABRIGHT) then
+            -- 100
+            local idx=self.gbg:getCurrrentTabIndex()+1
+            if idx>=self.gbg:getChildCount() then
+                idx=self.gbg:getChildCount()
+            end
+            self.gbg:showChild(idx+1)
+            imcSound.PlaySoundEvent('item_insert');
+            return g.uieHandlerBase.RefRefresh
+            
+        end
+        if g.key:IsKeyPress(g.key.CANCEL) then
+            -- 100
+            
+            return g.uieHandlerBase.RefEnd
+            
         end
         return self:gbgTick()
     end,
@@ -390,8 +438,8 @@ g.uieHandlergbgComponentTracer = {
     findButtonsRecurse = function(self, ctrl)
         for i = 0, ctrl:GetChildCount() - 1 do
             local cc = ctrl:GetChildByIndex(i)
-            local gbgname=ctrl:GetUserValue('gbg_name')
-            local gbgintrusive=ctrl:GetUserIValue('gbg_intrusive')
+            -- local gbgname=ctrl:GetUserValue('gbg_name')
+            -- local gbgintrusive=ctrl:GetUserIValue('gbg_intrusive')
             
 
             if cc:IsVisible() == 1 and cc:GetName():lower()~='colse' and cc:GetName():lower()~='close' then
@@ -400,13 +448,14 @@ g.uieHandlergbgComponentTracer = {
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_CHECKBOX) ~= 0 and (cc:GetClassString() == 'ui::CCheckBox')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOT) ~= 0 and (cc:GetClassString() == 'ui::CSlot')) or
                         ((self.flags & g.uieHandlerControlTracer.FLAG_ENABLE_SLOTSET) ~= 0 and (cc:GetClassString() == 'ui::CSlotSet'))
-                        --or (g.util.isNilOrNoneOrWhitespace(gbgname) and gbgintrusive==0)
+                 
                  then
                     AUTO_CAST(cc)
                     local x=cc:GetX()
                     local y=cc:GetY()
                     local w=cc:GetWidth()
                     local h=cc:GetHeight()
+                   
                     if cc:GetParent():GetClassString()~='ui::CFrame' then 
                         local p=cc:GetParent()
                         local px=cc:GetParent():GetX()
@@ -586,7 +635,7 @@ g.uieHandlergbgComponentTracer = {
         self.ctrls = {}
         self.ctrlscount = 0
 
-        self:findButtonsRecurse(self.frame)
+        self:findButtonsRecurse(self.gbg.gbox)
 
         self.ctrlscursor = math.min(self.ctrlscount-1, self.ctrlscursor)
         table.sort(
@@ -603,8 +652,37 @@ g.uieHandlergbgComponentTracer = {
     moveMouse = function(self, idx)
         if idx < self.ctrlscount then
             local ctrl = self.ctrls[idx + 1]
+            AUTO_CAST(ctrl)
 
-            self:moveMouseToControl(ctrl)
+
+            local parent = ctrl:GetParent()
+            parent=self.gbg.gbox:GetChildRecursively(parent:GetName())
+
+            AUTO_CAST(parent)
+            
+            if parent:GetClassString()=='ui::CGroupBox' or parent:GetName()==self.gbg.gbox:GetName() then
+                local y 
+                -- if  parent:GetName()==self.gbg.gbox:GetName() then
+                --     parent=self.gbg.gbox
+                -- end
+                AUTO_CAST(parent)
+
+                y = ctrl:GetY()
+
+                local h = ctrl:GetHeight()
+                local scrolly = parent:GetScrollCurPos()
+                local scrollh = parent:GetHeight()
+                scrolly = math.min(y, math.max(scrolly, y - scrollh + h + 10))
+                parent:SetScrollPos(scrolly)
+                parent:UpdateGroupBox()
+                parent:ValidateControl()
+                parent:UpdateDataByScroll()
+                g.util.delayedCallback(function()
+                    self:moveMouseToControl(ctrl)
+                end)
+            else
+                self:moveMouseToControl(ctrl)
+            end
         end
     end,
 
@@ -624,7 +702,8 @@ function UIE_GENERALBG_ON_INIT(addon, frame)
             addon:RegisterMsg('INV_ITEM_LIST_GET', 'UIE_GENERALBG_HOOK')
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_LIST", "UIE_GENERALBG_HOOK");
             addon:RegisterMsg("CABINET_ITEM_LIST", "UIE_GENERALBG_HOOK");
-            
+            addon:RegisterMsg("MARKET_ITEM_LIST", "UIE_GENERALBG_HOOK");
+            acutil.setupHook(UIE_GENERALBG_GET_TOOLTIP_ITEM_OBJECT,'GET_TOOLTIP_ITEM_OBJECT')
             addon:RegisterOpenOnlyMsg("ACCOUNT_WAREHOUSE_VIS", "UIE_GENERALBG_HOOK");
             UIE_GENERALBG_INIT(frame)
         end,
@@ -645,17 +724,23 @@ function UIE_GENERALBG_ON_OPEN(frame)
     }
 end
 function UIE_GENERALBG_HOOK(frame, msg, argStr, argNum)
-       
+    EBI_try_catch {
+        try = function()
     for _, v in pairs(g.gbg._componentInstances) do
 
         v:hookmsg(frame, msg, argStr, argNum)
     end
+       end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
 function UIE_GENERALBG_INIT()
     EBI_try_catch {
         try = function()
             local frame = ui.GetFrame(framename)
-            frame:SetLayerLevel(95)
+            frame:SetLayerLevel(99)
             local gbox = frame:CreateOrGetControl('groupbox', 'gboxbody', 0, 0, 1920, 1080)
             AUTO_CAST(gbox)
             gbox:Resize(frame:GetWidth(), frame:GetHeight() - 200)
@@ -739,3 +824,14 @@ function UIE_GENERALBG_ON_CLOSE(frame)
     g.gbg.release()
 
 end
+function UIE_GENERALBG_GET_TOOLTIP_ITEM_OBJECT(strarg, guid, numarg1)
+    print('aaaa')
+    if strarg=='uie_market' then
+        return UIE_GENERALBG_TOOLTIP_GUID[guid].ies
+    end
+   local ret=  GET_TOOLTIP_ITEM_OBJECT_OLD(strarg, guid, numarg1)
+   if ret then 
+    return ret
+   end
+end
+UIE_GENERALBG_TOOLTIP_GUID={}

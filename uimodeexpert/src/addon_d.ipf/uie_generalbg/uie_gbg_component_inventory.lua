@@ -175,7 +175,7 @@ g.gbg.uiegbgComponentInventoryBase = {
         local col = math.floor((gboxin:GetWidth() - 20) / slotsize)
         self.col = col
         self.invItemList = invItemList
-       
+        local beginidx=0
         for k, v in ipairs(invItemList) do
             local invItem = v.item
 
@@ -195,6 +195,8 @@ g.gbg.uiegbgComponentInventoryBase = {
                         if slotset then
                             slotset:Invalidate()
                             slotset:EnableAutoResize(true, true)
+                            slotset:SetSlotCount(slotidx)
+                            slotset:SetUserValue('count',slotidx)
                             oy = oy + slotset:GetHeight() + 5
                         end
                         local rich = gboxin:CreateOrGetControl('richtext', 'category' .. treename, 0, oy, gboxin:GetWidth(), 30)
@@ -223,6 +225,7 @@ g.gbg.uiegbgComponentInventoryBase = {
                         end
                         --slotset:SetSkinName('slot')
                         slotset:CreateSlots()
+                        beginidx=beginidx+slotidx
                         slotidx = 0
                     end
                     cnt = cnt + 1
@@ -232,7 +235,11 @@ g.gbg.uiegbgComponentInventoryBase = {
                     end
                     local parentslot = slotset:GetSlotByIndex(slotidx)
                     invItemList[k].slot = parentslot
-                    invItemList[k].index = k
+                    invItemList[k].index = k-1
+                    invItemList[k].slotset=slotset
+                    invItemList[k].indexinslotset=slotidx
+                    invItemList[k].beginindexinslotset=beginidx
+                    
                     self:updateSlot(k)
                     if not self.option.enableaccess or  self.option.selectable then
                         parentslot:SetEventScript(ui.RBUTTONDOWN, 'None')
@@ -255,6 +262,7 @@ g.gbg.uiegbgComponentInventoryBase = {
                 end
             end
         end
+        --slotset:SetUserValue('count',slotidx)
         if self.option.singleselect then
             ui.EnableSlotMultiSelect(0);
         else
@@ -384,6 +392,57 @@ g.gbg.uiegbgComponentShopInventory = {
         slot:SetEventScriptArgNumber(ui.LBUTTONUP, inv.index)
         slot:SetEventScriptArgString(ui.LBUTTONUP, self.name)
     end,
+    getItemListImpl=function(self)
+        --override me
+        session.BuildInvItemSortedList()
+
+        local sortedList = session.GetInvItemSortedList()
+        local invItemCount = sortedList:size()
+        local invItemList = {}
+        local index_count = 1
+        
+        for i = 0, invItemCount - 1 do
+            local invItem = sortedList:at(i)
+            if invItem ~= nil then
+                local itemCls = GetIES(invItem:GetObject())
+                local itemProp = geItemTable.GetPropByName(itemCls.ClassName)
+            
+                if itemCls ~= nil and item.IsNoneItem(itemCls.ClassID) == 0 and
+                  itemCls.MarketCategory ~= 'None' then
+                    if true == invItem.isLockState or itemProp:IsEnableShopTrade() == false or
+                    itemCls.MarketCategory == 'Housing_Furniture' or 
+                    itemCls.MarketCategory == 'PHousing_Furniture' or 
+                    itemCls.MarketCategory == 'PHousing_Wall' or
+                    itemCls.MarketCategory == 'PHousing_Carpet' then
+
+                     else
+
+                        local baseidcls = GET_BASEID_CLS_BY_INVINDEX(invItem.invIndex)
+
+                        local titleName = baseidcls.ClassName
+                        if baseidcls.MergedTreeTitle ~= 'NO' then
+                            titleName = baseidcls.MergedTreeTitle
+                        end
+                        local typeStr = GET_INVENTORY_TREEGROUP(baseidcls)
+                        local rank = 0
+                        for _, v in ipairs(g.util.inventory_filters) do
+                            if v.original == typeStr then
+                                rank = v.rank
+                            end
+                        end
+                        invItemList[index_count] = {
+                            rank = rank,
+                            item = invItem
+                            
+                        }
+
+                        index_count = index_count + 1
+                    end
+                end
+            end
+        end
+        return invItemList
+    end,
     sellItem = function(self, index, amount)
         local inv = self.invItemList[index]
         local invitem = inv.item
@@ -413,6 +472,7 @@ g.gbg.uiegbgComponentShopInventory = {
         if self.updatecallback then
             self.updatecallback()
         end
+        imcSound.PlaySoundEvent("button_inven_click_item");
     end,
     calcTotalValue = function(self)
         local invItemList = self.invItemList
@@ -547,51 +607,181 @@ g.uieHandlergbgComponentInventory = {
             end
         }
     end,
+    findNextElem=function(self,index,invItemList) 
+        local slotset=invItemList[index].slotset
+        for i=index,#invItemList do
+            if slotset~=invItemList[i].slotset then
+                return invItemList[i]
+            end
+        end
+        return nil
+    end,
+    findPrevElem=function(self,index,invItemList) 
+        local slotset=invItemList[index].slotset
+        for i=index,1,-1 do
+            if slotset~=invItemList[i].slotset then
+                return invItemList[i]
+            end
+        end
+        return nil
+    end,
     tick = function(self)
         local count = #self.gbg.invItemList
+      
         if count > 0 then
-            if g.key:IsKeyPress(g.key.RIGHT) then
-                --down
-                self.cursor = self.cursor + 1
-                if self.cursor >= count then
-                    self.cursor = 0
+            local elem=self.gbg.invItemList[self.cursor+1]
+            local prevelem=self:findPrevElem(self.cursor+1,self.gbg.invItemList)
+            local nextelem=self:findNextElem(self.cursor+1,self.gbg.invItemList)
+            if g.key:IsKeyPressed(g.key.SUB) then
+                local gbg=self.gbg
+                if g.key:IsKeyPress(g.key.RIGHT) then
+                    -- +1
+                    gbg:sellItem(self.cursor+1, 1)
+          
                 end
-                self:moveMouse()
-                g:onChangedCursor()
-            end
-            if g.key:IsKeyPress(g.key.LEFT) then
-                --up
-                self.cursor = self.cursor - 1
-                if self.cursor < 0 then
-                    self.cursor = count - 1
-                end
-                self:moveMouse()
-                g:onChangedCursor()
-            end
-            if g.key:IsKeyPress(g.key.DOWN) then
-                --down
-                self.cursor = self.cursor + self.gbg.col
-                if self.cursor >= count then
-                    self.cursor = 0
-                end
-                self:moveMouse()
-                g:onChangedCursor()
-            end
-            if g.key:IsKeyPress(g.key.UP) then
-                --up
-                self.cursor = self.cursor - self.gbg.col
-                if self.cursor < 0 then
-                    self.cursor = count - 1
-                end
-                self:moveMouse()
-                g:onChangedCursor()
-            end
-            if g.key:IsKeyDown(g.key.CANCEL) then
-                g:onCanceledCursor()
-                return g.uieHandlerBase.RefEnd
-            end
+                if g.key:IsKeyPress(g.key.LEFT) then
+                    -- +1
+                    gbg:sellItem(self.cursor+1, -1)
 
-            if g.key:IsKeyDown(g.key.MAIN) or g.key:IsKeyDown(g.key.SUB) then
+                end
+                if g.key:IsKeyPress(g.key.UP) then
+                    -- -10
+                    gbg:sellItem(self.cursor+1, 10)
+       
+                end
+                if g.key:IsKeyPress(g.key.DOWN) then
+                    -- +10
+                    gbg:sellItem(self.cursor+1, -10)
+                    
+                end
+                if g.key:IsKeyPress(g.key.PAGEUP) then
+                    -- -100
+                    gbg:sellItem(self.cursor+1, -100)
+                   
+                end
+                if g.key:IsKeyPress(g.key.PAGEDOWN) then
+                    -- 100
+                    gbg:sellItem(self.cursor+1, 100)
+                    
+                end
+            else
+                if g.key:IsKeyPress(g.key.RIGHT) then
+                    --down
+                    self.cursor = self.cursor + 1
+                    if self.cursor >= count then
+                        self.cursor = 0
+                    end
+                    self:moveMouse()
+                    g:onChangedCursor()
+                end
+                if g.key:IsKeyPress(g.key.LEFT) then
+                    --up
+                    self.cursor = self.cursor - 1
+                    if self.cursor < 0 then
+                        self.cursor = count - 1
+                    end
+                    self:moveMouse()
+                    g:onChangedCursor()
+                end
+                if g.key:IsKeyPress(g.key.DOWN) then
+                    --down
+                    local inindex=self.cursor+self.gbg.col
+                    
+                    if nextelem then
+                        
+                        self.cursor=math.min(
+                            nextelem.beginindexinslotset+elem.indexinslotset,
+                        nextelem.beginindexinslotset+nextelem.slotset:GetUserIValue('count')-1,inindex)
+                    else
+                        self.cursor=inindex
+                    end
+                    
+                    if self.cursor<0 then
+                        self.cursor= count - 1
+                    end
+                    if self.cursor>=count then
+                        self.cursor= 0
+        
+                    end
+                    self:moveMouse()
+                    g:onChangedCursor()
+                end
+                if g.key:IsKeyPress(g.key.UP) then
+                    --up
+                    local inindex=self.cursor-self.gbg.col
+                
+                    if prevelem then
+                        self.cursor=math.max(
+                            math.min(prevelem.beginindexinslotset+elem.indexinslotset,
+                            prevelem.beginindexinslotset+prevelem.slotset:GetUserIValue('count')-1)
+                            ,inindex)
+                    else
+                        self.cursor=inindex
+                    end
+                    if self.cursor<0 then
+                        self.cursor= count - 1
+                    end
+                    if self.cursor>=count then
+                        self.cursor= 0
+        
+                    end
+                  
+                    print(''..self.cursor)
+                    self:moveMouse()
+                    g:onChangedCursor()
+                end
+                if g.key:IsKeyPress(g.key.PAGEUP) then
+                    local inindex=self.cursor-self.gbg.col*4
+                
+                    if prevelem then
+                        self.cursor=math.max(
+                            math.min(prevelem.beginindexinslotset+elem.indexinslotset,
+                            prevelem.beginindexinslotset+prevelem.slotset:GetUserIValue('count')-1)
+                            ,inindex)
+                    else
+                        self.cursor=inindex
+                    end
+                    if self.cursor<0 then
+                        self.cursor= count - 1
+                    end
+                    if self.cursor>=count then
+                        self.cursor= 0
+        
+                    end
+                  
+                    print(''..self.cursor)
+                    self:moveMouse()
+                    g:onChangedCursor()
+                end
+                if g.key:IsKeyPress(g.key.PAGEDOWN) then
+                    --down
+                    local inindex=self.cursor+self.gbg.col*4
+                    
+                    if nextelem then
+                        
+                        self.cursor=math.min(
+                            nextelem.beginindexinslotset+elem.indexinslotset,
+                        nextelem.beginindexinslotset+nextelem.slotset:GetUserIValue('count')-1,inindex)
+                    else
+                        self.cursor=inindex
+                    end
+                    
+                    if self.cursor<0 then
+                        self.cursor= count - 1
+                    end
+                    if self.cursor>=count then
+                        self.cursor= 0
+        
+                    end
+                    self:moveMouse()
+                    g:onChangedCursor()
+                end
+                if g.key:IsKeyDown(g.key.CANCEL) then
+                    g:onCanceledCursor()
+                    return g.uieHandlerBase.RefEnd
+                end
+            end
+            if g.key:IsKeyDown(g.key.MAIN)  then
                 local scp
                 local idx = self.cursor
                 local ctrl = self.gbg.invItemList[self.cursor + 1].slot
@@ -606,20 +796,6 @@ g.uieHandlergbgComponentInventory = {
                             scp = ctrl:GetEventScript(evt)
                             if not scp then
                                 evt = ui.LBUTTONPRESSED
-                                scp = ctrl:GetEventScript(evt)
-                                if not scp then
-                                --none
-                                end
-                            end
-                        end
-                    elseif g.key:IsKeyDown(g.key.SUB) then
-                        evt = ui.RBUTTONUP
-                        scp = ctrl:GetEventScript(evt)
-                        if not scp then
-                            evt = ui.RBUTTONDOWN
-                            scp = ctrl:GetEventScript(evt)
-                            if not scp then
-                                evt = ui.RBUTTONPRESSED
                                 scp = ctrl:GetEventScript(evt)
                                 if not scp then
                                 --none
@@ -673,9 +849,8 @@ g.uieHandlergbgComponentInventory = {
                             if ctrl:IsSelected() == 1 then
                                 ctrl:Select(0)
                             else
-                                if self.option.singleselect then
-                                        parent:ClearSelectedSlot()
-                                
+                                if self.gbg.option.singleselect then
+                                    parent:ClearSelectedSlot()
                                 end
                                 ctrl:Select(1)
                             end

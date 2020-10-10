@@ -60,7 +60,16 @@ g.util.map = {
     ['ui::CIcon'] = 'icon',
     ['ui::CDropList'] = 'droplist'
 }
-
+g.util._delayedCallbackStack={}
+g.util.delayedCallback=function(callback)
+    table.insert(g.util._delayedCallbackStack,callback)
+    ReserveScript("UIE_UTIL_DELAYEDCALLBACK()",0.01)
+end
+g.util._namedReserveScript={}
+g.util.namedReserveScript=function(name,callback,time)
+    g.util._namedReserveScript[name]=callback
+    ReserveScript(string.format("UIE_UTIL_NAMEDRESERVESCRIPT('%s')",name),time)
+end
 g.util.instanceof = function(subject, super)
     super = tostring(super)
     local mt = getmetatable(subject)
@@ -234,3 +243,15 @@ g.util.generateSilverString = function(price, size)
     return string.format('{img icon_item_silver %d %d} {ol}{s%d} %s {/}{/}{/}', size, size, size * 3 / 4, tostring(price))
 end
 UIMODEEXPERT = g
+function UIE_UTIL_DELAYEDCALLBACK()
+    local top=table.remove(g.util._delayedCallbackStack)
+    assert(pcall(top))
+end
+
+function UIE_UTIL_NAMEDRESERVESCRIPT(name)
+    local cb= g.util._namedReserveScript[name]
+    g.util._namedReserveScript[name]=nil
+    if cb then
+        assert(pcall(cb,name))
+    end
+end

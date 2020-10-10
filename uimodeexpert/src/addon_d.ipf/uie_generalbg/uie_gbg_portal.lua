@@ -86,10 +86,10 @@ g.gbg.uiegbgPortal={
             if isValid == false then
                 world.PreloadMinimap(mapName);
             end
-            local w=(gbox:GetWidth()-100)/itemCount
+            local w=450
             local ww=350
             local h=600
-            local ingbox=gbox:CreateOrGetControl('groupbox','gboxportal'..i,w*(i-1)+gbox:GetWidth()/2-ww/2,50,ww,h);
+            local ingbox=gbox:CreateOrGetControl('groupbox','gboxportal'..i,w*i+300,50,ww,h);
             AUTO_CAST(ingbox)
             local title=ingbox:CreateOrGetControl('richtext','title',10,10,ww-20,60)
             title:SetText('{ol}{s32}'..mapCls.Name)
