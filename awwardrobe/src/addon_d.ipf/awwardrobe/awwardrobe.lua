@@ -59,7 +59,7 @@ g.tab_aw=TAB_EQUIP
 g.tab_config=TAB_EQUIP
 g.max_cards=13  --カードの最大値
 g.framename = "awwardrobe"
-g.debug = true
+g.debug = false
 g.interlocked = false
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.reservedscript={}
@@ -544,7 +544,7 @@ function AWWARDROBE_ON_DEPOSIT()
                 
                 --AWWARDROBE_DETACH_CARDS(ui.GetFrame(g.framename), tbl.data)
                 ui.MsgBox(string.format(L_('dlgcarddetach'),AWWARDROBE_CALCULATE_SILVER_DETACH(tbl.data)),
-                string.format('AWWARDROBE_DETACH_CARDS(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected))
+                string.format('AWWARDROBE_DETACH_CARDS(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected),'None')
             else
                 ui.SysMsg(L_("alertplzselect"))
             end
@@ -582,7 +582,7 @@ function AWWARDROBE_ON_WITHDRAW()
             --WEAR
             --AWWARDROBE_ATTACH_CARDS(ui.GetFrame(g.framename), tbl.data)
             ui.MsgBox(string.format(L_('dlgcardattach'),AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl.data)),
-            string.format('AWWARDROBE_ATTACH_CARDS(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected))
+            string.format('AWWARDROBE_ATTACH_CARDS(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected),'None')
             
             else
                 ui.SysMsg(L_("alertplzselect"))
@@ -598,7 +598,7 @@ function AWWARDROBE_GET_CARDDATABYINDEX(index)
 end
 function AWWARDROBE_DETACH_CARDS(frame, tbl)
        AWWARDROBE_try(function()
-        local delay = 0
+        local delay = 1
         local awframe = ui.GetFrame("accountwarehouse")
         
         local items = {}
@@ -642,7 +642,7 @@ function AWWARDROBE_DETACH_CARDS(frame, tbl)
         end
         if IsGreaterThanForBigNumber(accountsilver,'0')==1 then
             ReserveScript(string.format([[AWWARDROBE_TAKESILVER('%s')]],needzeny),delay)
-            delay=delay+0.5
+            delay=delay+1
         end
         for i=1,g.max_cards do
             for k,v in pairs(todetach) do
@@ -652,7 +652,7 @@ function AWWARDROBE_DETACH_CARDS(frame, tbl)
                 if cardInfo and v and v.count>0 and v.clsid==cardInfo:GetCardID() and v.lv==cardInfo.cardLv then
                     AWWARDROBE_DBGOUT('UNEQ'..i)
                     ReserveScript(string.format([[pc.ReqExecuteTx_NumArgs("SCR_TX_UNEQUIP_CARD_SLOT", tostring(%d)..' 1');]],i-1),delay)
-                    delay=delay+0.5
+                    delay=delay+1
                     todetach[k].count=todetach[k].count-1
 
                     break
@@ -664,7 +664,7 @@ function AWWARDROBE_DETACH_CARDS(frame, tbl)
         for _,v in pairs(tbl) do
             if v and v.clsid~=0 then
             ReserveScript(string.format([[AWWARDROBE_DEPOSITCARD(%d,%d)]],v.clsid,v.lv),delay)
-                delay=delay+0.6
+                delay=delay+0.75
             end
         end
         ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
@@ -695,8 +695,8 @@ function AWWARDROBE_FINDINVITEMBYTYPEANDLEVEL(clsid,lv)
     for i = 0, cnt - 1 do
         local guid = guidList:Get(i);
         local invItem=invItemList:GetItemByGuid(guid)
-       
-        if invItem.type==clsid then
+
+        if invItem.type==clsid  then
             AWWARDROBE_DBGOUT('pp'..invItem.type)
             local elv=GET_ITEM_LEVEL_EXP(GetIES(invItem:GetObject()))
             AWWARDROBE_DBGOUT(''..invItem.type..'-/'..elv)
@@ -712,7 +712,7 @@ end
 
 function AWWARDROBE_ATTACH_CARDS(frame, tbl)
     AWWARDROBE_try(function()
-        local delay = 0
+        local delay = 1
         local awframe = ui.GetFrame("accountwarehouse")
         
         local items = {}
@@ -727,7 +727,7 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
             return
         end
 
-        local needzeny,toattach=AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl)
+        local needzeny,toattach,toremove=AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl)
         local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
         local cnt, visItemList = GET_INV_ITEM_COUNT_BY_PROPERTY( { { Name = 'ClassName', Value = MONEY_NAME } }, false, itemList);
         local visItem = visItemList[1];
@@ -770,6 +770,7 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
             if obj.ClassName ~= MONEY_NAME then
                 for k,v in pairs(toattachcopy) do
                     AWWARDROBE_DBGOUT('POPO'..v.clsid..'/'..invItem.type)
+                    
                     if v.count>0 and v.clsid~=0 and v.clsid==invItem.type and GET_ITEM_LEVEL_EXP(GetIES(invItem:GetObject()))==v.lv  then
                         items[#items+1] = {
                             iesid=invItem:GetIESID(),
@@ -785,7 +786,7 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
         LS.takeitems(items);
 
         local currentcards={}
-        local detach=deepcopy(toattach)
+        local detach=deepcopy(toremove)
         --取り外し
         for i=1,g.max_cards do
             local cardInfo = equipcard.GetCardInfo(i);
@@ -798,12 +799,13 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
             end
         end
         for k,v in pairs(detach) do
-           
-            if detach[k].count>0  then
+            local pass=false
+            while pass==false and detach[k].count>0  do
+                pass=true
                 for i=1,g.max_cards do
                     local kk=i
                     local vv= currentcards[kk]
-                    if vv~=nil and v.clsid ~=0 and v.clsid==vv.clsid and v.lv==vv.lv and vv.original  then
+                    if vv~=nil and v.clsid ~=0 and (v.clsid~=vv.clsid or v.lv~=vv.lv) and vv.original  then
                         currentcards[kk]=  {
                             clsid=v.clsid,
                             lv=v.lv,
@@ -811,10 +813,12 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
                         }
                         AWWARDROBE_DBGOUT('detach '..i)
                         ReserveScript(string.format([[pc.ReqExecuteTx_NumArgs("SCR_TX_UNEQUIP_CARD_SLOT", tostring(%d)..' 1')]],i-1),delay)
-                        delay=delay+0.6
+                        delay=delay+1
                         detach[k].count=detach[k].count-1
-                        
+                        currentcards[kk].original=false
+                        pass=false
                     end
+                  
                 end
             end
         end
@@ -822,33 +826,39 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
         --取り付け
         for k,v in pairs(toattach) do 
             for i=1,v.count do
+              
                 if v and v.clsid~=0 then
-                    AWWARDROBE_DBGOUT('hooo')
-                    ReserveScript(string.format([[AWWARDROBE_DO_INSERT(%d,%d)]],v.clsid,v.lv),delay)
-                    delay=delay+0.6
+                  
+                    ReserveScript(string.format([[AWWARDROBE_DO_INSERT(%d,%d,%d)]],v.clsid,v.lv,i),delay)
+                    delay=delay+0.75
                 end
             end
         end
         ReserveScript('ui.SysMsg("'..L_("alertcomplete")..'");AWWARDROBE_INTERLOCK(false)', delay)
     end)
 end
-function AWWARDROBE_DO_INSERT(clsid,lv)
-    AWWARDROBE_DBGOUT('hooo4')
-    local invItem =AWWARDROBE_FINDINVITEMBYTYPEANDLEVEL(clsid,lv);
-    AWWARDROBE_DBGOUT('hooo3')
-    if invItem then
-        AWWARDROBE_DBGOUT('hooo2')
-        AWWARDROBE_INSERTCARD(invItem:GetIESID())
-    else
-        AWWARDROBE_DBGOUT('hooaao2')
-    end
-end
-function AWWARDROBE_INSERTCARD(iesid)
+function AWWARDROBE_DO_INSERT(clsid,lv,dummy)
+    AWWARDROBE_try(function()
+        AWWARDROBE_DBGOUT('hooo4')
 
-    local invItem=session.GetInvItemByGuid(iesid)
+        local invItem =AWWARDROBE_FINDINVITEMBYTYPEANDLEVEL(clsid,lv);
+        AWWARDROBE_DBGOUT('hooo3')
+        if invItem then
+   
+            AWWARDROBE_DBGOUT('hooo2')
+            AWWARDROBE_INSERTCARD(invItem)
+        else
+
+            AWWARDROBE_DBGOUT('hooaao2')
+        end
+    end)
+end
+function AWWARDROBE_INSERTCARD(invItem)
+
+
     local cardObj = GetClassByType("Item", invItem.type)
     if cardObj == nil then
-        AWWARDROBE_DBGOUT('Fail')
+
         return
     end
     if cardObj.CardGroupName == "REINFORCE_CARD" then
@@ -879,18 +889,14 @@ function AWWARDROBE_INSERTCARD(iesid)
             candidate=idx
             break
         else
-            if cardInfo:GetCardID()==invItem.type and cardInfo.cardLv==GET_ITEM_LEVEL_EXP(invItem) then
-
-            else
-              
-            end
+    
         end
     end
     candidate=candidate or lessercandidate
    
     if candidate then
-        AWWARDROBE_DBGOUT('INSERT'..candidate..'/'..invItem.type)
-        local argStr = string.format("%d#%s", candidate-1, iesid);
+
+        local argStr = string.format("%d#%s", candidate-1, invItem:GetIESID());
         pc.ReqExecuteTx("SCR_TX_EQUIP_CARD_SLOT", argStr);
     end
 end
@@ -1423,6 +1429,7 @@ function AWWARDROBE_SETSLOT(slot, invItem)
     AWWARDROBE_DBGOUT("I" .. tostring(invItem:GetIESID()))
     
     slot:SetUserValue("clsid", tostring(GetIES(invItem:GetObject()).ClassID))
+    slot:SetUserValue("iesid", tostring(invItem:GetIESID()))
 
 
 end
@@ -1665,8 +1672,11 @@ function AWWARDROBE_CALCULATE_SILVER_DETACH(tbl)
             local key=tostring(v.clsid)..'#'..tostring(v.lv)
             local cardObj = GetClassByType("Item", v.clsid);
             if current[key] and current[key]>0 then
-
-                silver=silver+CALC_NEED_SILVER(cardObj, v.lv)
+                local lv=v.lv
+                if lv==1 then
+                    lv=0
+                end
+                silver=silver+(CALC_NEED_SILVER(cardObj, lv) or 0)
                 current[key]=current[key]-1
                 if  todetach[key] then
                     todetach[key].count=todetach[key].count+1
@@ -1698,54 +1708,61 @@ function AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl)
             if  toattach[key] then
                 toattach[key].count=toattach[key].count+1
             else
-
                 toattach[key]={
                     count=1,
                     clsid=v.clsid,
                     lv=v.lv
-                    
                 }
-
             end
-            
-
         end
+        tbl[k].filled=false
     end
-    local slotemptyness={
-        ATK={1,1,1},
-        DEF={1,1,1},
-        UTIL={1,1,1},
-        STAT={1,1,1},
-        LEG={1},
-        
-    }
-     --すでに装着済みをカウント
-     for i = 1, MAX_NORMAL_MONSTER_CARD_SLOT_COUNT + LEGEND_CARD_SLOT_COUNT do
-        local cardInfo = equipcard.GetCardInfo(i);
-        if cardInfo ~= nil then
-            local key=tostring(cardInfo:GetCardID())..'#'..tostring(cardInfo.cardLv)
-            AWWARDROBE_DBGOUT('CARD'..key)
-            current[key]=
-            current[key] or 0
-            current[key]=
-            current[key]+1
-            local cardObj = GetClassByType("Item", cardInfo:GetCardID())
+   
+    local toremove={}
+    --  --すでに装着済みをカウント
+    --  for i = 1, 13 do
+    --     local cardInfo = equipcard.GetCardInfo(i);
+    --     if cardInfo ~= nil and cardInfo:GetCardID()~=0 then
+    --         local key=tostring(cardInfo:GetCardID())..'#'..tostring(cardInfo.cardLv)
+    --         AWWARDROBE_DBGOUT('CARD'..key)
+    --         current[key]=
+    --         current[key] or 0
+    --         current[key]=
+    --         current[key]+1
+    --         local cardObj = GetClassByType("Item", cardInfo:GetCardID())
 
-            local localidx=i
-            if cardObj.CardGroupName=='ATK' then
-                localidx=i-0
-            elseif cardObj.CardGroupName=='DEF' then
-                localidx=i-3
-            elseif cardObj.CardGroupName=='UTIL' then
-                localidx=i-6
-            elseif cardObj.CardGroupName=='STAT' then
-                localidx=i-9
-            else
-                localidx=i-12
-            end
-            slotemptyness[cardObj.CardGroupName][localidx]=0
-        end
-    end
+    --         local localidx=i
+    --         if cardObj.CardGroupName=='ATK' then
+    --             localidx=i-0
+    --         elseif cardObj.CardGroupName=='DEF' then
+    --             localidx=i-3
+    --         elseif cardObj.CardGroupName=='UTIL' then
+    --             localidx=i-6
+    --         elseif cardObj.CardGroupName=='STAT' then
+    --             localidx=i-9
+    --         else
+    --             localidx=i-12
+    --         end
+    --         slotemptyness[cardObj.CardGroupName][localidx]=0
+      
+    --         if toremove[i] then
+    --             toremove[i].count=toremove[i].count+1
+    --             toremove[i].remain=toremove[i].remain+1
+    --         else
+    --             toremove[i]={
+    --                 count=1,
+    --                 remain=1
+    --                 clsid=cardInfo:GetCardID(),
+    --                 lv=cardInfo.cardLv,
+    --                 group=cardObj.CardGroupName,
+    --                 remove=false
+    --             }
+    --         end
+    --     else
+    --         AWWARDROBE_DBGOUT('EMPTY'..i)
+    --     end
+    -- end
+  
     
     for k,v in pairs(tbl) do
         if v and v.clsid ~= 0 then
@@ -1764,42 +1781,122 @@ function AWWARDROBE_CALCULATE_SILVER_ATTACH(tbl)
                     tbl[k].filled=true
                     current[key]=current[key]-1
                     AWWARDROBE_DBGOUT('found')
+                    
                 end
             end
         end
     end
-    local toattach_forsilver=deepcopy(toattach)
-    
-    --スロットがあいているならシルバーの計算からは除外
-    for k,v in pairs(tbl) do
-        if v and v.clsid ~= 0 and not v.filled then
-
-            local cardObj = GetClassByType("Item", v.clsid);
-            for kk,vv in ipairs(slotemptyness[cardObj.CardGroupName]) do
-                if vv==1 then
-                    local key=tostring(v.clsid)..'#'..tostring(v.lv)
-                    slotemptyness[cardObj.CardGroupName][kk]=0
-                    if (toattach_forsilver[key].count>0) then
-                        toattach_forsilver[key].count=toattach_forsilver[key].count-1
-                    end
-                    if toattach_forsilver[key].count==0 then
-                        toattach_forsilver[key]=nil
-                    end
-                    tbl[k].filled=true
+    local filled={0,0,0,0,0 ,0,0,0,0,0, 0,0,0}
+    local zone={
+        "ATK",
+        "ATK",
+        "ATK",
+        "DEF",
+        "DEF",
+        "DEF",
+        "UTIL",
+        "UTIL",
+        "UTIL",
+        "STAT",
+        "STAT",
+        "STAT",
+        "LEG",
+    }
+     --すでに装着済みをカウント
+     for k,v in pairs(tbl) do
+        if v and v.clsid ~= 0 then
+           --すでに装着済みなら除外
+            local key=tostring(v.clsid)..'#'..tostring(v.lv)
+            local pass=false
+            for i = 1, 13 do
+                local cardInfo = equipcard.GetCardInfo(i);
+                local cardObjB = GetClassByType("Item", v.clsid);
+                if cardInfo == nil and filled[i]==0 and zone[i]== cardObjB.CardGroupName then
+                    
+            
+                    
+                    filled[i]=1
+                    pass=true
                     break
                 end
             end
+            if pass==false then
+                for i = 1, 13 do
+                    local cardInfo = equipcard.GetCardInfo(i);
+                    if cardInfo ~= nil and (cardInfo:GetCardID()~=v.clsid or cardInfo.cardLv ~= v.lv) then
+                        local cardObjA = GetClassByType("Item", cardInfo:GetCardID());
+                        local cardObjB = GetClassByType("Item", v.clsid);
+                        if filled[i]==0 and cardObjA.CardGroupName==cardObjB.CardGroupName then
+                            if not toremove[key] then
+                                toremove[key]={
+                                    count=1,
+                                    clsid=v.clsid,
+                                    lv=v.lv
+                                }
+                            else
+                                toremove[key].count=toremove[key].count+1
+                            end
+
+                            
+                            filled[i]=1
+                            break
+                        end
+            
+                    end
+                end
+            end
         end
     end
-    --最後に計算
-    for k,v in pairs(toattach_forsilver) do
-        if v and v.clsid ~= 0 and v.count ~= 0 then
-            AWWARDROBE_DBGOUT(''..v.clsid..'.'..v.lv)
-            local cardObj = GetClassByType("Item", v.clsid);
-            silver=silver+CALC_NEED_SILVER(cardObj, v.lv)*v.count
+    -- --スロットがあいているならシルバーの計算からは除外
+    -- for k,v in pairs(tbl) do
+    --     if v and v.clsid ~= 0 and not v.filled then
+
+    --         local cardObj = GetClassByType("Item", v.clsid);
+    --         AWWARDROBE_DBGOUT('FILLA'.. k)
+    --         for kk,vv in ipairs(slotemptyness[cardObj.CardGroupName]) do
+    --             if vv==1 then
+    --                 local key=tostring(v.clsid)..'#'..tostring(v.lv)
+    --                 slotemptyness[cardObj.CardGroupName][kk]=-1
+         
+    --                 AWWARDROBE_DBGOUT('FILL'.. key)
+    --                 tbl[k].filled=true
+    --                 break
+    --             end
+    --         end
+    --     end
+    -- end
+
+    -- --最後に計算
+    -- for k,v in pairs(tbl) do
+    --     if v and v.clsid ~= 0 and v.count ~= 0 and not v.filled then
+    --         local key=tostring(v.clsid)..'#'..tostring(v.lv)
+    --         local cardObj = GetClassByType("Item", v.clsid);
+    --         for kk,vv in pairs(toremove) do
+
+    --             if not vv.remove and vv.group==cardObj.CardGroupName and toremove[key].remain>0 then
+    --                 toremove[kk].count=toremove[kk].count+1
+    --                 toremove[kk].remain=toremove[kk].remain-1
+                    
+    --                 break
+    --             end
+    --         end
+            
+    --     end
+    -- end
+
+    for k,v in pairs(toremove) do
+
+        local cardObj = GetClassByType("Item", v.clsid);
+
+        local lv= v.lv
+        if lv==1 then
+            lv=0
         end
+        silver=silver+(CALC_NEED_SILVER(cardObj,lv) or 0)*v.count
+  
     end
-    return silver,toattach
+            
+    return silver,toattach,toremove
 end
 
 function AWWARDROBE_WEAR_MATCHED(frame, tbl)
