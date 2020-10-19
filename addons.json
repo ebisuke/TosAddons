@@ -522,5 +522,19 @@
       "challengemode",
       "dialog"
     ]
+  },
+  {
+    "name": "ikor",
+    "file": "ikorextractionresetinhibiter",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "ikorextractionresetinhibiter-v0.0.1",
+    "unicode": "📖",
+    "description": "イコル抜き時に設定したアイテムが初期化されないようにします  ",
+    "tags": [
+      "ui",
+      "ikor",
+      "extract"
+    ]
   }
 ]

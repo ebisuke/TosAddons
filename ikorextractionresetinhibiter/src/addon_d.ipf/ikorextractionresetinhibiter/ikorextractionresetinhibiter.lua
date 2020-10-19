@@ -101,92 +101,39 @@ function IERI_ITEMOPTIONEXTRACT_OPEN(frame)
 end
 
 function IERI_SEND_OK(frame)
+    EBI_try_catch {
+        try = function()
+	
+            local frame = ui.GetFrame("itemoptionextract");
 
-	local pic_bg = GET_CHILD_RECURSIVELY(frame, "pic_bg")
-	pic_bg:ShowWindow(1)
+            local slot=frame:GetChildRecursively('slot')
+            AUTO_CAST(slot)
+            local iconInfo=slot:GetIcon():GetInfo()
+            local mainiesid=iconInfo:GetIESID()
+            local extractKitSlot = GET_CHILD_RECURSIVELY(frame, "extractKitSlot")
+            local extractKitIcon = extractKitSlot:GetIcon()
+            local extractiesid= extractKitIcon:GetInfo():GetIESID()
 
-	local send_ok = GET_CHILD_RECURSIVELY(frame, "send_ok")
-	send_ok:ShowWindow(0)
-
-	local do_extract = GET_CHILD_RECURSIVELY(frame, "do_extract")
-	do_extract : ShowWindow(1)
-
-	local resultGbox = GET_CHILD_RECURSIVELY(frame, "resultGbox")
-	resultGbox:ShowWindow(0)
-
-	local putOnItem = GET_CHILD_RECURSIVELY(frame, "text_putonitem")
-	putOnItem:ShowWindow(1)
-
-	local text_material = GET_CHILD_RECURSIVELY(frame, "text_material")
-	text_material : ShowWindow(1)
-
-	local slot_bg_image = GET_CHILD_RECURSIVELY(frame, "slot_bg_image")
-	slot_bg_image : ShowWindow(1)
-
-	local text_potential = GET_CHILD_RECURSIVELY(frame, "text_potential")
-	text_potential : ShowWindow(0)
-	local gauge_potential = GET_CHILD_RECURSIVELY(frame, "gauge_potential")
-	gauge_potential : ShowWindow(0)
-		
-	local arrowbox = GET_CHILD_RECURSIVELY(frame, "arrowbox")
-	arrowbox : ShowWindow(0)
-
-	local slot_result = GET_CHILD_RECURSIVELY(frame, "slot_result")
-	slot_result : ShowWindow(0)
-
-	local itemName = GET_CHILD_RECURSIVELY(frame, "text_itemname")
-	itemName:SetText("")
-
-	local bodyGbox1 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox1');
-	bodyGbox1:ShowWindow(1)
-	local bodyGbox2 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox2');
-	bodyGbox2:ShowWindow(1)
-	local bodyGbox2_1 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox2_1');
-	bodyGbox2_1:ShowWindow(1)
-	local extractKitGbox = GET_CHILD_RECURSIVELY(frame, 'extractKitGbox')
-	extractKitGbox:ShowWindow(0)
-	local bodyGbox3 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox3');
-    bodyGbox3:ShowWindow(0)
-    
-    
-	local bodyGbox1_1 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox1_1');
-	bodyGbox1_1:ShowWindow(1)
-	bodyGbox1_1:Resize(bodyGbox1:GetWidth(), bodyGbox1:GetHeight())
-
-	local bodyGbox2_2 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox2_2');
-	bodyGbox2_2:ShowWindow(1)
-
-	local bodyGbox3_1 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox3_1');
-	bodyGbox3_1:ShowWindow(1)
-
-
-	local destroy_gbox = GET_CHILD_RECURSIVELY(frame, 'destroy_gbox')
-	destroy_gbox:ShowWindow(0)
-
-    local invItem = session.GetInvItemByGuid(itemID)
-	if invItem == nil then
-		return;
-	end
-    local slot=frame:GetChild('slot')
-    AUTO_CAST(slot)
-    local iconInfo=slot:GetIcon():GetInfo()
-    local extractKitSlot = GET_CHILD_RECURSIVELY(frame, "extractKitSlot")
-    local extractKitIcon = extractKitSlot:GetIcon()
-
-    if session.GetInvItemByGuid(iconInfo:GetIESID()) then
-        ITEM_OPTIONEXTRACT_REG_TARGETITEM(frame, iconInfo:GetIESID());
-        if session.GetInvItemByGuid(extractKitIcon:GetInfo():GetIESID()) then
-            ITEM_OPTIONEXTRACT_KIT_REG_TARGETITEM(frame, extractKitIcon:GetInfo():GetIESID());
-        else
+            CLEAR_ITEMOPTIONEXTRACT_UI()
+            if session.GetInvItemByGuid(mainiesid) then
+                ITEM_OPTIONEXTRACT_REG_TARGETITEM(frame, mainiesid);
+                if session.GetInvItemByGuid(extractiesid) then
+                    ITEM_OPTIONEXTRACT_KIT_REG_TARGETITEM(frame, extractiesid);
+                else
+                    
+                    local extractKitName = GET_CHILD_RECURSIVELY(frame, "extractKitName")
+                    extractKitName:SetTextByKey("value", frame:GetUserConfig("EXTRACT_KIT_DEFAULT"))
             
-            local extractKitName = GET_CHILD_RECURSIVELY(frame, "extractKitName")
-            extractKitName:SetTextByKey("value", frame:GetUserConfig("EXTRACT_KIT_DEFAULT"))
-    
-        end
-    else
+                end
+            else
 
-        slot:ClearIcon();
-        slot:SetGravity(ui.CENTER_HORZ, ui.CENTER_VERT)    
-    end
-    
+                slot:ClearIcon();
+                slot:SetGravity(ui.CENTER_HORZ, ui.CENTER_VERT)    
+            end
+            
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
