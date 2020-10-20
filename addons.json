@@ -539,7 +539,7 @@
     ]
   },
   {
-    "name": "ikor",
+    "name": "ikorextractionresetinhibiter",
     "file": "ikorextractionresetinhibiter",
     "extension": "ipf",
     "fileVersion": "v0.0.1",
