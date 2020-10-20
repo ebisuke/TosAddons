@@ -30,7 +30,7 @@ g.prop = nil
 g.go = false
 g.propvalue = 0
 g.useadrasive = false
-g.nousehighadrasive = false
+g.usehighadrasive = false
 g.stones = {
     645768,
     645732,
@@ -355,10 +355,10 @@ function AWAKENROLLER_GETCOUNTFROMINV(list, argnum)
     local curCount = #invItemList
     for _, guid in ipairs(invItemList) do
         local invItem = session.GetInvItemByGuid(guid)
-        local cls = GetClassByType('Item', v)
+        local cls = GetClassByType('Item',invItem.type)
         for _, v in ipairs(list) do
             local prop = TryGetProp(cls, 'NumberArg1') or 0
-            if invItem.type == v and invItem.isLockState == false and (not argnum or prop >= argnum) then
+            if invItem.type == v and invItem.isLockState == false and (not argnum or prop == argnum) then
                 cnt = cnt + invItem.count
                 break
             end
@@ -423,15 +423,15 @@ function AWAKENROLLER_INITFRAME(invItem)
             local chkuseadrasive = frame:CreateOrGetControl('checkbox', 'chkuseadrasive', 30, 270, 50, 30)
             AUTO_CAST(chkuseadrasive)
             chkuseadrasive:SetCheck(1)
-            chkuseadrasive:SetText('{ol}Use Adrasive {img icon_item_awakemisc01 35 35}: ' .. AWAKENROLLER_GETCOUNTFROMINV(g.adrasive))
+            chkuseadrasive:SetText('{ol}Use LV400 Adrasive {img icon_item_awakemisc01 35 35}: ' .. AWAKENROLLER_GETCOUNTFROMINV(g.adrasive,400))
             chkuseadrasive:SetEventScript(ui.LBUTTONUP, 'AWAKENROLLER_UPDATENUMATTEMPT')
-            chkuseadrasive:SetTextTooltip('覚醒研磨剤を使用します。')
-            local chknousehighadrasive = frame:CreateOrGetControl('checkbox', 'chknousehighadrasive', 30, 300, 50, 30)
-            AUTO_CAST(chknousehighadrasive)
-            chknousehighadrasive:SetCheck(1)
-            chknousehighadrasive:SetText("{ol}Don't Use Lv430 Adrasive {s12}Lv430{/}{img icon_item_awakemisc01 35 35}: " .. AWAKENROLLER_GETCOUNTFROMINV(g.adrasive, 430))
-            chknousehighadrasive:SetEventScript(ui.LBUTTONUP, 'AWAKENROLLER_UPDATENUMATTEMPT')
-            chknousehighadrasive:SetTextTooltip('Lv430覚醒研磨剤を使用しません。')
+            chkuseadrasive:SetTextTooltip('LV400覚醒研磨剤を使用します。')
+            local chkusehighadrasive = frame:CreateOrGetControl('checkbox', 'chkusehighadrasive', 30, 300, 50, 30)
+            AUTO_CAST(chkusehighadrasive)
+            chkusehighadrasive:SetCheck(0)
+            chkusehighadrasive:SetText("{ol}Use Lv430 Adrasive {s12}Lv430{/}{img icon_item_awakemisc01 35 35}: " .. AWAKENROLLER_GETCOUNTFROMINV(g.adrasive, 430))
+            chkusehighadrasive:SetEventScript(ui.LBUTTONUP, 'AWAKENROLLER_UPDATENUMATTEMPT')
+            chkusehighadrasive:SetTextTooltip('Lv430覚醒研磨剤を使用します')
             local txtattempt = frame:CreateOrGetControl('richtext', 'txtattempt', 30, 360, 50, 30)
             txtattempt:SetText('{ol}Max Attempts:')
 
@@ -461,21 +461,33 @@ function AWAKENROLLER_INITFRAME(invItem)
     }
 end
 
-function AWAKENROLLER_UPDATENUMATTEMPT()
+function AWAKENROLLER_UPDATENUMATTEMPT(aa,ctrl)
     local frame = ui.GetFrame(g.framename)
     local chkuseadrasive = frame:GetChild('chkuseadrasive')
     AUTO_CAST(chkuseadrasive)
-    local chknousehighadrasive = frame:GetChild('chknousehighadrasive')
-    AUTO_CAST(chknousehighadrasive)
+    local chkusehighadrasive = frame:GetChild('chkusehighadrasive')
+    AUTO_CAST(chkusehighadrasive)
     local useadrasive = chkuseadrasive:IsChecked()
-    local nousehighadrasive = chknousehighadrasive:IsChecked()
+    local usehighadrasive = chkusehighadrasive:IsChecked()
     local adrasive = 0
     local mx
+    if useadrasive==1 and usehighadrasive==1 and ctrl then
+        chkuseadrasive:SetCheck(0)
+        chkusehighadrasive:SetCheck(0)
+        AUTO_CAST(ctrl)
+        ctrl:SetCheck(1)
+        useadrasive = chkuseadrasive:IsChecked()
+        usehighadrasive = chkusehighadrasive:IsChecked()
+    end
+
     if useadrasive == 1 then
-        adrasive = AWAKENROLLER_GETCOUNTFROMINV(g.adrasive)
-        if nousehighadrasive == 1 then
-            adrasive = adrasive - AWAKENROLLER_GETCOUNTFROMINV(g.adrasive, 430)
-        end
+       
+    
+        adrasive = AWAKENROLLER_GETCOUNTFROMINV(g.adrasive,400)
+        
+        mx = math.min(AWAKENROLLER_GETCOUNTFROMINV(g.stones), adrasive)
+    elseif usehighadrasive == 1 then
+        adrasive = AWAKENROLLER_GETCOUNTFROMINV(g.adrasive, 430)
         mx = math.min(AWAKENROLLER_GETCOUNTFROMINV(g.stones), adrasive)
     else
         mx = AWAKENROLLER_GETCOUNTFROMINV(g.stones)
@@ -499,11 +511,11 @@ function AWAKENROLLER_CONFIRM()
             local invItem = g.invItem
             local chkuseadrasive = frame:GetChild('chkuseadrasive')
             AUTO_CAST(chkuseadrasive)
-            local chknousehighadrasive = frame:GetChild('chknousehighadrasive')
-            AUTO_CAST(chknousehighadrasive)
+            local chkusehighadrasive = frame:GetChild('chkusehighadrasive')
+            AUTO_CAST(chkusehighadrasive)
 
             g.useadrasive = chkuseadrasive:IsChecked() == 1
-            g.nousehighadrasive = chknousehighadrasive:IsChecked() == 1
+            g.usehighadrasive = chkusehighadrasive:IsChecked() == 1
 
             local numattempts = frame:GetChild('numattempt')
             AUTO_CAST(numattempts)
@@ -612,7 +624,7 @@ function AWAKENROLLER_DO_EXECUTE()
                                   
                                     local prop = TryGetProp(cls, 'NumberArg1') or 0
                                     DBGOUT('hoge6:'..i..'/'..ccnt-1)
-                                    if prop < 430 or not g.nousehighadrasive then
+                                    if (prop < 430 and not g.usehighadrasive )or (prop == 430 and g.usehighadrasive)then
                                         adrasives[#adrasives + 1] = {
                                             iesid = guid,
                                             has = iv.hasLifeTime,
