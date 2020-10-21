@@ -516,7 +516,7 @@ function AWAKENROLLER_CONFIRM()
 
             g.useadrasive = chkuseadrasive:IsChecked() == 1
             g.usehighadrasive = chkusehighadrasive:IsChecked() == 1
-            if  g.useadrasive~=1 and g.usehighadrasive~=1 then
+            if  not  g.useadrasive and not g.usehighadrasive then
                 ui.SysMsg('Abrasive is required for item awakening.')
                 return
             end
