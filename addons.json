@@ -556,8 +556,8 @@
     "name": "enchantroller",
     "file": "enchantroller",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "enchantroller-v0.0.2",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "enchantroller-v0.0.3",
     "unicode": "📖",
     "description": "エンチャントで指定した以上の数値が出るまでロールするアドオンです",
     "tags": [

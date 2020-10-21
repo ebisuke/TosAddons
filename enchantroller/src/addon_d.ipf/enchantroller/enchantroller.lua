@@ -461,21 +461,37 @@ function ENCHANTROLLER_ON_SUCESS_ENCHANT_JEWELL(frame)
     end
     local complete=false
     if proptype=='fixed' then
-        if  g.fixedprop and propvalue >= g.fixedprop then
+        if  g.settings.fixedprop and propvalue >= g.settings.fixedprop then
             complete=true
         end
     elseif proptype=='high' then
-        if  g.highprop and propvalue/10.0 >= g.highprop then
+        if  g.settings.highprop and propvalue/10.0 >= g.settings.highprop then
             complete=true
         end
     elseif proptype=='low' then
-        if  g.lowprop and propvalue/10.0 >= g.lowprop then
+        if  g.settings.lowprop and propvalue/10.0 >= g.settings.lowprop then
             complete=true
         end
     end
     if complete then
         ui.SysMsg("Complete.")
         ENCHANTROLLER_STOP(frame)
+        
+        local jewelinvItem=session.GetInvItemByGuid(g.jewelguid)
+        if not jewelinvItem then
+            jewelinvItem=ENCHANTROLLER_FIND_JEWELL_ITEM()
+            local slotactive=frame:GetChildRecursively('slotactive')
+            AUTO_CAST(slotactive)
+            if jewelinvItem then
+                g.jewelguid=jewelinvItem:GetIESID()
+                SET_SLOT_ITEM(slotactive,jewelinvItem)
+            else
+
+                slotactive:ClearIcon()
+
+
+            end
+        end
         return
     else
         --続行
