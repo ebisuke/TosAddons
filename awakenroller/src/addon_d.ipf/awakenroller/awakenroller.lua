@@ -516,7 +516,10 @@ function AWAKENROLLER_CONFIRM()
 
             g.useadrasive = chkuseadrasive:IsChecked() == 1
             g.usehighadrasive = chkusehighadrasive:IsChecked() == 1
-
+            if  g.useadrasive~=1 and g.usehighadrasive~=1 then
+                ui.SysMsg('Abrasive is required for item awakening.')
+                return
+            end
             local numattempts = frame:GetChild('numattempt')
             AUTO_CAST(numattempts)
             local numofattempts = numattempts:GetNumber()
@@ -615,7 +618,7 @@ function AWAKENROLLER_DO_EXECUTE()
                                 break
                             end
                         end
-                        if g.useadrasive then
+                        if g.useadrasive or g.usehighadrasive then
                             for _, v in ipairs(g.adrasive) do
                                 
                                 if iv.type == v then
@@ -647,10 +650,10 @@ function AWAKENROLLER_DO_EXECUTE()
                     local ta = 100000000
                     local tb = 100000000
                     if a.has then
-                        ta = a.time
+                        ta = tonumber(a.time)
                     end
                     if b.has then
-                        tb = a.time
+                        tb = tonumber(b.time)
                     end
                     return ta < tb
                 end
@@ -662,10 +665,10 @@ function AWAKENROLLER_DO_EXECUTE()
                     local ta = 100000000
                     local tb = 100000000
                     if a.has then
-                        ta = a.time
+                        ta = tonumber(a.time)
                     end
                     if b.has then
-                        tb = a.time
+                        tb = tonumber(b.time)
                     end
                     return ta < tb
                 end
@@ -677,10 +680,18 @@ function AWAKENROLLER_DO_EXECUTE()
             local stoneguid = '0'
             if stone then
                 stoneguid = stone.iesid
+            else
+                ui.SysMsg('No stones')
+                ui.SetEscapeScp('')
+                return
             end
             local adrasiveguid = '0'
             if adrasive then
                 adrasiveguid = adrasive.iesid
+            else
+                ui.SysMsg('No adrasives')
+                ui.SetEscapeScp('')
+                return
             end
             local aframe = ui.GetFrame('itemdungeon')
             local handle = aframe:GetUserIValue('HANDLE')
@@ -720,7 +731,7 @@ function AWAKENROLLER_SUCCESS()
                     ui.SysMsg('Remain Attempt:' .. g.attempts)
                     g.attempts = g.attempts - 1
                     -- いくらでも早くできるが、まぁ
-                    ReserveScript('AWAKENROLLER_DO_EXECUTE()', 0.75)
+                    ReserveScript('AWAKENROLLER_DO_EXECUTE()', 0.9)
                 end
             end
         end,

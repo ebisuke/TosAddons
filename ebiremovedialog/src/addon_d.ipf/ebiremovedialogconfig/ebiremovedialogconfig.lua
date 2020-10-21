@@ -143,7 +143,7 @@ end
 
 function EBIREMOVEDIALOGCONFIG_GENERATEDEFAULT(config, node)
     if (node == nil) then
-        node = SMALLUI_CONFIG_DEFS
+        node = EBIREMOVEDIALOGCONFIG_CONFIG_DEFS
     end
     for k, v in ipairs(node) do
         if (v.default and config[v.name]==nil) then
