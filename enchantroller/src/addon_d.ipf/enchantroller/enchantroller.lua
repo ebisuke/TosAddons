@@ -93,22 +93,55 @@ function ENCHANTROLLER_SAVE_SETTINGS()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 end
 function ENCHANTROLLER_SAVE_ALL()
-    ENCHANT_SAVETOSTRUCTURE()
-    ENCHANT_SAVE_SETTINGS()
+    ENCHANTROLLER_SAVETOSTRUCTURE()
+    ENCHANTROLLER_SAVE_SETTINGS()
     ui.MsgBox('保存しました')
 end
 function ENCHANTROLLER_SAVETOSTRUCTURE()
     local frame = ui.GetFrame('enchantroller')
+    local edithighpercent=frame:GetChild('edithighpercent')
+    local editlowpercent=frame:GetChild('editlowpercent')
+    local editfixed=frame:GetChild('editfixed')
+    local high=edithighpercent:GetText()
+    local low=editlowpercent:GetText()
+    local fixed=editfixed:GetText()
+    if high=='' then
+        g.settings.highprop=nil
+    else
+        g.settings.highprop=tonumber(high)
+     
+    end
+    if low=='' then
+        g.settings.lowprop=nil
+    else
+        g.settings.lowprop=tonumber(low)
+        
+    end
+    if fixed=='' then
+        g.settings.fixedprop=nil
+    else
+        g.settings.fixedprop=tonumber(fixed)
+        
+    end
+    
 end
 
 function ENCHANTROLLER_LOAD_SETTINGS()
     DBGOUT('LOAD_SETTING')
-    g.settings = {foods = {}}
+    g.settings = {
+        highprop=15,
+        lowprop=10,
+        fixedprop=3,
+    }
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
         DBGOUT(string.format('[%s] cannot load setting files', addonName))
-        g.settings = {foods = {}}
+        g.settings = {
+            highprop=15,
+            lowprop=10,
+            fixedprop=3,
+        }
     else
         --設定ファイル読み込み成功時処理
         g.settings = t
@@ -124,6 +157,13 @@ end
 
 function ENCHANTROLLER_LOADFROMSTRUCTURE()
     local frame = ui.GetFrame('enchantroller')
+    local edithighpercent=frame:GetChild('edithighpercent')
+    local editlowpercent=frame:GetChild('editlowpercent')
+    local editfixed=frame:GetChild('editfixed')
+    edithighpercent:SetText(tostring(g.settings.highprop))
+    editlowpercent:SetText(tostring(g.settings.lowprop))
+    editfixed:SetText(tostring(g.settings.fixedprop))
+    
 end
 
 function ENCHANTROLLER_UPGRADE_SETTINGS()
@@ -146,6 +186,7 @@ function ENCHANTROLLER_ON_INIT(addon, frame)
                 g.loaded = true
             end
             acutil.setupHook(ENCHANTROLLER_OPEN_RAREOPTION,'OPEN_RAREOPTION')
+            acutil.setupHook(ENCHANTROLLER_WRAP_ON_SUCESS_ENCHANT_JEWELL,'ON_SUCESS_ENCHANT_JEWELL')
             frame:ShowWindow(0)
             local timer=frame:GetChild('addontimer')
             AUTO_CAST(timer)
@@ -153,7 +194,7 @@ function ENCHANTROLLER_ON_INIT(addon, frame)
             timer:Start(0.01)
             addon:RegisterMsg('FAIL_ENCHANT_JEWELL', 'ENCHANTROLLER_ON_FAIL_ENCHANT_JEWELL');
             addon:RegisterMsg('SUCESS_ENCHANT_JEWELL', 'ENCHANTROLLER_ON_SUCESS_ENCHANT_JEWELL');
-            ENCHANTROLLER_LOAD_SETTINGS()
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -176,6 +217,7 @@ function ENCHANTROLLER_SHOW()
     rframe:ShowWindow(1)
     local frame = ui.GetFrame('rareoption');
     frame:ShowWindow(0)
+   
     ENCHANTROLLER_INITFRAME()
     local guid = frame:GetUserValue('JEWELL_GUID');
 
@@ -203,9 +245,10 @@ function ENCHANTROLLER_SHOW()
         slotactive:ClearIcon()
     end
 
-
+    ITEM_UNREVERT_RANDOM_CLOSE()
 end
 function ENCHANTROLLER_INITFRAME()
+
     local frame = ui.GetFrame(g.framename);
     frame:Resize(710,386)
     local bgbox=frame:GetChild('bgBox')
@@ -269,6 +312,8 @@ function ENCHANTROLLER_INITFRAME()
     editfixed:SetText('3')
     editfixed:SetFontName('white_16_ol')
     editfixed:SetTextTooltip('最大値が固定値の区分の条件。使用しない場合は空欄にしてください')
+
+    ENCHANTROLLER_LOAD_SETTINGS()
 end
 function ENCHANTROLLER_ON_TIMER()
     EBI_try_catch {
@@ -310,37 +355,37 @@ function ENCHANTROLLER_START(frame)
     local low=editlowpercent:GetText()
     local fixed=editfixed:GetText()
     if high=='' then
-        g.highprop=nil
+        g.settings.highprop=nil
     else
-        g.highprop=tonumber(high)
-        if g.highprop==nil then
+        g.settings.highprop=tonumber(high)
+        if g.settings.highprop==nil then
             ui.SysMsg("InvalidValue:Condition 25%")
             return
-        elseif g.highprop>25.0 then
+        elseif g.settings.highprop>25.0 then
             ui.SysMsg("InvalidValue:Condition 25%")
             return
         end
     end
     if low=='' then
-        g.lowprop=nil
+        g.settings.lowprop=nil
     else
-        g.lowprop=tonumber(low)
-        if g.lowprop==nil then
+        g.settings.lowprop=tonumber(low)
+        if g.settings.lowprop==nil then
             ui.SysMsg("InvalidValue:Condition 15%")
             return
-        elseif g.lowprop>25.0 then
+        elseif g.settings.lowprop>15.0 then
             ui.SysMsg("InvalidValue:Condition 15%")
             return
         end
     end
     if fixed=='' then
-        g.fixedprop=nil
+        g.settings.fixedprop=nil
     else
-        g.fixedprop=tonumber(fixed)
-        if g.fixedprop==nil then
+        g.settings.fixedprop=tonumber(fixed)
+        if g.settings.fixedprop==nil then
             ui.SysMsg("InvalidValue:Condition 3")
             return
-        elseif g.lowprop>25.0 then
+        elseif g.settings.lowprop>3 then
             ui.SysMsg("InvalidValue:Condition 3")
             return
         end
@@ -362,6 +407,7 @@ function ENCHANTROLLER_START(frame)
     gauge:SetCurPoint(0)
     g.running=true
     g.waitforresult=false
+    ENCHANTROLLER_SAVE_SETTINGS()
     ENCHANTROLLER_ANIM()
 end,
 catch = function(error)
@@ -377,6 +423,9 @@ function ENCHANTROLLER_STOP(frame)
     g.waitforresult=false
 end
 function ENCHANTROLLER_ON_FAIL_ENCHANT_JEWELL(frame)
+    if not g.running then
+        return
+    end
     ui.SysMsg("Failed")
     ENCHANTROLLER_STOP(frame)
 end
@@ -387,10 +436,13 @@ function ENCHANTROLLER_SUPPRESS_ORIGINAL_ANIM()
 end
 function ENCHANTROLLER_ON_SUCESS_ENCHANT_JEWELL(frame)
     --判定
-
+    if not g.running then
+        return
+    end
     ReserveScript('ENCHANTROLLER_SUPPRESS_ORIGINAL_ANIM()',0.01)
     ENCHANTROLLER_UPDATE_JEWELCOUNT()
     local slot=frame:GetChildRecursively('slot')
+    AUTO_CAST(slot)
     local icon=slot:GetIcon()
     local targetguid = icon:GetInfo():GetIESID();
     local invItem=session.GetInvItemByGuid(targetguid)
@@ -431,11 +483,15 @@ function ENCHANTROLLER_ON_SUCESS_ENCHANT_JEWELL(frame)
         local jewelinvItem=session.GetInvItemByGuid(g.jewelguid)
         if not jewelinvItem then
             jewelinvItem=ENCHANTROLLER_FIND_JEWELL_ITEM()
-            
+            local slotactive=frame:GetChildRecursively('slotactive')
+            AUTO_CAST(slotactive)
             if jewelinvItem then
                 g.jewelguid=jewelinvItem:GetIESID()
+                SET_SLOT_ITEM(slotactive,jewelinvItem)
             else
                 ui.SysMsg("No jewel.")
+              
+                slotactive:ClearIcon()
                 ENCHANTROLLER_STOP(frame)
                 return
             end
@@ -511,9 +567,9 @@ function ENCHANTROLLER_UPDATE_JEWELCOUNT()
     end
 
     local haveCount = GET_INV_ITEM_COUNT_BY_PROPERTY({{Name = 'StringArg', Value ='EnchantJewell'}, {Name = 'Level', Value = g.jewellv}, {Name = 'ItemGrade', Value =g.jewelgrade}});
-	if haveCount == 0 then
-		haveCount = GET_INV_ITEM_COUNT_BY_PROPERTY({{Name = 'StringArg', Value ='EnchantJewell'}, {Name = 'NumberArg1', Value = g.jewellv}, {Name = 'ItemGrade', Value = g.jewelgrade}});
-    end
+
+	haveCount =haveCount+ GET_INV_ITEM_COUNT_BY_PROPERTY({{Name = 'StringArg', Value ='EnchantJewell'}, {Name = 'NumberArg1', Value = g.jewellv}, {Name = 'ItemGrade', Value = g.jewelgrade}});
+
     
     txtcount:SetText('{@st43}Jewels:'..haveCount)
 end
@@ -623,4 +679,15 @@ function ENCHANTROLLER_ANIM()
 	pic_bg:PlayUIEffect(RESET_SUCCESS_EFFECT_NAME, EFFECT_SCALE, 'RESET_SUCCESS_EFFECT');
 
  
+end
+function ENCHANTROLLER_WRAP_ON_SUCESS_ENCHANT_JEWELL(frame, msg, argStr, argNum)	
+    if g.running then
+    else
+        ON_SUCESS_ENCHANT_JEWELL_OLD(frame, msg, argStr, argNum)	
+    end
+end
+function ENCHANTROLLER_CLOSE(frame)
+    frame:ShowWindow(0)
+    ENCHANTROLLER_STOP(frame)
+    ENCHANTROLLER_SAVE_SETTINGS()
 end

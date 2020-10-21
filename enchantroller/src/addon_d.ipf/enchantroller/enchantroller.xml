@@ -20,7 +20,7 @@
 		<groupbox name="headerBox" rect="0 0 710 65" margin="0 0 0 0" layout_gravity="left top" skin="pipwin_top_wizard"/>
 		
 		<richtext name="titleText" parent="headerBox" rect="0 0 100 30" margin="0 -2 0 0" layout_gravity="center center" caption="{@st43}Enchantment Altar"/>
-		<button name="closeBtn" parent="headerBox" rect="0 0 50 50" margin="0 -2 12 0" layout_gravity="right center" LBtnUpScp="ui.CloseFrame('enchantroller')" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" image="testclose_button" oversound="button_over"/>
+		<button name="closeBtn" parent="headerBox" rect="0 0 50 50" margin="0 -2 12 0" layout_gravity="right center" LBtnUpScp="ENCHANTROLLER_CLOSE" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" image="testclose_button" oversound="button_over"/>
 		<slot name="slot" margin="0 0 50 0" rect="0 0 140 140" parent="pic_bg" movepop="false" dropsound="icon_get_down" picksound="icon_pick_up" DropScp="ENCHANTROLLER_RAREOPTION_DROP_ITEM" skin="invenslot2" RBtnUpScp="ENCHANTROLLER_RAREOPTION_INIT" layout_gravity="center center"/>
 		
 	</controls>
