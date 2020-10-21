@@ -359,7 +359,7 @@ function ENCHANTROLLER_START(frame)
     else
         g.settings.highprop=tonumber(high)
         if g.settings.highprop==nil then
-            ui.SysMsg("InvalidValue:Condition 25%")
+            ui.SysMsg("InvalidValue:Condition 25% is nil")
             return
         elseif g.settings.highprop>25.0 then
             ui.SysMsg("InvalidValue:Condition 25%")
@@ -371,7 +371,7 @@ function ENCHANTROLLER_START(frame)
     else
         g.settings.lowprop=tonumber(low)
         if g.settings.lowprop==nil then
-            ui.SysMsg("InvalidValue:Condition 15%")
+            ui.SysMsg("InvalidValue:Condition 15% is nil")
             return
         elseif g.settings.lowprop>15.0 then
             ui.SysMsg("InvalidValue:Condition 15%")
@@ -383,9 +383,9 @@ function ENCHANTROLLER_START(frame)
     else
         g.settings.fixedprop=tonumber(fixed)
         if g.settings.fixedprop==nil then
-            ui.SysMsg("InvalidValue:Condition 3")
+            ui.SysMsg("InvalidValue:Condition 3 is nil")
             return
-        elseif g.settings.lowprop>3 then
+        elseif g.settings.fixedprop>3 then
             ui.SysMsg("InvalidValue:Condition 3")
             return
         end
