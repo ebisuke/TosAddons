@@ -545,11 +545,26 @@
     "fileVersion": "v0.0.1",
     "releaseTag": "ikorextractionresetinhibiter-v0.0.1",
     "unicode": "📖",
-    "description": "イコル抜き時に設定したアイテムが初期化されないようにします  ",
+    "description": "イコル抜き時に設定したアイテムが初期化されないようにします",
     "tags": [
       "ui",
       "ikor",
       "extract"
+    ]
+  },
+  {
+    "name": "enchantroller",
+    "file": "enchantroller",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "enchantroller-v0.0.1",
+    "unicode": "📖",
+    "description": "エンチャントで指定した以上の数値が出るまでロールするアドオンです",
+    "tags": [
+      "ui",
+      "enchant",
+      "item",
+      "jewel"
     ]
   }
 ]
