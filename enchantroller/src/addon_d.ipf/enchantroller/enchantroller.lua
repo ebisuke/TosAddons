@@ -95,7 +95,7 @@ end
 function ENCHANTROLLER_SAVE_ALL()
     ENCHANTROLLER_SAVETOSTRUCTURE()
     ENCHANTROLLER_SAVE_SETTINGS()
-    ui.MsgBox('保存しました')
+    --ui.MsgBox('保存しました')
 end
 function ENCHANTROLLER_SAVETOSTRUCTURE()
     local frame = ui.GetFrame('enchantroller')
@@ -128,7 +128,7 @@ end
 
 function ENCHANTROLLER_LOAD_SETTINGS()
     DBGOUT('LOAD_SETTING')
-    g.settings = {
+    g.settings = g.settings or {
         highprop=15,
         lowprop=10,
         fixedprop=3,
@@ -194,7 +194,7 @@ function ENCHANTROLLER_ON_INIT(addon, frame)
             timer:Start(0.01)
             addon:RegisterMsg('FAIL_ENCHANT_JEWELL', 'ENCHANTROLLER_ON_FAIL_ENCHANT_JEWELL');
             addon:RegisterMsg('SUCESS_ENCHANT_JEWELL', 'ENCHANTROLLER_ON_SUCESS_ENCHANT_JEWELL');
-            
+            ENCHANTROLLER_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
@@ -687,7 +687,14 @@ function ENCHANTROLLER_WRAP_ON_SUCESS_ENCHANT_JEWELL(frame, msg, argStr, argNum)
     end
 end
 function ENCHANTROLLER_CLOSE(frame)
-    frame:ShowWindow(0)
-    ENCHANTROLLER_STOP(frame)
-    ENCHANTROLLER_SAVE_SETTINGS()
+    EBI_try_catch {
+        try = function()
+        g.frame:ShowWindow(0)
+        ENCHANTROLLER_STOP(g.frame)
+        ENCHANTROLLER_SAVE_ALL()
+    end,
+    catch = function(error)
+        ERROUT(error)
+    end
+    }
 end
