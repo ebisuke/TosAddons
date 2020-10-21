@@ -194,7 +194,7 @@ function ENCHANTROLLER_ON_INIT(addon, frame)
             timer:Start(0.01)
             addon:RegisterMsg('FAIL_ENCHANT_JEWELL', 'ENCHANTROLLER_ON_FAIL_ENCHANT_JEWELL');
             addon:RegisterMsg('SUCESS_ENCHANT_JEWELL', 'ENCHANTROLLER_ON_SUCESS_ENCHANT_JEWELL');
-            ENCHANTROLLER_LOAD_SETTINGS()
+            --ENCHANTROLLER_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
