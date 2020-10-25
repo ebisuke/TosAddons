@@ -150,6 +150,13 @@ function EBIREMOVEDIALOG_APPLY()
                     end
                 end))
             end
+            if g.settings.challengemodecomplete then
+                assert(pcall(function()
+                    function DIALOG_COMPLETE_CHALLENGE_MODE(handle)
+                        ACCEPT_STOP_LEVEL_CHALLENGE_MODE(handle)
+                    end
+                end))
+            end
             
 
             if g.settings.bookreading then
