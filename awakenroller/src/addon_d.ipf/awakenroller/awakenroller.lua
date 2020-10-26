@@ -45,97 +45,26 @@ g.adrasive = {
     494116
 }
 local MARKET_OPTION_GROUP_PROP_LIST = {
-    STAT = {
-        'STR',
-        'DEX',
-        'INT',
-        'CON',
-        'MNA'
+
+    DEF = {
+        'ADD_DEF',        --物理防御力
+        'ADD_MDEF',       --魔法防御力
+        'ResAdd_Damage',  --追加ダメージ抵抗
+        'CRTDR',          --クリティカル抵抗
+        'ADD_DR',         --回避
+        'MHP',            --MaxHP
+        'MSP',            --MaxSP
+        'RHP',            --HP回復力
+        'RSP',            --SP回復力
     },
-    UTIL = {
-        'BLK',
-        'BLK_BREAK',
-        'ADD_HR',
-        'ADD_DR',
-        'CRTHR',
-        'MHP',
-        'MSP',
-        'MSTA',
-        'RHP',
-        'RSP',
-        'LootingChance'
-    },
-    MARKET_DEF = {
-        'ADD_DEF',
-        'ADD_MDEF',
-        'AriesDEF',
-        'SlashDEF',
-        'StrikeDEF',
-        'RES_FIRE',
-        'RES_ICE',
-        'RES_POISON',
-        'RES_LIGHTNING',
-        'RES_EARTH',
-        'RES_SOUL',
-        'RES_HOLY',
-        'RES_DARK',
-        'CRTDR',
-        'Cloth_Def',
-        'Leather_Def',
-        'Iron_Def',
-        'MiddleSize_Def',
-        'ResAdd_Damage'
-    },
-    MARKET_ATK = {
-        'PATK',
-        'ADD_MATK',
-        'CRTATK',
-        'CRTMATK',
-        'ADD_CLOTH',
-        'ADD_LEATHER',
-        'ADD_IRON',
-        'ADD_SMALLSIZE',
-        'ADD_MIDDLESIZE',
-        'ADD_LARGESIZE',
-        'ADD_GHOST',
-        'ADD_FORESTER',
-        'ADD_WIDLING',
-        'ADD_VELIAS',
-        'ADD_PARAMUNE',
-        'ADD_KLAIDA',
-        'ADD_FIRE',
-        'ADD_ICE',
-        'ADD_POISON',
-        'ADD_LIGHTNING',
-        'ADD_EARTH',
-        'ADD_SOUL',
-        'ADD_HOLY',
-        'ADD_DARK',
-        'Add_Damage_Atk',
-        'ADD_BOSS_ATK'
-    },
-    ETC = {
-        'SR',
-        'MSPD',
-        'SDR'
-    },
-    MARKET_ENCHANT = {
-        'RareOption_SR',
-        'RareOption_MSPD',
-        'RareOption_BlockRate',
-        'RareOption_BlockBreakRate',
-        'RareOption_DodgeRate',
-        'RareOption_HitRate',
-        'RareOption_CriticalDodgeRate',
-        'RareOption_CriticalHitRate',
-        'RareOption_PVPReducedRate',
-        'RareOption_MeleeReducedRate',
-        'RareOption_MagicReducedRate',
-        'RareOption_CriticalDamage_Rate',
-        'RareOption_PVPDamageRate',
-        'RareOption_BossDamageRate',
-        'RareOption_SubWeaponDamageRate',
-        'RareOption_MainWeaponDamageRate'
+    WEAPON = {
+        'CRTHR',          --クリティカル発生
+        'PATK',           --物理攻撃力
+        'ADD_MATK',       --魔法攻撃力
+        'CRTATK',         --物理クリティカル攻撃力
+        'CRTMATK',        --魔法クリティカル攻撃力
+        'Add_Damage_Atk', --追加ダメージ
+        'ADD_HR',         --命中
     }
 }
 --ライブラリ読み込み
@@ -256,7 +185,14 @@ function AWAKENROLLER_ON_INIT(addon, frame)
         end
     }
 end
-
+function AWAKENROLLER_IS_WEAPON(invItem)
+    local cls = GetClassByType("Item",invItem.type);
+    if cls.GroupName=='Weapon' or cls.GroupName=='SubWeapon' then
+        return true
+    else
+        return false
+    end
+end
 function AWAKENROLLER_OPEN_ITEMDUNGEON_SELLER()
     EBI_try_catch {
         try = function()
@@ -385,13 +321,20 @@ function AWAKENROLLER_INITFRAME(invItem)
             local cmboption = frame:CreateOrGetControl('droplist', 'cmbtype', 30, 50, 300, 20)
             AUTO_CAST(cmboption)
             cmboption:SetSkinName('droplist_normal')
-            cmboption:SetTextTooltip('絞り込むオプションの種類です。一覧にあるオプションが必ずしも出現するとは限りません。')
+            cmboption:SetTextTooltip('絞り込むオプションの種類です')
+            cmboption:ClearItems()
             local idx = 0
-            for k, v in pairs(MARKET_OPTION_GROUP_PROP_LIST) do
-                for kk, vv in ipairs(v) do
-                    cmboption:AddItem(idx, ScpArgMsg(vv))
+            local props
+            if AWAKENROLLER_IS_WEAPON(invItem) then
+                props=MARKET_OPTION_GROUP_PROP_LIST.WEAPON
+            else
+                props=MARKET_OPTION_GROUP_PROP_LIST.DEF
+            end
+            for k, v in pairs(props) do
+              
+                    cmboption:AddItem(idx, ScpArgMsg(v))
                     idx = idx + 1
-                end
+                
             end
             local txtmorethaneq = frame:CreateOrGetControl('richtext', 'txtmorethaneq', 30, 90, 160, 30)
             txtmorethaneq:SetText('{ol}{s14}is more than or equal {s16}(≧)')
@@ -530,14 +473,20 @@ function AWAKENROLLER_CONFIRM()
             local idx = 0
             local numvalue = frame:GetChild('numvalue')
             AUTO_CAST(numvalue)
-            for k, v in pairs(MARKET_OPTION_GROUP_PROP_LIST) do
-                for kk, vv in ipairs(v) do
+            local props
+            if AWAKENROLLER_IS_WEAPON(invItem) then
+                props=MARKET_OPTION_GROUP_PROP_LIST.WEAPON
+            else
+                props=MARKET_OPTION_GROUP_PROP_LIST.DEF
+            end
+            for k, v in pairs(props) do
+                
                     if cmboption:GetSelItemIndex() == idx then
-                        prop = vv
-                        g.prop = vv
+                        prop = v
+                        g.prop = v
                     end
                     idx = idx + 1
-                end
+                
             end
             if numofattempts <= 0 then
                 ui.SysMsg('Max Attempts must be higher than 1.')

@@ -9,6 +9,7 @@
     "Lua.diagnostics.disable": [
         113,
         611,
-        611
+        611,
+        "empty-block"
     ]
 }
