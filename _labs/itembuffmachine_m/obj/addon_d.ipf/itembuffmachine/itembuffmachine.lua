@@ -515,8 +515,6 @@ function ITEMBUFFMACHINE_ITEMBUFF()
             local handle = frame:GetUserValue('HANDLE')
             local equipItem = nil
             equipItem = session.GetInvItemByGuid(equipItemIESID)
-
-
             session.autoSeller.BuySquireBuff(handle, AUTO_SELL_SQUIRE_BUFF, skillName, equipItemIESID)
             g.squirewaitfornext=true
         end,
