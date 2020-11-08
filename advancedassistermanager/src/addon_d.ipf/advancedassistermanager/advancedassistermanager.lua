@@ -17,10 +17,12 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ''
 g.framename = 'advancedassistermanager'
 g.debug = false
-g.slotset_state = nil
 
 g.aam = {
     sort = nil,
+    
+    watchingcards={},
+    watchingcallback=nil,
     menus = {
         {name = 'menufile', text = 'File', callback = function()
             local context = ui.CreateContextMenu('context_menufile', '', 0, 10, 200, 200)
@@ -31,8 +33,8 @@ g.aam = {
         {name = 'menuedit', text = 'Edit', callback = function()
             local context = ui.CreateContextMenu('context_menuedit', '', 0, 10, 200, 200)
             
-            ui.AddContextMenuItem(context, 'Lock Card(s)', 'None')
-            ui.AddContextMenuItem(context, 'Unlock Card(s)', 'None')
+            ui.AddContextMenuItem(context, 'Lock Card(s)', 'ADVANCEDASSISTERMANAGER_MENU_LOCK(true)')
+            ui.AddContextMenuItem(context, 'Unlock Card(s)', 'ADVANCEDASSISTERMANAGER_MENU_LOCK(false)')
             ui.AddContextMenuItem(context, 'Delete Card(s)', 'None')
             ui.OpenContextMenu(context)
         end},
@@ -45,7 +47,7 @@ g.aam = {
         {name = 'menucard', text = 'Card', callback = function()
             local context = ui.CreateContextMenu('context_menucard', '', 0, 10, 200, 200)
             
-            ui.AddContextMenuItem(context, 'Auto Combine Cards', 'None')
+            ui.AddContextMenuItem(context, 'Auto Combine Cards', 'ADVANCEDASSISTERMANAGER_SHOW_COMBINER()')
             ui.OpenContextMenu(context)
         end},
         {name = 'menusort', text = 'Sort', callback = function()
@@ -58,7 +60,20 @@ g.aam = {
             ui.OpenContextMenu(context)
         end}
     },
-    
+    getSelectedSlotIndices=function(slotset)
+        local selected={}
+        for i=0,slotset:GetSlotCount()-1 do
+            local slot=slotset:GetSlotByIndex(i)
+            if slot:GetIcon()~= nil then
+                if slot:IsSelected()==1 then
+                    selected[#selected+1] = true
+                else
+                    selected[#selected+1] = false
+                end
+            end
+        end
+        return selected
+    end,
     getAllCards = function(noinventory)
         local cards = {}
         for i = 0, 3 do
@@ -107,7 +122,8 @@ g.aam = {
                             end,
                             level=1,
                             starrank=1,
-            
+                            rarity=ancientCls.Rarity,
+                            slot=0,
                         }, cost = ancientCostCls.Cost, rarity = ancientCls.Rarity, guid = invItem:GetIESID(), invItem = nil,
                             isinSlot = false, isinInventory = true,name=ancientCls.Name, islocked = invItem.isLockState, classname = classname, starrank = 1, lv = 1}
                     end
@@ -222,7 +238,8 @@ function ADVANCEDASSISTERMANAGER_ON_INIT(addon, frame)
             if not g.loaded then
                 g.loaded = true
             end
-            
+            addon:RegisterMsg('ANCIENT_CARD_ADD', 'ADVANCEDASSISTERMANAGER_ON_ANCIENT_CARD_ADD');
+            addon:RegisterMsg('INV_ITEM_ADD', 'ADVANCEDASSISTERMANAGER_ON_ANCIENT_CARD_ADD');
             acutil.setupHook(ADVANCEDASSISTERMANAGER_ANCIENT_CARD_LIST_OPEN, 'ANCIENT_CARD_LIST_OPEN')
             acutil.setupHook(UPDATE_AAM_ANCIENT_CARD_TOOLTIP, 'UPDATE_ANCIENT_CARD_TOOLTIP')
             
@@ -313,12 +330,10 @@ function ADVANCEDASSISTERMANAGER_INIT_FRAME()
     local slotset = gbox:CreateOrGetControl('slotset', 'cards', 5, 5, gbox:GetWidth() - 25, gbox:GetHeight()-10)
     AUTO_CAST(slotset)
     
-    slotset:SetSkinName('accountwarehouse_slot')
-    slotset:EnableDrag(0)
-    slotset:EnableDrop(0)
-    slotset:EnableSelection(0)
-    
+
     ui.EnableSlotMultiSelect(0)
+
+    ADVANCEDASSISTERMANAGER_INIT_SLOTSET(slotset)
     --menus
     local x = 10
     for _, v in ipairs(g.aam.menus) do
@@ -329,121 +344,191 @@ function ADVANCEDASSISTERMANAGER_INIT_FRAME()
         
         x = x + btn:GetWidth() + 5
     end
-    ADVANCEDASSISTERMANAGER_UPDATE_CARDS()
+
+    ADVANCEDASSISTERMANAGER_UPDATE_CARDS(slotset)
+end
+function ADVANCEDASSISTERMANAGER_INIT_SLOTSET(slotset,w,h,pop,c,r)
+    AUTO_CAST(slotset)
+    slotset:SetSkinName('accountwarehouse_slot')
+    slotset:EnableDrag(0)
+    slotset:EnableDrop(0)
+    slotset:EnablePop(pop or 1)
+    slotset:EnableSelection(0)
+    slotset:SetSlotSize(w or 100, h or 120)
+    slotset:SetSpc(3, 3)
+
+    if r then
+        slotset:SetColRow(c,r) 
+           
+        slotset:CreateSlots()
+    end
 end
 
 function ADVANCEDASSISTERMANAGER_SLOTSET_ON_MOUSEMOVE(frame, slot)
+    local parent=slot:GetParent()
     AUTO_CAST(slot)
+    local state=tonumber(parent:GetUserValue("lbtnpressed"))
     if mouse.IsLBtnPressed() == 1 then
-        if g.slotset_state == nil then
+        if state == nil  then
             if slot:IsSelected() == 1 then
-                g.slotset_state = 0
+                state = 0
+               
             else
-                g.slotset_state = 1
+                state = 1
             end
-        else
-            slot:Select(g.slotset_state)
+            parent:SetUserValue('lbtnpressed',tostring(state))
         end
+        if (slot:GetUserIValue('islocked')==1 and parent:GetUserIValue('islockedselectable')~=1) then
+            state=0
+        end
+        slot:Select(state)
+        
     else
-        g.slotset_state = nil
+        state = nil
+        parent:SetUserValue('lbtnpressed',nil)
+    end
+  
+end
+function ADVANCEDASSISTERMANAGER_ON_ANCIENT_CARD_ADD()
+    if ui.GetFrame(g.framename):IsVisible()==1 then
+        ADVANCEDASSISTERMANAGER_INIT_FRAME()
     end
 end
-function ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v)
+function ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v,nodesc)
     local icon = CreateIcon(slot)
     local monCls = GetClass("Monster", v.classname);
     local iconName = TryGetProp(monCls, "Icon");
     icon:SetImage(iconName)
-    local starStr = ''
-    for ii = 1, v.starrank do
-        starStr = starStr .. string.format("{img monster_card_starmark %d %d}", 15, 15)
+    slot:SetUserValue('islocked',BoolToNumber(v.islocked))
+    if nodesc == nil then
+        nodesc=false
+
     end
-    local starr = slot:CreateOrGetControl("richtext", 'rank', 0, 0, 60, 20)
-    
-    starr:SetGravity(ui.LEFT, ui.BOTTOM)
-    starr:SetMargin(0, 0, 0, 0)
-    starr:SetText(starStr)
-    starr:EnableHitTest(0)
-    starr:SetSkinName('bg2')
-    
-    
-    local statetext = slot:CreateOrGetControl('richtext', 'state', 0, 0, 40, 20)
-    local stateStr = ''
-    if v.isinSlot then
-        stateStr = stateStr .. '{img icon_item_ancient_card 20 20}'
+    if nodesc==false then
+        local starStr = ''
+        for ii = 1, v.starrank do
+            starStr = starStr .. string.format("{img monster_card_starmark %d %d}", 15, 15)
+        end
+        local starr = slot:CreateOrGetControl("richtext", 'rank', 0, 0, 60, 20)
+        
+        starr:SetGravity(ui.LEFT, ui.BOTTOM)
+        starr:SetMargin(0, 0, 0, 0)
+        starr:SetText(starStr)
+        starr:EnableHitTest(0)
+        starr:SetSkinName('bg2')
+
+        
+        local statetext = slot:CreateOrGetControl('richtext', 'state', 0, 0, 40, 20)
+        local stateStr = ''
+        if v.isinSlot then
+            stateStr = stateStr .. '{img icon_item_ancient_card 20 20}'
+        end
+        if v.isinInventory then
+            stateStr = stateStr .. '{img icon_item_farm47_sack_01 20 20}'
+        end
+        if v.islocked then
+            stateStr = stateStr .. '{img inven_lock2 15 20}'
+        end
+        
+        statetext:SetGravity(ui.RIGHT, ui.BOTTOM)
+        statetext:SetMargin(0, 0, 0, 0)
+        statetext:SetText(stateStr)
+        statetext:EnableHitTest(0)
+        statetext:SetSkinName('bg')
+        local costtext = slot:CreateOrGetControl('richtext', 'cost', 0, 0, 30, 30)
+        costtext:SetGravity(ui.RIGHT, ui.TOP)
+        costtext:SetMargin(3, 3, 3, 3)
+        costtext:SetText('{#44FFFF}{@st41}{s18}' .. tostring(v.cost))
+        costtext:EnableHitTest(0)
+        costtext:SetSkinName('none')
+        local ancientCls = GetClass("Ancient_Info", monCls.ClassName)
+        local rarity = ancientCls.Rarity
+        local raritycolor = ''
+        if rarity == 1 then
+            raritycolor = '{#ffffff}'
+        elseif rarity == 2 then
+            raritycolor = '{#0e7fe8}'
+        elseif rarity == 3 then
+            raritycolor = '{#d92400}'
+        --raritycolor ='{#d94822}'
+        elseif rarity == 4 then
+            raritycolor = '{#ffa800}'
+        end
+        local lvstr = raritycolor .. '{ol}{@st41}{s18}' .. raritycolor .. 'Lv' .. v.lv
+        local lvtext = slot:CreateOrGetControl('richtext', 'lv', 0, 0, 30, 30)
+        lvtext:SetGravity(ui.LEFT, ui.TOP)
+        lvtext:SetMargin(3, 3, 3, 3)
+        lvtext:SetText(lvstr)
+        lvtext:EnableHitTest(0)
+        lvtext:SetSkinName('none')
+        local namestr = '{ol}{s14}' .. raritycolor .. monCls.Name
+        local nametext = slot:CreateOrGetControl('richtext', 'name', 0, 0, 30, 30)
+        nametext:SetGravity(ui.LEFT, ui.TOP)
+        nametext:SetMargin(3, 28, 3, 3)
+        nametext:SetText(namestr)
+        nametext:EnableHitTest(0)
+        nametext:SetSkinName('none')
     end
-    if v.isinInventory then
-        stateStr = stateStr .. '{img icon_item_farm47_sack_01 20 20}'
-    end
-    if v.islocked then
-        stateStr = stateStr .. '{img inven_lock2 15 20}'
-    end
-    
-    statetext:SetGravity(ui.RIGHT, ui.BOTTOM)
-    statetext:SetMargin(0, 0, 0, 0)
-    statetext:SetText(stateStr)
-    statetext:EnableHitTest(0)
-    statetext:SetSkinName('bg')
-    local costtext = slot:CreateOrGetControl('richtext', 'cost', 0, 0, 30, 30)
-    costtext:SetGravity(ui.RIGHT, ui.TOP)
-    costtext:SetMargin(3, 3, 3, 3)
-    costtext:SetText('{#44FFFF}{@st41}{s18}' .. tostring(v.cost))
-    costtext:EnableHitTest(0)
-    costtext:SetSkinName('none')
-    local ancientCls = GetClass("Ancient_Info", monCls.ClassName)
-    local rarity = ancientCls.Rarity
-    local raritycolor = ''
-    if rarity == 1 then
-        raritycolor = '{#ffffff}'
-    elseif rarity == 2 then
-        raritycolor = '{#0e7fe8}'
-    elseif rarity == 3 then
-        raritycolor = '{#d92400}'
-    --raritycolor ='{#d94822}'
-    elseif rarity == 4 then
-        raritycolor = '{#ffa800}'
-    end
-    local lvstr = raritycolor .. '{ol}{@st41}{s18}' .. raritycolor .. 'Lv' .. v.lv
-    local lvtext = slot:CreateOrGetControl('richtext', 'lv', 0, 0, 30, 30)
-    lvtext:SetGravity(ui.LEFT, ui.TOP)
-    lvtext:SetMargin(3, 3, 3, 3)
-    lvtext:SetText(lvstr)
-    lvtext:EnableHitTest(0)
-    lvtext:SetSkinName('none')
-    local namestr = '{ol}{s14}' .. raritycolor .. monCls.Name
-    local nametext = slot:CreateOrGetControl('richtext', 'name', 0, 0, 30, 30)
-    nametext:SetGravity(ui.LEFT, ui.TOP)
-    nametext:SetMargin(3, 28, 3, 3)
-    nametext:SetText(namestr)
-    nametext:EnableHitTest(0)
-    nametext:SetSkinName('none')
     icon:SetTooltipType("ancient_card")
     icon:SetTooltipStrArg(v.guid)
     icon:SetUserValue("ANCIENT_GUID", v.guid)
 end
-function ADVANCEDASSISTERMANAGER_UPDATE_CARDS()
+function ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS()
+    local frame = ui.GetFrame(g.framename)
+    local cards = AUTO_CAST(frame:GetChildRecursively('cards'))
+    local aamcards={}
+    local ref=g.aam.getAllCards()
+    for i=0,cards:GetSlotCount()-1 do
+        local slot = cards:GetSlotByIndex(i)
+        local icon=slot:GetIcon()
+        if icon and slot:IsSelected()==1 then
+            local guid= icon:GetUserValue("ANCIENT_GUID")
+            if guid then
+                for _,v in ipairs(ref) do
+                    if v.guid==guid then
+                        aamcards[#aamcards+1] = v
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return aamcards
+end
+
+function ADVANCEDASSISTERMANAGER_UPDATE_CARDS(slotset,selectedindices,cards,nodesc)
     EBI_try_catch{
         try = function()
-            local frame = ui.GetFrame(g.framename)
-            local cards = AUTO_CAST(frame:GetChildRecursively('cards'))
-            cards:RemoveAllChild()
-            local cardlist = g.aam.getAllCards()
+
+            slotset:RemoveAllChild()
+            
+            local cardlist = cards or g.aam.getAllCards()
             if g.aam.sort then
                 
                 table.sort(cardlist, g.aam.sort)
             end
-            cards:SetColRow(7, math.ceil(#cardlist / 7))
-            cards:SetSpc(3, 3)
-            cards:SetSlotSize(100, 120)
-            
-            cards:CreateSlots()
+            slotset:SetColRow(7, math.ceil(#cardlist / 7))
+
+   
+            slotset:CreateSlots()
             for i, v in ipairs(cardlist) do
-                local slot = cards:GetSlotByIndex(i - 1)
+                local slot = slotset:GetSlotByIndex(i - 1)
                 AUTO_CAST(slot)
                 
+                slot:SetUserValue('islockedselectable',1)
                 slot:SetEventScript(ui.MOUSEMOVE, 'ADVANCEDASSISTERMANAGER_SLOTSET_ON_MOUSEMOVE')
-                ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v)
-               
+                ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v,nodesc)
+                if selectedindices then
+                    if selectedindices[i] then
+
+                        slot:Select(1)
+                    else
+                        slot:Select(0)
+                    end
+                end
             end
+              
+         
         end,
         catch = function(error)
             ERROUT(error)
@@ -467,16 +552,99 @@ function ADVANCEDASSISTERMANAGER_ON_MENU_BTN(frame, ctrl)
         end
     }
 end
-function ADVANCEDASSISTERMANAGER_ENSURECARD(aamcard)
-    if aamcard.isinInventory then
-        if aamcard.islocked then
+function ADVANCEDASSISTERMANAGER_ENSURECARDS(aamcards,needunlock,callback)
+    local needtounlock=0
+    local needtoadd=0
 
+    for _,v in ipairs(aamcards) do
+        if v.isinInventory then
+            if v.islocked then
+                needtounlock=needtounlock+1
+            
+            else
+                
+            end
+            needtoadd=needtoadd+1
+        else
+            -- nothing to do
+            if v.islocked and needunlock then
+                needtounlock=needtounlock+1
+            end
+        end
+    end
+    if needtounlock > 0 or needtoadd > 0 then
+        if needtoadd>(ANCIENT_CARD_SLOT_MAX-session.pet.GetAncientCardCount()) then
+            ui.SysMsg('Insufficient empty slots.')
             return false
         end
+        g.aam.watchingcards=aamcards
+        g.aam.watchingcallback=callback
+        ui.MsgBox(
+            string.format('To unlock cards:%d{nl}To add cards as assister:%d{nl}Proceed?',
+        string.format("ADVANCEDASSISTERMANAGER_DO_ENSURECARDS('%s')",tostring(needunlock)),'None'))
+        return true
     else
-        -- nothing to do
+        pcall(callback)
     end
-    return true
+    return false
+end
+
+function ADVANCEDASSISTERMANAGER_DO_ENSURECARDS(needunlock)
+    local needtounlock=0
+    local needtoadd=0
+    local delay=0
+    for _,v in ipairs( g.aam.watchingcards) do
+        if v.isinInventory then
+            if v.islocked then
+                needtounlock=needtounlock+1
+                ReserveScript(string.format("session.inventory.SendLockItem('%s', %d)",v.guid,0),delay)
+                delay=delay+0.1
+            else
+                
+            end
+            ReserveScript(string.format("ANCIENT_CARD_REGISTER_C('%s')",v.guid),delay)
+            delay=delay+0.1
+            needtoadd=needtoadd+1
+        else
+            -- nothing to do
+            if v.islocked and needunlock then
+                ReserveScript(string.format("ReqLockAncientCard('guid')",v.guid),delay)
+                delay=delay+0.1
+                needtounlock=needtounlock+1
+                
+            end
+        end
+    end
+    return delay
+end
+function ADVANCEDASSISTERMANAGER_LOCK(aamcards,lock)
+    local delay=0
+    for _,v in ipairs( aamcards) do
+        if v.isinInventory then
+            if v.islocked ~= lock then
+                ReserveScript(string.format("session.inventory.SendLockItem('%s', %d)",v.guid,BoolToNumber(lock)),delay)
+                delay=delay+0.1
+            end
+        else
+            if v.islocked ~= lock then
+                ReserveScript(string.format("ReqLockAncientCard('%s')",v.guid),delay)
+                delay=delay+0.1
+            end
+        end
+    end
+    return delay
+end
+function ADVANCEDASSISTERMANAGER_MENU_LOCK(lock)
+       EBI_try_catch{
+        try = function()
+        local aamcards=ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS()
+        local delay=ADVANCEDASSISTERMANAGER_LOCK(aamcards,lock)
+        ReserveScript('ADVANCEDASSISTERMANAGER_INIT_FRAME()',delay+0.8)
+       end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
 end
 function UPDATE_AAM_ANCIENT_CARD_TOOLTIP(frame, guid)
     EBI_try_catch{
@@ -617,6 +785,9 @@ function UPDATE_AAM_ANCIENT_CARD_TOOLTIP(frame, guid)
             ERROUT(error)
         end
     }
+end
+function ADVANCEDASSISTERMANAGER_SHOW_COMBINER()
+    ui.GetFrame('advancedassistermanager_combiner'):ShowWindow(1)
 end
 
 

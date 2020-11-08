@@ -973,6 +973,27 @@ local function ipermutations(iterable,r)
     end
     return list
 end
+local function card_combination4(list)
+    local comb={}
+    for k,v in ipairs(list) do
+        for kk,vv in ipairs(list) do
+            if kk~=k then
+                for kkk,vvv in ipairs(list) do
+                    if kkk~=k and kkk~=kk and kkk> kk then
+                        for kkkk,vvvv in ipairs(list) do
+                            if kkkk~=k and kkkk~=kk and kkkk~=kkk and kkkk> kk and kkkk> kkk then
+                                comb[#comb+1] = {
+                                    v,vv,vvv,vvvv
+                                }
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return comb
+end
 --アドオン名（大文字）
 local addonName = 'advancedassistermanager'
 local addonNameLower = string.lower(addonName)
@@ -991,6 +1012,14 @@ g.aamc={
         main=nil,
         sub={}
     },
+    search={
+        work=false,
+        combination={},
+        progress=0,
+        count=0,
+        matched={}
+    },
+
     searchresult={},
     getPassiveListByCards=function(cards)
         local passives={}
@@ -1053,6 +1082,29 @@ g.aamc={
         end
         return supcards
     end,
+    calcScore=function(aamcards)
+        local infoCls = GetClass("Ancient_Info",aamcards[1].classname)
+    
+        local caption, parsed = TRY_PARSE_ANCIENT_PROPERTY(infoCls, infoCls.Tooltop, aamcards[1].card);
+        local comboList=AAM_GET_ANCIENT_COMBO_LIST({
+            aamcards[1].card,
+            aamcards[2].card,
+            aamcards[3].card,
+            aamcards[4].card,
+        })
+
+        for i = 1,#comboList do
+            local comboCls = comboList[i][1]
+            local comboCardList = comboList[i][2]
+            local caption, parsed = TRY_PARSE_ANCIENT_PROPERTY(comboCls, comboCls.Tooltop,{
+                aamcards[1].card,
+                aamcards[2].card,
+                aamcards[3].card,
+                aamcards[4].card,
+            });
+
+        end
+    end,
     getCombinationPassiveListByCards=function(cards,musthavemonstername)
         
         local byracetype={}
@@ -1061,7 +1113,7 @@ g.aamc={
 
         local supcards={}
         local clsList,clsCount = GetClassList("ancient_combo")
-        supcards=g.aamc.getFilteredCard(cards)
+        supcards=cards
 
         for _,v in ipairs(supcards)do
             local cls = GetClass("Monster",v.classname)
@@ -1093,13 +1145,10 @@ g.aamc={
             local comboCls = GetClassByIndexFromList(clsList, i);
             local typename=comboCls.TypeName_1
             local classname=comboCls.ClassName
-            
-            local pass={false,false,false}
-            for _,v in ipairs(g.aamc.condition.sub) do
-                pass[v.type]=v.buffName
-            end
+            local comb_min=tonumber(comboCls.TypeNum_1)
+
             if  comboCls.PreScript=='SCR_ANCIENT_COMBO_ATTRIBUTE_PRECHECK' then
-                if byattribute[typename] and #byattribute[typename] >= 4 and (not pass[1] or classname==pass[1]) then
+                if byattribute[typename] and #byattribute[typename] >= comb_min  then
                     list[#list+1]={
                         name=comboCls.Name,
                         buffName=classname,
@@ -1111,7 +1160,7 @@ g.aamc={
                 end
             elseif comboCls.PreScript=='SCR_ANCIENT_COMBO_RACETYPE_PRECHECK' then
                 
-                if byracetype[typename] and #byracetype[typename] >= 4 and (not pass[2] or classname==pass[2])then
+                if byracetype[typename] and #byracetype[typename] >= comb_min then
                     list[#list+1]={
                         name=comboCls.Name,
                         buffName=classname,
@@ -1123,7 +1172,7 @@ g.aamc={
                 end
             elseif  comboCls.PreScript=='SCR_ANCIENT_COMBO_RANK_PRECHECK' then
                 
-                if byrarity[tonumber(typename)] and #byrarity[tonumber(typename)] >= 4 and (not pass[3] or classname==pass[3])then
+                if byrarity[tonumber(typename)] and #byrarity[tonumber(typename)] >= comb_min then
                     list[#list+1]={
                         name=comboCls.Name,
                         buffName=classname,
@@ -1224,7 +1273,12 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_INIT(addon, frame)
             if not g.loaded then
                 g.loaded = true
             end
-
+                
+            local timer = frame:CreateOrGetControl("timer", "addontimer");
+            AUTO_CAST(timer)
+            timer:SetUpdateScript("ADVANCEDASSISTERMANAGER_SEARCH_TICK");
+            timer:Stop();
+            timer:Start(0.01, 0);
 
             frame:ShowWindow(0)
             ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
@@ -1253,17 +1307,15 @@ function  ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
         btnclear:SetText('{ol}Reset')
         btnclear:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_ON_CLEAR_BUFF')
 
-        local cards=g.aam.getAllCards(true)
-        local suppedcards=g.aamc.getFilteredCard(cards)
+        local cards=g.aam.getAllCards()
+
         gboxmain:RemoveAllChild()
         gboxsub:RemoveAllChild()
-        local mainpassives=g.aamc.getPassiveListByCards(suppedcards)
+        local mainpassives=g.aamc.getPassiveListByCards(cards)
         local combinationpassives
         if g.aamc.condition.main then
             local monsterCls=GetClassByType('Monster',g.aamc.condition.main.monsterid)
-   
-        
-            combinationpassives=g.aamc.getCombinationPassiveListByCards(cards,monsterCls.ClassName)
+            combinationpassives=g.aamc.getCombinationPassiveListByCards(cards)
         else
             combinationpassives=g.aamc.getCombinationPassiveListByCards(cards)
         end
@@ -1271,14 +1323,18 @@ function  ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
         y=0
         
         for k,v in pairs(mainpassives) do
+          
+            local red='{#FFFFFF}'
+            local filtered=false
+            if g.aamc.condition.main and v[1].buffName== g.aamc.condition.main.buffName then
+                red='{#FF0000}'
+                filtered=true
+                
+            end
+    
             local btn=gboxmain:CreateOrGetControl('button','btnmain'..k,10,y,200,30)
             AUTO_CAST(btn)
             btn:SetSkinName('test_pvp_btn')
-            local red='{#FFFFFF}'
-
-            if g.aamc.condition.main and v[1].buffName== g.aamc.condition.main.buffName then
-                red='{#FF0000}'
-            end
             btn:SetText('{ol}'..red..v[1].name)
             btn:SetTextTooltip('{ol}'..v[1].tooltip)
             btn:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_ON_ADD_MAINBUFF')
@@ -1287,6 +1343,7 @@ function  ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
 
             btn:SetEventScriptArgNumber(ui.LBUTTONUP,cls.ClassID)
             y=y+35
+            
         end
         y=0
         local clsList,clsCount = GetClassList("ancient_combo")
@@ -1312,9 +1369,16 @@ function  ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
        
         local btnsearch=frame:CreateOrGetControl('button','btnsearch',0,400,150,30)
         btnsearch:SetGravity(ui.CENTER_HORZ,ui.TOP)
+        btnsearch:SetMargin(0,400,150,0)
         btnsearch:SetSkinName('test_pvp_btn')
         btnsearch:SetText('{ol}Search')
         btnsearch:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_ON_SEARCH')
+        local btnstop=frame:CreateOrGetControl('button','btnstop',0,400,150,30)
+        btnstop:SetGravity(ui.CENTER_HORZ,ui.TOP)
+        btnstop:SetMargin(150,400,0,0)
+        btnstop:SetSkinName('test_pvp_btn')
+        btnstop:SetText('{ol}Stop')
+        btnstop:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_SEARCH_STOP')
 
     end,
     catch = function(error)
@@ -1324,6 +1388,14 @@ function  ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
 end
 function ADVANCEDASSISTERMANAGER_COMBO_ON_ADD_MAINBUFF(frame,ctrl,argstr,argnum)
     local buffCls = GetClass("Buff",argstr)
+    if g.aamc.condition.main then
+        if g.aamc.condition.main.buffName==argstr then
+            g.aamc.condition.main=nil
+            ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
+            return
+        end
+    end
+
     g.aamc.condition.main={
         buffName=argstr,
         monsterid=argnum
@@ -1332,6 +1404,14 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_ADD_MAINBUFF(frame,ctrl,argstr,argnum)
 end
 function ADVANCEDASSISTERMANAGER_COMBO_ON_ADD_SUBBUFF(frame,ctrl,argstr,argnum)
     local buffCls = GetClass("Buff",argstr)
+
+    for k,v in ipairs(g.aamc.condition.sub) do
+        if v.buffName==argstr then
+            table.remove(g.aamc.condition.sub,k)
+            ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
+            return
+        end
+    end
     g.aamc.condition.sub[#g.aamc.condition.sub+1]={
         buffName=argstr,
         type=argnum
@@ -1344,59 +1424,161 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_CLEAR_BUFF(frame,ctrl,argstr,argnum)
     g.aamc.condition.sub={}
     ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
 end
+function ADVANCEDASSISTERMANAGER_SEARCH_TICK()
+        EBI_try_catch {
+        try = function()
+    local frame= ui.GetFrame(g.framename_cmb)
+    local gboxcomb=frame:GetChildRecursively('gboxcomb')
+    if not g.aamc.search.work then
+        return
+
+    end
+    AUTO_CAST(gboxcomb)
+    for kk=g.aamc.search.progress,math.min(g.aamc.search.progress+5000,#g.aamc.search.combination)  do
+        local vv=g.aamc.search.combination[kk]
+        local pass=true
+        for k,v in ipairs(g.aamc.condition.sub) do
+            local cls=GetClass('ancient_combo',v.buffName)
+            
+            
+            
+            local cardlist={vv[1].card,vv[2].card,vv[3].card,vv[4].card}
+          
+            if _G[cls.PreScript](cls,cardlist)~='None' then
+                
+            else
+
+                pass=false
+            end
+            
+        end
+        if g.aamc.search.count>=100 then
+            pass=false
+
+        end
+        if pass then
+            g.aamc.matched[#g.aamc.matched+1]=vv
+           
+            g.aamc.search.count=g.aamc.search.count+1
+            
+
+            
+        end
+        g.aamc.search.progress=kk
+        local gauge=frame:CreateOrGetControl('gauge','gauge',20,frame:GetHeight()-10,frame:GetWidth()-40,10)
+        AUTO_CAST(gauge)
+        gauge:SetMaxPoint(#g.aamc.search.combination)
+        gauge:SetCurPoint(kk)
+        
+
+        if kk==#g.aamc.search.combination then
+            g.aamc.search.work=false
+            frame:RemoveChild('gauge')
+            ADVANCEDASSISTERMANAGER_COMBO_SEARCH_COMPLETE()
+            break
+        end
+    end
+
+end,
+catch = function(error)
+    ERROUT(error)
+end
+}
+       
+       
+end
+function ADVANCEDASSISTERMANAGER_COMBO_SEARCH_STOP()
+    local frame= ui.GetFrame(g.framename_cmb)
+    g.aamc.search.work=false
+    frame:RemoveChild('gauge')
+end
+function ADVANCEDASSISTERMANAGER_COMBO_SEARCH_COMPLETE()
+    local frame= ui.GetFrame(g.framename_cmb)
+    local gboxcomb=frame:GetChildRecursively('gboxcomb')
+    gboxcomb:RemoveAllChild()
+    
+end
+
+function ADVANCEDASSISTERMANAGER_COMBO_ADD(vv)
+    local frame= ui.GetFrame(g.framename_cmb)
+    local gboxcomb=frame:GetChildRecursively('gboxcomb')
+    local minigbox=gboxcomb:CreateOrGetControl('groupbox','gboxmini'..g.aamc.search.count,0,g.aamc.search.count*120,gboxcomb:GetWidth()-20,130)
+    AUTO_CAST(minigbox)
+    minigbox:SetSkinName('none')
+    minigbox:EnableHittestGroupBox(0)
+    local slotset=minigbox:CreateOrGetControl('slotset','slots',0,10,minigbox:GetWidth()-300,minigbox:GetHeight())
+    
+    AUTO_CAST(slotset)
+    slotset:SetSkinName('accountwarehouse_slot')
+    slotset:EnableDrag(0)
+    slotset:EnableDrop(0)
+    slotset:EnableSelection(0)
+    slotset:SetColRow(4,1)
+    slotset:SetSpc(3, 3)
+    slotset:SetSlotSize(90, 110)
+    slotset:CreateSlots()
+    
+    for i, vvv in ipairs(vv) do
+        
+        local slot = slotset:GetSlotByIndex(i - 1)
+        AUTO_CAST(slot)
+        ADVANCEDASSISTERMANAGER_SET_SLOT(slot,vvv)
+        
+    end
+    local tooltip=minigbox:CreateOrGetControl('richtext','tooltip',minigbox:GetWidth()-290,10,100,90)
+    tooltip:EnableHitTest(0)
+    local button=minigbox:CreateOrGetControl('button','btnequip',minigbox:GetWidth()-100,100,100,30)
+    button:SetText('{ol}Equip')
+    button:SetSkinName('test_pvp_btn')
+    button:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_ON_EQUIP')
+    button:SetEventScriptArgNumber(ui.LBUTTONUP,kk)
+    
+    local yellow_font = "{s14}{#f9e38d}"
+    local green_font = "{s14}{#2dcd37}-"
+    local txt='{ol}'
+    local infoCls = GetClass("Ancient_Info",vv[1].classname)
+    
+    local caption, parsed = TRY_PARSE_ANCIENT_PROPERTY(infoCls, infoCls.Tooltop, vv[1].card);
+    local comboList=AAM_GET_ANCIENT_COMBO_LIST({
+        vv[1].card,
+        vv[2].card,
+        vv[3].card,
+        vv[4].card,
+    })
+    txt=txt..green_font..caption..'{nl}'
+    for i = 1,#comboList do
+        local comboCls = comboList[i][1]
+        local comboCardList = comboList[i][2]
+        local caption, parsed = TRY_PARSE_ANCIENT_PROPERTY(comboCls, comboCls.Tooltop,{
+            vv[1].card,
+            vv[2].card,
+            vv[3].card,
+            vv[4].card,
+        });
+        txt=txt..green_font..caption..'{nl}'
+    end
+    button:SetTextTooltip(txt)
+    tooltip:SetText(txt)
+end
 function ADVANCEDASSISTERMANAGER_COMBO_ON_SEARCH(frame,ctrl,argstr,argnum)
     EBI_try_catch {
         try = function()
-        local cards=g.aam.getAllCards(true)
-        local suppedcards=g.aamc.getFilteredCard(cards)
+        local cards=g.aam.getAllCards()
+        local suppedcards=cards
         local nest=4
         local another={}
-        -- if g.aamc.condition.main then
-        --     local moncls=getclassbytype('monster',g.aamc.condition.main.monsterid)
-        --     local clon={}
-        --     for k,v in ipairs(suppedcards) do
-        --         if v.classname==moncls.classname then
-        --             another[#another+1]=v
-        --             clon[k]=nil
-        --         else
-        --             clon[#clon+1]=v
-        --         end
-        --     end
-        --     nest=3
-        --     suppedcards=clon
-        -- end
         --計算コストを調べる
         local n=#suppedcards
         local calccost=fact(n)/(fact(nest)*fact(n-nest))
-        if calccost > 100 then
+        if calccost > 3500 then
             ui.MsgBox('Too many combination.Please select more condition.')
             return
         end
         --コンビネーションを生成
-        print(#suppedcards)
-        local comb=ipermutations(suppedcards,nest)
-        local clon={}
-        for k,v in ipairs(comb) do
-            if #v~=nest then
-                
-            else
-                clon[#clon+1]=v
-            end
-        end
-        comb=clon
+
+        local comb=card_combination4(suppedcards)
+
         if g.aamc.condition.main then
-            -- local alter={}
-            -- for _,v in ipairs(another) do
-                
-            --     for _,vv in ipairs(comb) do
-            --         local c={v}
-            --         c=cat(c,vv)
-                  
-            --         alter[#alter+1] = c
-            --     end
-               
-            -- end
-            -- comb=alter
 
             local moncls=GetClassByType('Monster',g.aamc.condition.main.monsterid)
             local clon={}
@@ -1409,75 +1591,17 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_SEARCH(frame,ctrl,argstr,argnum)
             end
             comb=clon
         end
+        g.aamc.search.combination=comb;
+        g.aamc.search.progress=1;
+        
+        g.aamc.search.work=true;
+        g.aamc.search.count=0;
         local frame= ui.GetFrame(g.framename_cmb)
         local gboxcomb=frame:GetChildRecursively('gboxcomb')
 
         AUTO_CAST(gboxcomb)
         gboxcomb:RemoveAllChild()
-        local y=0
-        g.aamc.searchresult=comb
-        for k,v in ipairs(comb) do
-            if k<30 then
-                local minigbox=gboxcomb:CreateOrGetControl('groupbox','gboxmini'..k,0,y,gboxcomb:GetWidth()-20,130)
-                AUTO_CAST(minigbox)
-                minigbox:SetSkinName('none')
-                minigbox:EnableHittestGroupBox(1)
-                local slotset=minigbox:CreateOrGetControl('slotset','slots',0,10,minigbox:GetWidth()-200,minigbox:GetHeight())
-                
-                AUTO_CAST(slotset)
-                slotset:SetSkinName('accountwarehouse_slot')
-                slotset:EnableDrag(0)
-                slotset:EnableDrop(0)
-                slotset:EnableSelection(0)
-                slotset:SetColRow(4,1)
-                slotset:SetSpc(3, 3)
-                slotset:SetSlotSize(90, 110)
-                slotset:CreateSlots()
-               
-                for i, vv in ipairs(v) do
-                   
-                    local slot = slotset:GetSlotByIndex(i - 1)
-                    AUTO_CAST(slot)
-                    ADVANCEDASSISTERMANAGER_SET_SLOT(slot,vv)
-                    
-                end
-                local tooltip=minigbox:CreateOrGetControl('richtext','tooltip',minigbox:GetWidth()-190,10,100,90)
-                tooltip:EnableHitTest(0)
-                local button=minigbox:CreateOrGetControl('button','btnequip',minigbox:GetWidth()-100,100,100,30)
-                button:SetText('{ol}Equip')
-                button:SetSkinName('test_pvp_btn')
-                button:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_ON_EQUIP')
-                button:SetEventScriptArgNumber(ui.LBUTTONUP,k)
-                
-                local yellow_font = "{s14}{#f9e38d}"
-                local green_font = "{s14}{#2dcd37}-"
-                local txt='{ol}'
-                local infoCls = GetClass("Ancient_Info",v[1].classname)
-                
-                local caption, parsed = TRY_PARSE_ANCIENT_PROPERTY(infoCls, infoCls.Tooltop, v[1].card);
-                local comboList=AAM_GET_ANCIENT_COMBO_LIST({
-                    v[1].card,
-                    v[2].card,
-                    v[3].card,
-                    v[4].card,
-                })
-                txt=txt..green_font..caption..'{nl}'
-                for i = 1,#comboList do
-                    local comboCls = comboList[i][1]
-                    local comboCardList = comboList[i][2]
-                    local caption, parsed = TRY_PARSE_ANCIENT_PROPERTY(comboCls, comboCls.Tooltop,{
-                        v[1].card,
-                        v[2].card,
-                        v[3].card,
-                        v[4].card,
-                    });
-                    txt=txt..green_font..caption..'{nl}'
-                end
-                button:SetTextTooltip(txt)
-                tooltip:SetText(txt)
-                y=y+120
-            end
-        end
+    
         
         end,
         catch = function(error)
@@ -1486,11 +1610,16 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_SEARCH(frame,ctrl,argstr,argnum)
     }
 end
 function ADVANCEDASSISTERMANAGER_COMBO_ON_EQUIP(frame,ctrl,argstr,argnum)
-    local v=g.aamc.searchresult[argnum]
-    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[1].guid,0),0.3)
-    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[2].guid,1),0.6)
-    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[3].guid,2),0.9)
-    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[4].guid,3),1.2)
+    local v=g.aamc.search.combination[argnum]
+    local delay=ADVANCEDASSISTERMANAGER_DO_ENSURECARDS(v)
+    delay=delay+0.3
+    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[1].guid,0),delay)
+    delay=delay+0.3
+    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[2].guid,1),delay)
+    delay=delay+0.3
+    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[3].guid,2),delay)
+    delay=delay+0.3
+    ReserveScript(string.format('REQUEST_SWAP_ANCIENT_CARD(nil,"%s",%d)',v[4].guid,3),delay)
 
 end
 function AAM_GET_ANCIENT_COMBO_LIST(cardList)
