@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by asdasd (IMCGames Co., Ltd) -->
+<uiframe name="specifictargetskill" x="0" y="0" width="600" height="300">
+	<draw drawtitlebar="false"/>
+	<frame fasthide="true" layout_gravity="left top" margin="300 100 0 0"/>
+	<input maxwidth="600" height="400" moveable="true"/>
+	<layer layerlevel="80"/>
+	<skin frameskin="None"/>
+	<animation frameOpenAnim="chat_balloon_start" frameCloseAnim="chat_balloon_end"/>
+	<sound opensound="window_open" closesound="window_close"/>
+
+	<script OpenScp="SPECIFICTARGETSKILL_LIST_OPEN" CloseScp="SPECIFICTARGETSKILL_CARD_LIST_CLOSE"/>
+	<controls>
+		<groupbox name="bg" rect="3 3 594 294" margin="0 40 0 0" layout_gravity="left top" draw="true" hittestbox="false" skin="test_frame_low"/>
+		<groupbox name="title_bg" rect="0 0 600 61" margin="0 0 0 0" layout_gravity="left top" draw="true" hittestbox="false" scrollbar="false" skin="test_frame_top"/>
+		<richtext name="title" rect="0 0 100 30" parent="title_bg" margin="0 18 0 0" layout_gravity="center top" hittestbox="false"  caption="{@st43}{s22}Specific Target Skill{/}" fotname="default" spacey="0"/>
+		<button name="close" rect="-10 0 34 34" margin="0 20 17 0" layout_gravity="right top" LBtnUpScp="ui.CloseFrame(&apos;specifictargetskill&apos;)" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" image="testclose_button" oversound="button_over" texttooltip="{@st59}어시스터 보관함을 닫습니다{/}"/>
+		
+		</controls>
+</uiframe>
+

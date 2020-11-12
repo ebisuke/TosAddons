@@ -169,7 +169,7 @@ function TESTBOARD_INIT()
             
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
-            timer:Start(1);
+            timer:Start(0.01);
             timer:EnableHideUpdate(true)
 
             
@@ -193,8 +193,10 @@ function TESTBOARD_ON_TIMER(frame)
             if g.b then
                 local pc = GetMyActor()
                 g.a=g.a+0.01
-               
+                pc:EnableSkillCancel(1);
                 --UPDATE_COL_SKL(pc,g.a)
+                pc:SetPause(0);
+                pc:GetAnimation():StopFixAnim();
             end
                   end,
         catch = function(error)
@@ -247,22 +249,22 @@ function TESTBOARD_TEST()
             --     end
             -- end
  
-            local actor = GetMyActor()
+            -- local actor = GetMyActor()
         
-            local scenePos = world.GetActorPos(actor:GetHandleVal());	
-            scenePos.y = scenePos.x;	
-            local scenePos2 = world.GetActorPos(actor:GetHandleVal());	
-            scenePos2.x = scenePos2.x+50;	
-            --pc:SetDirMoveSpeed(33);
-            --pc:SetDirMoveAccel(33);
-            actor:SetMoveFromPos(scenePos);
-            actor:SetMoveDestPos(scenePos2);
-            actor:SetDirDestPos(scenePos2);
+            -- local scenePos = world.GetActorPos(actor:GetHandleVal());	
+            -- scenePos.y = scenePos.x;	
+            -- local scenePos2 = world.GetActorPos(actor:GetHandleVal());	
+            -- scenePos2.x = scenePos2.x+50;	
+            -- --pc:SetDirMoveSpeed(33);
+            -- --pc:SetDirMoveAccel(33);
+            -- actor:SetMoveFromPos(scenePos);
+            -- actor:SetMoveDestPos(scenePos2);
+            -- actor:SetDirDestPos(scenePos2);
         
-            actor:SetFSMTime( imcTime.GetAppTime() );
-            --actor:ActorJump(10000, 100);
-            --actor:ProcessDirMove(0.1);
-            actor:MoveDirTo(scenePos2,1)
+            -- actor:SetFSMTime( imcTime.GetAppTime() );
+            -- --actor:ActorJump(10000, 100);
+            -- --actor:ProcessDirMove(0.1);
+            -- actor:MoveDirTo(scenePos2,1)
 
         end,
         catch = function(error)

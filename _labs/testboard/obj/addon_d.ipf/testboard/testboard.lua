@@ -169,7 +169,7 @@ function TESTBOARD_INIT()
             
             local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
-            timer:Start(1);
+            timer:Start(0.01);
             timer:EnableHideUpdate(true)
 
             
@@ -190,7 +190,14 @@ end
 function TESTBOARD_ON_TIMER(frame)
     EBI_try_catch{
         try = function()
-  
+            if g.b then
+                local pc = GetMyActor()
+                g.a=g.a+0.01
+                pc:EnableSkillCancel(1);
+                --UPDATE_COL_SKL(pc,g.a)
+                pc:SetPause(0);
+                pc:GetAnimation():StopFixAnim();
+            end
                   end,
         catch = function(error)
             ERROUT(error)
@@ -202,40 +209,63 @@ function TESTBOARD_TEST()
     
     EBI_try_catch{
         try = function()
-
-            local pc = GetMyActor()
-            local pos=pc:GetPos()
-            local actor=pc
-            local targetActor=world.GetActor(session.GetTargetHandle())
-            --PlayEffect(actor, 'F_circle020_light', 1.5,1,'BOT')
+            g.a=0
+            if g.b then
+                g.b=false
+            else
+                g.b=true
+            end
+            -- local pc = GetMyActor()
+            -- local pos=pc:GetPos()
+            -- local actor=pc
+            -- local targetActor=world.GetActor(session.GetTargetHandle())
+            -- --PlayEffect(actor, 'F_circle020_light', 1.5,1,'BOT')
            
-            effect.PlayTextEffect(pc,"I_SYS_damage_4","100");
-            effect.PlayTextEffect(pc,"I_SYS_damage_3","100")
-            effect.PlayTextEffect(pc,"I_SYS_damage_2","100");
-            effect.PlayTextEffect(pc,"I_SYS_damage_1","100");
-            effect.PlayTextEffect(pc,"I_SYS_damage",'100');
-            effect.PlayTextEffect(pc,"SHOW_DMG_SHIELD","100");
-            effect.PlayTextEffect(pc,"I_SYS_heal2","100");
-            local objList, objCount = SelectObject(self, 300, 'ALL') 
-            CHAT_SYSTEM("Thaurge BEGIN")
+            -- effect.PlayTextEffect(pc,"I_SYS_damage_4","100");
+            -- effect.PlayTextEffect(pc,"I_SYS_damage_3","100")
+            -- effect.PlayTextEffect(pc,"I_SYS_damage_2","100");
+            -- effect.PlayTextEffect(pc,"I_SYS_damage_1","100");
+            -- effect.PlayTextEffect(pc,"I_SYS_damage",'100');
+            -- effect.PlayTextEffect(pc,"SHOW_DMG_SHIELD","100");
+            -- effect.PlayTextEffect(pc,"I_SYS_heal2","100");
+            -- local objList, objCount = SelectObject(self, 300, 'ALL') 
+            -- CHAT_SYSTEM("Thaurge BEGIN")
                     
-            for i = 1, objCount do
-                local enemyHandle = GetHandle(objList[i]);
-			    local enemy = world.GetActor(enemyHandle);
-                if objList[i].ClassName == 'pcskill_Warlock_DarkTheurge' then
-                    local enemyDestPos = enemy:GetArgPos(0);
-                    local enemyPos = enemy:GetPos();
-                    local distFromActor = imcMath.Vec3Dist(enemyPos, pos);
-                    CHAT_SYSTEM("Thaurge"..enemyHandle..":"..tostring(objList[i].Faction))
+            -- for i = 1, objCount do
+            --     local enemyHandle = GetHandle(objList[i]);
+			--     local enemy = world.GetActor(enemyHandle);
+            --     if objList[i].ClassName == 'pcskill_Warlock_DarkTheurge' then
+            --         local enemyDestPos = enemy:GetArgPos(0);
+            --         local enemyPos = enemy:GetPos();
+            --         local distFromActor = imcMath.Vec3Dist(enemyPos, pos);
+            --         CHAT_SYSTEM("Thaurge"..enemyHandle..":"..tostring(objList[i].Faction))
                   
-                end
-                if objList[i].ClassID==150011 then
-                    ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(enemyHandle)
-                end
-                if objList[i].ClassID==150010 then
-                    ACCEPT_CHALLENGE_MODE(enemyHandle)
-                end
-		    end
+            --     end
+            --     if objList[i].ClassID==150011 then
+            --         ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(enemyHandle)
+            --     end
+            --     if objList[i].ClassID==150010 then
+            --         ACCEPT_CHALLENGE_MODE(enemyHandle)
+            --     end
+            -- end
+ 
+            -- local actor = GetMyActor()
+        
+            -- local scenePos = world.GetActorPos(actor:GetHandleVal());	
+            -- scenePos.y = scenePos.x;	
+            -- local scenePos2 = world.GetActorPos(actor:GetHandleVal());	
+            -- scenePos2.x = scenePos2.x+50;	
+            -- --pc:SetDirMoveSpeed(33);
+            -- --pc:SetDirMoveAccel(33);
+            -- actor:SetMoveFromPos(scenePos);
+            -- actor:SetMoveDestPos(scenePos2);
+            -- actor:SetDirDestPos(scenePos2);
+        
+            -- actor:SetFSMTime( imcTime.GetAppTime() );
+            -- --actor:ActorJump(10000, 100);
+            -- --actor:ProcessDirMove(0.1);
+            -- actor:MoveDirTo(scenePos2,1)
+
         end,
         catch = function(error)
             ERROUT("FAIL:" .. tostring(error))

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="specifictargetskill_images">
+		<image name="sts_roundrobin" file="\skin\roundrobin.tga" imgrect="0 0 20 20"/>
+		<image name="sts_lowhp" file="\skin\lowhp.tga" imgrect="0 0 20 20"/>
+		<image name="sts_pt1" file="\skin\pt1.tga" imgrect="0 0 20 20"/>
+		<image name="sts_pt2" file="\skin\pt2.tga" imgrect="0 0 20 20"/>
+		<image name="sts_pt3" file="\skin\pt3.tga" imgrect="0 0 20 20"/>
+		<image name="sts_pt4" file="\skin\pt4.tga" imgrect="0 0 20 20"/>
+		<image name="sts_pt5" file="\skin\pt5.tga" imgrect="0 0 20 20"/>
+		<image name="sts_debuff" file="\skin\debuff.tga" imgrect="0 0 20 20"/>
+
+		
+	</imagelist>
+</skinset>
