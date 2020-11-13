@@ -196,7 +196,7 @@ end
 function AWAKENROLLER_OPEN_ITEMDUNGEON_SELLER()
     EBI_try_catch {
         try = function()
-            OPEN_ITEMDUNGEON_SELLER()
+            OPEN_ITEMDUNGEON_SELLER_OLD()
             local frame = ui.GetFrame('itemdungeon')
             frame:RemoveChild('btnactivate')
         end,
