@@ -509,19 +509,37 @@
       "item"
     ]
   },
-
   {
-    "name": "EbiNochallengemodenextdialog",
-    "file": "ebinochallengemodenextdialog",
+    "name": "Option Roller",
+    "file": "optionroller",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "ebinochallengemodenextdialog-v0.0.2",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "optionroller-v0.0.3",
     "unicode": "📖",
-    "description": "チャレンジモードで次の段階に進む際のダイアログを省略します。  ",
+    "description": "アイテムオプションで指定したオプションが出るまでロールするアドオンです",
     "tags": [
       "ui",
-      "challengemode",
-      "dialog"
+      "option",
+      "prop",
+      "reidentify",
+      "item"
+    ]
+  },
+
+  {
+    "name": "Enchant Roller",
+    "file": "enchantroller",
+    "extension": "ipf",
+    "fileVersion": "v0.0.4",
+    "releaseTag": "enchantroller-v0.0.4",
+    "unicode": "📖",
+    "description": "エンチャントで指定した以上の数値が出るまでロールするアドオンです ",
+    "tags": [
+      "ui",
+      "option",
+      "prop",
+      "enchant",
+      "item"
     ]
   },
   {
