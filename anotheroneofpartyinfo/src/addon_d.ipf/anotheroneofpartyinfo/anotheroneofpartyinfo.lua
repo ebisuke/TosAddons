@@ -20,7 +20,7 @@ g.settings =
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ''
 g.framename = 'anotheroneofpartyinfo'
-g.debug = false
+g.debug = true
 g.tick = 0
 g.casting = false
 g.castanim = 0
@@ -90,7 +90,7 @@ function AOP_DEFAULT_SETTINGS()
         y = 300,
         style = 0,
         lock = false,
-        layerlevel = 90
+        layerlevel = 70
     }
 end
 function AOP_LOAD_SETTINGS()
@@ -191,7 +191,7 @@ function AOP_INIT()
             local frame = ui.GetFrame(g.framename)
             frame:RemoveAllChild()
             frame:Resize(800, 800)
-            frame:SetLayerLevel(g.settings.layerlevel or 90)
+            frame:SetLayerLevel(g.settings.layerlevel or 70)
             --下準備
 
             local bg = frame:CreateOrGetControl('picture', 'bg' .. 0, 0, 0, 150, 110)

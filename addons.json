@@ -538,4 +538,18 @@
       "extract"
     ]
   }
+  ,
+  {
+    "name": "disablemagicshield",
+    "file": "disablemagicshield",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "disablemagicshield-v0.0.1",
+    "unicode": "📖",
+    "description": "マジックシールドを自動的に無効化します",
+    "tags": [
+      "buff",
+      "magicshield"
+    ]
+  }
 ]
