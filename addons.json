@@ -569,5 +569,20 @@
       "buff",
       "magicshield"
     ]
+  },
+  {
+    "name": "AncientMonsterSimpleOpen ",
+    "file": "ancientmonstersimpleopen",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "ancientmonstersimpleopen-v0.0.1",
+    "unicode": "📖",
+    "description": "アシスターカードブックを自動で開きます",
+    "tags": [
+      "assister",
+      "ui",
+      "cardbook",
+      "ancientmonster"
+    ]
   }
 ]
