@@ -10,6 +10,17 @@
 		<image name="aop_spray_large_bar" file="\skin\large_bar.tga" imgrect="0 0 10 10"/>
 		<image name="aop_spray_dia" file="\skin\brush_dia.tga" imgrect="0 0 40 40"/>
 		<image name="aop_spray_triangle" file="\skin\brush_triangle.tga" imgrect="0 0 40 40"/>
+		<image name="aop_num_0" file="\skin\num.tga" imgrect="0 0 5 7"/>
+		<image name="aop_num_1" file="\skin\num.tga" imgrect="5 0 5 7"/>
+		<image name="aop_num_2" file="\skin\num.tga" imgrect="10 0 5 7"/>
+		<image name="aop_num_3" file="\skin\num.tga" imgrect="15 0 5 7"/>
+		<image name="aop_num_4" file="\skin\num.tga" imgrect="20 0 5 7"/>
+		<image name="aop_num_5" file="\skin\num.tga" imgrect="25 0 5 7"/>
+		<image name="aop_num_6" file="\skin\num.tga" imgrect="30 0 5 7"/>
+		<image name="aop_num_7" file="\skin\num.tga" imgrect="35 0 5 7"/>
+		<image name="aop_num_8" file="\skin\num.tga" imgrect="40 0 5 7"/>
+		<image name="aop_num_9" file="\skin\num.tga" imgrect="45 0 5 7"/>
+		<image name="aop_num_sp" file="\skin\num.tga" imgrect="50 0 5 7"/>
 		
 	</imagelist>
 </skinset>

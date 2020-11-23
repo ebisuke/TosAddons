@@ -337,6 +337,14 @@ function AOP_CALC_POINT_SIMPLE_ANIMATED(widthval, actualval, actualmax, minw, ma
 
     return widthval
 end
+function AOP_IS_PARTY_INFO_SHOWICON(showicon)
+    if g.debug then
+        return true
+    else
+    
+        return IS_PARTY_INFO_SHOWICON(showicon)
+    end
+end
 function AOP_ON_TIMER(frame)
     EBI_try_catch {
         try = function()
@@ -401,6 +409,23 @@ function AOP_RENDER()
             ERROUT(error)
         end
     }
+end
+function AOP_GETBUFFOVERTEXT(num,digit)
+    local txt=''
+    digit=digit or 2
+
+    repeat
+        local img=''
+        if num==0 then
+            img='aop_num_sp'
+        else
+            img='aop_num_'..tostring(num%10)
+        end
+        txt=string.format('{img %s 5 7}',img)..txt
+        num=math.floor(num/10)
+        digit=digit-1
+    until digit<=0 and num==0;
+    return txt
 end
 function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
     EBI_try_catch {
@@ -529,19 +554,20 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
             local slotsbuff
             local slotsdebuff
             if (frame:GetChild('buffs' .. id)) then
-                slotsbuff = frame:CreateOrGetControl('slotset', 'buffs' .. id, ox, oy + 50, 120, 15)
-                slotsdebuff = frame:CreateOrGetControl('slotset', 'debuffs' .. id, ox, oy + 80 + 15, 120, 15)
+                slotsbuff = frame:GetChild('buffs' .. id)
+                slotsdebuff = frame:GetChild('debuffs' .. id)
                 AUTO_CAST(slotsbuff)
                 AUTO_CAST(slotsdebuff)
                 if (slotsbuff:GetCol()~= 10) then
+                    slotsbuff:RemoveAllChild()
+                    slotsdebuff:RemoveAllChild()
                     slotsbuff:SetSlotSize(15, 15)
                     slotsdebuff:SetSlotSize(15, 15)
                     slotsbuff:SetColRow(10, 3)
                     slotsdebuff:SetColRow(10, 1)
                     slotsdebuff:SetSpc(0, 0);
                     slotsbuff:SetSpc(0, 0);
-                    slotsbuff:RemoveAllChild()
-                    slotsdebuff:RemoveAllChild()
+                
                     slotsbuff:CreateSlots()
                     slotsdebuff:CreateSlots()
                     slotsbuff:EnableDrag(0)
@@ -558,37 +584,38 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                 slotsdebuff = frame:CreateOrGetControl('slotset', 'debuffs' .. id, ox, oy + 80 + 15, 120, 15)
                 AUTO_CAST(slotsbuff)
                 AUTO_CAST(slotsdebuff)
-                if (slotsbuff:GetCol()~= 10) then
-                    slotsbuff:SetSlotSize(15, 15)
-                    slotsdebuff:SetSlotSize(15, 15)
-                    slotsbuff:SetColRow(10, 3)
-                    slotsdebuff:SetColRow(10, 1)
-                    slotsdebuff:SetSpc(0, 0);
-                    slotsbuff:SetSpc(0, 0);
-                    slotsbuff:RemoveAllChild()
-                    slotsdebuff:RemoveAllChild()
-                    slotsbuff:CreateSlots()
-                    slotsdebuff:CreateSlots()
-                    slotsbuff:EnableDrag(0)
-                    slotsdebuff:EnableDrag(0)
-                    slotsbuff:EnableDrop(0)
-                    slotsdebuff:EnableDrop(0)
-                    slotsbuff:Invalidate()
-                    slotsdebuff:Invalidate()
-                    DBGOUT('HERE')
-                end
+                slotsbuff:RemoveAllChild()
+                slotsdebuff:RemoveAllChild()
+                slotsbuff:SetSlotSize(15, 15)
+                slotsdebuff:SetSlotSize(15, 15)
+                slotsbuff:SetColRow(10, 3)
+                slotsdebuff:SetColRow(10, 1)
+                slotsdebuff:SetSpc(0, 0);
+                slotsbuff:SetSpc(0, 0);
+           
+                slotsbuff:CreateSlots()
+                slotsdebuff:CreateSlots()
+                slotsbuff:EnableDrag(0)
+                slotsdebuff:EnableDrag(0)
+                slotsbuff:EnableDrop(0)
+                slotsdebuff:EnableDrop(0)
+                slotsbuff:Invalidate()
+                slotsdebuff:Invalidate()
+                DBGOUT('HERE')
+            
 
             end
             --cleanup
-            for i = 0, slotsbuff:GetSlotCount() - 1 do
-                slotsbuff:GetSlotByIndex(i):ShowWindow(0)
-            end
-            for i = 0, slotsdebuff:GetSlotCount() - 1 do
-                slotsdebuff:GetSlotByIndex(i):ShowWindow(0)
-            end
+            -- for i = 0, slotsbuff:GetSlotCount() - 1 do
+            --     slotsbuff:GetSlotByIndex(i):ShowWindow(0)
+            -- end
+            -- for i = 0, slotsdebuff:GetSlotCount() - 1 do
+            --     slotsdebuff:GetSlotByIndex(i):ShowWindow(0)
+            -- end
             if (targetinfo) then
                 local buffCount = info.GetBuffCount(handle)
                 if buffCount > 0 then
+                  
                     local buffIndex = 0
                     local debuffIndex = 0
                    
@@ -597,7 +624,7 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                         local cls = GetClassByType('Buff', buff.buffID)
                         local buffID = buff.buffID
 
-                        if cls ~= nil and IS_PARTY_INFO_SHOWICON(cls.ShowIcon) == true and cls.ClassName ~= 'TeamLevel'  then
+                        if cls ~= nil and AOP_IS_PARTY_INFO_SHOWICON(cls.ShowIcon) == true and cls.ClassName ~= 'TeamLevel'  then
                             local slot
                             if cls.Group1 == 'Buff' then
                                 slot = slotsbuff:GetSlotByIndex(buffIndex)
@@ -606,7 +633,9 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                                 slot = slotsdebuff:GetSlotByIndex(debuffIndex)
                                 debuffIndex = debuffIndex + 1
                             end
+                            
                             if slot ~= nil then
+                                --CHAT_SYSTEM(''..buffIndex..'/'..cls.Group1)
                                 local icon = slot:GetIcon()
                                 if icon == nil then
                                     icon = CreateIcon(slot)
@@ -614,7 +643,8 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
 
                                 handle = tostring(handle)
                                 if buff.over > 1 then
-                                    slot:SetText('{s13}{ol}{b}' .. buff.over, 'count', ui.RIGHT, ui.BOTTOM, 1, 2)
+                                    --slot:SetText('{s13}{ol}{b}' .. AOP_GETBUFFOVERTEXT(buff.over), 'count', ui.RIGHT, ui.BOTTOM, 1, 2)
+                                    slot:SetText('{s6} ' .. AOP_GETBUFFOVERTEXT(buff.over)..'', 'count', ui.RIGHT, ui.BOTTOM, 0,2)
                                 else
                                     slot:SetText('')
                                 end
@@ -653,7 +683,7 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                         local buffID = partyMemberInfo:GetBuffIDByIndex(j)
 
                         local cls = GetClassByType('Buff', buffID)
-                        if cls ~= nil and IS_PARTY_INFO_SHOWICON(cls.ShowIcon) == true and cls.ClassName ~= 'TeamLevel' then
+                        if cls ~= nil and AOP_IS_PARTY_INFO_SHOWICON(cls.ShowIcon) == true and cls.ClassName ~= 'TeamLevel' then
                             local buffOver = partyMemberInfo:GetBuffOverByIndex(j)
                             local buffTime = partyMemberInfo:GetBuffTimeByIndex(j)
                             local slot
@@ -687,7 +717,9 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                                 local imageName = 'icon_' .. cls.Icon
                                 icon:Set(imageName, 'BUFF', buffID, 0)
                                 if buffOver > 1 then
-                                    slot:SetText('{s13}{ol}{b}' .. buffOver, 'count', ui.RIGHT, ui.BOTTOM, 1, 2)
+                                    --slot:SetText('{s13}{ol}{b}' .. AOP_GETBUFFOVERTEXT(buffOver), 'count', ui.RIGHT, ui.BOTTOM, 1, 2)
+                                    slot:SetText('{s6} ' .. AOP_GETBUFFOVERTEXT(buffOver)..'', 'count', ui.RIGHT, ui.BOTTOM, 0, 2)
+                                
                                 else
                                     slot:SetText('')
                                 end
@@ -718,7 +750,7 @@ function AOP_RENDER_PARTY(frame, pic)
 
     for i = 0, count - 1 do
         local partyMemberInfo = list:Element(i)
-        if partyMemberInfo:GetAID() == session.loginInfo.GetAID() then
+        if partyMemberInfo:GetAID() == session.loginInfo.GetAID() and g.debug==false then
         else
             local ox = 10
             local oy = 0

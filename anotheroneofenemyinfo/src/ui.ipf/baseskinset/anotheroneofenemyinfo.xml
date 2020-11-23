@@ -10,6 +10,10 @@
 		<image name="aoe_spray_large_bar" file="\skin\large_bar.tga" imgrect="0 0 10 10"/>
 		<image name="aoe_spray_dia" file="\skin\brush_dia.tga" imgrect="0 0 40 40"/>
 		<image name="aoe_spray_triangle" file="\skin\brush_triangle.tga" imgrect="0 0 40 40"/>
-		
+		<image name="aoe_spray_dia_leftup" file="\skin\dia_leftup.tga" imgrect="0 0 40 40"/>
+		<image name="aoe_spray_dia_rightup" file="\skin\dia_rightup.tga" imgrect="0 0 40 40"/>
+		<image name="aoe_spray_dia_leftdown" file="\skin\dia_leftdown.tga" imgrect="0 0 40 40"/>
+		<image name="aoe_spray_dia_rightdown" file="\skin\dia_rightdown.tga" imgrect="0 0 40 40"/>
+
 	</imagelist>
 </skinset>
