@@ -24,7 +24,7 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.hpmonitorFileLoc = string.format('../addons/%s/settings.txt', 'hpmonitor')
 g.personalsettingsFileLoc = ""
 g.framename = "anotheroneofenemyinfo"
-g.debug = false
+g.debug = true
 g.tick = 0
 g.castanim = 0
 g.trace = nil
@@ -33,7 +33,7 @@ g.hplogssecondary = {}
 g.ctrls = g.ctrls or {}
 g.remain = {}
 g.run = g.run or false
-g.hpmonitor=g.hpmonitor or nil  -- for intellisense
+g.hpmonitor = g.hpmonitor or nil -- for intellisense
 --ライブラリ読み込み
 CHAT_SYSTEM("[AOE]loaded")
 local acutil = require('acutil')
@@ -113,32 +113,39 @@ function AOE_DEFAULT_SETTINGS()
 
 end
 function AOE_LOAD_SETTINGS()
-    DBGOUT("LOAD_SETTING")
-    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
-    if err then
-        --設定ファイル読み込み失敗時処理
-        DBGOUT(string.format('[%s] cannot load setting files', addonName))
-        AOE_DEFAULT_SETTINGS()
-    else
-        --設定ファイル読み込み成功時処理
-        g.settings = t
-        if (not g.settings.version) then
-            g.settings.version = 0
+    EBI_try_catch{
+        try = function()
+            DBGOUT("LOAD_SETTING")
+            local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+            if err then
+                --設定ファイル読み込み失敗時処理
+                DBGOUT(string.format('[%s] cannot load setting files', addonName))
+                AOE_DEFAULT_SETTINGS()
+            else
+                --設定ファイル読み込み成功時処理
+                g.settings = t
+                if (not g.settings.version) then
+                    g.settings.version = 0
+                
+                end
+            end
+            local f = io.open(g.hpmonitorFileLoc, 'r')
+            if f then
+                local txt = f:read("*a")
+                f:close()
+                g.hpmonitor = assert(load(txt))()
+               
+            else
+                g.hpmonitor = nil
+            end
+            AOE_UPGRADE_SETTINGS()
+            AOE_SAVE_SETTINGS()
         
+        end,
+        catch = function(error)
+            ERROUT(error)
         end
-    end
-    local f=io.open(g.hpmonitorFileLoc,'r')
-    if f then
-        local txt=f:read()
-        f:close()
-        g.hpmonitor=assert(load(txt))()
-        
-    else
-        g.hpmonitor=nil
-    end
-    AOE_UPGRADE_SETTINGS()
-    AOE_SAVE_SETTINGS()
-
+    }
 end
 
 
@@ -268,7 +275,7 @@ function AOE_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     
     
     if (msg == "GAME_START_3SEC") then
-       
+        
         g.frame:ShowWindow(1)
         AOE_LOAD_SETTINGS()
         AOE_INIT()
@@ -408,7 +415,7 @@ function AOE_RENDER()
             if IS_IN_EVENT_MAP() == true then
                 return;
             end
-           
+            
             if (pic) then
                 AUTO_CAST(pic)
                 pic:FillClonePicture("00000000")
@@ -472,15 +479,16 @@ function AOE_RENDER()
 end
 function AOE_HAS_SECONDARY(montype)
     
-
+    
     if g.hpmonitor then
-        local monCls=GetClassByType('Monster',montype)
-        if g.hpmonitor[monCls.ClassName] then
+        local monCls = GetClassByType('Monster', montype)
+        if monCls and g.hpmonitor[monCls.ClassName] then
             --select limit
-            local lim={}
-            for _,v in ipairs(g.hpmonitor[monCls.ClassName]) do
-                lim[#lim+1] = v.limit
+            local lim = {}
+            for _, v in pairs(g.hpmonitor[monCls.ClassName]) do
+                lim[#lim + 1] = v.limit
             end
+            table.sort(lim)
             return lim
         end
     end
@@ -529,8 +537,8 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
                     TargetWindow = ninfo.TargetWindow,
                     isInvincible = ninfo.isInvincible,
                     attribute = ninfo.attribute,
-                    raceType=ninfo.raceType,
-                    armortype=ninfo.armorType
+                    raceType = ninfo.raceType,
+                    armortype = ninfo.armorType
                 }
                 local s = targetinfo.stat
                 stat = {
@@ -556,23 +564,23 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
             end
             
             local actor = world.GetActor(handle)
-            if actor==nil then
+            if actor == nil then
                 return 0
             end
             local monCls = GetClassByType("Monster", actor:GetType());
-            local attribute = AOE_GET_MON_PROPICON_BY_PROPNAME('Attribute',monCls)or 'None'
-    
-            local raceType = AOE_GET_MON_PROPICON_BY_PROPNAME('RaceType',monCls)or 'None'
-    
-            local armorType=AOE_GET_MON_PROPICON_BY_PROPNAME('ArmorMaterial',monCls)or 'None'
-    
-            local effectiveType='None'
+            local attribute = AOE_GET_MON_PROPICON_BY_PROPNAME('Attribute', monCls) or 'None'
+            
+            local raceType = AOE_GET_MON_PROPICON_BY_PROPNAME('RaceType', monCls) or 'None'
+            
+            local armorType = AOE_GET_MON_PROPICON_BY_PROPNAME('ArmorMaterial', monCls) or 'None'
+            
+            local effectiveType = 'None'
             local iconname = "nil"
             
-          
+            
             iconname = TryGetProp(monCls, "Icon");
-            effectiveType= AOE_GET_MON_PROPICON_BY_PROPNAME('EffectiveAtkType',monCls) or 'None'
-    
+            effectiveType = AOE_GET_MON_PROPICON_BY_PROPNAME('EffectiveAtkType', monCls) or 'None'
+            
             
             
             local attributeImgName = "attribute_" .. attribute
@@ -682,10 +690,10 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
                 end
                 local uppercolor = string.format("%02XFF0000", ninfo.time * 0xFF / maxtime)
                 local undercolor = string.format("%02XAA0000", ninfo.time * 0xFF / maxtime)
-
-                if gaugecount~=0 then
-                    uppercolor =string.format("%02XFFAA00", ninfo.time * 0xFF / maxtime)
-                    undercolor =string.format("%02XAA7700", ninfo.time * 0xFF / maxtime)
+                
+                if gaugecount ~= 0 then
+                    uppercolor = string.format("%02XFFAA00", ninfo.time * 0xFF / maxtime)
+                    undercolor = string.format("%02XAA7700", ninfo.time * 0xFF / maxtime)
                 end
                 if (ninfo.isInvincible == 1) then
                     uppercolor = string.format("%02XFFFFFF", ninfo.time * 0xFF / maxtime)
@@ -693,24 +701,24 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
                 end
                 
                 pic:DrawBrush(ox, offsec, ox + hp.wid, offsec, "aoe_spray_large_s", uppercolor)
-                pic:DrawBrush(ox - 2-1, offsec + 2, ox - 2 + hp.wid-1, offsec + 2, "aoe_spray_small_s", undercolor)
+                pic:DrawBrush(ox - 2 - 1, offsec + 2, ox - 2 + hp.wid - 1, offsec + 2, "aoe_spray_small_s", undercolor)
                 --sekiro gauge dot
                 local txt = ''
-                for i = 1, maxgaugecount do
-                    if i <= gaugecount then
+                for i = 1, maxgaugecount+1 do
+                    if i <= gaugecount+1 then
                         txt = txt .. '{img red_color 20 20}'
                     else
                         txt = txt .. '{img black_color 20 20}'
                     end
                 end
-                AOE_GENERATE_TEXT(frame,'gaugecount',txt, ox, offsec - 40, 100, 24)
-              
+                AOE_GENERATE_TEXT(frame, 'gaugecount', txt, ox, offsec - 40, 100, 24)
+            
             else
                 g.hplogssecondary[handle] = nil
-                AOE_GENERATE_TEXT(frame,'gaugecount','', ox, offsec + 8, 100, 24)
+                AOE_GENERATE_TEXT(frame, 'gaugecount', '', ox, offsec + 8, 100, 24)
                 --render
                 pic:DrawBrush(ox, off, ox + len, off, "aoe_spray_large_s", "77000000")
-
+                
                 if (hp.rem ~= hp.wid) then
                     if (hp.rem < hp.wid) then
                         pic:DrawBrush(ox, off, ox + hp.rem, off, "aoe_spray_large_s", "FF22FFFF")
@@ -719,7 +727,7 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
                     end
                 end
                 
-             
+                
                 local uppercolor = string.format("%02XFF0000", ninfo.time * 0xFF / maxtime)
                 local undercolor = string.format("%02XAA0000", ninfo.time * 0xFF / maxtime)
                 if (ninfo.isInvincible == 1) then
@@ -730,58 +738,56 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
                 -- if attributeImgName == "None" or attribute == "None" then
                 --     local c = AOE_GENERATE_ATTRIBUTE(frame, "attr" .. id, attributeImgName, ox + 50, oy, 20, 20)
                 --     c:ShowWindow(0)
-                
                 -- else
                 --     local c = AOE_GENERATE_ATTRIBUTE(frame, "attr" .. id, attributeImgName, ox + 50, oy, 20, 20)
                 --     c:ShowWindow(1)
                 --     c:SetColorTone(string.format("%02XFFFFFF", ninfo.time * 0xFF / maxtime))
                 -- end
-                
                 pic:DrawBrush(ox, off, ox + hp.wid, off, "aoe_spray_large_s", uppercolor)
-                pic:DrawBrush(ox - 2-1, off + 2, ox - 2 + hp.wid-1, off + 2, "aoe_spray_small_s", undercolor)
+                pic:DrawBrush(ox - 2 - 1, off + 2, ox - 2 + hp.wid - 1, off + 2, "aoe_spray_small_s", undercolor)
             end
             --attributes
-            local colortable={
-                Fire='AA774400',
-                Ice='AA007777',
-                Lightning='AA777700',
-                Poison='AA007700',
-                Earth='AA447700',
-                Dark='AA444444',
-                Holy='AAAAAAAA',
-                Soul='AA440077',
+            local colortable = {
+                Fire = 'AA774400',
+                Ice = 'AA007777',
+                Lightning = 'AA777700',
+                Poison = 'AA007700',
+                Earth = 'AA447700',
+                Dark = 'AA444444',
+                Holy = 'AAAAAAAA',
+                Soul = 'AA440077',
             }
-            local color='AA000000'
-            if colortable[ ninfo.attribute] then
-                color=colortable[ ninfo.attribute]
+            local color = 'AA000000'
+            if colortable[ninfo.attribute] then
+                color = colortable[ninfo.attribute]
             end
-
-            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_leftdown", color)
-            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftdown",color)
-            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftup",color)
-            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_leftup",color)
-            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightup",color)
-            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_rightup", color)
-            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_rightdown",color)
-            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightdown", color)
-            AOE_GENERATE_TEXT(frame, "effective" .. id, string.format('{img %s 25 25}',effectiveType), 3,5, 25, 25)
-            AOE_GENERATE_TEXT(frame, "race" .. id, string.format('{img %s 25 25}',raceType), 3, 45, 25, 25)
-            AOE_GENERATE_TEXT(frame, "attribute" .. id, string.format('{img %s 25 25}',attribute), 33, 45, 25, 25)
-            AOE_GENERATE_TEXT(frame, "armortype" .. id, string.format('{img %s 25 25}',armorType), 33, 5, 25, 25)
             
-
-
-
+            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_leftdown", color)
+            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftdown", color)
+            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftup", color)
+            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_leftup", color)
+            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightup", color)
+            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_rightup", color)
+            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_rightdown", color)
+            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightdown", color)
+            AOE_GENERATE_TEXT(frame, "effective" .. id, string.format('{img %s 25 25}', effectiveType), 3, 5, 25, 25)
+            AOE_GENERATE_TEXT(frame, "race" .. id, string.format('{img %s 25 25}', raceType), 3, 45, 25, 25)
+            AOE_GENERATE_TEXT(frame, "attribute" .. id, string.format('{img %s 25 25}', attribute), 33, 45, 25, 25)
+            AOE_GENERATE_TEXT(frame, "armortype" .. id, string.format('{img %s 25 25}', armorType), 33, 5, 25, 25)
+            
+            
+            
+            
             --texts
             local strHPValue = TARGETINFO_TRANS_HP_VALUE(handle, stat.HP);
-                
+            
             local name = dic.getTranslatedStr(ninfo.name);
             local font = string.format("{#%02X%02X%02X}", ninfo.time * 0xFF / maxtime, ninfo.time * 0xFF / maxtime, ninfo.time * 0xFF / maxtime)
-            local c=AOE_GENERATE_TEXT(frame, "lv" .. id, "{@st43}" .. font .. lvsz .. "" .. tostring(ninfo.level), 0, 40, 40, 30)
-            local offsetw=(60-c:GetTextWidth())/2
-            c:SetOffset(offsetw,28)
+            local c = AOE_GENERATE_TEXT(frame, "lv" .. id, "{@st43}" .. font .. lvsz .. "" .. tostring(ninfo.level), 0, 40, 40, 30)
+            local offsetw = (60 - c:GetTextWidth()) / 2
+            c:SetOffset(offsetw, 28)
             --AOE_GENERATE_TEXT(frame, "name" .. id, "{img " .. tostring(iconname) .. "20 20}" .. "{@st43}" .. font .. sz .. name:gsub("{nl}", ""), ox + 70, oy, 800, 30)
-            AOE_GENERATE_TEXT(frame, "name" .. id, "{@st43}" .. font .. sz .. name:gsub("{nl}", ""), ox+10, oy, 800, 30)
+            AOE_GENERATE_TEXT(frame, "name" .. id, "{@st43}" .. font .. sz .. name:gsub("{nl}", ""), ox + 10, oy, 800, 30)
             
             AOE_GENERATE_TEXT(frame, "hp" .. id, "{@st43}{s20}" .. font .. tostring(strHPValue), ox + 10, off - 20, 200, 30)
             if info.IsPercentageHP(handle) == true then
@@ -789,8 +795,11 @@ function AOE_RENDER_ENEMY(frame, pic, idx, oy, handle, nonelapse)
                 AOE_GENERATE_TEXT(frame, "hpp" .. id, "{@st43}{s14}" .. font .. tostring(math.ceil(stat.HP * 100 / stat.maxHP)) .. "%", ox + 110, off + 5 - 10, 200, 30)
             end
             --バフ欄設置
-            local cslot = frame:CreateOrGetControl("slotset", "buff" .. id, ox, off + 10, 200, 20)
             
+            local cslot = frame:GetChild("buff" .. id)
+            if cslot==nil then 
+                cslot = frame:CreateOrGetControl("slotset", "buff" .. id, ox, off + 10, 200, 20)
+            end
             AOE_GENERATE_PASSIVE(frame, cslot)
             AUTO_CAST(cslot)
             cslot:EnableHitTest(1)
@@ -1082,120 +1091,120 @@ function AOE_ON_LONGTIMER(frame)
 end
 
 function AOE_GET_MON_PROPICON_BY_PROPNAME(paramname, monclass)
-
-    if monclass==nil then
+    
+    if monclass == nil then
         return 'None'
     end
-	
-	if paramname == "RaceType" then 
-
-		local paramvalue = monclass[paramname]
-
-		if paramvalue == "Forester" then
-			return 'mon_info_forester'
-		elseif paramvalue == "Widling" then
-			return 'mon_info_widling'
-		elseif paramvalue == "Paramune" then
-			return 'mon_info_paramune'
-		elseif paramvalue == "Klaida" then
-			return 'mon_info_klaida'
-		elseif paramvalue == "Velnias" then
-			return 'mon_info_velnias'
-		end
-
-	elseif paramname == "Size" then 
-
-		local paramvalue = monclass[paramname]
-
-		if paramvalue == "S" then
-			return 'mon_info_s'
-		elseif paramvalue == "M" then
-			return 'mon_info_m'
-		elseif paramvalue == "L" then
-			return 'mon_info_l'
-		elseif paramvalue == "XL" then
-			return 'mon_info_xl'
-		end
-
-	elseif paramname == "MonRank" then 
-
-		local paramvalue = monclass[paramname]
-
-		if paramvalue == "Normal" then
-			return 'mon_info_mon'
-		elseif paramvalue == "Elite" then
-			return 'mon_info_elite'
-		elseif paramvalue == "Boss" then
-			return 'mon_info_boss'
-		end
-
-	elseif paramname == "ArmorMaterial" then 
-
-		local paramvalue = monclass[paramname]
-
-		if paramvalue == "Cloth" then
-			return 'mon_info_cloth'
-		elseif paramvalue == "Leather" then
-			return 'mon_info_leather'
-		elseif paramvalue == "Iron" then
-			return 'mon_info_iron'
-		elseif paramvalue == "Ghost" then
-			return 'mon_info_ghost'
-		elseif paramvalue == "None" then
-			return 'mon_info_none'
-		end
-
-	elseif paramname == "Attribute" then 
-
-		local paramvalue = monclass[paramname]
-
-		if paramvalue == "Fire" then
-			return 'mon_info_fire'
-		elseif paramvalue == "Ice" then
-			return 'mon_info_ice'
-		elseif paramvalue == "Lightning" then
-			return 'mon_info_lightning'
-		elseif paramvalue == "Poison" then
-			return 'mon_info_poison'
-		elseif paramvalue == "Dark" then
-			return 'mon_info_dark'
-		elseif paramvalue == "Holy" then
-			return 'mon_info_holy'
-		elseif paramvalue == "Earth" then
-			return 'mon_info_earth'
-		elseif paramvalue == "Melee" then
-			return 'mon_info_melee'
-		end
-
-	elseif paramname == "MoveType" then 
-
-		local paramvalue = monclass[paramname]
-
-		if paramvalue == "Holding" then
-			return 'mon_info_holding'
-		elseif paramvalue == "Normal" then
-			return 'mon_info_normal'
-		elseif paramvalue == "Flying" then
-			return 'mon_info_flying'
-		end
-
-	elseif paramname == "EffectiveAtkType" then
-
-		if monclass.ArmorMaterial == "Cloth" then
-		--���Ⱑ ȿ����
-			return 'mon_info_slash'
-		elseif monclass.ArmorMaterial == "Leather" then
-		--��Ⱑ ȿ����
-			return 'mon_info_aries'
-		elseif monclass.ArmorMaterial == "Iron" then
-		--�����Ⱑ ȿ����
-			return 'mon_info_strike'
-		else
-		--�׷��� ����
-			return 'mon_info_none'
-		end
-
-	end
-
-	return 'None'
+    
+    if paramname == "RaceType" then
+        
+        local paramvalue = monclass[paramname]
+        
+        if paramvalue == "Forester" then
+            return 'mon_info_forester'
+        elseif paramvalue == "Widling" then
+            return 'mon_info_widling'
+        elseif paramvalue == "Paramune" then
+            return 'mon_info_paramune'
+        elseif paramvalue == "Klaida" then
+            return 'mon_info_klaida'
+        elseif paramvalue == "Velnias" then
+            return 'mon_info_velnias'
+        end
+    
+    elseif paramname == "Size" then
+        
+        local paramvalue = monclass[paramname]
+        
+        if paramvalue == "S" then
+            return 'mon_info_s'
+        elseif paramvalue == "M" then
+            return 'mon_info_m'
+        elseif paramvalue == "L" then
+            return 'mon_info_l'
+        elseif paramvalue == "XL" then
+            return 'mon_info_xl'
+        end
+    
+    elseif paramname == "MonRank" then
+        
+        local paramvalue = monclass[paramname]
+        
+        if paramvalue == "Normal" then
+            return 'mon_info_mon'
+        elseif paramvalue == "Elite" then
+            return 'mon_info_elite'
+        elseif paramvalue == "Boss" then
+            return 'mon_info_boss'
+        end
+    
+    elseif paramname == "ArmorMaterial" then
+        
+        local paramvalue = monclass[paramname]
+        
+        if paramvalue == "Cloth" then
+            return 'mon_info_cloth'
+        elseif paramvalue == "Leather" then
+            return 'mon_info_leather'
+        elseif paramvalue == "Iron" then
+            return 'mon_info_iron'
+        elseif paramvalue == "Ghost" then
+            return 'mon_info_ghost'
+        elseif paramvalue == "None" then
+            return 'mon_info_none'
+        end
+    
+    elseif paramname == "Attribute" then
+        
+        local paramvalue = monclass[paramname]
+        
+        if paramvalue == "Fire" then
+            return 'mon_info_fire'
+        elseif paramvalue == "Ice" then
+            return 'mon_info_ice'
+        elseif paramvalue == "Lightning" then
+            return 'mon_info_lightning'
+        elseif paramvalue == "Poison" then
+            return 'mon_info_poison'
+        elseif paramvalue == "Dark" then
+            return 'mon_info_dark'
+        elseif paramvalue == "Holy" then
+            return 'mon_info_holy'
+        elseif paramvalue == "Earth" then
+            return 'mon_info_earth'
+        elseif paramvalue == "Melee" then
+            return 'mon_info_melee'
+        end
+    
+    elseif paramname == "MoveType" then
+        
+        local paramvalue = monclass[paramname]
+        
+        if paramvalue == "Holding" then
+            return 'mon_info_holding'
+        elseif paramvalue == "Normal" then
+            return 'mon_info_normal'
+        elseif paramvalue == "Flying" then
+            return 'mon_info_flying'
+        end
+    
+    elseif paramname == "EffectiveAtkType" then
+        
+        if monclass.ArmorMaterial == "Cloth" then
+            --���Ⱑ ȿ����
+            return 'mon_info_slash'
+        elseif monclass.ArmorMaterial == "Leather" then
+            --��Ⱑ ȿ����
+            return 'mon_info_aries'
+        elseif monclass.ArmorMaterial == "Iron" then
+            --�����Ⱑ ȿ����
+            return 'mon_info_strike'
+        else
+            --�׷��� ����
+            return 'mon_info_none'
+        end
+    
+    end
+    
+    return 'None'
 end

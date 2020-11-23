@@ -193,10 +193,14 @@ function TESTBOARD_ON_TIMER(frame)
             if g.b then
                 local pc = GetMyActor()
                 g.a=g.a+0.01
-                pc:EnableSkillCancel(1);
-                --UPDATE_COL_SKL(pc,g.a)
-                pc:SetPause(0);
-                pc:GetAnimation():StopFixAnim();
+                pc:DetachCopiedModel();
+                pc:ChangeEquipNode(EmAttach.eHelmet, "Dummy_L_HAND");
+                pc:ChangeEquipNode(EmAttach.eLHand, "Dummy_L_HAND");
+                pc:ChangeEquipNode(EmAttach.eRHand, "Dummy_L_HAND");
+          
+                pc:CopyAttachedModel(EmAttach.eLHand, "Dummy_L_HAND");
+                pc:CopyAttachedModel(EmAttach.eRHand, "Dummy_L_HAND");
+              
             end
                   end,
         catch = function(error)
@@ -215,8 +219,9 @@ function TESTBOARD_TEST()
             else
                 g.b=true
             end
-            -- local pc = GetMyActor()
-            -- local pos=pc:GetPos()
+             local pc = GetMyActor()
+        
+             -- local pos=pc:GetPos()
             -- local actor=pc
             -- local targetActor=world.GetActor(session.GetTargetHandle())
             -- --PlayEffect(actor, 'F_circle020_light', 1.5,1,'BOT')
@@ -228,9 +233,26 @@ function TESTBOARD_TEST()
             -- effect.PlayTextEffect(pc,"I_SYS_damage",'100');
             -- effect.PlayTextEffect(pc,"SHOW_DMG_SHIELD","100");
             -- effect.PlayTextEffect(pc,"I_SYS_heal2","100");
-            -- local objList, objCount = SelectObject(self, 300, 'ALL') 
+             local objList, objCount = SelectObject(self, 300, 'ALL') 
             -- CHAT_SYSTEM("Thaurge BEGIN")
                     
+            -- for i = 1, objCount do
+            --     local enemyHandle = GetHandle(objList[i]);
+			--     local enemy = world.GetActor(enemyHandle);
+            --     if objList[i].ClassName == 'pcskill_Warlock_DarkTheurge' then
+            --         local enemyDestPos = enemy:GetArgPos(0);
+            --         local enemyPos = enemy:GetPos();
+            --         local distFromActor = imcMath.Vec3Dist(enemyPos, pos);
+            --         CHAT_SYSTEM("Thaurge"..enemyHandle..":"..tostring(objList[i].Faction))
+                  
+            --     end
+            --     if objList[i].ClassID==150011 then
+            --         ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(enemyHandle)
+            --     end
+            --     if objList[i].ClassID==150010 then
+            --         ACCEPT_CHALLENGE_MODE(enemyHandle)
+            --     end
+            -- end
             -- for i = 1, objCount do
             --     local enemyHandle = GetHandle(objList[i]);
 			--     local enemy = world.GetActor(enemyHandle);
