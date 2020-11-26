@@ -973,26 +973,33 @@ local function ipermutations(iterable,r)
     end
     return list
 end
-local function card_combination4(list)
+local function card_combination4(list,limit)
     local comb={}
     for k,v in ipairs(list) do
         for kk,vv in ipairs(list) do
             if kk~=k then
-                for kkk,vvv in ipairs(list) do
-                    if kkk~=k and kkk~=kk and kkk> kk then
-                        for kkkk,vvvv in ipairs(list) do
-                            if kkkk~=k and kkkk~=kk and kkkk~=kkk and kkkk> kk and kkkk> kkk then
+                for kkk=kk+1,#list do
+                    local vvv=list[kkk]
+                    if kkk~=k and kkk~=kk then
+                        for kkkk=kkk+1,#list do
+                            local vvvv=list[kkkk]
+                            if kkkk~=k and kkkk~=kk and kkkk~=kkk  then
                                 comb[#comb+1] = {
                                     v,vv,vvv,vvvv
                                 }
+                                if limit and #comb>limit then
+                                    return comb,false
+                                end
                             end
                         end
                     end
+                    
                 end
             end
         end
+        
     end
-    return comb
+    return comb,true
 end
 --アドオン名（大文字）
 local addonName = 'advancedassistermanager'
@@ -1307,7 +1314,7 @@ function  ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
         btnclear:SetText('{ol}Reset')
         btnclear:SetEventScript(ui.LBUTTONUP,'ADVANCEDASSISTERMANAGER_COMBO_ON_CLEAR_BUFF')
 
-        local cards=g.aam.getAllCards()
+        local cards=g.aam.getAllCards(true)
 
         gboxmain:RemoveAllChild()
         gboxsub:RemoveAllChild()
@@ -1425,66 +1432,74 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_CLEAR_BUFF(frame,ctrl,argstr,argnum)
     ADVANCEDASSISTERMANAGER_COMBO_INIT_FRAME()
 end
 function ADVANCEDASSISTERMANAGER_SEARCH_TICK()
-        EBI_try_catch {
+    EBI_try_catch {
         try = function()
-    local frame= ui.GetFrame(g.framename_cmb)
-    local gboxcomb=frame:GetChildRecursively('gboxcomb')
-    if not g.aamc.search.work then
-        return
+            local frame= ui.GetFrame(g.framename_cmb)
+            local gboxcomb=frame:GetChildRecursively('gboxcomb')
+            if not g.aamc.search.work then
 
-    end
-    AUTO_CAST(gboxcomb)
-    for kk=g.aamc.search.progress,math.min(g.aamc.search.progress+5000,#g.aamc.search.combination)  do
-        local vv=g.aamc.search.combination[kk]
-        local pass=true
-        for k,v in ipairs(g.aamc.condition.sub) do
-            local cls=GetClass('ancient_combo',v.buffName)
-            
-            
-            
-            local cardlist={vv[1].card,vv[2].card,vv[3].card,vv[4].card}
-          
-            if _G[cls.PreScript](cls,cardlist)~='None' then
-                
-            else
-
-                pass=false
+                return
             end
-            
-        end
-        if g.aamc.search.count>=100 then
-            pass=false
+            AUTO_CAST(gboxcomb)
+      
+            for kk=g.aamc.search.progress,math.min(g.aamc.search.progress+5000,#g.aamc.search.combination)  do
+                local vv=g.aamc.search.combination[kk]
+                local pass=true
+                for k,v in ipairs(g.aamc.condition.sub) do
+                    local cls=GetClass('ancient_combo',v.buffName)
+                    
+                    local cardlist={vv[1].card,vv[2].card,vv[3].card,vv[4].card}
+                
+                    if _G[cls.PreScript](cls,cardlist)~='None' then
+                        
+                    else
 
-        end
-        if pass then
-            g.aamc.matched[#g.aamc.matched+1]=vv
-           
-            g.aamc.search.count=g.aamc.search.count+1
-            
+                        pass=false
+                    end
+                    
+                end
+                if g.aamc.search.count>=100 then
+                    pass=false
 
-            
-        end
-        g.aamc.search.progress=kk
-        local gauge=frame:CreateOrGetControl('gauge','gauge',20,frame:GetHeight()-10,frame:GetWidth()-40,10)
-        AUTO_CAST(gauge)
-        gauge:SetMaxPoint(#g.aamc.search.combination)
-        gauge:SetCurPoint(kk)
+                end
         
+                if pass then
+                    
+                    g.aamc.matched[#g.aamc.matched+1]=vv
+                
+                    g.aamc.search.count=g.aamc.search.count+1
+                    
 
-        if kk==#g.aamc.search.combination then
-            g.aamc.search.work=false
-            frame:RemoveChild('gauge')
-            ADVANCEDASSISTERMANAGER_COMBO_SEARCH_COMPLETE()
-            break
+                    
+                end
+                g.aamc.search.progress=kk
+                local gauge=frame:CreateOrGetControl('gauge','gauge',20,frame:GetHeight()-10,frame:GetWidth()-40,10)
+                AUTO_CAST(gauge)
+                gauge:SetMaxPoint(#g.aamc.search.combination)
+                gauge:SetCurPoint(kk)
+                
+                if kk==#g.aamc.search.combination then
+                    g.aamc.search.work=false
+                    frame:RemoveChild('gauge')
+                    ui.SysMsg('[AAM]Search Completed')
+                    ADVANCEDASSISTERMANAGER_COMBO_SEARCH_COMPLETE()
+                    return
+                end
+                
+            end
+            if g.aamc.search.progress==#g.aamc.search.combination then
+                g.aamc.search.work=false
+                frame:RemoveChild('gauge')
+                ui.SysMsg('[AAM]Search Completed')
+                ADVANCEDASSISTERMANAGER_COMBO_SEARCH_COMPLETE()
+                
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
         end
-    end
-
-end,
-catch = function(error)
-    ERROUT(error)
-end
-}
-       
+    }
+        
        
 end
 function ADVANCEDASSISTERMANAGER_COMBO_SEARCH_STOP()
@@ -1496,13 +1511,16 @@ function ADVANCEDASSISTERMANAGER_COMBO_SEARCH_COMPLETE()
     local frame= ui.GetFrame(g.framename_cmb)
     local gboxcomb=frame:GetChildRecursively('gboxcomb')
     gboxcomb:RemoveAllChild()
-    
+    for k,v in ipairs(g.aamc.matched) do
+        ADVANCEDASSISTERMANAGER_COMBO_ADD(k,v)
+        
+    end
 end
 
-function ADVANCEDASSISTERMANAGER_COMBO_ADD(vv)
+function ADVANCEDASSISTERMANAGER_COMBO_ADD(kk,vv)
     local frame= ui.GetFrame(g.framename_cmb)
     local gboxcomb=frame:GetChildRecursively('gboxcomb')
-    local minigbox=gboxcomb:CreateOrGetControl('groupbox','gboxmini'..g.aamc.search.count,0,g.aamc.search.count*120,gboxcomb:GetWidth()-20,130)
+    local minigbox=gboxcomb:CreateOrGetControl('groupbox','gboxmini'..kk,0,(kk-1)*120,gboxcomb:GetWidth()-20,130)
     AUTO_CAST(minigbox)
     minigbox:SetSkinName('none')
     minigbox:EnableHittestGroupBox(0)
@@ -1563,24 +1581,25 @@ end
 function ADVANCEDASSISTERMANAGER_COMBO_ON_SEARCH(frame,ctrl,argstr,argnum)
     EBI_try_catch {
         try = function()
-        local cards=g.aam.getAllCards()
+        
+        local cards=g.aam.getAllCards(true)
         local suppedcards=cards
         local nest=4
         local another={}
         --計算コストを調べる
         local n=#suppedcards
         local calccost=fact(n)/(fact(nest)*fact(n-nest))
-        if calccost > 3500 then
-            ui.MsgBox('Too many combination.Please select more condition.')
-            return
-        end
+
+       
         --コンビネーションを生成
 
-        local comb=card_combination4(suppedcards)
-
+        local comb,completed=card_combination4(suppedcards)
+ 
+        DBGOUT('cost:'..calccost..' comb:'..#comb)
         if g.aamc.condition.main then
 
             local moncls=GetClassByType('Monster',g.aamc.condition.main.monsterid)
+            print('mon'..moncls.ClassName)
             local clon={}
             for k,v in ipairs(comb) do
                 if v[1].classname~=moncls.ClassName then
@@ -1590,10 +1609,12 @@ function ADVANCEDASSISTERMANAGER_COMBO_ON_SEARCH(frame,ctrl,argstr,argnum)
                 end
             end
             comb=clon
+         
         end
+        print(tostring(#comb))
         g.aamc.search.combination=comb;
         g.aamc.search.progress=1;
-        
+        g.aamc.matched={}
         g.aamc.search.work=true;
         g.aamc.search.count=0;
         local frame= ui.GetFrame(g.framename_cmb)

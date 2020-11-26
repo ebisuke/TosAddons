@@ -16,7 +16,7 @@ g.settings = {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ''
 g.framename = 'advancedassistermanager'
-g.debug = false
+g.debug = true
 
 g.aam = {
     sort = nil,
@@ -74,7 +74,35 @@ g.aam = {
         end
         return selected
     end,
-    getAllCards = function(noinventory)
+    getSameStatCards=function(cards)
+        local assisters=g.aam.getAllCards(true,true)
+        local sames={}
+        for k,v in ipairs(cards) do
+
+            for kk,vv in ipairs(assisters) do
+                if vv.islocked==false and vv.classname==v.classname and vv.lv==v.lv then
+                    sames[#sames+1] = vv
+                    table.remove(assisters,kk)
+                    break
+                end
+            end
+        end
+        return sames
+    end,
+    getCardByGuid=function(guid)
+        local card = session.pet.GetAncientCardByGuid(guid)
+        local classname = card:GetClassName()
+        local ancientCls = GetClass("Ancient_Info", classname)
+        local exp = card:GetStrExp();
+        local xpInfo = gePetXP.GetXPInfo(gePetXP.EXP_ANCIENT, tonumber(exp))
+        local level = xpInfo.level
+        local cards={}
+        cards[#cards + 1] = {card = card, cost = card:GetCost(), rarity = ancientCls.Rarity, guid = card:GetGuid(), invItem = nil,
+            isinSlot = false, isinInventory = false,name=ancientCls.Name, islocked = card.isLock, classname = card:GetClassName(), starrank = card.starrank, lv = level}
+        
+        return cards
+    end,
+    getAllCards = function(noinventory,nolocked)
         local cards = {}
         for i = 0, 3 do
             local card = session.pet.GetAncientCardBySlot(i)
@@ -84,9 +112,11 @@ g.aam = {
                 local exp = card:GetStrExp();
                 local xpInfo = gePetXP.GetXPInfo(gePetXP.EXP_ANCIENT, tonumber(exp))
                 local level = xpInfo.level
+                if not nolocked or not card.isLock then
                 cards[#cards + 1] = {card = card, cost = card:GetCost(), rarity = ancientCls.Rarity, guid = card:GetGuid(), invItem = nil,
                     isinSlot = true, isinInventory = false,name=ancientCls.Name, islocked = card.isLock, classname = card:GetClassName(), starrank = card.starrank, lv = level}
-            end
+                end
+                end
         
         end
         local cnt = session.pet.GetAncientCardCount()
@@ -100,8 +130,10 @@ g.aam = {
                 local exp = card:GetStrExp();
                 local xpInfo = gePetXP.GetXPInfo(gePetXP.EXP_ANCIENT, tonumber(exp))
                 local level = xpInfo.level
+                if not nolocked or not  card.isLock then
                 cards[#cards + 1] = {card = card, cost = card:GetCost(), rarity = ancientCls.Rarity, guid = card:GetGuid(), invItem = nil,
                     isinSlot = false, isinInventory = false,name=ancientCls.Name, islocked = card.isLock, classname = card:GetClassName(), starrank = card.starrank, lv = level}
+                end
             end
         end
         if not noinventory then
@@ -113,6 +145,7 @@ g.aam = {
                     local ancientCls = GetClass("Ancient_Info", classname)
                     local ancientCostCls = GetClassByType("Ancient_Rarity", ancientCls.Rarity)
                     for i = 1, invItem.count do
+                        if not nolocked or not   invItem.isLockState then
                         cards[#cards + 1] = {card = {
                             GetStrExp=function(self)
                                 return "0"
@@ -126,6 +159,7 @@ g.aam = {
                             slot=0,
                         }, cost = ancientCostCls.Cost, rarity = ancientCls.Rarity, guid = invItem:GetIESID(), invItem = nil,
                             isinSlot = false, isinInventory = true,name=ancientCls.Name, islocked = invItem.isLockState, classname = classname, starrank = 1, lv = 1}
+                    end
                     end
                 end
             
@@ -333,7 +367,7 @@ function ADVANCEDASSISTERMANAGER_INIT_FRAME()
 
     ui.EnableSlotMultiSelect(0)
 
-    ADVANCEDASSISTERMANAGER_INIT_SLOTSET(slotset)
+    ADVANCEDASSISTERMANAGER_INIT_SLOTSET(slotset,nil,nil,nil,7)
     --menus
     local x = 10
     for _, v in ipairs(g.aam.menus) do
@@ -357,11 +391,15 @@ function ADVANCEDASSISTERMANAGER_INIT_SLOTSET(slotset,w,h,pop,c,r)
     slotset:SetSlotSize(w or 100, h or 120)
     slotset:SetSpc(3, 3)
 
-    if r then
-        slotset:SetColRow(c,r) 
+    if c or r then
+        slotset:SetColRow(c or 7,r or 1) 
            
-        slotset:CreateSlots()
+       
+    else
+        slotset:SetColRow(1,1) 
+           
     end
+    slotset:CreateSlots()
 end
 
 function ADVANCEDASSISTERMANAGER_SLOTSET_ON_MOUSEMOVE(frame, slot)
@@ -473,13 +511,12 @@ function ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v,nodesc)
     icon:SetTooltipStrArg(v.guid)
     icon:SetUserValue("ANCIENT_GUID", v.guid)
 end
-function ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS()
-    local frame = ui.GetFrame(g.framename)
-    local cards = AUTO_CAST(frame:GetChildRecursively('cards'))
+function ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS(slotset)
+
     local aamcards={}
     local ref=g.aam.getAllCards()
-    for i=0,cards:GetSlotCount()-1 do
-        local slot = cards:GetSlotByIndex(i)
+    for i=0,slotset:GetSlotCount()-1 do
+        local slot = slotset:GetSlotByIndex(i)
         local icon=slot:GetIcon()
         if icon and slot:IsSelected()==1 then
             local guid= icon:GetUserValue("ANCIENT_GUID")
@@ -496,32 +533,50 @@ function ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS()
     return aamcards
 end
 
-function ADVANCEDASSISTERMANAGER_UPDATE_CARDS(slotset,selectedindices,cards,nodesc)
+function ADVANCEDASSISTERMANAGER_UPDATE_CARDS(slotset,selectedindices,cards,nodesc,noexpand)
     EBI_try_catch{
         try = function()
 
-            slotset:RemoveAllChild()
+         
             
             local cardlist = cards or g.aam.getAllCards()
             if g.aam.sort then
                 
                 table.sort(cardlist, g.aam.sort)
             end
-            slotset:SetColRow(7, math.ceil(#cardlist / 7))
+            if not noexpand then
+                slotset:RemoveAllChild()
 
-   
-            slotset:CreateSlots()
+                slotset:SetColRow(slotset:GetCol(), math.max(1,math.ceil(#cardlist /slotset:GetCol())))
+                slotset:CreateSlots()
+           
+            else
+
+                for i=0,slotset:GetSlotCount()-1 do
+                
+                    local slot = slotset:GetSlotByIndex(i)
+    
+                    AUTO_CAST(slot)
+                    slot:RemoveAllChild()
+                end
+            end
+          
+            slotset:SetUserValue('islockedselectable',1)
             for i, v in ipairs(cardlist) do
                 local slot = slotset:GetSlotByIndex(i - 1)
-                AUTO_CAST(slot)
+                if slot then
+                    AUTO_CAST(slot)
+                    
                 
-                slot:SetUserValue('islockedselectable',1)
-                slot:SetEventScript(ui.MOUSEMOVE, 'ADVANCEDASSISTERMANAGER_SLOTSET_ON_MOUSEMOVE')
-                ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v,nodesc)
-                if selectedindices then
-                    if selectedindices[i] then
+                    slot:SetEventScript(ui.MOUSEMOVE, 'ADVANCEDASSISTERMANAGER_SLOTSET_ON_MOUSEMOVE')
+                    ADVANCEDASSISTERMANAGER_SET_SLOT(slot,v,nodesc)
+                    if selectedindices then
+                        if selectedindices[i] then
 
-                        slot:Select(1)
+                            slot:Select(1)
+                        else
+                            slot:Select(0)
+                        end
                     else
                         slot:Select(0)
                     end
@@ -579,16 +634,19 @@ function ADVANCEDASSISTERMANAGER_ENSURECARDS(aamcards,needunlock,callback)
         end
         g.aam.watchingcards=aamcards
         g.aam.watchingcallback=callback
-        ui.MsgBox(
-            string.format('To unlock cards:%d{nl}To add cards as assister:%d{nl}Proceed?',
-        string.format("ADVANCEDASSISTERMANAGER_DO_ENSURECARDS('%s')",tostring(needunlock)),'None'))
+        local delay=ADVANCEDASSISTERMANAGER_DO_ENSURECARDS(needunlock)
+        --ui.MsgBox(string.format('To unlock cards:%d{nl}To add cards as assister:%d{nl}Proceed?',needtounlock,needtoadd),
+        --string.format("ADVANCEDASSISTERMANAGER_DO_ENSURECARDS('%s')",tostring(needunlock)),'None'))
+        ReserveScript('ADVANCEDASSISTERMANAGER_DO_CALLBACK()',delay+2)
         return true
     else
         pcall(callback)
     end
     return false
 end
-
+function ADVANCEDASSISTERMANAGER_DO_CALLBACK()
+    g.aam.watchingcallback()
+end
 function ADVANCEDASSISTERMANAGER_DO_ENSURECARDS(needunlock)
     local needtounlock=0
     local needtoadd=0
@@ -598,18 +656,18 @@ function ADVANCEDASSISTERMANAGER_DO_ENSURECARDS(needunlock)
             if v.islocked then
                 needtounlock=needtounlock+1
                 ReserveScript(string.format("session.inventory.SendLockItem('%s', %d)",v.guid,0),delay)
-                delay=delay+0.1
+                delay=delay+0.5
             else
                 
             end
             ReserveScript(string.format("ANCIENT_CARD_REGISTER_C('%s')",v.guid),delay)
-            delay=delay+0.1
+            delay=delay+1
             needtoadd=needtoadd+1
         else
             -- nothing to do
             if v.islocked and needunlock then
                 ReserveScript(string.format("ReqLockAncientCard('guid')",v.guid),delay)
-                delay=delay+0.1
+                delay=delay+0.5
                 needtounlock=needtounlock+1
                 
             end
@@ -637,7 +695,9 @@ end
 function ADVANCEDASSISTERMANAGER_MENU_LOCK(lock)
        EBI_try_catch{
         try = function()
-        local aamcards=ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS()
+            local frame = ui.GetFrame(g.framename)
+            local cards = AUTO_CAST(frame:GetChildRecursively('cards'))
+        local aamcards=ADVANCEDASSISTERMANAGER_GET_SELECTED_CARDS(cards)
         local delay=ADVANCEDASSISTERMANAGER_LOCK(aamcards,lock)
         ReserveScript('ADVANCEDASSISTERMANAGER_INIT_FRAME()',delay+0.8)
        end,
