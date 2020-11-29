@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 2 U (http://www.xmlspy.com) by imc (imc) -->
+
+<idspace id="NormalTx">
+
+	<Class OverrideType="ADD" ClassID="200" ClassName="SCR_WEEKLY_BOSS_DPS_START"   />
+	<Class OverrideType="ADD" ClassID="201" ClassName="WEEKLY_BOSS_DPS_TIMER_UPDATE_SERVER"   />
+
+</idspace>

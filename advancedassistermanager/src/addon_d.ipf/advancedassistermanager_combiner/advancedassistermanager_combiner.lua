@@ -265,24 +265,29 @@ function ADVANCEDASSISTERMANAGER_COMBINER_PICKUP_WORK()
         local wk = {}
         local remain = {}
         local same = true
-    
+        
         for k, v in ipairs(g.aamcb.combine.ingredients) do
-  
 
-            if #wk < 3 then
-                if #wk == 1 then
-                    if wk[1].classname ~= v.classname then
+            if #wk == 3   then
+                remain[#remain+1] = v
+                
+            elseif #wk > 0  then
+                if #wk == 2 then
+                    if  wk[1].classname ~=  wk[2].classname or wk[1].classname ~= v.classname and wk[2].classname ~= v.classname then
                         wk[#wk + 1] = v
+                    else
+                        remain[#remain+1] = v
                     end
                 else
                     wk[#wk + 1] = v
                 end
             
             else
-                remain[#remain + 1] = v
+                wk[#wk + 1] = v
             end
             
         end
+       
         
         return wk, remain
     else

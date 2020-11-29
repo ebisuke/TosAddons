@@ -135,20 +135,12 @@ function ITEMBUFFMACHINE_ITEMBUFFOPEN_INIT()
             local btn = frame:CreateOrGetControl('button', 'ibmbuff', 20, 70, 100, 30)
             btn:SetText('{ol}Auto Buff')
             btn:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON')
-        end,
-        catch = function(error)
-            ERROUT(error)
-        end
-    }
-end
---New try button
-function ITEMBUFFMACHINE_WEAPBUFFOPEN_INIT()
-    EBI_try_catch {
-        try = function()
-            local frame = ui.GetFrame('itembuffopen')
-            local btn = frame:CreateOrGetControl('button', 'ibmbuff', 100, 70, 100, 30)
-            btn:SetText('{ol}Buff Weapons')
-            btn:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_WEAPBUFF_ONBUTTON')
+            -- vvv modified vvv
+            local btn2 = frame:CreateOrGetControl('button', 'ibmbuff2', 130, 70, 100, 30)
+            btn2:SetText('{ol}Buff Weapons')
+            btn2:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_WEAPBUFF_ONBUTTON')
+            test-syntax-error
+            -------------------
         end,
         catch = function(error)
             ERROUT(error)
@@ -515,6 +507,8 @@ function ITEMBUFFMACHINE_ITEMBUFF()
             local handle = frame:GetUserValue('HANDLE')
             local equipItem = nil
             equipItem = session.GetInvItemByGuid(equipItemIESID)
+
+
             session.autoSeller.BuySquireBuff(handle, AUTO_SELL_SQUIRE_BUFF, skillName, equipItemIESID)
             g.squirewaitfornext=true
         end,
