@@ -138,7 +138,7 @@ function MYSTERIOUSBOOKADV_SELECTED(frame, ctrl)
                             ability = itemcls.StringArg,
                             first = ies.ClassName,
                             second = itemcls.ClassName,
-                            secondno = itemno,
+                            secondno = j,
                         }
                         return
                     end
@@ -254,12 +254,27 @@ function MYSTERIOUSBOOKADV_ON_LEARNBTN()
         local abilcls = GetClass("Ability", g.tocraftsel.ability)
         local jobcls = GetClass("Job", abilcls.Job)
         local abildetailcls = GetClass("Ability_" .. jobcls.EngName, g.tocraftsel.ability)
+        local cond = _G[abildetailcls.UnlockScr](
+            pc,
+            TryGetProp(abildetailcls,"UnlockArgStr",0),
+            TryGetProp(abildetailcls, "MaxLevel", 0),abilies
+        )
+        if cond~="UNLOCK" then
+            if cond=="LOCK_GRADE" then
+                ui.SysMsg('[MBA]Not meet the Arts learning requirements.')
+                return
+            else
+                ui.SysMsg('[MBA]Failed in checking ability condition.')
+                return
+            end
+        end
         local needpt = _G[abildetailcls.ScrCalcPrice](
             pc,
             g.tocraftsel.ability,
             TryGetProp(abilies, "Level", 0),
             TryGetProp(abildetailcls, "MaxLevel", 0)
         )
+        
         if TryGetProp(abilies, "Level", 0) >= TryGetProp(abildetailcls, "MaxLevel", 0) then
             ui.SysMsg('[MBA]Level is reached to maximum.')
             return
@@ -333,8 +348,8 @@ function MYSTERIOUSBOOKADV_ON_LEARNBTN()
         local btn = frame:GetChildRecursively("btnlearn")
         btn:SetEnable(0)
         local resultlist = session.GetItemIDList();
-        g.working =
-            item.DialogTransaction('HIDDENABILITY_MAKE', resultlist, "", nameList)
+        g.working = true
+        item.DialogTransaction('HIDDENABILITY_MAKE', resultlist, "", nameList)
      
         DebounceScript("MYSTERIOUSBOOKADV_TIMEOUT", g.timeout, 0)
         ReserveScript('MYSTERIOUSBOOKADV_NEXT()', 1.5)
