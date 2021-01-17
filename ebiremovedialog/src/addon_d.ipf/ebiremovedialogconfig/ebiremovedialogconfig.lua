@@ -181,7 +181,7 @@ function EBIREMOVEDIALOGCONFIG_INIT()
             btnsave:SetText("{ol}{s16}Apply")
             local label = frame:CreateOrGetControl("richtext", "labelattention", 30, 140, 70, 30)
             AUTO_CAST(label)
-            label:SetText("{ol}{s16}* Move the map or change the character {nl} to apply the settings.")
+            label:SetText("{ol}{s16}* Restart ToS {nl} to apply the settings.")
             EBIREMOVEDIALOGCONFIG_INITGBOX(gbox, g.settings)
         end,
         catch = function(error)

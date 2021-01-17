@@ -20,7 +20,7 @@ g.settings =
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ''
 g.framename = 'anotheroneofpartyinfo'
-g.debug = true
+g.debug = false
 g.tick = 0
 g.casting = false
 g.castanim = 0
@@ -191,7 +191,7 @@ function AOP_INIT()
             local frame = ui.GetFrame(g.framename)
             frame:RemoveAllChild()
             frame:Resize(800, 800)
-            frame:SetLayerLevel(g.settings.layerlevel or 70)
+            frame:SetLayerLevel(g.settings.layerlevel or 69)
             --下準備
 
             local bg = frame:CreateOrGetControl('picture', 'bg' .. 0, 0, 0, 150, 110)
@@ -357,7 +357,7 @@ function AOP_ON_TIMER(frame)
             local dx = (pframe:GetX() - 50) - g.settings.x
             local dy = (pframe:GetY() - 50) - g.settings.y
             g.settings.mode = g.settings.mode or 0x00
-            if (g.settings.mode & 0x02 ~= 0) then
+            if ((g.settings.mode & 0x02) ~= 0) then
                 g.castanim = 1
             elseif (g.casting) then
                 g.castanim = g.castanim + (1 - g.castanim) / 2
@@ -558,6 +558,9 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                 slotsdebuff = frame:GetChild('debuffs' .. id)
                 AUTO_CAST(slotsbuff)
                 AUTO_CAST(slotsdebuff)
+                slotsbuff:SetOffset( ox, oy + 50)
+                slotsdebuff:SetOffset( ox, oy + 50)
+                
                 if (slotsbuff:GetCol()~= 10) then
                     slotsbuff:RemoveAllChild()
                     slotsdebuff:RemoveAllChild()
@@ -584,6 +587,10 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                 slotsdebuff = frame:CreateOrGetControl('slotset', 'debuffs' .. id, ox, oy + 80 + 15, 120, 15)
                 AUTO_CAST(slotsbuff)
                 AUTO_CAST(slotsdebuff)
+                
+                slotsbuff:SetOffset( ox, oy + 50)
+                slotsdebuff:SetOffset( ox, oy + 50)
+                
                 slotsbuff:RemoveAllChild()
                 slotsdebuff:RemoveAllChild()
                 slotsbuff:SetSlotSize(15, 15)
