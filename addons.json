@@ -609,7 +609,7 @@
     "fileVersion": "v0.0.3",
     "releaseTag": "ebiremovedialog-v0.0.3",
     "unicode": "📖",
-    "description": "アーツから神秘の全集を逆引きする機能を追加します。及び神秘の書作成からアーツ習得までを自動化する機能も追加します。",
+    "description": "各種確認ダイアログを削除します",
     "tags": [
       "arts",
       "ui",
