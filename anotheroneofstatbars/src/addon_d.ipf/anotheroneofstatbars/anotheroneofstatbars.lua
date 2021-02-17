@@ -57,7 +57,7 @@ g.fixhp = nil
 g.fanatic = nil
 
 g.buffs = {}
-
+local libaodrawpic=LIBAODRAWPICV1_0
 
 --ライブラリ読み込み
 CHAT_SYSTEM("[AOS]loaded")
@@ -77,7 +77,7 @@ local function DrawPolyLine(pic, poly, brush, color)
     local prev = nil
     for _, v in ipairs(poly) do
         if (prev) then
-            pic:DrawBrush(prev[1], prev[2], v[1], v[2], brush, color)
+            -- pic:DrawBrush(prev[1], prev[2], v[1], v[2], brush, color)
         end
         prev = v
     end
@@ -262,7 +262,7 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-            
+            libaodrawpic=LIBAODRAWPICV1_0
             --addon:RegisterMsg('GAME_START_3SEC', 'CHALLENGEMODESTUFF_SHOW')
             --ccするたびに設定を読み込む
             addon:RegisterOpenOnlyMsg('STAT_UPDATE', 'AOS_HEADSUPDISPLAY_ON_MSG');
@@ -394,16 +394,16 @@ function AOS_INIT()
             frame:RemoveAllChild()
             frame:Resize(1920, 300)
             frame:SetLayerLevel(g.settings.layerlevel or 90)
-            local pic = frame:CreateOrGetControl("picture", "pic", 0, 0, frame:GetWidth(), frame:GetHeight())
+            local pic = frame:CreateOrGetControl("groupbox", "pic", 0, 0, frame:GetWidth(), frame:GetHeight())
             local touch = frame:CreateOrGetControl("picture", "touchbar", 500 - 20, 22, 40, 40)
             local soulcrystal = frame:CreateOrGetControl("richtext", "soulcrystal", 500 - 30, 5, 40, 40)
-            tolua.cast(pic, "ui::CPicture")
+            AUTO_CAST(pic)
             tolua.cast(touch, "ui::CPicture")
             AUTO_CAST(soulcrystal)
             pic:EnableHitTest(0)
-            pic:CreateInstTexture()
-            pic:FillClonePicture("00000000")
-            
+            --pic:CreateInstTexture()
+            --pic:FillClonePicture("00000000")
+
             touch:EnableHitTest(1)
             touch:SetEnableStretch(1)
             touch:SetEventScript(ui.MOUSEWHEEL, "AOS_MOUSEWHEEL");
@@ -450,6 +450,7 @@ function AOS_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     local stat = info.GetStat(session.GetMyHandle());
     if (msg == "GAME_START") then
         g.frame:ShowWindow(1)
+        libaodrawpic=LIBAODRAWPICV1_0
         AOS_LOAD_SETTINGS()
         AOS_INIT()
         g.frame:SetOffset(g.settings.x, g.settings.y)
@@ -596,6 +597,9 @@ function AOS_ON_TIMER(frame)
             
             
             local stat = info.GetStat(session.GetMyHandle());
+            if stat==nil then
+                return
+            end
             local minwidth = 0
             
             local maxmaxhp = g.settings.maxhp
@@ -764,6 +768,7 @@ function AOS_RENDER()
             if (stat) then
                 local frame = ui.GetFrame(g.framename)
                 local pic = frame:GetChild("pic")
+                
                 if (pic) then
                     if (g.settings.style == nil or g.settings.style == 0) then
                         AOS_RENDER_STYLEA()
@@ -783,12 +788,15 @@ function AOS_RENDER_STYLEA()
         try = function()
             local frame = ui.GetFrame(g.framename)
             local pic = frame:GetChild("pic")
-            tolua.cast(pic, "ui::CPicture")
+            AUTO_CAST(pic)
+            libaodrawpic.inject(pic)
+            pic:RemoveAllChild()
             local touch = frame:CreateOrGetControl("picture", "touchbar", 500 - 20, 22, 40, 40)
             local soulcrystal = frame:CreateOrGetControl("richtext", "soulcrystal", 500 - 30, 5, 40, 40)
-            pic:FillClonePicture("00000000")
-            pic:DrawBrush(500, 41 - 5, 500, 41 + 5, "spray_dia", "AA000000")
-            pic:DrawBrush(500 - 5, 41, 500 + 5, 41, "spray_dia", "AA000000")
+            pic:DrawBrushIcon(500, 41, 500, 41,"icon_dia","AA000000")
+            --pic:FillClonePicture("00000000")
+            --pic:DrawBrush(500, 41 - 5, 500, 41 + 5, "brush_dia", "AA000000")
+            --pic:DrawBrush(500 - 5, 41, 500 + 5, 41, "brush_dia", "AA000000")
             AOS_DRAW_HPBAR(frame, pic)
             AOS_DRAW_SPBAR(frame, pic)
             AOS_DRAW_STAMINABAR(frame, pic)
@@ -818,42 +826,42 @@ function AOS_DRAW_HPBAR(frame, pic)
     end
     if (stat.HP <= stat.maxHP * 0.3) then
         local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "spray_large_bs", lowstr)
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "brush_large_bs", lowstr)
     else
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "spray_large_bs", "AA444444")
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw, oy + 5, "brush_large_bs", "AA444444")
     end
     if (g.remhpw ~= g.curhpw) then
         if (colw > g.curhpw) then
-            pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remhpw, oy + 5, "spray_large_bs", "FF22FFFF")
+            pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + g.remhpw, oy + 5, "brush_large_bs", "FF22FFFF")
         else
-            pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remhpw, oy + 5, "spray_large_bs", "FFFF0000")
+            pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + g.remhpw, oy + 5, "brush_large_bs", "FFFF0000")
         end
     end
     if g.fanatic then
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FFFFBB77")
-        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FFDDAA44")
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "brush_large_bs", "FFFFBB77")
+        pic:DrawBrushHorz(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "brush_small_bs", "FFDDAA44")
     else
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "spray_large_bs", "FF22FF77")
-        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "spray_small_bs", "FF11CC55")
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + curw, oy + 5, "brush_large_bs", "FF22FF77")
+        pic:DrawBrushHorz(ox + 7, oy + 7, ox + 7 + fixhpw, oy + 7, "brush_small_bs", "FF11CC55")
     end
     if (g.remshpw > 0) then
         if (g.remshpw ~= g.curshpw) then
             if (colsw > g.curshpw) then
-                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_bs", "FFFFFFFF")
+                pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "brush_large_bs", "FFFFFFFF")
             else
-                pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_bs", "FF6666FF")
+                pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "brush_large_bs", "FF6666FF")
             end
         end
     end
     if (g.curshpw > 0) then
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + g.curshpw, oy + 5, "spray_large_bs", "FFFFFFFF")
-        pic:DrawBrush(ox + 7, oy + 7, ox + 7 + g.curshpw, oy + 7, "spray_small_bs", "FFCCCCCC")
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + g.curshpw, oy + 5, "brush_large_bs", "FFFFFFFF")
+        pic:DrawBrushHorz(ox + 7, oy + 7, ox + 7 + g.curshpw, oy + 7, "brush_small_bs", "FFCCCCCC")
     end
     DrawPolyLine(pic, {
         {ox, oy},
         {ox + 10, oy + 10},
         {ox + maxw + 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
     
     local txt = frame:CreateOrGetControl("richtext", "hpnum", ox + 20, oy - 10, 50, 16)
     txt:EnableHitTest(0)
@@ -875,26 +883,26 @@ function AOS_DRAW_SPBAR(frame, pic)
     end
     if (stat.SP <= stat.maxSP * 0.3) then
         local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_s", lowstr)
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "brush_large_s", lowstr)
     
     else
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_s", "AA444444")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "brush_large_s", "AA444444")
     end
     if (g.remspw ~= g.curspw) then
         if (colw > g.curspw) then
-            pic:DrawBrush(ox - 5, oy + 5, ox - 5 - g.remspw, oy + 5, "spray_large_s", "FF22FF77")
+            pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - g.remspw, oy + 5, "brush_large_s", "FF22FF77")
         
         else
-            pic:DrawBrush(ox - 5, oy + 5, ox - 5 - g.remspw, oy + 5, "spray_large_s", "FFFF0000")
+            pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - g.remspw, oy + 5, "brush_large_s", "FFFF0000")
         end
     end
-    pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_s", "FF44CCFF")
-    pic:DrawBrush(ox - 7, oy + 7, ox - 7 - fixspw, oy + 7, "spray_small_s", "FF33AACC")
+    pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "brush_large_s", "FF44CCFF")
+    pic:DrawBrushHorz(ox - 7, oy + 7, ox - 7 - fixspw, oy + 7, "brush_small_s", "FF33AACC")
     DrawPolyLine(pic, {
         {ox, oy},
         {ox - 10, oy + 10},
         {ox - maxw - 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
     
     local txt = frame:CreateOrGetControl("richtext", "spnum", ox - 20 - 50, oy - 10, 50, 16)
     txt:EnableHitTest(0)
@@ -915,18 +923,18 @@ function AOS_DRAW_DURBAR(frame, pic)
     if (durmin <= durmax * 0.3 and durmin > 0) then
         --if(durmin <= durmax*0.3)then
         local lowstr = string.format("AA%02X44%02X", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs", lowstr)
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "brush_large_bs", lowstr)
     else
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "spray_large_bs", "AA444444")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - maxw, oy + 5, "brush_large_bs", "AA444444")
     end
     
-    pic:DrawBrush(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "spray_large_bs", "FFFF88FF")
-    pic:DrawBrush(ox - 5 + 2, oy + 7, ox - 5 + 2 - curw + 1 - 1, oy + 7, "spray_small_bs", "FFCC55CC")
+    pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 - curw, oy + 5, "brush_large_bs", "FFFF88FF")
+    pic:DrawBrushHorz(ox - 5 + 2, oy + 7, ox - 5 + 2 - curw + 1 - 1, oy + 7, "brush_small_bs", "FFCC55CC")
     DrawPolyLine(pic, {
         {ox - 10, oy},
         {ox + 0, oy + 10},
         {ox - maxw + 0, oy + 0 + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
 
 
 end
@@ -939,21 +947,21 @@ function AOS_DRAW_STAMINABAR(frame, pic)
     
     local ox = 500 + 20 - 2
     local oy = 40 + 4
-    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
+    pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "brush_large_s", "AA444444")
     if (stat.Stamina <= stat.MaxStamina * 0.3) then
         local lowstr = string.format("AA%02X%02X44", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x44 * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", lowstr)
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "brush_large_s", lowstr)
     else
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "brush_large_s", "AA444444")
     end
     
-    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw + 1, oy + 5, "spray_large_s", "FFFFFF00")
-    pic:DrawBrush(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCCCC00")
+    pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + curw + 1, oy + 5, "brush_large_s", "FFFFFF00")
+    pic:DrawBrushHorz(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "brush_small_s", "FFCCCC00")
     DrawPolyLine(pic, {
         {ox + 10 - 2, oy},
         {ox - 10 + 10 - 2, oy + 10},
         {ox + maxw - 10 + 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
 
 end
 function AOS_DRAW_SPECIALSKILLBAR(frame, pic)
@@ -1065,10 +1073,14 @@ function AOS_RENDER_STYLEB()
         try = function()
             local frame = ui.GetFrame(g.framename)
             local pic = frame:GetChild("pic")
-            tolua.cast(pic, "ui::CPicture")
-            pic:FillClonePicture("00000000")
-            pic:DrawBrush(40, 20 + 20, 0, 20 + 20, "spray_triangle", "AA000000")
-            pic:DrawBrush(0, 20 + 20, 0, 20 + 20 + 20, "spray_triangle", "AA000000")
+            AUTO_CAST(pic)
+            pic:RemoveAllChild()
+            libaodrawpic.inject(pic)
+
+            pic:DrawBrushIcon(0, 20, 0, 20, "icon_triangle", "AA000000")
+            --pic:FillClonePicture("00000000")
+            --pic:DrawBrush(40, 20 + 20, 0, 20 + 20, "spray_triangle", "AA000000")
+            --pic:DrawBrush(0, 20 + 20, 0, 20 + 20 + 20, "spray_triangle", "AA000000")
             --pic:DrawBrush(50+20, 20+20, 50+20, 20+20, "spray_triangle", "AA000000")
             local touch = frame:GetChild("touchbar")
             local soulcrystal = frame:GetChild("soulcrystal")
@@ -1102,42 +1114,42 @@ function AOS_DRAW_HPBAR_B(frame, pic)
     end
     if (stat.HP <= stat.maxHP * 0.3) then
         local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "brush_large_s", lowstr)
     else
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "brush_large_s", "AA444444")
     end
     if (g.remhpw ~= g.curhpw) then
         if (colw > g.curhpw) then
-            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remhpw, oy + 5, "spray_large_s", "FF22FFFF")
+            pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + g.remhpw, oy + 5, "brush_large_s", "FF22FFFF")
         else
-            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remhpw, oy + 5, "spray_large_s", "FFFF0000")
+            pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + g.remhpw, oy + 5, "brush_large_s", "FFFF0000")
         end
     end
     if g.fanatic then
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FFFFBB77")
-        pic:DrawBrush(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + fixhpw, oy + 5 + 2, "spray_small_s", "FFDDAA44")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "brush_large_s", "FFFFBB77")
+        pic:DrawBrushHorz(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + fixhpw, oy + 5 + 2, "brush_small_s", "FFDDAA44")
     else
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FF22FF77")
-        pic:DrawBrush(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + fixhpw, oy + 5 + 2, "spray_small_s", "FF11CC55")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "brush_large_s", "FF22FF77")
+        pic:DrawBrushHorz(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + fixhpw, oy + 5 + 2, "brush_small_s", "FF11CC55")
     end
     if (g.remshpw > 0) then
         if (g.remshpw ~= g.curshpw) then
             if (colsw > g.curshpw) then
-                pic:DrawBrush(ox - 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FFFFFFFF")
+                pic:DrawBrushHorz(ox - 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "brush_large_s", "FFFFFFFF")
             else
-                pic:DrawBrush(ox - 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "spray_large_s", "FF6666FF")
+                pic:DrawBrushHorz(ox - 5, oy + 5, ox + 5 + g.remshpw, oy + 5, "brush_large_s", "FF6666FF")
             end
         end
     end
     if (g.curshpw > 0) then
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.curshpw, oy + 5, "spray_large_s", "FFFFFFFF")
-        pic:DrawBrush(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + g.curshpw, oy + 5 + 2, "spray_small_s", "FFCCCCCC")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + g.curshpw, oy + 5, "brush_large_s", "FFFFFFFF")
+        pic:DrawBrushHorz(ox - 5 - 2, oy + 5 + 2, ox - 5 - 2 + g.curshpw, oy + 5 + 2, "brush_small_s", "FFCCCCCC")
     end
     DrawPolyLine(pic, {
         {ox - 1, oy},
         {ox - 10 - 1, oy + 10},
         {ox + maxw - 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
     
     local txt = frame:CreateOrGetControl("richtext", "hpnum", ox + 20, oy - 10, 50, 16)
     txt:EnableHitTest(0)
@@ -1159,26 +1171,26 @@ function AOS_DRAW_SPBAR_B(frame, pic)
     end
     if (stat.SP <= stat.maxSP * 0.3) then
         local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "brush_large_s", lowstr)
     
     else
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "brush_large_s", "AA444444")
     end
     if (g.remspw ~= g.curspw) then
         if (colw > g.curspw) then
-            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remspw, oy + 5, "spray_large_s", "FF22FF77")
+            pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + g.remspw, oy + 5, "brush_large_s", "FF22FF77")
         
         else
-            pic:DrawBrush(ox - 5, oy + 5, ox - 5 + g.remspw, oy + 5, "spray_large_s", "FFFF0000")
+            pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + g.remspw, oy + 5, "brush_large_s", "FFFF0000")
         end
     end
-    pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FF44CCFF")
-    pic:DrawBrush(ox - 7, oy + 7, ox - 7 + fixspw, oy + 7, "spray_small_s", "FF33AACC")
+    pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "brush_large_s", "FF44CCFF")
+    pic:DrawBrushHorz(ox - 7, oy + 7, ox - 7 + fixspw, oy + 7, "brush_small_s", "FF33AACC")
     DrawPolyLine(pic, {
         {ox - 1, oy},
         {ox - 10 - 1, oy + 10},
         {ox + maxw - 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
     
     local txt = frame:CreateOrGetControl("richtext", "spnum", ox + 20, oy - 10, 50, 16)
     txt:EnableHitTest(0)
@@ -1199,18 +1211,18 @@ function AOS_DRAW_DURBAR_B(frame, pic)
     if (durmin <= durmax * 0.3 and durmin > 0) then
         --if(durmin <= durmax*0.3)then
         local lowstr = string.format("AA%02X44%02X", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", lowstr)
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "brush_large_s", lowstr)
     else
-        pic:DrawBrush(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "spray_large_s", "AA444444")
+        pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + maxw, oy + 5, "brush_large_s", "AA444444")
     end
     
-    pic:DrawBrush(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "spray_large_s", "FFFF88FF")
-    pic:DrawBrush(ox - 5 - 2, oy + 7, ox - 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCC55CC")
+    pic:DrawBrushHorz(ox - 5, oy + 5, ox - 5 + curw, oy + 5, "brush_large_s", "FFFF88FF")
+    pic:DrawBrushHorz(ox - 5 - 2, oy + 7, ox - 5 - 2 + curw + 1 - 1, oy + 7, "brush_small_s", "FFCC55CC")
     DrawPolyLine(pic, {
         {ox - 1, oy},
         {ox - 10 - 1, oy + 10},
         {ox + maxw - 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
 
 
 end
@@ -1223,21 +1235,21 @@ function AOS_DRAW_STAMINABAR_B(frame, pic)
     
     local ox = 40 + 15 + 5 - 15 + 1 - 15 - 15 - 10
     local oy = 50 - 20 - 5 - 5 + 15 + 15 + 15
-    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
+    pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "brush_large_s", "AA444444")
     if (stat.Stamina <= stat.MaxStamina * 0.3) then
         local lowstr = string.format("AA%02X%02X44", 0x44 + math.floor(0x99 * math.abs(g.tick % 50 - 25) / 25), 0x44 + math.floor(0x44 * math.abs(g.tick % 50 - 25) / 25))
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", lowstr)
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "brush_large_s", lowstr)
     else
-        pic:DrawBrush(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "spray_large_s", "AA444444")
+        pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + maxw + 1, oy + 5, "brush_large_s", "AA444444")
     end
     
-    pic:DrawBrush(ox + 5, oy + 5, ox + 5 + curw + 1, oy + 5, "spray_large_s", "FFFFFF00")
-    pic:DrawBrush(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "spray_small_s", "FFCCCC00")
+    pic:DrawBrushHorz(ox + 5, oy + 5, ox + 5 + curw + 1, oy + 5, "brush_large_s", "FFFFFF00")
+    pic:DrawBrushHorz(ox + 5 - 2 - 1, oy + 7, ox + 5 - 2 + curw + 1 - 1, oy + 7, "brush_small_s", "FFCCCC00")
     DrawPolyLine(pic, {
         {ox + 10 - 2, oy},
         {ox - 10 + 10 - 2, oy + 10},
         {ox + maxw - 10 + 10, oy + 10},
-    }, "spray_1", "FF000000")
+    }, "brush_1", "FF000000")
 
 end
 
