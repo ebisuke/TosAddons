@@ -1,3 +1,3 @@
 $addonname="anotheroneofpartyinfo"
 
-$version="v0.0.4"
+$version="v0.1.0TR1"

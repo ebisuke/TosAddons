@@ -26,6 +26,7 @@ g.casting = false
 g.castanim = 0
 g.trace = nil
 g.run = g.run or false
+local libaodrawpic
 --ライブラリ読み込み
 CHAT_SYSTEM('[AOP]loaded')
 
@@ -210,8 +211,8 @@ function AOP_INIT()
             tolua.cast(touch, 'ui::CPicture')
 
             pic:EnableHitTest(0)
-            pic:CreateInstTexture()
-            pic:FillClonePicture('00000000')
+            --pic:CreateInstTexture()
+            --pic:FillClonePicture('00000000')
 
             touch:EnableHitTest(1)
             touch:SetEnableStretch(1)
@@ -245,6 +246,7 @@ end
 
 function AOP_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     if (msg == 'GAME_START_3SEC') then
+        libaodrawpic=LIBAODRAWPICV1_0
         g.frame:ShowWindow(1)
         AOP_LOAD_SETTINGS()
         AOP_INIT()
@@ -400,7 +402,9 @@ function AOP_RENDER()
             local pic = frame:GetChild('pic')
             if (pic) then
                 AUTO_CAST(pic)
-                pic:FillClonePicture('00000000')
+                pic:RemoveAllChild()
+                --libaodrawpic.inject(pic)
+                --pic:FillClonePicture('00000000')
                 AOP_RENDER_PARTY(frame, pic)
                 pic:Invalidate()
             end
@@ -431,16 +435,20 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
     EBI_try_catch {
         try = function()
             local id = tostring(inc)
-            local bg = frame:CreateOrGetControl('picture', 'bg' .. id, ox, oy, 150, 110)
+            local bg = frame:CreateOrGetControl('groupbox', 'bg' .. id, ox, oy, 150, 110)
             AUTO_CAST(bg)
             bg:EnableHitTest(0)
-            bg:CreateInstTexture()
+            bg:RemoveAllChild()
+            --bg:CreateInstTexture()
 
-            bg:FillClonePicture('55000000')
+            --bg:FillClonePicture('55000000')
             if (not g.casting or AOP_GET_MEMBER_STATE(inc + 1)) then
+                bg:SetSkinName("bg2")
+                bg:SetColorTone("AA000000")
             else
-                bg:DrawBrush(0, bg:GetHeight(), bg:GetWidth(), 0, 'spray_8', 'FFFF0000')
-                bg:DrawBrush(0, 0, bg:GetWidth(), bg:GetHeight(), 'spray_8', 'FFFF0000')
+                bg:SetColorTone("AAFF0000")
+                --bg:DrawBrushHorz(0, bg:GetHeight(), bg:GetWidth(), 0, 'spray_8', 'FFFF0000')
+                --bg:DrawBrush(0, 0, bg:GetWidth(), bg:GetHeight(), 'spray_8', 'FFFF0000')
             end
             bg:Invalidate()
 
@@ -480,19 +488,19 @@ function AOP_RENDER_PARTY_MEMBER(frame, pic, partyMemberInfo, idx, inc, ox, oy)
                 dsp = sp / msp
             else
             end
-            pic:DrawBrush(box + 2, goy, box + sz - 2, goy, 'aop_spray_large_bs', 'AA000000')
-            pic:DrawBrush(box + 8, goy, box + sz - 8, goy, 'aop_spray_small_bs', 'AA000000')
+            pic:DrawBrushHorz(box + 2, goy, box + sz - 2, goy, 'brush_large_bs', 'AA000000')
+            pic:DrawBrushHorz(box + 8, goy, box + sz - 8, goy, 'brush_small_bs', 'AA000000')
             if (dhp > 0.3) then
-                pic:DrawBrush(box, goy, box + sz * dhp, goy, 'aop_spray_large_bs', 'FF22FF77')
-                pic:DrawBrush(box + 2, goy + 2, box + sz * dhp + 2, goy + 2, 'aop_spray_small_bs', 'FF11CC55')
+                pic:DrawBrushHorz(box, goy, box + sz * dhp, goy, 'brush_large_bs', 'FF22FF77')
+                pic:DrawBrushHorz(box + 2, goy + 2, box + sz * dhp + 2, goy + 2, 'brush_small_bs', 'FF11CC55')
             else
-                pic:DrawBrush(box, goy, box + sz * dhp, goy, 'aop_spray_large_bs', string.format('FF%02X0000', math.abs(50 - g.tick) * 255 / 50))
-                pic:DrawBrush(box + 2, goy + 2, box + sz * dhp + 2, goy + 2, 'aop_spray_small_bs', string.format('FF%02X0000', math.abs(50 - g.tick) * 128 / 50))
+                pic:DrawBrushHorz(box, goy, box + sz * dhp, goy, 'brush_large_bs', string.format('FF%02X0000', math.abs(50 - g.tick) * 255 / 50))
+                pic:DrawBrushHorz(box + 2, goy + 2, box + sz * dhp + 2, goy + 2, 'brush_small_bs', string.format('FF%02X0000', math.abs(50 - g.tick) * 128 / 50))
                 redzone = true
             end
-            pic:DrawBrush(box + 8, goy + 8, box + sz * dsp + 8, goy + 8, 'aop_spray_small_bs', 'FF44CCFF')
+            pic:DrawBrushHorz(box + 8, goy + 8, box + sz * dsp + 8, goy + 8, 'brush_small_bs', 'FF44CCFF')
 
-            pic:DrawBrush(ox, oy + 14, ox + sz + 20, oy + 14, 'aop_spray_vsmall_bar', '88000000')
+            --pic:DrawBrushHorz(ox, oy + 14, ox + sz + 20, oy + 14, 'brush_vsmall_bar', '88000000')
             local iconinfo = partyMemberInfo:GetIconInfo()
             local jobCls = GetClassByType('Job', iconinfo.repre_job)
             if nil ~= jobCls then

@@ -34,6 +34,7 @@ g.ctrls = g.ctrls or {}
 g.remain = {}
 g.run = g.run or false
 g.hpmonitor = g.hpmonitor or nil -- for intellisense
+local libaodrawpic
 --ライブラリ読み込み
 CHAT_SYSTEM("[AOE]loaded")
 local acutil = require('acutil')
@@ -52,7 +53,7 @@ local function DrawPolyLine(pic, poly, brush, color)
     local prev = nil
     for _, v in ipairs(poly) do
         if (prev) then
-            pic:DrawBrush(prev[1], prev[2], v[1], v[2], brush, color)
+            --pic:DrawBrush(prev[1], prev[2], v[1], v[2], brush, color)
         end
         prev = v
     end
@@ -234,7 +235,7 @@ function AOE_INIT()
             
             pic:EnableHitTest(0)
             pic:CreateInstTexture()
-            pic:FillClonePicture("00000000")
+            --pic:FillClonePicture("00000000")
             
             
             touch:EnableHitTest(1)
@@ -275,7 +276,7 @@ function AOE_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     
     
     if (msg == "GAME_START_3SEC") then
-        
+        libaodrawpic=LIBAODRAWPICV1_0
         g.frame:ShowWindow(1)
         AOE_LOAD_SETTINGS()
         AOE_INIT()
@@ -418,7 +419,9 @@ function AOE_RENDER()
             
             if (pic) then
                 AUTO_CAST(pic)
-                pic:FillClonePicture("00000000")
+                libaodrawpic.inject(pic)
+                pic:RemoveAllChild()
+                --pic:FillClonePicture("00000000")
                 local target = session.GetTargetHandle()
                 local boss = session.GetTargetBossHandle();
                 local idx = 0
@@ -680,12 +683,12 @@ function AOE_RENDER_ENEMY_TYPE1(frame, pic, idx, oy, handle, nonelapse)
                 hp.wid = w;
                 g.hplogssecondary[handle] = hp
                 
-                pic:DrawBrush(ox, offsec, ox + len, offsec, "aoe_spray_large_s", "77000000")
+                pic:DrawBrushHorz(ox, offsec, ox + len, offsec, "brush_large_s", "77000000")
                 if (hp.rem ~= hp.wid) then
                     if (hp.rem < hp.wid) then
-                        pic:DrawBrush(ox, offsec, ox + hp.rem, offsec, "aoe_spray_large_s", "FF22FFFF")
+                        pic:DrawBrushHorz(ox, offsec, ox + hp.rem, offsec, "brush_large_s", "FF22FFFF")
                     else
-                        pic:DrawBrush(ox, offsec, ox + hp.rem, offsec, "aoe_spray_large_s", "FFFF7700")
+                        pic:DrawBrushHorz(ox, offsec, ox + hp.rem, offsec, "brush_large_s", "FFFF7700")
                     end
                 end
                 local uppercolor = string.format("%02XFF0000", ninfo.time * 0xFF / maxtime)
@@ -700,8 +703,8 @@ function AOE_RENDER_ENEMY_TYPE1(frame, pic, idx, oy, handle, nonelapse)
                     undercolor = string.format("%02XAAAAAA", ninfo.time * 0xFF / maxtime)
                 end
                 
-                pic:DrawBrush(ox, offsec, ox + hp.wid, offsec, "aoe_spray_large_s", uppercolor)
-                pic:DrawBrush(ox - 2 - 1, offsec + 2, ox - 2 + hp.wid - 1, offsec + 2, "aoe_spray_small_s", undercolor)
+                pic:DrawBrushHorz(ox, offsec, ox + hp.wid, offsec, "brush_large_s", uppercolor)
+                pic:DrawBrushHorz(ox - 2 - 1, offsec + 2, ox - 2 + hp.wid - 1, offsec + 2, "brush_small_s", undercolor)
                 --sekiro gauge dot
                 local txt = ''
                 for i = 1, maxgaugecount+1 do
@@ -717,13 +720,13 @@ function AOE_RENDER_ENEMY_TYPE1(frame, pic, idx, oy, handle, nonelapse)
                 g.hplogssecondary[handle] = nil
                 AOE_GENERATE_TEXT(frame, 'gaugecount', '', ox, offsec + 8, 100, 24)
                 --render
-                pic:DrawBrush(ox, off, ox + len, off, "aoe_spray_large_s", "77000000")
+                pic:DrawBrushHorz(ox, off, ox + len, off, "brush_large_s", "77000000")
                 
                 if (hp.rem ~= hp.wid) then
                     if (hp.rem < hp.wid) then
-                        pic:DrawBrush(ox, off, ox + hp.rem, off, "aoe_spray_large_s", "FF22FFFF")
+                        pic:DrawBrushHorz(ox, off, ox + hp.rem, off, "brush_large_s", "FF22FFFF")
                     else
-                        pic:DrawBrush(ox, off, ox + hp.rem, off, "aoe_spray_large_s", "FFFF7700")
+                        pic:DrawBrushHorz(ox, off, ox + hp.rem, off, "brush_large_s", "FFFF7700")
                     end
                 end
                 
@@ -743,8 +746,8 @@ function AOE_RENDER_ENEMY_TYPE1(frame, pic, idx, oy, handle, nonelapse)
                 --     c:ShowWindow(1)
                 --     c:SetColorTone(string.format("%02XFFFFFF", ninfo.time * 0xFF / maxtime))
                 -- end
-                pic:DrawBrush(ox, off, ox + hp.wid, off, "aoe_spray_large_s", uppercolor)
-                pic:DrawBrush(ox - 2 - 1, off + 2, ox - 2 + hp.wid - 1, off + 2, "aoe_spray_small_s", undercolor)
+                pic:DrawBrushHorz(ox, off, ox + hp.wid, off, "brush_large_s", uppercolor)
+                pic:DrawBrushHorz(ox - 2 - 1, off + 2, ox - 2 + hp.wid - 1, off + 2, "brush_small_s", undercolor)
             end
             --attributes
             local colortable = {
@@ -761,15 +764,15 @@ function AOE_RENDER_ENEMY_TYPE1(frame, pic, idx, oy, handle, nonelapse)
             if colortable[ninfo.attribute] then
                 color = colortable[ninfo.attribute]
             end
-            
-            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_leftdown", color)
-            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftdown", color)
-            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftup", color)
-            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_leftup", color)
-            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightup", color)
-            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_rightup", color)
-            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_rightdown", color)
-            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightdown", color)
+            --[[ 
+            pic:DrawBrushHorz(30, 40, 30, 50, "brush_dia_leftdown", color)
+            pic:DrawBrushHorz(30, 40, 20, 40, "brush_dia_leftdown", color)
+            pic:DrawBrushHorz(30, 40, 20, 40, "brush_dia_leftup", color)
+            pic:DrawBrushHorz(30, 40, 30, 30, "brush_dia_leftup", color)
+            pic:DrawBrushHorz(30, 40, 40, 40, "brush_dia_rightup", color)
+            pic:DrawBrushHorz(30, 40, 30, 30, "brush_dia_rightup", color)
+            pic:DrawBrushHorz(30, 40, 30, 50, "brush_dia_rightdown", color)
+            pic:DrawBrushHorz(30, 40, 40, 40, "brush_dia_rightdown", color) ]]
             AOE_GENERATE_TEXT(frame, "effective" .. id, string.format('{img %s 25 25}', effectiveType), 3, 5, 25, 25)
             AOE_GENERATE_TEXT(frame, "race" .. id, string.format('{img %s 25 25}', raceType), 3, 45, 25, 25)
             AOE_GENERATE_TEXT(frame, "attribute" .. id, string.format('{img %s 25 25}', attribute), 33, 45, 25, 25)
@@ -1085,13 +1088,13 @@ function AOE_RENDER_ENEMY_TYPE2(frame, pic, idx, oy, handle, nonelapse)
                     end
                     local iscur=math.min(maxwid, hp.wid*lens/len)~=maxwid or #sec+1==i
                     local isign=hp.wid*lens/len < minwid
-                    pic:DrawBrush(ox+spc+minwid, off, ox + maxwid+spc, off, "aoe_spray_large_s", "77000000")
+                    pic:DrawBrushHorz(ox+spc+minwid, off, ox + maxwid+spc, off, "brush_large_s", "77000000")
                     if iscur and  not isign then
                         if (hp.rem ~= hp.wid) then
                             if (hp.rem < hp.wid) then
-                                pic:DrawBrush(ox+spc+minwid, off, ox + math.min(maxwid,hp.rem*lens/len)+spc, off, "aoe_spray_large_s", "FF22FFFF")
+                                pic:DrawBrushHorz(ox+spc+minwid, off, ox + math.min(maxwid,hp.rem*lens/len)+spc, off, "brush_large_s", "FF22FFFF")
                             else
-                                pic:DrawBrush(ox+spc+minwid, off, ox + math.min(maxwid,hp.rem*lens/len)+spc, off, "aoe_spray_large_s", "FFFF7700")
+                                pic:DrawBrushHorz(ox+spc+minwid, off, ox + math.min(maxwid,hp.rem*lens/len)+spc, off, "brush_large_s", "FFFF7700")
                             end
                         end
                     end
@@ -1107,21 +1110,21 @@ function AOE_RENDER_ENEMY_TYPE2(frame, pic, idx, oy, handle, nonelapse)
                         undercolor = string.format("%02XAAAAAA", ninfo.time * 0xFF / maxtime)
                     end
                     if not isign then
-                        pic:DrawBrush(ox+minwid+spc+3, off-3, ox + math.min(maxwid, hp.wid*lens/len)+spc+3, off-3, "aoe_spray_small_s", uppercolor)
-                        pic:DrawBrush(ox - 2 +minwid+spc, off + 2, ox - 2 + math.min(maxwid, hp.wid*lens/len)+spc , off +2, "aoe_spray_small_s", undercolor)
+                        pic:DrawBrushHorz(ox+minwid+spc+3, off-3, ox + math.min(maxwid, hp.wid*lens/len)+spc+3, off-3, "brush_small_s", uppercolor)
+                        pic:DrawBrushHorz(ox - 2 +minwid+spc, off + 2, ox - 2 + math.min(maxwid, hp.wid*lens/len)+spc , off +2, "brush_small_s", undercolor)
                     end
                     minwid=maxwid
                     spc=spc+2
                 end
                
                  --render
-                 pic:DrawBrush(ox-12, offsec, ox + len-12, offsec, "aoe_spray_small_s", "77000000")
+                 pic:DrawBrushHorz(ox-12, offsec, ox + len-12, offsec, "brush_small_s", "77000000")
                 
                  if (hps.rem ~= hps.wid) then
                      if (hps.rem < hps.wid) then
-                         pic:DrawBrush(ox-12, offsec, ox-12 + hps.rem, offsec, "aoe_spray_small_s", "FF22FFFF")
+                         pic:DrawBrushHorz(ox-12, offsec, ox-12 + hps.rem, offsec, "brush_small_s", "FF22FFFF")
                      else
-                         pic:DrawBrush(ox-12, offsec, ox-12 + hps.rem, offsec, "aoe_spray_small_s", "FFFF7700")
+                         pic:DrawBrushHorz(ox-12, offsec, ox-12 + hps.rem, offsec, "brush_small_s", "FFFF7700")
                      end
                  end
                  
@@ -1141,19 +1144,19 @@ function AOE_RENDER_ENEMY_TYPE2(frame, pic, idx, oy, handle, nonelapse)
                  --     c:ShowWindow(1)
                  --     c:SetColorTone(string.format("%02XFFFFFF", ninfo.time * 0xFF / maxtime))
                  -- end
-                 pic:DrawBrush(ox-12, offsec, ox-12 + hps.wid, offsec, "aoe_spray_small_s", uppercolor)
+                 pic:DrawBrushHorz(ox-12, offsec, ox-12 + hps.wid, offsec, "brush_small_s", uppercolor)
             
             else
                 g.hplogssecondary[handle] = nil
               
                 --render
-                pic:DrawBrush(ox, off, ox + len, off, "aoe_spray_large_s", "77000000")
+                pic:DrawBrushHorz(ox, off, ox + len, off, "brush_large_s", "77000000")
                 
                 if (hp.rem ~= hp.wid) then
                     if (hp.rem < hp.wid) then
-                        pic:DrawBrush(ox, off, ox + hp.rem, off, "aoe_spray_large_s", "FF22FFFF")
+                        pic:DrawBrushHorz(ox, off, ox + hp.rem, off, "brush_large_s", "FF22FFFF")
                     else
-                        pic:DrawBrush(ox, off, ox + hp.rem, off, "aoe_spray_large_s", "FFFF7700")
+                        pic:DrawBrushHorz(ox, off, ox + hp.rem, off, "brush_large_s", "FFFF7700")
                     end
                 end
                 
@@ -1173,8 +1176,8 @@ function AOE_RENDER_ENEMY_TYPE2(frame, pic, idx, oy, handle, nonelapse)
                 --     c:ShowWindow(1)
                 --     c:SetColorTone(string.format("%02XFFFFFF", ninfo.time * 0xFF / maxtime))
                 -- end
-                pic:DrawBrush(ox, off, ox + hp.wid, off, "aoe_spray_large_s", uppercolor)
-                pic:DrawBrush(ox - 2 - 1, off + 2, ox - 2 + hp.wid - 1, off + 2, "aoe_spray_small_s", undercolor)
+                pic:DrawBrushHorz(ox, off, ox + hp.wid, off, "brush_large_s", uppercolor)
+                pic:DrawBrushHorz(ox - 2 - 1, off + 2, ox - 2 + hp.wid - 1, off + 2, "brush_small_s", undercolor)
             end
             --attributes
             local colortable = {
@@ -1191,15 +1194,15 @@ function AOE_RENDER_ENEMY_TYPE2(frame, pic, idx, oy, handle, nonelapse)
             if colortable[ninfo.attribute] then
                 color = colortable[ninfo.attribute]
             end
-            
-            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_leftdown", color)
-            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftdown", color)
-            pic:DrawBrush(30, 40, 20, 40, "aoe_spray_dia_leftup", color)
-            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_leftup", color)
-            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightup", color)
-            pic:DrawBrush(30, 40, 30, 30, "aoe_spray_dia_rightup", color)
-            pic:DrawBrush(30, 40, 30, 50, "aoe_spray_dia_rightdown", color)
-            pic:DrawBrush(30, 40, 40, 40, "aoe_spray_dia_rightdown", color)
+            --[[ 
+            pic:DrawBrushHorz(30, 40, 30, 50, "brush_dia_leftdown", color)
+            pic:DrawBrushHorz(30, 40, 20, 40, "brush_dia_leftdown", color)
+            pic:DrawBrushHorz(30, 40, 20, 40, "brush_dia_leftup", color)
+            pic:DrawBrushHorz(30, 40, 30, 30, "brush_dia_leftup", color)
+            pic:DrawBrushHorz(30, 40, 40, 40, "brush_dia_rightup", color)
+            pic:DrawBrushHorz(30, 40, 30, 30, "brush_dia_rightup", color)
+            pic:DrawBrushHorz(30, 40, 30, 50, "brush_dia_rightdown", color)
+            pic:DrawBrushHorz(30, 40, 40, 40, "brush_dia_rightdown", color) ]]
             AOE_GENERATE_TEXT(frame, "effective" .. id, string.format('{img %s 30 30}', effectiveType), ox, offatt, 30, 30)
             AOE_GENERATE_TEXT(frame, "race" .. id, string.format('{img %s 30 30}', raceType), ox+30*1, offatt, 30, 30)
             AOE_GENERATE_TEXT(frame, "attribute" .. id, string.format('{img %s 30 30}', attribute), ox+30*2, offatt, 30, 30)
