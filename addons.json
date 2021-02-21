@@ -234,19 +234,6 @@
     ]
   },
   {
-    "name": "AutoSwap For SetOptionSkill",
-    "file": "autoswapforsetoptionskill",
-    "extension": "ipf",
-    "fileVersion": "v0.0.10",
-    "releaseTag": "autoswapforsetoptionskill-v0.0.10",
-    "unicode": "📖",
-    "description": "セット装備スキルを装備スワップで使用可能にします",
-    "tags": [
-      "setoption",
-      "skill"
-    ]
-  },
-  {
     "name": "Remove Warning For Book",
     "file": "removewarningforbook",
     "extension": "ipf",
@@ -256,19 +243,6 @@
     "description": "カードブックを読むときの警告を削除します",
     "tags": [
       "cardbook"
-    ]
-  },
-  {
-    "name": "Another One of Statbars",
-    "file": "anotheroneofstatbars",
-    "extension": "ipf",
-    "fileVersion": "v0.1.6",
-    "releaseTag": "anotheroneofstatbars-v0.1.6",
-    "unicode": "📖",
-    "description": "ちょっと変わったステータスバーを追加します",
-    "tags": [
-      "ui",
-      "statbar"
     ]
   },
   {
@@ -324,18 +298,6 @@
     ]
   },
   {
-    "name": "Pseudo Forecast For ITOS",
-    "file": "pseudoforecastitos",
-    "extension": "ipf",
-    "fileVersion": "v0.4.0",
-    "releaseTag": "pseudoforecastitos-v0.4.0",
-    "unicode": "📖",
-    "description": "Forecastを疑似体験できる ITOS用",
-    "tags": [
-      "forecast"
-    ]
-  },
-  {
     "name": "Mini Expbar",
     "file": "miniexpbar",
     "extension": "ipf",
@@ -350,19 +312,6 @@
     ]
   },
   {
-    "name": "Stat View Ex R",
-    "file": "statview_ex_r",
-    "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "statview_ex_r-v0.0.1",
-    "unicode": "⛄",
-    "description": "This is a modified version of Torahamu's modified version of Excrulon's statviewer addon.  Excrulonさんのstatviewerアドオンを改造したTorahamuさんのstatviewer_exを改造しました。[v2.0.0  ReBuild Patch]",
-    "tags": [
-      "ui",
-      "status"
-    ]
-  },
-  {
     "name": "Yet Another Account Inventory",
     "file": "yaaccountinventory",
     "extension": "ipf",
@@ -374,8 +323,7 @@
       "storage",
       "inventory"
     ]
-  }
-  ,
+  },
   {
     "name": "AutoSave Money Reloaded",
     "file": "autosavemoneyreloaded",
@@ -388,8 +336,7 @@
       "storage",
       "warehouse"
     ]
-  }
-  ,
+  },
   {
     "name": "SmallSummonedMonster",
     "file": "smallsummonedmonster",
@@ -403,8 +350,7 @@
       "monster",
       "small"
     ]
-  }
-  ,
+  },
   {
     "name": "FindPortalShop",
     "file": "findportalshop",
@@ -429,8 +375,7 @@
     "tags": [
       "buff"
     ]
-  }
-  ,
+  },
   {
     "name": "Overdosed Composition",
     "file": "overdosedcomposition",
@@ -459,8 +404,7 @@
       "silver",
       "storage"
     ]
-  }
-  ,
+  },
   {
     "name": "Merkabah Fix",
     "file": "merkabahfix",
@@ -510,23 +454,6 @@
     ]
   },
   {
-    "name": "Option Roller",
-    "file": "optionroller",
-    "extension": "ipf",
-    "fileVersion": "v0.0.3",
-    "releaseTag": "optionroller-v0.0.3",
-    "unicode": "📖",
-    "description": "アイテムオプションで指定したオプションが出るまでロールするアドオンです",
-    "tags": [
-      "ui",
-      "option",
-      "prop",
-      "reidentify",
-      "item"
-    ]
-  },
-
-  {
     "name": "Enchant Roller",
     "file": "enchantroller",
     "extension": "ipf",
@@ -555,8 +482,7 @@
       "ikor",
       "extract"
     ]
-  }
-  ,
+  },
   {
     "name": "disablemagicshield",
     "file": "disablemagicshield",
@@ -583,40 +509,6 @@
       "ui",
       "cardbook",
       "ancientmonster"
-    ]
-  },
-  {
-    "name": "Mysterious Book Adv",
-    "file": "mysteriousbookadv",
-    "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "mysteriousbookadv-v0.0.1",
-    "unicode": "📖",
-    "description": "アーツから神秘の全集を逆引きする機能を追加します。及び神秘の書作成からアーツ習得までを自動化する機能も追加します。",
-    "tags": [
-      "arts",
-      "ui",
-      "mysteriousbook",
-      "class",
-      "job",
-      "ability"
-    ]
-  },
-  {
-    "name": "Ebi remove dialog",
-    "file": "ebiremovedialog",
-    "extension": "ipf",
-    "fileVersion": "v0.0.3",
-    "releaseTag": "ebiremovedialog-v0.0.3",
-    "unicode": "📖",
-    "description": "各種確認ダイアログを削除します",
-    "tags": [
-      "arts",
-      "ui",
-      "mysteriousbook",
-      "class",
-      "job",
-      "ability"
     ]
   }
 ]
