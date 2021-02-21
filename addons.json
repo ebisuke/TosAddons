@@ -510,5 +510,19 @@
       "cardbook",
       "ancientmonster"
     ]
+  },
+  {
+    "name": "Outrage Gauge",
+    "file": "outragegauge",
+    "extension": "ipf",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "outragegauge-v0.1.0",
+    "unicode": "📖",
+    "description": "加熱バフ・アウトレイジバフの残数をバー表示します",
+    "tags": [
+      "skill",
+      "ui",
+      "outrage"
+    ]
   }
 ]
