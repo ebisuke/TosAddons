@@ -1,4 +1,3 @@
---アドオン名（大文字）
 local addonName = 'OUTRAGEGAUGE'
 local addonNameLower = string.lower(addonName)
 --作者名
@@ -8,7 +7,7 @@ local author = 'ebisuke'
 _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
-local g = _G['ADDONS'][author][addonName]
+local g= _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.version = 0
 g.settings =
@@ -28,6 +27,7 @@ g.buffs = {}
 g.chganim = 0
 g.speed = 0.25
 g.tick=0
+local libaodrawpic=LIBAODRAWPICV1_1
 --ライブラリ読み込み
 CHAT_SYSTEM('[OG]loaded')
 local acutil = require('acutil')
@@ -128,7 +128,7 @@ function OUTRAGEGAUGE_BUFF_UPDATE(frame, msg, argStr, argNum)
         try = function()
             local handle = session.GetMyHandle()
 
-            if (msg == 'BUFF_ADD'  or msg == "RELOAD_BUFF_ADD") then
+            if (msg == 'BUFF_ADD'  or msg == "RELOAD_BUFF_ADD" ) then
                 if (argNum == clsid_oh) then
                     local buff = info.GetBuff(handle, argNum)
                     g.buffs[argNum] = {
@@ -146,7 +146,7 @@ function OUTRAGEGAUGE_BUFF_UPDATE(frame, msg, argStr, argNum)
                     }
                     DBGOUT('BUFF')
                 end
-            elseif (msg == 'BUFF_UPDATE') then
+            elseif (msg == 'BUFF_UPDATE' or (msg == 'BUFF_UPDATE')) then
                 if (argNum == clsid_oh) then
                     g.chganim = 1
                 elseif (argNum == clsid_release) then
@@ -171,17 +171,18 @@ function OUTRAGEGAUGE_INIT()
             frame:RemoveAllChild()
             frame:Resize(300, 300)
             frame:SetLayerLevel(g.settings.layerlevel or 60)
-            local pic = frame:CreateOrGetControl('picture', 'pic', 0, 0, frame:GetWidth(), frame:GetHeight())
+            local pic = frame:CreateOrGetControl('groupbox', 'pic', 0, 0, frame:GetWidth(), frame:GetHeight())
             local over = frame:CreateOrGetControl('richtext', 'over', 0, 0, frame:GetWidth(), 30)
             over:SetGravity(ui.CENTER_HORZ, ui.BOTTOM)
+            over:SetMargin(0,0,0,20)
             AUTO_CAST(pic)
             AUTO_CAST(over)
 
             FRAME_AUTO_POS_TO_OBJ(frame, session.GetMyHandle(), -150, -150, 1, 1, 1)
             pic:EnableHitTest(0)
             over:EnableHitTest(0)
-            pic:CreateInstTexture()
-            pic:FillClonePicture('00000000')
+            --pic:CreateInstTexture()
+            --pic:FillClonePicture('00000000')
 
             OUTRAGEGAUGE_RENDER()
         end,
@@ -192,6 +193,7 @@ function OUTRAGEGAUGE_INIT()
 end
 
 function OUTRAGEGAUGE_TIMER_BEGIN()
+    libaodrawpic=LIBAODRAWPICV1_1
     local frame = ui.GetFrame(g.framename)
     frame:CreateOrGetControl('timer', 'addontimer', 0, 0, 10, 10)
     local timer = GET_CHILD(frame, 'addontimer', 'ui::CAddOnTimer')
@@ -210,13 +212,14 @@ function OUTRAGEGAUGE_RENDER()
             AUTO_CAST(pic)
             over:SetText('')
             g.tick=(g.tick+1) % 100
-            if (pic) then
+            if (pic and libaodrawpic) then
                 DBGOUT('here2')
                 local handle = session.GetMyHandle()
-
-                pic:FillClonePicture('00000000')
-                local brush = 'og_spray_small_sq'
-                local brushshade = 'og_spray_small_bsq'
+                pic=libaodrawpic.inject(pic)
+                pic:RemoveAllChild()
+                --pic:FillClonePicture('00000000')
+                local brush = 'brush_4'
+                local brushshade = 'brush_2'
 
                 if g.buffs[clsid_oh] then
                     DBGOUT('here')
@@ -234,7 +237,7 @@ function OUTRAGEGAUGE_RENDER()
                     local h = 30
                     
                     local oy = wh -h- 40
-                    local int = 6
+                    local int = 5
                     local ox = (300-maxammo*int)/2
                     local w = maxammo*int
                     for i = 0, maxammo - 1 do
@@ -256,49 +259,55 @@ function OUTRAGEGAUGE_RENDER()
                             end
                         end
                         
-                        pic:DrawBrush(ox + i * int, oy+math.min(20,20-(i-least)/(maxammo-least)*20), ox + i * int, oy + h, brush, color)
-                        pic:DrawBrush(ox + i * int, oy+math.min(20,20-(i-least)/(maxammo-least)*20), ox + i * int, oy + h, brushshade, colorshade)
+                        pic:DrawBrushVert(ox + i * int, oy+math.min(20,20-(i-least)/(maxammo-least)*20), ox + i * int, oy + h, brush, color)
+                        pic:DrawBrushVert(ox + i * int+2, oy+math.min(20,20-(i-least)/(maxammo-least)*20)+2, ox + i * int+2, oy + h+2, brushshade, colorshade)
                         
                         
                     end
-                    if ammo==maxammo and g.tick==0 then
-                        local pos=GetMyActor():GetPos()
-                        effect.AddActorEffect(GetMyActor(),"SKL_DOUBLEGUN_ASTD",1,pos.x,pos.y,pos.z,-1)
-                    end
+                
                     over:SetText('{s24}{ol}' .. tostring(ammo))
-                    pic:DrawBrush(ox + w/2- w/2 * time / maxtime, oy + h-3+10, ox + w/2+ w/2*time / maxtime, oy + h-3+10, brush, '887777FF')
-                    pic:DrawBrush(ox + w/2- w/2 * time / maxtime, oy + h+10, ox + w/2+ w/2*time / maxtime, oy + h+10, brush, '884444FF')
+                    pic:DrawBrushHorz(ox + w/2- w/2 * time / maxtime, oy + h-3+10, ox + w/2+ w/2*time / maxtime, oy + h-3+10, brush, '887777FF')
+                    pic:DrawBrushHorz(ox + w/2- w/2 * time / maxtime, oy + h+10, ox + w/2+ w/2*time / maxtime, oy + h+10, brush, '884444FF')
                 elseif g.buffs[clsid_release] then
                     -- circular mode
-                    local buff = info.GetBuff(handle, clsid_release)
-                    local ammo = buff.over
-                    local max = g.buffs[clsid_release].over
-                    local cur = ammo
-                    local int = 20
-                    local sz = (360 - (max ) * int) * math.pi / 180 /  (max) 
-                    if sz<= (10 * math.pi/180) then
-                        int = 2
-                        sz = (360 - (max ) * int) * math.pi / 180 /  (max) 
-                    end
-                    local curpos = math.pi/2
+                     local buff = info.GetBuff(handle, clsid_release)
+                     local ammo = buff.over
+                     local max = g.buffs[clsid_release].over
+                     local cur = ammo
+                     local int = 10
+                     local sz = (250) / max
+                    -- if sz<= (10 * math.pi/180) then
+                    --     int = 2
+                    --     sz = (360 - (max ) * int) * math.pi / 180 /  (max) 
+                    -- end
+                    -- local curpos = math.pi/2
                     local color = 'CCFF7700'
                     for i = 0, cur - 1 do
-                      
-                        if i== cur-1 then
-                            local t=math.abs(g.tick-50)/50
-                            DrawPseudoArc(pic, 150, 150, 140, curpos, curpos + sz, brush,
-                            string.format("CC%02X%02X%02X",
-                            math.floor(0xFF/2*t)+0xFF/2, 
-                            math.floor(0x77/2*t)+0x77/2,
-                            math.floor(0x00/2*t)+0x00/2
-                        ))
-                        else
-                            DrawPseudoArc(pic, 150, 150, 140, curpos, curpos + sz, brush, color)
-                        end
+                       
+                    --     if i== cur-1 then
+                    --         local t=math.abs(g.tick-50)/50
+                    --         DrawPseudoArc(pic, 150, 150, 140, curpos, curpos + sz, brush,
+                    --         string.format("CC%02X%02X%02X",
+                    --         math.floor(0xFF/2*t)+0xFF/2, 
+                    --         math.floor(0x77/2*t)+0x77/2,
+                    --         math.floor(0x00/2*t)+0x00/2
+                    --     ))
+                    --     else
+                    --         DrawPseudoArc(pic, 150, 150, 140, curpos, curpos + sz, brush, color)
+                    --     end
                                       
-                        curpos = curpos + sz+int * math.pi / 180
+                    --     curpos = curpos + sz+int * math.pi / 180
+                        local ccol=color
+                        if i==cur-1 then
+                            local t=math.abs(g.tick-50)/50
+                            ccol=string.format("CC%02X%02X%02X",
+                             math.floor(0xFF/2*t)+0xFF/2, 
+                             math.floor(0x77/2*t)+0x77/2,
+                             math.floor(0x00/2*t)+0x00/2)
+                        end
+                        pic:DrawBrushHorz(i*sz+25,260,i*sz+sz-int+25,260,'brush_8',ccol)
                     end
-                    over:SetText('{s32}{ol}{#FFAA66}< ' .. tostring(cur) .. ' >')
+                    over:SetText('{s32}{ol}{#FFAA66} ' .. tostring(cur) .. ' ')
                 end
 
                 if (g.chganim > 0) then

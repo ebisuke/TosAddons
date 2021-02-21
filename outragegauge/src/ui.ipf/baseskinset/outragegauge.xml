@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<skinset name="Base">
-    <imagelist category="outragegauge_imgs">
-		<image name="og_spray_small_sq" file="\skin\og_small_sq.tga" imgrect="0 0 20 20"/>
-		<image name="og_spray_small_bsq" file="\skin\og_small_bsq.tga" imgrect="0 0 20 20"/>
-		
-	</imagelist>
-</skinset>

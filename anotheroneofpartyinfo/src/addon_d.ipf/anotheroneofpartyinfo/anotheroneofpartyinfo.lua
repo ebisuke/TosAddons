@@ -1,3 +1,4 @@
+--ANOTHERONEOFPARTYINFO
 --アドオン名（大文字）
 local addonName = 'ANOTHERONEOFPARTYINFO'
 local addonNameLower = string.lower(addonName)
@@ -45,7 +46,7 @@ local function DrawPolyLine(pic, poly, brush, color)
     local prev = nil
     for _, v in ipairs(poly) do
         if (prev) then
-            pic:DrawBrush(prev[1], prev[2], v[1], v[2], brush, color)
+            --pic:DrawBrush(prev[1], prev[2], v[1], v[2], brush, color)
         end
         prev = v
     end
@@ -400,10 +401,10 @@ function AOP_RENDER()
         try = function()
             local frame = ui.GetFrame(g.framename)
             local pic = frame:GetChild('pic')
-            if (pic) then
+            if (pic and libaodrawpic) then
                 AUTO_CAST(pic)
                 pic:RemoveAllChild()
-                --libaodrawpic.inject(pic)
+                libaodrawpic.inject(pic)
                 --pic:FillClonePicture('00000000')
                 AOP_RENDER_PARTY(frame, pic)
                 pic:Invalidate()
