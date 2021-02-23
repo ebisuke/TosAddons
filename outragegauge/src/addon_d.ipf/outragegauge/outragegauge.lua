@@ -327,7 +327,7 @@ function OUTRAGEGAUGE_RENDER()
                     local wh=40
                     local h = 30
                     
-                    print(time)
+                    
                     local oy = wh -h
                     local int = 5
                     local ox = (300-maxammo*int)/2
