@@ -1,1 +1,0 @@
-../../libaodrawpic/ui.ipf
