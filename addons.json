@@ -515,8 +515,8 @@
     "name": "Outrage Gauge",
     "file": "outragegauge",
     "extension": "ipf",
-    "fileVersion": "v0.1.1",
-    "releaseTag": "outragegauge-v0.1.1",
+    "fileVersion": "v0.1.2",
+    "releaseTag": "outragegauge-v0.1.2",
     "unicode": "📖",
     "description": "加熱バフ・アウトレイジバフの残数をバー表示します",
     "tags": [
