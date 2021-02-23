@@ -315,7 +315,7 @@ function OUTRAGEGAUGE_RENDER()
                     DBGOUT('here')
                     local buff = info.GetBuff(handle, clsid_oh)
                     local ammo = buff.over
-                    local maxtime = g.buffs[clsid_oh].maxtime
+                    local maxtime =  g.buffs[clsid_oh].maxtime
                     local time = buff.time
 
                     local least = 4
@@ -326,6 +326,7 @@ function OUTRAGEGAUGE_RENDER()
                     local wh=40
                     local h = 30
                     
+                    print(time)
                     local oy = wh -h
                     local int = 5
                     local ox = (300-maxammo*int)/2
@@ -356,8 +357,8 @@ function OUTRAGEGAUGE_RENDER()
                     end
                 
                     over:SetText('{s24}{ol}' .. tostring(ammo))
-                    pic:DrawBrushHorz(ox + w/2- w/2 * time / maxtime, oy + h-3+10, ox + w/2+ w/2*time / maxtime, oy + h-3+10, brush, '887777FF')
-                    pic:DrawBrushHorz(ox + w/2- w/2 * time / maxtime, oy + h+10, ox + w/2+ w/2*time / maxtime, oy + h+10, brush, '884444FF')
+                    pic:DrawBrushHorz(ox + w/2- (w/2 * time) / maxtime, oy + h-3+10, ox + w/2+ (w/2*time) / maxtime, oy + h-3+10, brush, 'CC2222FF')
+                    pic:DrawBrushHorz(ox + w/2- (w/2 * time) / maxtime, oy + h+10, ox + w/2+ (w/2*time) / maxtime, oy + h+10, brush, 'CC2222FF')
                 elseif g.buffs[clsid_release] then
                     -- circular mode
                      local buff = info.GetBuff(handle, clsid_release)
