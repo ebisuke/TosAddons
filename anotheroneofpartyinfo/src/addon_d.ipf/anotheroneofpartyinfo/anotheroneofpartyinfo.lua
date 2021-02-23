@@ -247,7 +247,7 @@ end
 
 function AOP_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     if (msg == 'GAME_START_3SEC') then
-        libaodrawpic=LIBAODRAWPICV1_0
+        libaodrawpic=LIBAODRAWPICV1_1
         g.frame:ShowWindow(1)
         AOP_LOAD_SETTINGS()
         AOP_INIT()

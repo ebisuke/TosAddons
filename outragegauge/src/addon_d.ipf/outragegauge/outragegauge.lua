@@ -15,7 +15,8 @@ g.settings =
     {
         x = 300,
         y = 300,
-        style = 0
+        style = 0,
+        locked=true
     }
 g.configurepattern = {}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
@@ -105,11 +106,13 @@ function OUTRAGEGAUGE_ON_INIT(addon, frame)
             addon:RegisterMsg('BUFF_UPDATE', 'OUTRAGEGAUGE_BUFF_UPDATE')
             addon:RegisterMsg('FPS_UPDATE', 'OUTRAGEGAUGE_FPS_UPDATE')
             addon:RegisterMsg('GAME_START_3SEC', 'OUTRAGEGAUGE_TIMER_BEGIN')
-
+            acutil.slashCommand("/og", OUTRAGEGAUGE_PROCESS_COMMAND);
+            acutil.slashCommand("/outragegauge", OUTRAGEGAUGE_PROCESS_COMMAND);
+            
             if not g.loaded then
                 g.loaded = true
             end
-
+            OUTRAGEGAUGE_LOAD_SETTINGS()
             DBGOUT('INIT')
             --CHALLENGEMODESTUFF_INIT()
             OUTRAGEGAUGE_INIT()
@@ -167,29 +170,58 @@ end
 function OUTRAGEGAUGE_INIT()
     EBI_try_catch {
         try = function()
+            
             local frame = ui.GetFrame(g.framename)
             frame:RemoveAllChild()
-            frame:Resize(300, 300)
+            frame:Resize(300, 50)
             frame:SetLayerLevel(g.settings.layerlevel or 60)
+            frame:SetEventScript(ui.LBUTTONUP, "OUTRAGEGAUGE_END_DRAG")
+            frame:SetEventScript(ui.RBUTTONUP, "OUTRAGEGAUGE_SHOW_CONTEXTMENU")
+            
             local pic = frame:CreateOrGetControl('groupbox', 'pic', 0, 0, frame:GetWidth(), frame:GetHeight())
             local over = frame:CreateOrGetControl('richtext', 'over', 0, 0, frame:GetWidth(), 30)
             over:SetGravity(ui.CENTER_HORZ, ui.BOTTOM)
-            over:SetMargin(0,0,0,20)
+            over:SetMargin(0,0,0,10)
             AUTO_CAST(pic)
             AUTO_CAST(over)
-
-            FRAME_AUTO_POS_TO_OBJ(frame, session.GetMyHandle(), -150, -150, 1, 1, 1)
+            pic:EnableScrollBar(0)
             pic:EnableHitTest(0)
             over:EnableHitTest(0)
             --pic:CreateInstTexture()
             --pic:FillClonePicture('00000000')
 
+            if g.settings.style==0 then
+                FRAME_AUTO_POS_TO_OBJ(frame, session.GetMyHandle(), -150, 50, 1, 1, 1)
+            else
+                frame:StopUpdateScript()
+                frame:SetOffset(g.settings.x,g.settings.y)
+            end
+            if g.settings.locked then
+                frame:SetSkinName('None')
+                frame:EnableHitTest(0)
+                frame:EnableHittestFrame(0)
+                frame:EnableMove(0)
+            else
+                frame:SetSkinName('bg2')
+                frame:EnableHitTest(1)
+                frame:EnableHittestFrame(1)
+                frame:EnableMove(1)
+            end
+            
             OUTRAGEGAUGE_RENDER()
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
+end
+function OUTRAGEGAUGE_END_DRAG()
+    local frame = ui.GetFrame(g.framename)
+    g.settings.x=frame:GetX()
+    g.settings.y=frame:GetY()
+    g.settings.style=1
+    OUTRAGEGAUGE_SAVE_SETTINGS()
+    OUTRAGEGAUGE_INIT()
 end
 
 function OUTRAGEGAUGE_TIMER_BEGIN()
@@ -200,7 +232,65 @@ function OUTRAGEGAUGE_TIMER_BEGIN()
     timer:SetUpdateScript('OUTRAGEGAUGE_ON_TIMER')
     timer:Start(0.01)
 end
+function OUTRAGEGAUGE_SAVE_SETTINGS()
+    acutil.saveJSON(g.settingsFileLoc, g.settings)
+end
+function OUTRAGEGAUGE_SHOW_CONTEXTMENU()
+    local context = ui.CreateContextMenu('OUTRAGEGAUGE', 'OutrageGauge Config', 0, 0, 200, 200)
+    ui.AddContextMenuItem(context, 'Cancel', 'None')
+    ui.AddContextMenuItem(context, 'Lock Frame', 'OUTRAGEGAUGE_LOCKPOSITION(true)')
+    ui.AddContextMenuItem(context, 'Mode:Floating', 'OUTRAGEGAUGE_SETSTYLE(0)')
+    ui.AddContextMenuItem(context, 'Mode:Fixed', 'OUTRAGEGAUGE_SETSTYLE(1)')
+    ui.OpenContextMenu(context)
+end
+function OUTRAGEGAUGE_LOCKPOSITION(lock)
+    g.settings.locked=lock
+    OUTRAGEGAUGE_SAVE_SETTINGS()
+    OUTRAGEGAUGE_INIT()
+end
+function OUTRAGEGAUGE_SETSTYLE(style)
+    g.settings.style=style
+    OUTRAGEGAUGE_SAVE_SETTINGS()
+    OUTRAGEGAUGE_INIT()
+end
+function OUTRAGEGAUGE_DEFAULT_SETTINGS()
+    g.settings = {
+        x = 300,
+        y = 300,
+        style = 0,
+        locked=true,
+    }
+    
+end
+function OUTRAGEGAUGE_LOAD_SETTINGS()
+    DBGOUT("LOAD_SETTING")
+    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        AOS_DEFAULT_SETTINGS()
+    else
+        --設定ファイル読み込み成功時処理
+        g.settings = t
+        if (not g.settings.version) then
+            g.settings.version = 0
+        
+        end
+    end
+    
+    OUTRAGEGAUGE_UPGRADE_SETTINGS()
+    OUTRAGEGAUGE_SAVE_SETTINGS()
+
+end
+
+
+function OUTRAGEGAUGE_UPGRADE_SETTINGS()
+    local upgraded = false
+    
+    return upgraded
+end
 function OUTRAGEGAUGE_ON_TIMER()
+
     OUTRAGEGAUGE_RENDER()
 end
 function OUTRAGEGAUGE_RENDER()
@@ -233,10 +323,10 @@ function OUTRAGEGAUGE_RENDER()
                     local color = 'CCFFFF00'
                     local colorshade = 'CC777700'
                    
-                    local wh=300
+                    local wh=40
                     local h = 30
                     
-                    local oy = wh -h- 40
+                    local oy = wh -h
                     local int = 5
                     local ox = (300-maxammo*int)/2
                     local w = maxammo*int
@@ -305,7 +395,7 @@ function OUTRAGEGAUGE_RENDER()
                              math.floor(0x77/2*t)+0x77/2,
                              math.floor(0x00/2*t)+0x00/2)
                         end
-                        pic:DrawBrushHorz(i*sz+25,260,i*sz+sz-int+25,260,'brush_8',ccol)
+                        pic:DrawBrushHorz(i*sz+25,20,i*sz+sz-int+25,20,'brush_8',ccol)
                     end
                     over:SetText('{s32}{ol}{#FFAA66} ' .. tostring(cur) .. ' ')
                 end
@@ -321,4 +411,36 @@ function OUTRAGEGAUGE_RENDER()
             ERROUT(error)
         end
     }
+end
+function OUTRAGEGAUGE_PROCESS_COMMAND(command)
+    local cmd = "";
+    
+    if #command > 0 then
+        cmd = table.remove(command, 1);
+    else
+        CHAT_SYSTEM('[OG]Unrecognized command.')
+    end
+    
+    if cmd == "lock" then
+		OUTRAGEGAUGE_LOCKPOSITION(true)
+		CHAT_SYSTEM("[OG]Position locked.")
+	end
+    if cmd == "unlock" then
+		OUTRAGEGAUGE_LOCKPOSITION(false)
+		CHAT_SYSTEM("[OG]Position unlocked.")
+    end
+    if cmd == "floating" then
+		OUTRAGEGAUGE_SETSTYLE(0)
+		CHAT_SYSTEM("[OG]Changed to floating mode.")
+    end
+    if cmd == "fixed" then
+		OUTRAGEGAUGE_SETSTYLE(1)
+		CHAT_SYSTEM("[OG]Changed to fixed mode.")
+    end
+    if cmd == "reset" then
+		OUTRAGEGAUGE_DEFAULT_SETTINGS()
+        OUTRAGEGAUGE_SAVE_SETTINGS()
+        OUTRAGEGAUGE_INIT()
+		CHAT_SYSTEM("[OG]Reset settings.")
+    end
 end

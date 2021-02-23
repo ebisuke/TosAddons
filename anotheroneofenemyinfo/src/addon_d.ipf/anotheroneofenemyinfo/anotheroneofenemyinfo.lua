@@ -276,7 +276,7 @@ function AOE_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     
     
     if (msg == "GAME_START_3SEC") then
-        libaodrawpic=LIBAODRAWPICV1_0
+        libaodrawpic=LIBAODRAWPICV1_1
         g.frame:ShowWindow(1)
         AOE_LOAD_SETTINGS()
         AOE_INIT()

@@ -57,7 +57,7 @@ g.fixhp = nil
 g.fanatic = nil
 
 g.buffs = {}
-local libaodrawpic=LIBAODRAWPICV1_0
+local libaodrawpic=LIBAODRAWPICV1_1
 
 --ライブラリ読み込み
 CHAT_SYSTEM("[AOS]loaded")
@@ -262,7 +262,7 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-            libaodrawpic=LIBAODRAWPICV1_0
+            libaodrawpic=LIBAODRAWPICV1_1
             --addon:RegisterMsg('GAME_START_3SEC', 'CHALLENGEMODESTUFF_SHOW')
             --ccするたびに設定を読み込む
             addon:RegisterOpenOnlyMsg('STAT_UPDATE', 'AOS_HEADSUPDISPLAY_ON_MSG');
@@ -450,7 +450,7 @@ function AOS_HEADSUPDISPLAY_ON_MSG(frame, msg, argStr, argNum)
     local stat = info.GetStat(session.GetMyHandle());
     if (msg == "GAME_START") then
         g.frame:ShowWindow(1)
-        libaodrawpic=LIBAODRAWPICV1_0
+        libaodrawpic=LIBAODRAWPICV1_1
         AOS_LOAD_SETTINGS()
         AOS_INIT()
         g.frame:SetOffset(g.settings.x, g.settings.y)
