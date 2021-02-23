@@ -209,6 +209,7 @@ function OUTRAGEGAUGE_INIT()
             end
             
             OUTRAGEGAUGE_RENDER()
+            OUTRAGEGAUGE_TIMER_BEGIN()
         end,
         catch = function(error)
             ERROUT(error)
