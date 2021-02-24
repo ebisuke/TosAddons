@@ -269,7 +269,7 @@ function OUTRAGEGAUGE_LOAD_SETTINGS()
     if err then
         --設定ファイル読み込み失敗時処理
         DBGOUT(string.format('[%s] cannot load setting files', addonName))
-        AOS_DEFAULT_SETTINGS()
+        OUTRAGEGAUGE_DEFAULT_SETTINGS()
     else
         --設定ファイル読み込み成功時処理
         g.settings = t
