@@ -83,6 +83,9 @@ function ACQUIRERELICREWARD_ON_INIT(addon, frame)
     }
 end
 function ACQUIRERELICREWARD_GAME_START_3SEC()
+    ACQUIRERELICREWARD_PROCESS()
+end
+function ACQUIRERELICREWARD_PROCESS()
     local mapClsName = session.GetMapName();
 
     if(mapClsName ==  "c_Klaipe" or mapClsName ==  "c_fedimian" or mapClsName ==  "c_orsha")then
@@ -105,9 +108,12 @@ function ACQUIRERELICREWARD_GAME_START_3SEC()
                     if ccnt==0 then
                         --ui.SysMsg('[ARR]Acquiring Relic Rewards.')
                     end
-                    ReserveScript(string.format('ACQUIRERELICREWARD_ACQUIRE_REWARD("%s")', relicCls.ClassName),ccnt*0.6)
-                    
+                    --ReserveScript(string.format('ACQUIRERELICREWARD_ACQUIRE_REWARD("%s")', relicCls.ClassName),ccnt*3)
+                    ACQUIRERELICREWARD_ACQUIRE_REWARD(relicCls.ClassName)
+
                     ccnt=ccnt+1
+                    ReserveScript("ACQUIRERELICREWARD_PROCESS()",1)
+                    break
                 end
             end
         end
