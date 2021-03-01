@@ -524,5 +524,20 @@
       "ui",
       "outrage"
     ]
+  },
+  {
+    "name": "BypassDialogAssisterDungeon",
+    "file": "bypassdialogassisterdungeon",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "bypassdialogassisterdungeon-v0.0.1",
+    "unicode": "📖",
+    "description": "アシスターダンジョンのダイアログを自動でスキップします",
+    "tags": [
+      "ui",
+      "skip",
+      "dialog",
+      "assister"
+    ]
   }
 ]
