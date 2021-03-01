@@ -55,8 +55,8 @@
     "name": "Continuous Reinforce",
     "file": "continuousreinforce",
     "extension": "ipf",
-    "fileVersion": "v0.0.4",
-    "releaseTag": "continuousreinforce-v0.0.4",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "continuousreinforce-v0.1.0",
     "unicode": "📖",
     "description": "連続で金床強化できるようにするアドオンです",
     "tags": [

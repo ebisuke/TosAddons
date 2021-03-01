@@ -137,8 +137,8 @@ function CONTINUOUSREINFORCE_REINFORCE_OPEN(frame)
 	EBI_try_catch{
 		try=function()
 			--リサイズ
-			frame:Resize(390,430)
-			local editraw =frame:CreateOrGetControl("edit","delaytime",260,275,80,30)
+			frame:Resize(390,530)
+			local editraw =frame:CreateOrGetControl("edit","delaytime",260,375,80,30)
 			local edit = tolua.cast(editraw, 'ui::CEditControl')
 			edit:SetNumberMode(1)
 			edit:SetEnableEditTag(1);
@@ -147,7 +147,7 @@ function CONTINUOUSREINFORCE_REINFORCE_OPEN(frame)
 			edit:SetMinNumber(1)
 			edit:SetMaxNumber(500)
 			edit:SetFontName('white_20_ol')
-			local richtextraw =frame:CreateOrGetControl("richtext","setsumei",40,270,100,60)
+			local richtextraw =frame:CreateOrGetControl("richtext","setsumei",40,370,100,60)
 			richtextraw:SetText("{@st41b}連続金床{nl}ディレイ時間(10ms単位)")
 
 		end,
