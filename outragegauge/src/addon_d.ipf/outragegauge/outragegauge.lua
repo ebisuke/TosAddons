@@ -193,7 +193,7 @@ function OUTRAGEGAUGE_INIT()
             if g.settings.style==0 then
                 FRAME_AUTO_POS_TO_OBJ(frame, session.GetMyHandle(), -150, 50, 1, 1, 1)
             else
-                frame:StopUpdateScript()
+                frame:StopUpdateScript("_FRAME_AUTOPOS_BY_FRAMEPOS")
                 frame:SetOffset(g.settings.x,g.settings.y)
             end
             if g.settings.locked then

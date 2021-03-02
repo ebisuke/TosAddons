@@ -12,6 +12,8 @@
 		<groupbox name="headerBox" rect="0 0 600 55" margin="0 16 0 0" layout_gravity="center top" skin="test_socket_topskin" hittest="false"/>
 		<button name="xBtn" rect="0 0 40 40" margin="0 20 25 0" layout_gravity="right top" image="testclose_button" texttooltip="CLOSE" LBtnUpScp="AWWARDROBE_CLOSE"/>
 		<richtext name="headerText" rect="0 0 500 50" parent="headerBox" margin="0 5 0 0" layout_gravity="center center" caption="{@st43}AW Wardrobe{/}" hittest="false"/>
+		<groupbox name="equip" rect="0 0 400 400" margin="0 0 0 0" layout_gravity="left top" draw="true" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="false" skin="None"/>
+		
 		<groupbox name="gbox_Equipped" parent="equip" rect="0 0 260 290" margin="10 91 0 0" layout_gravity="left top" draw="true" tabname="tab_Equipped" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="true" skin="None"/>
 		<groupbox name="gbox_Dressed" parent="equip" rect="0 0 260 290" margin="270 91 0 0" layout_gravity="left top" draw="true" tabname="tab_Dressed" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="true" skin="None"/>
 		<!-- left -->
@@ -95,7 +97,67 @@
 		<slotset name="LEGcard_labelset" parent="LEGcardGbox" rect="0 0 114 176" margin="0 0 0 0" layout_gravity="center center" col="1" enableselect="false" maxselect="3" movepop="false" scrollbar="false" row="1" size="114 176" spc="2 3" hittest="false"/>
 		<slot name="LEGcard_slot" parent="mainGbox" rect="0 0 100 150" margin="0 0 0 0" layout_gravity="center center" dropsound="icon_get_down" enableselect="false" movepop="false" scrollbar="false" hittest="false" picksound="icon_pick_up" size="100 150" skin="legend_cardslot1"/>
 		
-
+		<groupbox name="gbox_Ikor"  rect="0 0 360 290" margin="30 111 0 0" layout_gravity="left top" draw="true" tabname="tab_Ikor" hittestbox="false" resizebyparent="false" resizebyresolution="true" scrollbar="true" skin="None"/>
+		<slot name="SHIRT_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 0 0 0" layout_gravity="left top" draw="true" skin="shirt" hittestbox="true"/>
+		<slot name="PANTS_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 50 0 0" layout_gravity="left top" draw="true" skin="pants" hittestbox="true"/>
+		<slot name="GLOVES_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 100 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="gloves"/>
+		<slot name="BOOTS_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 150 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="boots"/>
+		<slot name="RH_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="150 0 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="rh"/>
+		<slot name="LH_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="150 50 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="lh"/>
+		
+		<slot name="SHIRT" parent="gbox_Ikor" rect="0 0 50 50" margin="5 0 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="shirt" hittestbox="false" texttooltip="{@st59}상의{/}"/>
+		<slot name="PANTS" parent="gbox_Ikor" rect="0 0 50 50" margin="5 50 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="pants" hittestbox="false" texttooltip="{@st59}하의{/}"/>
+		<slot name="GLOVES" parent="gbox_Ikor" rect="0 0 50 50" margin="5 100 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="gloves" texttooltip="{@st59}장갑{/}"/>
+		<slot name="BOOTS" parent="gbox_Ikor" rect="0 0 50 50" margin="5 150 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="boots" texttooltip="{@st59}신발{/}"/>
+		<slot name="RH" parent="gbox_Ikor" rect="0 0 50 50" margin="150 0 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="rh" texttooltip="{@st59}왼손{/}"/>
+		<slot name="LH" parent="gbox_Ikor" rect="0 0 50 50" margin="150 50 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="lh" texttooltip="{@st59}오른손{/}"/>
+		<!-- <slot name="RH2_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 415 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="rh"/>
+		<slot name="LH2_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 480 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="lh"/>
+		<slot name="RH2" parent="gbox_Ikor" rect="0 0 50 50" margin="5 415 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="rh" texttooltip="{@st59}왼손{/}"/>
+		<slot name="LH2" parent="gbox_Ikor" rect="0 0 50 50" margin="5 480 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="lh" texttooltip="{@st59}오른손{/}"/>
+		<slot name="GLOVES_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 135 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="gloves"/> -->
+		
+		<animpicture name="GLOVESANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 0 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="BOOTSANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 50 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="SHIRTANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 100 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="PANTSANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 150 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+	
+		<animpicture name="RHANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="148 0 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="LHANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="148 50 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		
+		<!-- <animpicture name="RH2ANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 415 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="LH2ANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 490 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+	 -->
+		 <slot name="R_SHIRT_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="60 0 0 0" layout_gravity="left top" draw="true" skin="shirt" hittestbox="true"/>
+		<slot name="R_PANTS_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="60 50 0 0" layout_gravity="left top" draw="true" skin="pants" hittestbox="true"/>
+		<slot name="R_GLOVES_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="60 100 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="gloves"/>
+		<slot name="R_BOOTS_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="60 150 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="boots"/>
+		<slot name="R_RH_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="205 0 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="rh"/>
+		<slot name="R_LH_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="205 50 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="lh"/>
+		
+		<slot name="R_SHIRT" parent="gbox_Ikor" rect="0 0 50 50" margin="60 0 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="shirt" hittestbox="false" texttooltip="{@st59}상의{/}"/>
+		<slot name="R_PANTS" parent="gbox_Ikor" rect="0 0 50 50" margin="60 50 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" skin="pants" hittestbox="false" texttooltip="{@st59}하의{/}"/>
+		<slot name="R_GLOVES" parent="gbox_Ikor" rect="0 0 50 50" margin="60 100 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="gloves" texttooltip="{@st59}장갑{/}"/>
+		<slot name="R_BOOTS" parent="gbox_Ikor" rect="0 0 50 50" margin="60 150 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="boots" texttooltip="{@st59}신발{/}"/>
+		<slot name="R_RH" parent="gbox_Ikor" rect="0 0 50 50" margin="205 0 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="rh" texttooltip="{@st59}왼손{/}"/>
+		<slot name="R_LH" parent="gbox_Ikor" rect="0 0 50 50" margin="205 50 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="lh" texttooltip="{@st59}오른손{/}"/>
+		<!-- <slot name="R_RH2_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 415 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="rh"/>
+		<slot name="R_LH2_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 480 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="lh"/>
+		<slot name="R_RH2" parent="gbox_Ikor" rect="0 0 50 50" margin="5 415 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="rh" texttooltip="{@st59}왼손{/}"/>
+		<slot name="R_LH2" parent="gbox_Ikor" rect="0 0 50 50" margin="5 480 0 0" layout_gravity="left top"  dropsound="icon_get_down" movepop="false" oversound="button_cursor_over_3" picksound="icon_pick_up" draw="false" hittestbox="false" skin="lh" texttooltip="{@st59}오른손{/}"/>
+		<slot name="R_GLOVES_bg" parent="gbox_Ikor" rect="0 0 50 50" margin="5 135 0 0" layout_gravity="left top" draw="true" hittestbox="true" skin="gloves"/> -->
+		
+		<animpicture name="R_GLOVESANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="58 0 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="R_BOOTSANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="58 50 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="R_SHIRTANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="58 100 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="R_PANTSANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="58 150 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+	
+		<animpicture name="R_RHANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="203 0 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="R_LHANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="203 50 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		
+		<!-- <animpicture name="R_RH2ANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 415 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+		<animpicture name="R_LH2ANIM" parent="gbox_Ikor" rect="0 0 53 53" margin="2 490 0 0" layout_gravity="left top" animcount="4" blend="100" hideAnimEnd="true" hittest="false" image="inventory_ani" imagechangescp="AWWARDROBE_SLOTANIM_CHANGEIMG" loop="false" playanim="false" spacex="1" spacey="0" stretch="true" texelheight="74" texelwidth="74" texelx="0" texely="0" ticktime="0.04"/>
+	 -->
 		<timer name="addontimer" rect="0 0 10 10"/>
 	</controls>
 </uiframe>

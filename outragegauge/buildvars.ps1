@@ -1,3 +1,3 @@
 $addonname="outragegauge"
 
-$version="v0.1.4"
+$version="v0.1.5"
