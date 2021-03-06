@@ -11,5 +11,6 @@
         611,
         611,
         "empty-block"
-    ]
+    ],
+    "lua.targetVersion": "5.3"
 }

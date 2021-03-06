@@ -555,4 +555,20 @@
       "item"
     ]
   }
+  ,
+  {
+    "name": "Another One Of Statbars",
+    "file": "anotheroneofstatbars",
+    "extension": "ipf",
+    "fileVersion": "v0.2.0",
+    "releaseTag": "anotheroneofstatbars-v0.2.0",
+    "unicode": "📖",
+    "description": "Another One Of Statbars",
+    "tags": [
+      "ui",
+      "hud",
+      "headsupdisplay",
+      "stat"
+    ]
+  }
 ]

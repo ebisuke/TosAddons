@@ -235,13 +235,55 @@ function g.inject(pic)
                 ERROUT('Brush not found:'..brush)
         end
     end
-    
+    function pic.DrawBrushHorzNoTreat(self,x,y,xx,yy,brush,color)
+        if xx<x then
+            local swap=xx
+            xx=x
+            x=swap
+        end
+        if yy<y then
+            local swap=yy
+            yy=y
+            y=swap
+        end
+        local sz=math.floor(g.images[brush])
+        local szl=g.images[brush]
+        if g.images[brush] then
+            
+            local elem=self:CreateOrGetControl("groupbox","libaodrawpicelem"..self._drewElementCount,x,y,30,30)
+            AUTO_CAST(elem)
+            
+            elem:SetSkinName('sb_'..brush)
+            
+            elem:RemoveAllChild()
+            elem:EnableScrollBar(0)
+            --elem:SetSkinName('bg2')
+            elem:SetColorTone(color)
+            
+            elem:Resize(xx-x+sz,szl)
+            elem:SetOffset(math.ceil(x-szl/2),math.ceil(y-sz/2+1))
+            elem:EnableHitTest(0)
+            self._drewElementCount=self._drewElementCount+1
+        
+        else
+                ERROUT('Brush not found:'..brush)
+        end
+    end
     function pic.DrawBrushIcon(self,x,y,brush,color)
         local elem=self:CreateOrGetControl("picture","libaodrawpicelem"..self._drewElementCount,x,y,1,1)
         AUTO_CAST(elem)
         elem:SetImage(brush)
         elem:SetOffset(elem:GetX()-elem:GetImageWidth()/2,elem:GetY()-elem:GetImageHeight()/2)
         elem:Resize(elem:GetImageWidth(),elem:GetImageHeight())
+        elem:SetColorTone(color)
+        elem:EnableHitTest(0)
+        self._drewElementCount=self._drewElementCount+1
+    end
+    function pic.DrawBrushIconWithSize(self,x,y,w,h,brush,color)
+        local elem=self:CreateOrGetControl("picture","libaodrawpicelem"..self._drewElementCount,x,y,w,h)
+        AUTO_CAST(elem)
+        elem:SetImage(brush)
+        elem:SetEnableStretch(1)
         elem:SetColorTone(color)
         elem:EnableHitTest(0)
         self._drewElementCount=self._drewElementCount+1
@@ -253,7 +295,7 @@ end
 
 function LIBAODRAWPIC_ON_INIT(addon, frame)
 end
-LIBAODRAWPICV1_1=g
+LIBAODRAWPICV1_2=g
 
 function LIBAODRAWPIC_TEST()
 
