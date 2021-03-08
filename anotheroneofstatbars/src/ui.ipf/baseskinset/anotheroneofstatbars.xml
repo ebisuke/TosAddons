@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <skinset name="Base">
 	<imagelist category="aos_imgs">
+	
 	</imagelist>
 	<skinlist category="frames">
+		<skin name="aos_center_dia_skin" texture="\skin\aos_centerdia.tga">
+            <img name="slot" imgrect="0 0 1 1"/>
+			<img name="mouseon" imgrect="0 0 1 1"/>
+			<img name="cooltime" imgrect="0 0 82 82"/>
+			<img name="selected" imgrect="0 0 1 1"/>
+        </skin>
 	</skinlist>
 </skinset>

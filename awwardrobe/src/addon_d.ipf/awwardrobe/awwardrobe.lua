@@ -63,7 +63,7 @@ g.tab_aw = TAB_EQUIP
 g.tab_config = TAB_EQUIP
 g.max_cards = 13 --カードの最大値
 g.framename = "awwardrobe"
-g.debug = true
+g.debug = false
 g.interlocked = false
 g.logpath = string.format('../addons/%s/log.txt', addonNameLower)
 g.reservedscript = {}
@@ -95,6 +95,8 @@ g.effectingikorspot = {
     PANTS = true, --下半身
     SHIRT = true, --上半身
 }
+g.tempitemlist = {}--アイテム情報一時置き
+
 AWWARDROBE_TBL = {}
 local translationtable = {
         
@@ -138,7 +140,11 @@ local translationtable = {
         tabikor = {jp = "イコル", eng = "Icor"},
         dlgcarddetach = {jp = "カードを取り外しますか？費用は自動的にチーム倉庫から引き出されます。{nl}費用:%d", eng = "Do you want to remove cards?{nl}Cost:%d"},
         dlgcardattach = {jp = "既存のカードを取り外し、設定したカードを取り付けますか？費用は自動的にチーム倉庫から引き出されます。{nl}費用:%d", eng = "Do you want to remove the existing card and install the configured card?{nl}Cost:%d"},
+        dlgikordetach = {jp = "合致するイコルを自動で取り外しますか？費用は自動的にチーム倉庫から引き出されます。{nl}費用:%d", eng = "Do you want to remove icors?{nl}Cost:%d"},
+        dlgikorattach = {jp = "イコルを自動で取り付けますか？すでに装着済みのイコルは外されます。費用は自動的にチーム倉庫から引き出されます。{nl}費用:%d", eng = "Do you want to attach icors?{nl}Cost:%d"},
+        
         insufficientsilver = {jp = "シルバーが足りません。", eng = "Insufficient silver."},
+        needtoken = {jp = "この機能を使用するには課金トークンが有効になっている必要があります", eng = "The token must be enabled in order to use this feature."},
 }
 local function EP12()
     if (option.GetCurrentCountry() ~= "Japanese") then
@@ -389,7 +395,7 @@ function AWWARDROBE_UPGRADE_SETTINGS()
         }
         AWWARDROBE_SORTING()
         
-        g.settings.version = 3
+        g.settings.version = 4
         CHAT_SYSTEM("[AWW]Settings Verup 3->4")
         upgraded = true;
     end
@@ -557,9 +563,9 @@ function AWWARDROBE_ON_DEPOSIT()
                 AWWARDROBE_SAVE_SETTINGS()
                 --WEAR
                 --@TODO need to calc
-                --ui.MsgBox(string.format(L_('dlgcarddetach'),AWWARDROBE_CALCULATE_SILVER_DETACH(tbl.data)),
-                --tring.format('AWWARDROBE_DETACH_IKOR(nil,AWWARDROBE_GET_CARDDATABYINDEX(%d))',selected),'None')
-                AWWARDROBE_DETACH_IKOR(tbl.data)
+                ui.MsgBox(string.format(L_('dlgikordetach'), AWWARDROBE_CALCULATE_SILVER_IKORDETACH(tbl.data)),
+                    string.format('AWWARDROBE_DETACH_IKOR(AWWARDROBE_GET_IKORDATABYINDEX(%d))', selected), 'None')
+            --AWWARDROBE_DETACH_IKOR(tbl.data)
             else
                 ui.SysMsg(L_("alertplzselect"))
             end
@@ -609,7 +615,10 @@ function AWWARDROBE_ON_WITHDRAW()
                 AWWARDROBE_SAVE_SETTINGS()
                 --WEAR
                 --AWWARDROBE_ATTACH_CARDS(ui.GetFrame(g.framename), tbl.data)
-                AWWARDROBE_ATTACH_IKOR(tbl.data)
+                ui.MsgBox(string.format(L_('dlgikorattach'), AWWARDROBE_CALCULATE_SILVER_IKORATTACH(tbl.data)),
+                string.format('AWWARDROBE_ATTACH_IKOR(AWWARDROBE_GET_IKORDATABYINDEX(%d))', selected), 'None')
+        
+                --AWWARDROBE_ATTACH_IKOR(tbl.data)
             else
                 ui.SysMsg(L_("alertplzselect"))
             end
@@ -621,6 +630,9 @@ end
 
 function AWWARDROBE_GET_CARDDATABYINDEX(index)
     return g.settings.wardrobecard[index].data
+end
+function AWWARDROBE_GET_IKORDATABYINDEX(index)
+    return g.settings.wardrobeikor[index].data
 end
 function AWWARDROBE_DETACH_CARDS(frame, tbl)
     AWWARDROBE_try(function()
@@ -864,46 +876,48 @@ function AWWARDROBE_ATTACH_CARDS(frame, tbl)
     end)
 end
 function AWWARDROBE_GENERATE_IKORPROPSTRING(targetItem, userandom, usefixed)
-    local targetItemObj=GetIES(targetItem:GetObject())
+    local targetItemObj = GetIES(targetItem:GetObject())
     local propstr = ""
+    local basicList = GET_EQUIP_TOOLTIP_PROP_LIST(targetItemObj)
+    local list = {}
+    local basicTooltipPropList = StringSplit(targetItemObj.BasicTooltipProp, ';')
+    for i = 1, #basicTooltipPropList do
+        local basicTooltipProp = basicTooltipPropList[i]
+        list = GET_CHECK_OVERLAP_EQUIPPROP_LIST(basicList, basicTooltipProp, list)
+    end
+    local targetItemOld = GetClass('Item', targetItemObj.InheritanceItemName)
+    if targetItemOld == nil then
+        targetItemOld = GetClass('Item', targetItemObj.InheritanceRandomItemName)
+    end
+        
+    local spname =  targetItemOld.EqpType;
+    propstr=spname..">"
     if usefixed then
-        local basicList = GET_EQUIP_TOOLTIP_PROP_LIST(targetItemObj)
-        local list = {}
-        local basicTooltipPropList = StringSplit(targetItemObj.BasicTooltipProp, ';')
-        for i = 1, #basicTooltipPropList do
-            local basicTooltipProp = basicTooltipPropList[i]
-            list = GET_CHECK_OVERLAP_EQUIPPROP_LIST(basicList, basicTooltipProp, list)
+        local tgtclass = GetClass('Item', targetItemObj.InheritanceItemName)
+        
+        
+        for i = 1, #list do
             local propName = list[i]
-            local propValue = TryGetProp(targetItemObj, propName, 0)
+            local propValue = TryGetProp(tgtclass, propName, 0)
             local needToShow = true
             for j = 1, #basicTooltipPropList do
                 if basicTooltipPropList[j] == propName then
                     needToShow = false
                 end
             end
-            if needToShow then
-                propstr = propstr .. propName .. ':' .. propValue .. ','
-            end
-        end
-        
-        local list2 = GET_EUQIPITEM_PROP_LIST()
-        
-        
-        for i = 1, #list2 do
-            local propName = list2[i]
-            local propValue = TryGetProp(targetItemObj, propName, 0)
-            if propValue ~= 0 then
-                propstr = propstr .. propName .. ':' .. propValue .. ','
+            local pass = false
+            --if propName ~= "MINATK" and propName ~= 'MAXATK' and propName ~= 'MATK'and propName ~= 'DEF' then
+            pass = true
+            --end
             
-            end
-        end
-        for i = 1, 3 do
-            local propName = "HatPropName_" .. i
-            local propValue = "HatPropValue_" .. i
-            if targetItemObj[propValue] ~= 0 and targetItemObj[propName] ~= "None" then
+            if needToShow and propName~='HiddenProp' and pass and propValue ~= 0 then
                 propstr = propstr .. propName .. ':' .. propValue .. ','
             end
         end
+        
+     
+        
+        AWWARDROBE_DBGOUT("FIXEDPROP" .. propstr)
     end
     if userandom then
         local maxRandomOptionCnt = 6
@@ -936,11 +950,115 @@ function AWWARDROBE_GENERATE_IKORPROPSTRING(targetItem, userandom, usefixed)
             
             if itemObj[propValue] ~= 0 and itemObj[propName] ~= "None" then
                 local opName = string.format("%s %s", ClMsg(clientMessage), ScpArgMsg(itemObj[propName]))
-                propstr = propstr .. clientMessage .. ':' .. itemObj[propValue] .. ','
+                propstr = propstr .. itemObj[propName] .. ":" .. itemObj[propValue] .. ','
+            end
+        end
+        
+        AWWARDROBE_DBGOUT("RANDOMPROP" .. propstr)
+    end
+    return propstr
+end
+function AWWARDROBE_CALCULATE_SILVER_IKORDETACH(tbl)
+    
+    local releasefixed = {}
+    local releaserandom = {}
+    local releasemixed = {}
+    local equipItemList = session.GetEquipItemList();
+    local totalPrice = 0
+    local count = 0
+    for i = 0, equipItemList:Count() - 1 do
+        local equipItem = equipItemList:GetEquipItemByIndex(i)
+        local spname = item.GetEquipSpotName(equipItem.equipSpot);
+        if spname == 'TRINKET' then
+            spname = 'LH'
+        end
+        if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
+            local itemrandom = AWWARDROBE_GENERATE_IKORPROPSTRING(equipItem, true, false)
+            local itemfixed = AWWARDROBE_GENERATE_IKORPROPSTRING(equipItem, false, true)
+            local pass = false
+            if  tbl[spname].random then
+                if tbl[spname].random.props then
+                    if tbl[spname].random.props == itemrandom then
+                        pass = true
+                    end
+                end
+            end
+            if tbl[spname].fixed then
+                if tbl[spname].fixed.props then
+                    if tbl[spname].fixed.props == itemfixed then
+                        pass = true
+                    end
+                end
+            end
+            if pass and true ~= equipItem.isLockState then
+                -- ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", equipItem:GetIESID()), delay)
+                if tbl[spname].random and itemrandom ~= "" then
+                    releaserandom[#releaserandom + 1] = equipItem
+                    releasemixed[equipItem:GetIESID()] = equipItem.equipSpot
+                end
+                if tbl[spname].fixed and itemfioxed ~= "" then
+                    releasefixed[#releasefixed + 1] = equipItem
+                    releasemixed[equipItem:GetIESID()] = equipItem.equipSpot
+                end
+            
             end
         end
     end
-    return propstr
+    
+    for _, invItem in ipairs(releaserandom) do
+        local invItemObj = GetIES(invItem:GetObject())
+        local eachPrice = GET_OPTION_RELEASE_COST(invItemObj, nil, 0)
+        totalPrice = totalPrice + eachPrice
+        count = count + 1
+    end
+    for _, invItem in ipairs(releasefixed) do
+        local invItemObj = GetIES(invItem:GetObject())
+        local eachPrice = GET_OPTION_RELEASE_COST(invItemObj, nil, 0)
+        totalPrice = totalPrice + eachPrice
+        count = count + 1
+    end
+    return totalPrice, count
+
+end
+
+function AWWARDROBE_CALCULATE_SILVER_IKORATTACH(tbl)
+    local totalPrice = 0
+    local count = 0
+    local equipItemList = session.GetEquipItemList();
+    for i = 0, equipItemList:Count() - 1 do
+        --装備しているかチェック
+        local equipItem = equipItemList:GetEquipItemByIndex(i)
+        local spname = item.GetEquipSpotName(equipItem.equipSpot);
+        if spname == 'TRINKET' then
+            spname = 'LH'
+        end
+        if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
+            if true ~= equipItem.isLockState then
+                
+                local invItemObj=GetIES(equipItem:GetObject())
+                if tbl[spname].random then
+                  
+                    if TryGetProp(invItemObj, 'InheritanceRandomItemName', 'None') ~= 'None' and AWWARDROBE_FINDIKORBYPROPS(tbl[spname].random.props) then
+                        --OUT
+                        local eachPrice = GET_OPTION_RELEASE_COST(invItemObj, nil, 0)
+                        totalPrice=totalPrice+eachPrice
+                        count=count+1
+                    end
+                end
+                if tbl[spname].fixed then
+                    if TryGetProp(invItemObj, 'InheritanceItemName', 'None') ~= 'None'and AWWARDROBE_FINDIKORBYPROPS(tbl[spname].fixed.props)  then
+                        --OUT
+                        local eachPrice = GET_OPTION_RELEASE_COST(invItemObj, nil, 0)
+                        totalPrice=totalPrice+eachPrice
+                        count=count+1
+                    end
+                end
+            end
+
+        end
+    end
+    return totalPrice
+
 end
 function AWWARDROBE_DETACH_IKOR(tbl)
     AWWARDROBE_try(function()
@@ -953,6 +1071,12 @@ function AWWARDROBE_DETACH_IKOR(tbl)
             ui.SysMsg(L_("alertworkingothers"))
             return
         end
+        local isPremiumState = session.loginInfo.IsPremiumState(ITEM_TOKEN);
+        if isPremiumState == false then
+            
+            ui.SysMsg(L_("needtoken"))
+            return
+        end
         if (awframe:IsVisible() == 0) then
             
             ui.SysMsg(L_("alertopenaw"))
@@ -960,8 +1084,8 @@ function AWWARDROBE_DETACH_IKOR(tbl)
         end
         ui.SysMsg(L_("alertstart"))
         
-        AWWARDROBE_INTERLOCK(true)
-        local needzeny, todetach = 0, true or AWWARDROBE_CALCULATE_SILVER_IKORDETACH(tbl)
+        
+        local needzeny = AWWARDROBE_CALCULATE_SILVER_IKORDETACH(tbl)
         local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
         local cnt, visItemList = GET_INV_ITEM_COUNT_BY_PROPERTY({{Name = 'ClassName', Value = MONEY_NAME}}, false, itemList);
         local visItem = visItemList[1];
@@ -996,7 +1120,7 @@ function AWWARDROBE_DETACH_IKOR(tbl)
         
         local releasefixed = {}
         local releaserandom = {}
-        
+        local releasemixed = {}
         local equipItemList = session.GetEquipItemList();
         for i = 0, equipItemList:Count() - 1 do
             local equipItem = equipItemList:GetEquipItemByIndex(i)
@@ -1006,68 +1130,400 @@ function AWWARDROBE_DETACH_IKOR(tbl)
             end
             if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
                 local itemrandom = AWWARDROBE_GENERATE_IKORPROPSTRING(equipItem, true, false)
-                local itemfixed = AWWARDROBE_GENERATE_IKORPROPSTRING(equipItem, true, false)
-                local pass = true
+                local itemfixed = AWWARDROBE_GENERATE_IKORPROPSTRING(equipItem, false, true)
+                local pass = false
                 if tbl[spname].random then
-                    if tbl[spname].random ~= itemrandom then
-                        pass = false
+                    if tbl[spname].random.props then
+                        if tbl[spname].random.props == itemrandom then
+                            pass = true
+                        end
                     end
                 end
-                if tbl[spname].itemfixed then
-                    if tbl[spname].fixed ~= itemfixed then
-                        pass = false
+                if tbl[spname].fixed then
+                    if tbl[spname].fixed.props then
+                        if tbl[spname].fixed.props == itemfixed then
+                            pass = true
+                        end
                     end
                 end
                 if pass and true ~= equipItem.isLockState then
-                    ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", equipItem:GetIESID()), delay)
-                    delay = delay + 0.5
-                    if tbl[spname].random then
+                    
+                    if tbl[spname].random and itemrandom ~= "" then
                         releaserandom[#releaserandom + 1] = equipItem
+                        releasemixed[equipItem:GetIESID()] = equipItem.equipSpot
                     end
-                    if tbl[spname].itemfixed then
+                    if tbl[spname].fixed and itemfioxed ~= "" then
                         releasefixed[#releasefixed + 1] = equipItem
+                        releasemixed[equipItem:GetIESID()] = equipItem.equipSpot
                     end
                 
                 end
             end
         end
-        --イコルを外す
-        local script = 'session.ResetItemList()'
-        
-        for invItem in releasefixed do
-            script = script .. string.format(';session.AddItemID("%s", 1)', invItem:GetIESID())
+        --装備を外す
+        for iesid, spot in pairs(releasemixed) do
+            ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", iesid), delay)
+            delay = delay + 0.5
         
         end
-        script = script .. 'AWWARDROBE__DIALOG_TRANSACTION("RELEASE_ITEM_ICOR_MULTIPLE")'
-        ReserveScript(script, delay)
-        delay = delay + 1.5
-        --  for i=1,g.max_cards do
-        --      for k,v in pairs(todetach) do
-        --          --カードを外す
-        --          local cardInfo = equipcard.GetCardInfo(i);
-        --          if cardInfo and v and v.count>0 and v.clsid==cardInfo:GetCardID() and v.lv==cardInfo.cardLv then
-        --              AWWARDROBE_DBGOUT('UNEQ'..i)
-        --              ReserveScript(string.format([[pc.ReqExecuteTx_NumArgs("SCR_TX_UNEQUIP_CARD_SLOT", tostring(%d)..' 1');]],i-1),delay)
-        --              delay=delay+1
-        --              todetach[k].count=todetach[k].count-1
-        --              break
-        --          end
-        --      end
-        --  end
-        --  --預ける
-        --  for _,v in pairs(tbl) do
-        --      if v and v.clsid~=0 then
-        --      ReserveScript(string.format([[AWWARDROBE_DEPOSITCARD(%d,%d)]],v.clsid,v.lv),delay)
-        --          delay=delay+0.75
-        --      end
-        --  end
-        --stand up
+        if #releaserandom > 0 then
+            local script = 'AWWARDROBE__RESET_ITEMLIST();'
+            
+            for i, invItem in pairs(releaserandom) do
+                --ランダムイコルを外す
+                script = script .. 'AWWARDROBE__ADD_ITEM("' .. invItem:GetIESID() .. '");'
+            
+            end
+            
+            script = script .. 'AWWARDROBE__DIALOG_TRANSACTION("RELEASE_ITEM_ICOR_RANDOM_MULTIPLE");'
+            ReserveScript(script, delay)
+            delay = delay + 5
+        end
+        
+        if #releasefixed > 0 then
+            local script = 'AWWARDROBE__RESET_ITEMLIST();'
+            
+            for i, invItem in pairs(releasefixed) do
+                --ランダムイコルを外す
+                script = script .. 'AWWARDROBE__ADD_ITEM("' .. invItem:GetIESID() .. '");'
+            
+            end
+            
+            script = script .. 'AWWARDROBE__DIALOG_TRANSACTION("RELEASE_ITEM_ICOR_MULTIPLE");'
+            ReserveScript(script, delay)
+            delay = delay + 5
+        end
+        --装備を戻す
+        for iesid, spot in pairs(releasemixed) do
+            local spname = item.GetEquipSpotName(spot);
+            ReserveScript(string.format("AWWARDROBE_WEAR(\"%s\",\"%s\")", iesid, spname), delay)
+            delay = delay + 0.5
+        end
+        --イコルを預ける
+    
+         
+        for i, tp in pairs(tbl) do
+            
+            if tp.random then
+                AWWARDROBE_DBGOUT("DEPOS"..tp.random.props)
+                local script = 'AWWARDROBE_DEPOSIT_IKOR_BY_PROPS("'..tp.random.props..'");'
+                ReserveScript(script, delay)
+                delay = delay + 0.8
+            end
+            if tp.fixed then
+                local script = 'AWWARDROBE_DEPOSIT_IKOR_BY_PROPS("'..tp.fixed.props..'");'
+                ReserveScript(script, delay)
+                delay = delay + 0.8
+            end
+        end
+        
+        
+        
+    
         ReserveScript("if control.IsRestSit() then control.RestSit() end", delay)
         delay = delay + 1.2
         ReserveScript('ui.SysMsg("' .. L_("alertcomplete") .. '");AWWARDROBE_INTERLOCK(false)', delay)
     end)
 end
+function AWWARDROBE_FINDIKORBYPROPS(props)
+    --イコルを探す
+    for guid, invItem, invItemObj in LS.getitemiter() do
+                
+        if TryGetProp(invItemObj, 'GroupName') == 'Icor' then
+            local randomprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, true, false)
+            local fixedprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, false, true)
+            if randomprops==props or fixedprops==props then
+                return invItem
+            end
+        end
+    end
+    --なかったらインベントリから検索
+    local invItemList = session.GetInvItemList();
+    FOR_EACH_INVENTORY(invItemList, function(invItemList, invItem)
+        local invItemObj = GetIES(invItem:GetObject())
+        if TryGetProp(invItemObj, 'GroupName') == 'Icor' then
+            local randomprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, true, false)
+            local fixedprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, false, true)
+            if randomprops==props or fixedprops==props then
+                return invItem
+            end
+        end
+    end, false);
+    return nil
+    
+end
+function AWWARDROBE_DEPOSIT_IKOR_BY_PROPS(prop)
+    LS.target=IT_ACCOUNT_WAREHOUSE
+    local invItemList = session.GetInvItemList();
+    FOR_EACH_INVENTORY(invItemList, function(invItemList, invItem)
+        local invItemObj = GetIES(invItem:GetObject())
+        if TryGetProp(invItemObj, 'GroupName') == 'Icor' then
+            local randomprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, true, false)
+            local fixedprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, false, true)
+            AWWARDROBE_DBGOUT('LHS:'..randomprops)
+            AWWARDROBE_DBGOUT('RHS:'..prop)
+
+            if prop==randomprops or prop==fixedprops then
+                                LS.putitem(invItem:GetIESID(),1);
+            end
+        end
+    end, false);
+end
+function AWWARDROBE_ATTACH_IKOR(tbl)
+    AWWARDROBE_try(function()
+        local delay = 1
+        local awframe = ui.GetFrame("accountwarehouse")
+        
+        local items = {}
+        if (AWWARDROBE_INTERLOCK()) then
+            
+            ui.SysMsg(L_("alertworkingothers"))
+            return
+        end
+        local isPremiumState = session.loginInfo.IsPremiumState(ITEM_TOKEN);
+        if isPremiumState == false then
+            
+            ui.SysMsg(L_("needtoken"))
+            return
+        end
+        if (awframe:IsVisible() == 0) then
+            
+            ui.SysMsg(L_("alertopenaw"))
+            return
+        end
+        ui.SysMsg(L_("alertstart"))
+        
+        local needzeny =  AWWARDROBE_CALCULATE_SILVER_IKORATTACH(tbl)
+        local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
+        local cnt, visItemList = GET_INV_ITEM_COUNT_BY_PROPERTY({{Name = 'ClassName', Value = MONEY_NAME}}, false, itemList);
+        local visItem = visItemList[1];
+        
+        local accountsilver = '0'
+        if visItem == nil or GETMYPCLEVEL() >= 15 and true == session.loginInfo.IsPremiumState(ITEM_TOKEN) then
+            accountsilver = visItem:GetAmountStr()
+        end
+        
+        local zeny = SumForBigNumberInt64(GET_TOTAL_MONEY_STR(), accountsilver)
+        --足りる?
+        if IsGreaterThanForBigNumber(needzeny, zeny) == 1 then
+            ui.SysMsg(L_("insufficientsilver"))
+            return
+        end
+        
+        --DO
+        ui.SysMsg(L_("alertstart"))
+        AWWARDROBE_INTERLOCK(true)
+        
+        --sit down
+        ReserveScript("if not control.IsRestSit() then control.RestSit() end", delay)
+        delay = delay + 1.2
+        --費用を引き出す
+        if IsGreaterThanForBigNumber(needzeny, accountsilver) == 1 then
+            accountsilver = needzeny
+        end
+        if IsGreaterThanForBigNumber(accountsilver, '0') == 1 then
+            ReserveScript(string.format([[AWWARDROBE_TAKESILVER('%s')]], needzeny), delay)
+            delay = delay + 1
+        end
+        
+        local attachfixed = {}
+        local attachrandom = {}
+        local attachmixed = {}
+        local searchrandom = {}
+        local searchfixed = {}
+        
+        local equipItemList = session.GetEquipItemList();
+        for i = 0, equipItemList:Count() - 1 do
+            --装備しているかチェック
+            local equipItem = equipItemList:GetEquipItemByIndex(i)
+            local spname = item.GetEquipSpotName(equipItem.equipSpot);
+            if spname == 'TRINKET' then
+                spname = 'LH'
+            end
+            
+            if equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and equipItem.type ~= 0 and tbl[spname] then
+                if true ~= equipItem.isLockState then
+                    
+                    if tbl[spname].random then
+                        attachrandom[#attachrandom + 1] = equipItem
+                        attachmixed[equipItem:GetIESID()] = equipItem.equipSpot
+                        searchrandom[#searchrandom + 1] = {
+                            props = tbl[spname].random,
+                            to = equipItem}
+                    end
+                    if tbl[spname].fixed then
+                        attachfixed[#attachfixed + 1] = equipItem
+                        attachmixed[equipItem:GetIESID()] = equipItem.equipSpot
+                        searchfixed[#searchfixed + 1] = {
+                            props = tbl[spname].fixed,
+                            to = equipItem}
+                    end
+                end
+            end
+        end
+        local withdraws = {}
+        local toattachrandom = {}
+        local toattachfixed = {}
+        
+        --イコルを探す
+        for guid, invItem, invItemObj in LS.getitemiter() do
+            
+            if TryGetProp(invItemObj, 'GroupName') == 'Icor' then
+                local randomprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, true, false)
+                local fixedprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, false, true)
+                AWWARDROBE_DBGOUT('FFF'..fixedprops)
+                for k, v in ipairs(searchrandom) do
+                    if v.props.props == randomprops then
+                        withdraws[#withdraws + 1] = {
+                            iesid = guid,
+                            count = 1
+                        }
+                        toattachrandom[#toattachrandom + 1] = {guid = guid, data = v}
+                        table.remove(searchrandom, k)
+                        break
+                    end
+                end
+                for k, v in ipairs(searchfixed) do
+                    if v.props.props == fixedprops then
+                        withdraws[#withdraws + 1] = {
+                            iesid = guid,
+                            count = 1
+                        }
+                        toattachfixed[#toattachfixed + 1] = {guid = guid, data = v}
+                        table.remove(searchfixed, k)
+                        break
+                    end
+                end
+            end
+        end
+        --なかったらインベントリから検索
+        if #searchfixed + #searchrandom > 0 then
+            local invItemList = session.GetInvItemList();
+            FOR_EACH_INVENTORY(invItemList, function(invItemList, invItem)
+                local invItemObj = GetIES(invItem:GetObject())
+                if TryGetProp(invItemObj, 'GroupName') == 'Icor'  then
+                    local randomprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, true, false)
+                    local fixedprops = AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, false, true)
+                   
+                    for k, v in ipairs(searchrandom) do
+                        if v.props.props == randomprops then
+                            toattachrandom[#toattachrandom + 1] = {guid = invItem:GetIESID(), data = v}
+                            table.remove(searchrandom, k)
+                            break
+                        end
+                    end
+                    for k, v in ipairs(searchfixed) do
+                        if v.props.props == fixedprops then
+                            AWWARDROBE_DBGOUT("MATCH")
+                            toattachfixed[#toattachfixed + 1] = {guid = invItem:GetIESID(), data = v}
+                            table.remove(searchfixed, k)
+                           
+                            break
+                        end
+                    end
+                end
+            end, false);
+        end
+        if #toattachrandom + #toattachfixed > 0 then
+            if #withdraws > 0 then
+                --イコルを引き出す(fasttrick)
+                LS.takeitems(withdraws)
+                delay = delay + 3
+            end
+            --装備を外す
+            for iesid, spot in pairs(attachmixed) do
+                ReserveScript(string.format("AWWARDROBE_UNWEARBYGUID(\"%s\")", iesid), delay)
+                delay = delay + 0.5
+            
+            end
+           
+
+
+            if #toattachrandom > 0 then
+                --イコル装着済みのアイテムを処す
+                local cnt=0
+                local script = 'AWWARDROBE__RESET_ITEMLIST();'
+                for i, v in pairs(toattachrandom) do
+                    local invItemObj=GetIES(v.data.to:GetObject())
+                    if TryGetProp(invItemObj, 'InheritanceRandomItemName', 'None') ~= 'None'  then
+                        script = script .. 'AWWARDROBE__ADD_ITEM("' .. v.data.to:GetIESID() .. '");'
+                        cnt=cnt+1
+                    end
+                end
+                if cnt>0 then
+                    script = script .. "AWWARDROBE__DIALOG_TRANSACTION('RELEASE_ITEM_ICOR_RANDOM_MULTIPLE');"
+                    ReserveScript(script, delay)
+                    delay=delay+7
+                end
+                local script = 'AWWARDROBE__RESET_ITEMLIST();'
+                for i, v in pairs(toattachrandom) do
+                    
+                    --ランダムイコルを付ける
+                    script = script .. 'AWWARDROBE__ADD_ITEM("' .. v.data.to:GetIESID() .. '");'
+                    script = script .. 'AWWARDROBE__ADD_ITEM("' .. v.guid .. '");'
+                
+                
+                end
+                script = script .. "AWWARDROBE__DIALOG_TRANSACTION('EQUIP_ITEM_ICOR_MULTIPLE');"
+                ReserveScript(script, delay)
+                delay = delay + 7
+            end
+            
+            if #toattachfixed > 0 then
+                --イコル装着済みのアイテムを処す
+                
+                local cnt=0
+                local script = 'AWWARDROBE__RESET_ITEMLIST();'
+                for i, v in pairs(toattachfixed) do
+                    local invItemObj=GetIES(v.data.to:GetObject())
+                    if TryGetProp(invItemObj, 'InheritanceItemName', 'None') ~= 'None'  then
+                        script = script .. 'AWWARDROBE__ADD_ITEM("' .. v.data.to:GetIESID() .. '");'
+                        cnt=cnt+1
+                    end
+                end
+                if cnt>0 then
+                    script = script .. "AWWARDROBE__DIALOG_TRANSACTION('RELEASE_ITEM_ICOR_MULTIPLE');"
+                    ReserveScript(script, delay)
+                    delay=delay+7
+                end
+                --固定イコルを付ける
+                
+                local script = 'AWWARDROBE__RESET_ITEMLIST();'
+                for i, v in pairs(toattachfixed) do
+                    
+                    script = script .. 'AWWARDROBE__ADD_ITEM("' .. v.data.to:GetIESID() .. '");'
+                    script = script .. 'AWWARDROBE__ADD_ITEM("' .. v.guid .. '");'
+                    AWWARDROBE_DBGOUT("OK")
+                
+                end
+                script = script .. "AWWARDROBE__DIALOG_TRANSACTION('EQUIP_ITEM_ICOR_MULTIPLE');"
+                ReserveScript(script, delay)
+                delay = delay + 7
+            end
+            --装備を戻す
+            for iesid, spot in pairs(attachmixed) do
+                local spname = item.GetEquipSpotName(spot);
+                ReserveScript(string.format("AWWARDROBE_WEAR(\"%s\",\"%s\")", iesid, spname), delay)
+                delay = delay + 0.5
+            end
+        end
+        
+        ReserveScript("if control.IsRestSit() then control.RestSit() end", delay)
+        delay = delay + 1.2
+        ReserveScript('ui.SysMsg("' .. L_("alertcomplete") .. '");AWWARDROBE_INTERLOCK(false)', delay)
+    end)
+end
+function AWWARDROBE__RESET_ITEMLIST()
+    g.tempitemlist = {}
+end
+function AWWARDROBE__ADD_ITEM(guid)
+    g.tempitemlist[#g.tempitemlist + 1] = guid
+end
 function AWWARDROBE__DIALOG_TRANSACTION(cmd)
+    session.ResetItemList()
+    for _, v in ipairs(g.tempitemlist) do
+        session.AddItemID(v, 1)
+    end
     local resultlist = session.GetItemIDList()
     item.DialogTransaction(cmd, resultlist)
 end
@@ -1140,16 +1596,17 @@ function AWWARDROBE_INITIALIZE_FRAME()
         local frame = ui.GetFrame(g.framename);
         
         frame:Resize(900, 550)
-        frame:GetChildRecursively("gbox_Equipped"):ShowWindow(1)
+        --frame:GetChildRecursively("equip"):ShowWindow(1)
         
         frame:GetChild("mainGbox"):ShowWindow(1)
         frame:GetChild("mainGbox"):SetOffset(0, 110)
         frame:GetChild("mainGbox"):SetGravity(ui.LEFT, ui.TOP)
         frame:GetChild("mainGbox"):SetVisible(0)
         frame:GetChildRecursively("gbox_Equipped"):SetOffset(10, 110)
+        frame:GetChildRecursively("gbox_Equipped"):ShowWindow(1)
         frame:GetChildRecursively("gbox_Dressed"):ShowWindow(1)
         frame:GetChildRecursively("gbox_Dressed"):SetOffset(280, 120)
-        
+        frame:GetChild("equip"):Resize(600, 400)
         
         
         local btnregister = frame:CreateOrGetControl("button", "btnregister", 550, 240, 200, 40)
@@ -1200,7 +1657,7 @@ function AWWARDROBE_INITIALIZE_FRAME()
         
         for k, _ in pairs(g.effectingspot) do
             
-            local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
+            local slot = GET_CHILD_RECURSIVELY(frame:GetChildRecursively('equip'), k, "ui::CSlot")
             slot:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_SLOT_ON_RBUTTONDOWN")
             slot:SetEventScriptArgString(ui.RBUTTONDOWN, k)
             slot:SetEventScript(ui.DROP, "AWWARDROBE_SLOT_ON_DROP")
@@ -1210,19 +1667,18 @@ function AWWARDROBE_INITIALIZE_FRAME()
         end
         for k, _ in pairs(g.effectingikorspot) do
             
-            local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
+            local slot = GET_CHILD_RECURSIVELY(frame:GetChildRecursively('gbox_Ikor'), k, "ui::CSlot")
             slot:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_IKORSLOT_ON_RBUTTONDOWN")
             slot:SetEventScriptArgString(ui.RBUTTONDOWN, k)
             slot:SetEventScript(ui.DROP, "AWWARDROBE_IKORSLOT_ON_DROP")
             slot:SetEventScriptArgString(ui.DROP, k)
             
             slot:EnableDrag(0)
-            local rslot = GET_CHILD_RECURSIVELY(frame, "R_" .. k, "ui::CSlot")
+            local rslot = GET_CHILD_RECURSIVELY(frame:GetChildRecursively('gbox_Ikor'), "R_" .. k, "ui::CSlot")
             rslot:SetEventScript(ui.RBUTTONDOWN, "AWWARDROBE_IKORSLOT_ON_RBUTTONDOWN")
-            rslot:SetEventScriptArgString(ui.RBUTTONDOWN, k)
+            rslot:SetEventScriptArgString(ui.RBUTTONDOWN, "R_" .. k)
             rslot:SetEventScript(ui.DROP, "AWWARDROBE_IKORSLOT_ON_DROP")
             rslot:SetEventScriptArgString(ui.DROP, k)
-            
             rslot:EnableDrag(0)
         end
         g.tab_config = TAB_EQUIP
@@ -1293,6 +1749,9 @@ function AWWARDROBE_UPDATE_DROPBOXAW()
                 elseif g.tab_aw == TAB_CARD then
                     wardrobe = g.settings.wardrobecard
                     defaultname = g.personalsettings.defaultnamecard
+                elseif g.tab_aw == TAB_IKOR then
+                    wardrobe = g.settings.wardrobeikor
+                    defaultname = g.personalsettings.defaultnameikor
                 end
                 for k, d in pairs(wardrobe) do
                     if (k ~= L_("defaultvalue")) then
@@ -1360,7 +1819,7 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
                 if (key == "") then
                     AWWARDROBE_CLEARALLIKOR(frame)
                 else
-                    --AWWARDROBE_LOADIKORFROMSTRUCTURE(g.settings.wardrobeikor[key + 1].data)
+                    AWWARDROBE_LOADIKORFROMSTRUCTURE(g.settings.wardrobeikor[key + 1].data)
                 end
             end
             
@@ -1415,6 +1874,23 @@ function AWWARDROBE_BTNSAVE_ON_LBUTTONDOWN(frame)
                 end
                 if (fault == true) then
                     g.settings.wardrobecard[#g.settings.wardrobecard + 1] = {name = curname, data = table}
+                end
+            elseif g.tab_config == TAB_IKOR then
+                local table = AWWARDROBE_SAVEIKORTOSTRUCTURE()
+                g.settings.wardrobeikor = g.settings.wardrobeikor or {}
+                g.settings.defaultnameikor = curname
+                
+                --インデックス探索
+                local fault = true
+                for i = 1, #g.settings.wardrobeikor do
+                    if (g.settings.wardrobeikor[i].name == curname) then
+                        g.settings.wardrobeikor[i] = {name = curname, data = table}
+                        fault = false
+                        break
+                    end
+                end
+                if (fault == true) then
+                    g.settings.wardrobeikor[#g.settings.wardrobeikor + 1] = {name = curname, data = table}
                 end
             end
             --ソート
@@ -1490,9 +1966,28 @@ function AWWARDROBE_LOADCARDFROMSTRUCTURE(table)
     end
 
 end
+function AWWARDROBE_LOADIKORFROMSTRUCTURE(tbl)
+    --local tbl = {}
+    local frame = ui.GetFrame(g.framename):GetChildRecursively('gbox_Ikor')
+    for k, _ in pairs(g.effectingikorspot) do
+        if tbl[k] then
+            if tbl[k].fixed then
+                local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
+                
+                
+                AWWARDROBE_SETSLOT_IKOR(slot, tbl[k].fixed.clsid, tbl[k].fixed.props)
+            end
+            if tbl[k].random then
+                local slot = GET_CHILD_RECURSIVELY(frame, "R_" .. k, "ui::CSlot")
+                AWWARDROBE_SETSLOT_IKOR(slot, tbl[k].random.clsid, tbl[k].random.props)
+            end
+        end
+    end
+    return tbl
+end
 function AWWARDROBE_SAVEEQTOSTRUCTURE()
     local tbl = {}
-    local frame = ui.GetFrame(g.framename)
+    local frame = ui.GetFrame(g.framename):GetChildRecursively('equip')
     for k, _ in pairs(g.effectingspot) do
         local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
         local clsid = slot:GetUserValue("clsid")
@@ -1524,6 +2019,27 @@ function AWWARDROBE_SAVECARDTOSTRUCTURE()
                 lv = tonumber(slot:GetUserValue("lv") or '0') or 0,
             }
             cnt = cnt + 1
+        end
+    end
+    return tbl
+end
+function AWWARDROBE_SAVEIKORTOSTRUCTURE()
+    local tbl = {}
+    local frame = ui.GetFrame(g.framename):GetChildRecursively('gbox_Ikor')
+    for k, _ in pairs(g.effectingikorspot) do
+        local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
+        local clsid = slot:GetUserValue("clsid")
+        local props = slot:GetUserValue("props")
+        if (not EBI_IsNoneOrNil(props)) then
+            tbl[k] = tbl[k] or {}
+            tbl[k]["fixed"] = {clsid = clsid, props = props}
+        end
+        local slot = GET_CHILD_RECURSIVELY(frame, "R_" .. k, "ui::CSlot")
+        local clsid = slot:GetUserValue("clsid")
+        local props = slot:GetUserValue("props")
+        if (not EBI_IsNoneOrNil(props)) then
+            tbl[k] = tbl[k] or {}
+            tbl[k]["random"] = {clsid = clsid, props = props}
         end
     end
     return tbl
@@ -1577,30 +2093,21 @@ end
 function AWWARDROBE_SLOT_ON_RBUTTONDOWN(frame, ctrl, argstr, argnum)
     --現在の装備を登録
     AWWARDROBE_try(function()
-            
-            AWWARDROBE_CLEAREQUIP(frame, argstr)
-            imcSound.PlaySoundEvent('inven_unequip');
-            AWWARDROBE_PLAYSLOTANIMATION(frame, argstr)
+        frame = ctrl:GetTopParentFrame()
+        AWWARDROBE_CLEAREQUIP(ctrl:GetTopParentFrame(), argstr)
+        imcSound.PlaySoundEvent('inven_unequip');
+        AWWARDROBE_PLAYSLOTANIMATION(frame:GetChildRecursively("equip"), argstr)
     end)
 end
 function AWWARDROBE_IKORSLOT_ON_RBUTTONDOWN(frame, ctrl, argstr, argnum)
     --現在の装備を登録
     AWWARDROBE_try(function()
             
-            local slot = GET_CHILD_RECURSIVELY(frame, spname, "ui::CSlot")
-            local slot_bg = GET_CHILD_RECURSIVELY(frame, spname .. "_bg", "ui::CSlot")
-            
-            slot:ClearIcon()
-            slot:SetMaxSelectCount(0)
-            slot:SetText('')
-            slot:RemoveAllChild()
-            slot:SetSkinName(slot_bg:GetSkinName())
-            slot:SetUserValue('clsid', nil)
-            slot:SetUserValue('iesid', nil)
-            slot:SetUserValue('props', nil)
+            frame = ctrl:GetTopParentFrame()
+            AWWARDROBE_CLEARIKOR(ctrl:GetTopParentFrame(), argstr)
             
             imcSound.PlaySoundEvent('inven_unequip');
-            AWWARDROBE_PLAYSLOTANIMATION(frame, argstr)
+            AWWARDROBE_PLAYSLOTANIMATION(frame:GetChildRecursively("gbox_Ikor"), argstr)
     end)
 end
 function AWWARDROBE_CARD_SLOT_ON_RBUTTONDOWN(frame, slot, argstr, argnum)
@@ -1797,26 +2304,26 @@ function AWWARDROBE_SETSLOT_IKOR_BYITEM(parent, slotname, invItem)
     local invItemObj = GetIES(invItem:GetObject())
     local inheritItemName = TryGetProp(invItemObj, 'InheritanceItemName', 'None')
     local inheritItemCls = nil
-    AWWARDROBE_DBGOUT("IKORD"..slotname)
+    AWWARDROBE_DBGOUT("IKORD" .. slotname)
     AWWARDROBE_CLEARIKOR(parent:GetTopParentFrame(), slotname)
     --AWWARDROBE_CLEARIKOR(parent:GetTopParentFrame(), "R_" .. slotname)
     local slot = parent:GetChild(slotname)
     AUTO_CAST(slot)
-    if TryGetProp(invItemObj, 'InheritanceItemName', 'None') then
+    if TryGetProp(invItemObj, 'InheritanceItemName', 'None') ~= "None" then
         inheritItemName = TryGetProp(invItemObj, 'InheritanceItemName', 'None')
         inheritItemCls = GetClass('Item', inheritItemName)
         AWWARDROBE_DBGOUT(inheritItemName)
-        AWWARDROBE_SETSLOT_IKOR(slot, inheritItemCls.ClassID,AWWARDROBE_GENERATE_IKORPROPSTRING(invItem,false,true))
-        AWWARDROBE_DBGOUT(inheritItemName.."end")
+        AWWARDROBE_SETSLOT_IKOR(slot, inheritItemCls.ClassID, AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, false, true))
+        AWWARDROBE_DBGOUT(inheritItemName .. "end")
     end
     local rslot = parent:GetChild("R_" .. slotname)
-    AWWARDROBE_DBGOUT(tostring(rslot)..parent:GetName())
+    AWWARDROBE_DBGOUT(tostring(rslot) .. parent:GetName())
     AUTO_CAST(rslot)
-    if TryGetProp(invItemObj, 'InheritanceRandomItemName', 'None') then
+    if TryGetProp(invItemObj, 'InheritanceRandomItemName', 'None') ~= "None" then
         inheritItemName = TryGetProp(invItemObj, 'InheritanceRandomItemName', 'None')
         inheritItemCls = GetClass('Item', inheritItemName)
         AWWARDROBE_DBGOUT(inheritItemName)
-        AWWARDROBE_SETSLOT_IKOR(rslot, inheritItemCls.ClassID,AWWARDROBE_GENERATE_IKORPROPSTRING(invItem,true,false))
+        AWWARDROBE_SETSLOT_IKOR(rslot, inheritItemCls.ClassID, AWWARDROBE_GENERATE_IKORPROPSTRING(invItem, true, false))
     
     end
 
@@ -2566,9 +3073,9 @@ function AWWARDROBE_REGISTER_CURRENTEQUIP(frame)
                     AWWARDROBE_SETSLOT(slot, equipItem)
                     AWWARDROBE_PLAYSLOTANIMATION(frame, spname)
                 end
-                
+            
             end
-            local gbox=frame:GetChildRecursively("equip")
+            local gbox = frame:GetChildRecursively("equip")
             --左手右手用設定
             local rh1 = quickslot.GetSwapWeaponGuid(2);
             local lh1 = quickslot.GetSwapWeaponGuid(3);
@@ -2652,7 +3159,7 @@ function AWWARDROBE_REGISTER_CURRENTIKOR(frame)
             AWWARDROBE_DBGOUT("CLEAR")
             AWWARDROBE_CLEARALLIKOR(frame)
             AWWARDROBE_DBGOUT("CLEARD")
-            local gbox=frame:GetChildRecursively("gbox_Ikor")
+            local gbox = frame:GetChildRecursively("gbox_Ikor")
             local equipItemList = session.GetEquipItemList();
             local items = {}
             
@@ -2660,10 +3167,9 @@ function AWWARDROBE_REGISTER_CURRENTIKOR(frame)
                 local equipItem = equipItemList:GetEquipItemByIndex(i)
                 --local obj = GetIES(item.GetNoneItem(equipItem.equipSpot));
                 --CHAT_SYSTEM("GO")
-              
                 local spname = item.GetEquipSpotName(equipItem.equipSpot);
-                AWWARDROBE_DBGOUT("EQ"..i..spname)
-                if spname ~= "RH" and spname ~= "LH" and equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingikorspot[spname]~=nil then
+                AWWARDROBE_DBGOUT("EQ" .. i .. spname)
+                if spname ~= "RH" and spname ~= "LH" and equipItem.type ~= item.GetNoneItem(equipItem.equipSpot) and g.effectingikorspot[spname] ~= nil then
                     --登録
                     local slot = GET_CHILD_RECURSIVELY(gbox, spname, "ui::CSlot")
                     
@@ -2672,32 +3178,32 @@ function AWWARDROBE_REGISTER_CURRENTIKOR(frame)
                     AWWARDROBE_PLAYSLOTANIMATION(gbox, spname)
                 end
             end
-                --左手右手用設定
-                local rh1 = quickslot.GetSwapWeaponGuid(2);
-                local lh1 = quickslot.GetSwapWeaponGuid(3);
-                local rh2 = quickslot.GetSwapWeaponGuid(0);
-                local lh2 = quickslot.GetSwapWeaponGuid(1);
-                
-                if rh1 ~= nil then
-                    local item = GET_ITEM_BY_GUID(rh1);
-                    if item ~= nil then
-                        local quickspname = "RH"
-                        local slot = GET_CHILD_RECURSIVELY(gbox, quickspname, "ui::CSlot")
-                        AWWARDROBE_SETSLOT_IKOR_BYITEM(slot:GetParent(), quickspname, item)
-                        AWWARDROBE_PLAYSLOTANIMATION(gbox, 'R_' .. quickspname)
-                        AWWARDROBE_PLAYSLOTANIMATION(gbox, quickspname)
-                    end
+            --左手右手用設定
+            local rh1 = quickslot.GetSwapWeaponGuid(2);
+            local lh1 = quickslot.GetSwapWeaponGuid(3);
+            local rh2 = quickslot.GetSwapWeaponGuid(0);
+            local lh2 = quickslot.GetSwapWeaponGuid(1);
+            
+            if rh1 ~= nil then
+                local item = GET_ITEM_BY_GUID(rh1);
+                if item ~= nil then
+                    local quickspname = "RH"
+                    local slot = GET_CHILD_RECURSIVELY(gbox, quickspname, "ui::CSlot")
+                    AWWARDROBE_SETSLOT_IKOR_BYITEM(slot:GetParent(), quickspname, item)
+                    AWWARDROBE_PLAYSLOTANIMATION(gbox, 'R_' .. quickspname)
+                    AWWARDROBE_PLAYSLOTANIMATION(gbox, quickspname)
                 end
-                if lh1 ~= nil then
-                    local item = GET_ITEM_BY_GUID(lh1);
-                    if item ~= nil then
-                        local quickspname = "LH"
-                        local slot = GET_CHILD_RECURSIVELY(gbox, quickspname, "ui::CSlot")
-                        AWWARDROBE_SETSLOT_IKOR_BYITEM(slot:GetParent(), quickspname, item)
-                        AWWARDROBE_PLAYSLOTANIMATION(gbox, 'R_' .. quickspname)
-                        AWWARDROBE_PLAYSLOTANIMATION(gbox, quickspname)
-                    end
+            end
+            if lh1 ~= nil then
+                local item = GET_ITEM_BY_GUID(lh1);
+                if item ~= nil then
+                    local quickspname = "LH"
+                    local slot = GET_CHILD_RECURSIVELY(gbox, quickspname, "ui::CSlot")
+                    AWWARDROBE_SETSLOT_IKOR_BYITEM(slot:GetParent(), quickspname, item)
+                    AWWARDROBE_PLAYSLOTANIMATION(gbox, 'R_' .. quickspname)
+                    AWWARDROBE_PLAYSLOTANIMATION(gbox, quickspname)
                 end
+            end
             -- if rh2 ~= nil then
             --     local item = GET_ITEM_BY_GUID(rh2);
             --     if item ~= nil then
@@ -2718,8 +3224,6 @@ function AWWARDROBE_REGISTER_CURRENTIKOR(frame)
             --         AWWARDROBE_PLAYSLOTANIMATION(frame, 'R_'..quickspname)
             --     end
             -- end
-            
-            
             imcSound.PlaySoundEvent('inven_equip');
     end)
 end
@@ -2727,8 +3231,8 @@ function AWWARDROBE_CLEAREQUIP(frame, spname)
     --現在の装備を登録
     AWWARDROBE_try(function()
         local gbox = frame:GetChildRecursively("equip")
-        local slot = GET_CHILD_RECURSIVELY(frame, spname, "ui::CSlot")
-        local slot_bg = GET_CHILD_RECURSIVELY(frame, spname .. "_bg", "ui::CSlot")
+        local slot = GET_CHILD_RECURSIVELY(gbox, spname, "ui::CSlot")
+        local slot_bg = GET_CHILD_RECURSIVELY(gbox, spname .. "_bg", "ui::CSlot")
         
         slot:ClearIcon()
         slot:SetMaxSelectCount(0)
@@ -2763,6 +3267,8 @@ function AWWARDROBE_CLEARALL(frame)
         AWWARDROBE_CLEARALLEQUIPS(frame)
     elseif g.tab_config == TAB_CARD then
         AWWARDROBE_CLEARALLCARDS(frame)
+    elseif g.tab_config == TAB_IKOR then
+        AWWARDROBE_CLEARALLIKOR(frame)
     end
 end
 function AWWARDROBE_CLEARALLEQUIPS(frame)
@@ -2778,7 +3284,7 @@ function AWWARDROBE_CLEARALLIKOR(frame)
     
     for k, _ in pairs(g.effectingikorspot) do
         AWWARDROBE_CLEARIKOR(frame, k)
-        AWWARDROBE_CLEARIKOR(frame, "R_"..k)
+        AWWARDROBE_CLEARIKOR(frame, "R_" .. k)
     end
 
 end
@@ -2909,8 +3415,8 @@ function AWWARDROBE_CONFIG_ON_TAB(frame, ctrl)
     end
     local tabcfg = g.tab_config
     local tabctrl = ctrl
-    local equip = frame:GetChildRecursively('gbox_Equipped')
-    local equip2 = frame:GetChildRecursively('gbox_Dressed')
+    local equip = frame:GetChildRecursively('equip')
+    --local equip2 = frame:GetChildRecursively('gbox_Dressed')
     local card = frame:GetChildRecursively('mainGbox')
     local ikor = frame:GetChildRecursively('gbox_Ikor')
     
@@ -2919,20 +3425,20 @@ function AWWARDROBE_CONFIG_ON_TAB(frame, ctrl)
     if tabcfg == TAB_EQUIP then
         tabctrl:SetText(L_('tabequip'))
         equip:ShowWindow(1)
-        equip2:ShowWindow(1)
+        --equip2:ShowWindow(1)
         card:ShowWindow(0)
         ikor:ShowWindow(0)
     
     elseif tabcfg == TAB_CARD then
         tabctrl:SetText(L_('tabcard'))
         equip:ShowWindow(0)
-        equip2:ShowWindow(0)
+        --equip2:ShowWindow(0)
         card:ShowWindow(1)
         ikor:ShowWindow(0)
     elseif tabcfg == TAB_IKOR then
         tabctrl:SetText(L_('tabikor'))
         equip:ShowWindow(0)
-        equip2:ShowWindow(0)
+        --equip2:ShowWindow(0)
         card:ShowWindow(0)
         ikor:ShowWindow(1)
     end

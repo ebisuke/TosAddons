@@ -1043,50 +1043,67 @@ function AOS_DRAW_SPECIALSKILLBAR(frame, pic)
         end
         txt:EnableHitTest(0)
     end
+    local slot=frame:CreateOrGetControl('slot','slotspcooltime',ox-off,oy-off,off*2,off*2);
+    AUTO_CAST(slot)
+    slot:SetSkinName('aos_center_dia_skin')
+    slot:EnableHitTest(0)
+    local icon=slot:GetIcon()
+    if not icon then
+        icon=   CreateIcon(slot)
+        icon:SetDrawCoolTimeText(0)
+    end
+
     if (curtime == nil) then
+        icon:SetLeftCoolTime(0)
+        icon:SetEnable(0)
         return
     end
+    
     curtime=math.min(curtime,maxtime)
+    icon:SetLeftCoolTime(curtime)
+    icon:SetTotalCoolTime(maxtime)
     local skillpercent = curtime * 100 / maxtime
-    if (skillpercent >= 75) then
-        local r = (skillpercent - 75) / 25.0
-        DrawPolyLine(pic, {
-            {ox, oy - off},
-            {ox - off, oy},
-            {ox, oy + off},
-            {ox + off, oy},
-            {ox + off - off * r, oy - off * r}},
-        spray,
-        color
-    )
-    elseif (skillpercent >= 50) then
-        local r = (skillpercent - 50) / 25.0
-        DrawPolyLine(pic, {
-            {ox, oy - off},
-            {ox - off, oy},
-            {ox, oy + off},
-            {ox + off * r, oy + off - off * r}},
-        spray,
-        color
-    )
-    elseif (skillpercent >= 25) then
-        local r = (skillpercent - 25) / 25.0
-        DrawPolyLine(pic, {
-            {ox, oy - off},
-            {ox - off, oy},
-            {ox - off + off * r, oy + off * r}},
-        spray,
-        color
-    )
-    elseif (skillpercent > 0) then
-        local r = (skillpercent - 0) / 25.0
-        DrawPolyLine(pic, {
-            {ox, oy - off},
-            {ox - off * r, oy - off + off * r}},
-        spray,
-        color
-    )
-    end
+
+
+    -- if (skillpercent >= 75) then
+    --     local r = (skillpercent - 75) / 25.0
+    --     DrawPolyLine(pic, {
+    --         {ox, oy - off},
+    --         {ox - off, oy},
+    --         {ox, oy + off},
+    --         {ox + off, oy},
+    --         {ox + off - off * r, oy - off * r}},
+    --     spray,
+    --     color
+    -- )
+    -- elseif (skillpercent >= 50) then
+    --     local r = (skillpercent - 50) / 25.0
+    --     DrawPolyLine(pic, {
+    --         {ox, oy - off},
+    --         {ox - off, oy},
+    --         {ox, oy + off},
+    --         {ox + off * r, oy + off - off * r}},
+    --     spray,
+    --     color
+    -- )
+    -- elseif (skillpercent >= 25) then
+    --     local r = (skillpercent - 25) / 25.0
+    --     DrawPolyLine(pic, {
+    --         {ox, oy - off},
+    --         {ox - off, oy},
+    --         {ox - off + off * r, oy + off * r}},
+    --     spray,
+    --     color
+    -- )
+    -- elseif (skillpercent > 0) then
+    --     local r = (skillpercent - 0) / 25.0
+    --     DrawPolyLine(pic, {
+    --         {ox, oy - off},
+    --         {ox - off * r, oy - off + off * r}},
+    --     spray,
+    --     color
+    -- )
+    --end
 end
 function AOS_GET_DIAMOND_VALUE()
     --find buff
