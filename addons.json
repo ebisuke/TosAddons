@@ -570,5 +570,19 @@
       "headsupdisplay",
       "stat"
     ]
+  },
+  {
+    "name": "Shut Up Too Many Items",
+    "file": "shutuptoomanyitems",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "shutuptoomanyitems-v0.0.1",
+    "unicode": "📖",
+    "description": "アイテム数が2000を超えたときに表示されるダイアログを表示させないようにします。 ",
+    "tags": [
+      "ui",
+      "warning",
+      "item"
+    ]
   }
 ]
