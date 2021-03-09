@@ -94,10 +94,12 @@ function SHUTUPTOOMANYITEMS_EX_FRAME_OPEN_DELAYED()
     local warningbox=ui.GetFrame('warningmsgbox_ex')
     if warningbox:IsVisible()==1 then
         local text=warningbox:GetChildRecursively('warningtext')
-        if text:GetText()==ClMsg("ETC_20200724_048845") then
+        local yesarg=warningbox:GetChildRecursively('ok'):GetEventScriptArgString(ui.LBUTTONUP)
+        print(yesarg)
+        if text:GetText()==ClMsg("MaxSlotCountMsg") or yesarg=="MaxSlotCountMsgCompare/" then
             warningbox:ShowWindow(0)
             --alternate
-            ui.SysMsg(ClMsg("ETC_20200724_048845"))
+            ui.SysMsg(ClMsg("MaxSlotCountMsg"))
         end
     end
 end
