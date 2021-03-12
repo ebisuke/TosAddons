@@ -39,6 +39,18 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
                 default = false,
             },
             {
+                name = "cardremove",
+                vname = "Remove the dialog of removing the card.",
+                type = "boolean",
+                default = false,
+            },
+            {
+                name = "cardequip",
+                vname = "Remove the dialog of equipping the card.",
+                type = "boolean",
+                default = false,
+            },
+            {
                 name = "challengemodenextstep",
                 vname = "Remove dialog of going to next level in challengemode ",
                 type = "boolean",

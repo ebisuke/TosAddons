@@ -16,7 +16,7 @@ g.settings = {x = 300, y = 300}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "joystickenhancer"
-g.debug = true
+g.debug = false
 g.sys={
     uimodecount=0,
     uimodevisibles={
@@ -25,6 +25,7 @@ g.sys={
     uimodetriggers={
         "worldmap2_mainmap",
         "worldmap2_submap",
+        "skillability",
     }
 }
 
@@ -119,7 +120,7 @@ function JOYSTICKENHANCER_ON_TIMER()
             g.sys.uimodevisibles[k]=true
             g.sys.uimodecount=g.sys.uimodecount+1
             if g.sys.uimodecount==1 then
-                control.EnableControl(0,0);
+                SetKeyboardSelectMode(1)
                 CHAT_SYSTEM("setvbuf")
             end
         end
@@ -127,7 +128,7 @@ function JOYSTICKENHANCER_ON_TIMER()
             g.sys.uimodevisibles[k]=nil
             g.sys.uimodecount=g.sys.uimodecount-1
             if g.sys.uimodecount==0 then
-                control.EnableControl(1,1);
+                SetKeyboardSelectMode(0)
                 CHAT_SYSTEM("reset")
             end
         end

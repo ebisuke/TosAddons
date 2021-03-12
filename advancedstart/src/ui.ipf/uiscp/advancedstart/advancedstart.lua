@@ -72,8 +72,8 @@ end
 function AS_ISHIDELOGIN_DELAY()
     local frame = ui.GetFrame('barrack_charlist')
     if frame:IsVisible() == 1 then
-        local text = frame:CreateOrGetControl("richtext", 'as_control', 40, 0, 200, 40);
-        text:SetText([[{ol}{s16}UpDown:Select Charactor{nl}LeftRight:Change Barrack{nl}X:Game Start{nl}Start:Logout{nl}]])
+        local text = frame:CreateOrGetControl("richtext", 'as_control', 60, 0, 200, 40);
+        text:SetText([[{ol}{s13}UpDown:Select Charactor{nl}LeftRight:Change Barrack{nl}X:Game Start{nl}Start:Logout{nl}]])
         local timer = frame:CreateOrGetControl("timer", 'AS_barracktimer', 0, 0, 10, 10);
         AUTO_CAST(timer)
         timer:SetUpdateScript('ADVANCEDSTART_BARRACK_ON_TIMER');

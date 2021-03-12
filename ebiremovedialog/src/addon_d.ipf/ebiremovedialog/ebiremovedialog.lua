@@ -1047,7 +1047,7 @@ g.debug = false
 g.bkfade = {}
 g.watchingdialog = false
 g.usearts = false
-g.latesttext=""
+g.latesttext = ""
 --ライブラリ読み込み
 CHAT_SYSTEM("[ERD]loaded")
 local acutil = require('acutil')
@@ -1097,11 +1097,11 @@ end
 
 function EBIREMOVEDIALOG_DIALOG_TEXTVIEW(frame, text, titleName, voiceName)
     EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD(frame, text, titleName, voiceName)
-    g.latesttext=text
-    DBGOUT("latest"..g.latesttext)
+    g.latesttext = text
+    DBGOUT("latest" .. g.latesttext)
     if ui.GetFrame("challenge_mode"):IsVisible() == 1 or g.watchingdialog == true then
         DBGOUT("TEXTVIEW" .. tostring(ui.GetFrame("challenge_mode"):IsVisible()))
-        ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(true,'"..text.."')", 0.01)
+        ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(true,'" .. text .. "')", 0.01)
         g.watchingdialog = true
     end
 
@@ -1138,7 +1138,7 @@ function EBIREMOVEDIALOG_INV_ICON_USE(invItem)
                 end
                 g.usearts = true
                 g.watchingdialog = true
-               
+                
                 ReserveScript("EBIREMOVEDIALOG_DIALOG_DO_SINGLE(true)", 0.02)
                 item.UseByGUID(invItem:GetIESID());
             
@@ -1164,16 +1164,16 @@ function EBIREMOVEDIALOG_ON_INIT(addon, frame)
             --addon:RegisterMsg('DIALOG_CHANGE_NEXT', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
             --addon:RegisterMsg('DIALOG_SKIP', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
             addon:RegisterMsg('DIALOG_ADD_SELECT', 'EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE');
-            g.latesttest=""
-            g.watchingdialog=false
-            g.artsbook=false;
+            g.latesttest = ""
+            g.watchingdialog = false
+            g.artsbook = false;
             if EBIREMOVEDIALOG_INV_ICON_USE_OLD == nil and INV_ICON_USE ~= EBIREMOVEDIALOG_INV_ICON_USE then
                 EBIREMOVEDIALOG_INV_ICON_USE_OLD = INV_ICON_USE
                 INV_ICON_USE = EBIREMOVEDIALOG_INV_ICON_USE
             end
-            if EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD~=nil then
-                DIALOG_SHOW_DIALOG_TEXT=EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD
-                EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD=nil
+            if EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD ~= nil then
+                DIALOG_SHOW_DIALOG_TEXT = EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD
+                EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD = nil
             end
             if EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD == nil and DIALOG_SHOW_DIALOG_TEXT ~= EBIREMOVEDIALOG_DIALOG_TEXTVIEW then
                 EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD = DIALOG_SHOW_DIALOG_TEXT
@@ -1253,17 +1253,17 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
             DBGOUT(rawtext)
             DBGOUT(ClMsg('AcceptNextLevelChallengeMode'))
             if g.settings.challengemodenextstep then
-                if rawtext==ClMsg('AcceptNextLevelChallengeMode') then
+                if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
                     go = true
                 end
             end
             if g.settings.challengemodecomplete then
-                if rawtext==ClMsg('CompleteChallengeMode') then
+                if rawtext == ClMsg('CompleteChallengeMode') then
                     go = true
                 end
             end
             if g.settings.challengemodeabort then
-                if rawtext==ClMsg('AcceptStopLevelChallengeMode')then
+                if rawtext == ClMsg('AcceptStopLevelChallengeMode') then
                     go = true
                 end
             end
@@ -1277,11 +1277,10 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
             ReserveScript([[
                 local x=mouse.GetX();
                 local y=mouse.GetY();
-                CHAT_SYSTEM("IN")
                 ReserveScript('control.DialogSelect(]]
                 .. (select + 1) .. [[)',0.01);
                 ReserveScript(string.format('mouse.SetPos(%d,%d)',x,y),0.02)
-                ]]
+                ]]              
                 , 0.03);
         else
             DBGOUT("failed")
@@ -1298,21 +1297,21 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(ok)
             if ui.GetFrame("challenge_mode"):IsVisible() == 1 then
                 local uiframe = ui.GetFrame('dialog')
                 local text = uiframe:GetChildRecursively('textlist')
-                local rawtext =  g.latesttext
+                local rawtext = g.latesttext
                 DBGOUT(rawtext)
                 DBGOUT(ClMsg('AcceptNextLevelChallengeMode'))
                 if g.settings.challengemodenextstep then
-                    if rawtext==ClMsg('AcceptNextLevelChallengeMode') then
+                    if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
                         go = true
                     end
                 end
                 if g.settings.challengemodecomplete then
-                    if rawtext==ClMsg('CompleteChallengeMode') then
+                    if rawtext == ClMsg('CompleteChallengeMode') then
                         go = true
                     end
                 end
                 if g.settings.challengemodeabort then
-                    if rawtext==ClMsg('AcceptStopLevelChallengeMode')then
+                    if rawtext == ClMsg('AcceptStopLevelChallengeMode') then
                         go = true
                     end
                 end
@@ -1411,6 +1410,86 @@ function EBIREMOVEDIALOG_APPLY()
             --         end
             --     end))
             -- end
+            if g.settings.cardremove then
+                assert(pcall(function()
+                        -- 카드 슬롯 정보창 열기
+                        function EQUIP_CARDSLOT_INFO_OPEN(slotIndex)
+                            
+                            
+                            local frame = ui.GetFrame('equip_cardslot_info');
+                            
+                            if frame:IsVisible() == 1 then
+                                frame:ShowWindow(0);
+                            end
+                            
+                            local cardID, cardLv, cardExp = GETMYCARD_INFO(slotIndex);
+                            if cardID == 0 then
+                                return;
+                            end
+                            
+                            local prop = geItemTable.GetProp(cardID);
+                            if prop ~= nil then
+                                cardLv = prop:GetLevel(cardExp);
+                            end
+                            
+                            -- 카드 슬롯 제거하기 위함
+                            frame:SetUserValue("REMOVE_CARD_SLOTINDEX", slotIndex);
+                            EQUIP_CARDSLOT_BTN_REMOVE_WITHOUT_EFFECT(frame,nil)
+                        end
+                end
+                ))
+            end
+            if g.settings.cardequip then
+                assert(pcall(function()
+                    function CARD_SLOT_EQUIP(slot, item, groupNameStr)
+                        local obj = GetIES(item:GetObject());
+                        if obj.GroupName == "Card" then			
+                            local slotIndex = slot:GetSlotIndex();
+                            if groupNameStr == 'ATK' then
+                                slotIndex = slotIndex + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                            elseif groupNameStr == 'DEF' then
+                                slotIndex = slotIndex + (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                            elseif groupNameStr == 'UTIL' then
+                                slotIndex = slotIndex + (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                            elseif groupNameStr == 'STAT' then
+                                slotIndex = slotIndex + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                            elseif groupNameStr == 'LEG' then
+                                slotIndex = 4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE
+                                -- leg 카드는 slotindex = 12, 13번째 슬롯
+                            end
+                    
+                            local cardInfo = equipcard.GetCardInfo(slotIndex + 1);
+                            if cardInfo ~= nil then
+                                ui.SysMsg(ClMsg("AlreadyEquippedThatCardSlot"));
+                                return;
+                            end
+                    
+                            if groupNameStr == 'LEG' then
+                                local pcEtc = GetMyEtcObject();
+                                if pcEtc.IS_LEGEND_CARD_OPEN ~= 1 then
+                                    ui.SysMsg(ClMsg("LegendCard_Slot_NotOpen"))
+                                    return
+                                end
+                            end
+                    
+                            if item.isLockState == true then
+                                ui.SysMsg(ClMsg("MaterialItemIsLock"));
+                                return
+                            end
+                                    
+                            local itemGuid = item:GetIESID();
+                            local invFrame = ui.GetFrame("inventory");	
+                            invFrame:SetUserValue("EQUIP_CARD_GUID", itemGuid);
+                            invFrame:SetUserValue("EQUIP_CARD_SLOTINDEX", slotIndex);	
+                            local textmsg = string.format("[ %s ]{nl}%s", obj.Name, ScpArgMsg("AreYouSureEquipCard"));	
+                            REQUEST_EQUIP_CARD_TX()		
+                            return 1;
+                        end;
+                        return 0;
+                    end
+                end
+                ))
+            end
             if g.settings.bookreading then
                 assert(pcall(function()
                     function BEFORE_APPLIED_NON_EQUIP_ITEM_OPEN(invItem)

@@ -554,8 +554,7 @@
       "reward",
       "item"
     ]
-  }
-  ,
+  },
   {
     "name": "Another One Of Statbars",
     "file": "anotheroneofstatbars",
@@ -597,5 +596,34 @@
       "ui",
       "status"
     ]
-  }  
+  },
+  {
+    "name": "joystickenhancer",
+    "file": "joystickenhancer",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "joystickenhancer-v0.0.1",
+    "unicode": "📖",
+    "description": "ワールドマップ・スキル画面を開くと自動でUIモードになります。  ",
+    "tags": [
+      "ui",
+      "joystick"
+    ]
+  },
+  {
+    "name": "advancedstart",
+    "file": "advancedstart",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "advancedstart-v0.0.1",
+    "unicode": "📖",
+    "description": "スタート画面・バラック画面で一部操作をキーボード・ジョイスティックで行えるようにします。 ",
+    "tags": [
+      "ui",
+      "start",
+      "login",
+      "barrack",
+      "joystick"
+    ]
+  }
 ]
