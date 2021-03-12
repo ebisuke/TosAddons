@@ -31,15 +31,10 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
         vname = "",
         type = "proxy",
         child = {
+            
             {
-                name = "challengemodeenter",
-                vname = "Remove dialog of entering in challengemode ",
-                type = "boolean",
-                default = false,
-            },
-            {
-                name = "challengehardmodeenter",
-                vname = "Remove dialog of entering in challenge hardmode ",
+                name = "artsbook",
+                vname = "Remove dialog of reading Arts book.",
                 type = "boolean",
                 default = false,
             },
@@ -198,7 +193,7 @@ function EBIREMOVEDIALOGCONFIG_SAVE_ONLCLICK()
         try = function()
             EBIREMOVEDIALOGCONFIG_SAVETOSTRUCTURE()
             EBIREMOVEDIALOG_SAVE_SETTINGS()
-
+            EBIREMOVEDIALOG_LOAD_SETTINGS()
             CHAT_SYSTEM("[ERD]SAVED")
         end,
         catch = function(error)
