@@ -10,15 +10,11 @@ function AS_LOGIN_SERVERLIST_DELAY()
     if frame:IsVisible() == 1 then
         
         local text = frame:CreateOrGetControl("richtext", 'as', 0, 0, 200, 10);
-        text:SetText("{ol}{s16}Advanced Start Enabled.")
-        local text = frame:CreateOrGetControl("richtext", 'as_control', 40, 40, 200, 40);
-        text:SetText("{ol}{s24}UpDown:Select Server{nl}X Btn:Login{nl}Start Btn:Exit")
+        text:SetText("{ol}{s20}Advanced Start Enabled.")
         local timer = frame:CreateOrGetControl("timer", 'AS_timer', 0, 0, 10, 10);
         AUTO_CAST(timer)
-        timer:SetUpdateScript('ADVANCEDSTART_ON_TIMER');
-        timer:Start(0.01)
-    
-    
+        timer:SetUpdateScript('ADVANCEDSTART_ON_TIMER')
+        timer:Start(0.00)
     end
 end
 local function CalcPos(x, y)
@@ -72,12 +68,10 @@ end
 function AS_ISHIDELOGIN_DELAY()
     local frame = ui.GetFrame('barrack_charlist')
     if frame:IsVisible() == 1 then
-        local text = frame:CreateOrGetControl("richtext", 'as_control', 60, 0, 200, 40);
-        text:SetText([[{ol}{s13}UpDown:Select Charactor{nl}LeftRight:Change Barrack{nl}X:Game Start{nl}Start:Logout{nl}]])
         local timer = frame:CreateOrGetControl("timer", 'AS_barracktimer', 0, 0, 10, 10);
         AUTO_CAST(timer)
         timer:SetUpdateScript('ADVANCEDSTART_BARRACK_ON_TIMER');
-        timer:Start(0.01)
+        timer:Start(0.00)
     end
 end
 function ADVANCEDSTART_BARRACK_ON_TIMER()

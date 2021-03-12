@@ -215,7 +215,6 @@ function AWWARDROBE_DEFAULTSETTINGS()
         
         },
         defaultname = nil,
-        defaultname = nil
     }
 
 end
@@ -223,7 +222,6 @@ function AWWARDROBE_DEFAULTPERSONALSETTINGS()
     return {
         version = g.version,
         defaultname = nil,
-        defaultname = nil
     }
 end
 --デフォルト設定
@@ -300,7 +298,7 @@ function AWWARDROBE_SORTING()
     AWWARDROBE_DBGOUT("SORT")
     table.sort(g.settings.wardrobe, AWWARDROBE_COMPARE)
     table.sort(g.settings.wardrobecard, AWWARDROBE_COMPARE)
-
+    table.sort(g.settings.wardrobeikor, AWWARDROBE_COMPARE)
 end
 function AWWARDROBE_LOAD_SETTINGS()
     AWWARDROBE_DBGOUT("LOAD_SETTINGS " .. tostring(AWWARDROBE_GETCID()))
@@ -348,6 +346,18 @@ function AWWARDROBE_VALIDATE_SETTINGS()
     for k, v in pairs(g.settings.wardrobe) do
         if (EBI_IsNoneOrNilOrWhitespace(k)) then
             g.settings.wardrobe[k] = nil
+        
+        end
+    end
+    for k, v in pairs(g.settings.wardrobecard) do
+        if (EBI_IsNoneOrNilOrWhitespace(k)) then
+            g.settings.wardrobecard[k] = nil
+        
+        end
+    end
+    for k, v in pairs(g.settings.wardrobeikor) do
+        if (EBI_IsNoneOrNilOrWhitespace(k)) then
+            g.settings.wardrobeikor[k] = nil
         
         end
     end
@@ -1783,7 +1793,7 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
             local defaultname
             if g.tab_config == TAB_EQUIP then
                 wardrobe = g.settings.wardrobe
-                g.personalsettings.defaultname = wardrobe[key + 1].name
+                g.settings.defaultname = wardrobe[key + 1].name
                 local sound = not (shutup == true)
                 if (key ~= "" and not g.settings.wardrobe[key + 1]) then
                     ui.SysMsg(string.format(L_("alertnosettings"), key));
@@ -1797,7 +1807,7 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
                 end
             elseif g.tab_config == TAB_CARD then
                 wardrobe = g.settings.wardrobecard
-                g.personalsettings.defaultnamecard = wardrobe[key + 1].name
+                g.settings.defaultnamecard = wardrobe[key + 1].name
                 if (key ~= "" and not g.settings.wardrobecard[key + 1]) then
                     ui.SysMsg(string.format(L_("alertnosettings"), key));
                     return
@@ -1810,7 +1820,7 @@ function AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST(frame, shutup)
                 end
             elseif g.tab_config == TAB_IKOR then
                 wardrobe = g.settings.wardrobeikor
-                g.personalsettings.defaultnameikor = wardrobe[key + 1].name
+                g.settings.defaultnameikor = wardrobe[key + 1].name
                 if (key ~= "" and not g.settings.wardrobeikor[key + 1]) then
                     ui.SysMsg(string.format(L_("alertnosettings"), key));
                     return
@@ -1905,9 +1915,9 @@ function AWWARDROBE_LOADEQFROMSTRUCTURE(table, enableeffect)
     local frame = ui.GetFrame(g.framename)
     --一旦クリア
     AWWARDROBE_CLEARALLEQUIPS(frame)
-    
+    local gbox=frame:GetChildRecursively('equip')
     for k, v in pairs(table) do
-        local slot = GET_CHILD_RECURSIVELY(frame, k, "ui::CSlot")
+        local slot = GET_CHILD_RECURSIVELY(gbox, k, "ui::CSlot")
         if (slot ~= nil) then
             local iesid = v.iesid;
             local clsid = tonumber(v.clsid)
@@ -1969,6 +1979,7 @@ end
 function AWWARDROBE_LOADIKORFROMSTRUCTURE(tbl)
     --local tbl = {}
     local frame = ui.GetFrame(g.framename):GetChildRecursively('gbox_Ikor')
+    AWWARDROBE_CLEARALLIKOR(ui.GetFrame(g.framename))
     for k, _ in pairs(g.effectingikorspot) do
         if tbl[k] then
             if tbl[k].fixed then
@@ -2079,6 +2090,18 @@ function AWWARDROBE_BTNDELETE_ON_LBUTTONDOWN(frame)
                         end
                     end
                     g.settings.wardrobecard = tbl
+                    ui.SysMsg(string.format(L_("alertdeletesettings"), curname));
+                elseif (g.tab_config == TAB_IKOR and g.settings.wardrobeikor[curindex]) then
+                    g.settings.wardrobeikor[curindex].name = nil
+                    --詰める
+                    local tbl = {}
+                    for k, d in ipairs(g.settings.wardrobeikor) do
+                        if (d.name ~= nil) then
+                            tbl[#tbl + 1] = d
+                            AWWARDROBE_DBGOUT("BBB")
+                        end
+                    end
+                    g.settings.wardrobeikor = tbl
                     ui.SysMsg(string.format(L_("alertdeletesettings"), curname));
                 else
                     ui.SysMsg(string.format(L_("alertnosettings"), curname));

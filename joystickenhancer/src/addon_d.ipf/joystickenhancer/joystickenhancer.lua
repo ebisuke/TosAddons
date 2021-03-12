@@ -121,7 +121,6 @@ function JOYSTICKENHANCER_ON_TIMER()
             g.sys.uimodecount=g.sys.uimodecount+1
             if g.sys.uimodecount==1 then
                 SetKeyboardSelectMode(1)
-                CHAT_SYSTEM("setvbuf")
             end
         end
         if ui.GetFrame(k):IsVisible()==0 and g.sys.uimodevisibles[k] then
@@ -129,7 +128,6 @@ function JOYSTICKENHANCER_ON_TIMER()
             g.sys.uimodecount=g.sys.uimodecount-1
             if g.sys.uimodecount==0 then
                 SetKeyboardSelectMode(0)
-                CHAT_SYSTEM("reset")
             end
         end
     end
