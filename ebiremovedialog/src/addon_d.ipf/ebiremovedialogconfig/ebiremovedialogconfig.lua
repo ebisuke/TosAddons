@@ -51,8 +51,14 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
                 default = false,
             },
             {
+                name = "preventshowchallengemodeframe",
+                vname = "Fix the problem of the challenge mode frame being displayed.",
+                type = "boolean",
+                default = false,
+            },
+            {
                 name = "challengemodenextstep",
-                vname = "Remove dialog of going to next level in challengemode ",
+                vname = "Remove dialog of going to next level in challengemode.",
                 type = "boolean",
                 default = false,
             },

@@ -1026,7 +1026,9 @@ local function utf8gsub(str, regex, repl, limit)
     end
     return ret .. utf8sub(str, prevEnd), n
 end
-
+local function IsInChallengeMode()
+    return info.GetBuffByName(session.GetMyHandle(), "ChallengeMode_Player") ~= nil
+end
 local addonName = "ebiremovedialog"
 local addonNameLower = string.lower(addonName)
 --作者名
@@ -1099,8 +1101,7 @@ function EBIREMOVEDIALOG_DIALOG_TEXTVIEW(frame, text, titleName, voiceName)
     EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD(frame, text, titleName, voiceName)
     g.latesttext = text
     DBGOUT("latest" .. g.latesttext)
-    if ui.GetFrame("challenge_mode"):IsVisible() == 1 or g.watchingdialog == true then
-        DBGOUT("TEXTVIEW" .. tostring(ui.GetFrame("challenge_mode"):IsVisible()))
+    if IsInChallengeMode() or g.watchingdialog == true then
         ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(true,'" .. text .. "')", 0.01)
         g.watchingdialog = true
     end
@@ -1136,6 +1137,13 @@ function EBIREMOVEDIALOG_INV_ICON_USE(invItem)
                     imcSound.PlaySoundEvent("skill_cooltime");
                     return;
                 end
+                
+                local mapClassName = session.GetMapName();
+                if mapClassName == "c_Klaipe" or mapClassName == "c_orsha" or mapClassName == "c_fedimian" then
+                    else
+                    ui.SysMsg(ClMsg('AllowedInTown1'));
+                    return
+                end
                 g.usearts = true
                 g.watchingdialog = true
                 
@@ -1159,10 +1167,12 @@ function EBIREMOVEDIALOG_ON_INIT(addon, frame)
             g.frame = frame
             
             addon:RegisterMsg('GAME_START', 'EBIREMOVEDIALOG_GAME_START');
-            addon:RegisterMsg('DIALOG_CLOSE', 'EBIREMOVEDIALOG_DIALOG_RESTOREENABLE');
+            --addon:RegisterMsg('DIALOG_CLOSE', 'EBIREMOVEDIALOG_DIALOG_RESTOREENABLE');
             --addon:RegisterMsg('DIALOG_CHANGE_OK', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
             --addon:RegisterMsg('DIALOG_CHANGE_NEXT', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
             --addon:RegisterMsg('DIALOG_SKIP', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
+            addon:RegisterMsg('FPS_UPDATE', 'EBIREMOVEDIALOG_FPS_UPDATE');
+            
             addon:RegisterMsg('DIALOG_ADD_SELECT', 'EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE');
             g.latesttest = ""
             g.watchingdialog = false
@@ -1170,10 +1180,6 @@ function EBIREMOVEDIALOG_ON_INIT(addon, frame)
             if EBIREMOVEDIALOG_INV_ICON_USE_OLD == nil and INV_ICON_USE ~= EBIREMOVEDIALOG_INV_ICON_USE then
                 EBIREMOVEDIALOG_INV_ICON_USE_OLD = INV_ICON_USE
                 INV_ICON_USE = EBIREMOVEDIALOG_INV_ICON_USE
-            end
-            if EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD ~= nil then
-                DIALOG_SHOW_DIALOG_TEXT = EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD
-                EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD = nil
             end
             if EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD == nil and DIALOG_SHOW_DIALOG_TEXT ~= EBIREMOVEDIALOG_DIALOG_TEXTVIEW then
                 EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD = DIALOG_SHOW_DIALOG_TEXT
@@ -1192,40 +1198,16 @@ function EBIREMOVEDIALOG_GAME_START()
     EBIREMOVEDIALOGCONFIG_INIT()
     EBIREMOVEDIALOG_APPLY()
 end
--- function EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT(frame, msg, argstr, argnum)
---     if g.watchingdialog == false then
---         local go = false
---         local uiframe = ui.GetFrame('dialog')
---         local text = uiframe:GetChildRecursively('textlist')
---         local rawtext = g.latesttest
---         local prefix = "{s20}{b}{#1f100b}"
---         DBGOUT(rawtext)
---         DBGOUT(ClMsg('AcceptNextLevelChallengeMode'))
---         if g.settings.challengemodenextstep then
---             if rawtext==ClMsg('AcceptNextLevelChallengeMode') then
---                 go = true
---             end
---         end
---         if g.settings.challengemodecomplete then
---             if rawtext==ClMsg('CompleteChallengeMode') then
---                 go = true
---             end
---         end
---         if g.settings.challengemodeabort then
---             if rawtext==ClMsg('AcceptStopLevelChallengeMode')then
---                 go = true
---             end
---         end
---         if go then
---             DBGOUT("OKNEXT")
---             --frame:ShowWindow(0)
---             g.watchingdialog = true
---             ReserveScript('EBIREMOVEDIALOG_DIALOG_DO_SINGLE(true)', 0.01)
---         else
---             DBGOUT("FAIL")
---         end
---     end
--- end
+function EBIREMOVEDIALOG_FPS_UPDATE()
+    -- 強制的に直す
+    if g.settings.preventshowchallengemodeframe then
+        if (IsInChallengeMode() and ui.GetFrame('challenge_mode'):IsVisible() == 0) then
+            ui.GetFrame('challenge_mode'):ShowWindow(1)
+        elseif (not IsInChallengeMode() and ui.GetFrame('challenge_mode'):IsVisible() == 1) then
+            ui.GetFrame('challenge_mode'):ShowWindow(0)
+        end
+    end
+end
 function EBIREMOVEDIALOG_DIALOG_DO_SINGLE(ok)
     if g.watchingdialog == true then
         
@@ -1234,7 +1216,7 @@ function EBIREMOVEDIALOG_DIALOG_DO_SINGLE(ok)
 end
 function EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE(frame, ctrl, argstr, argnum)
     
-    if (ui.GetFrame("challenge_mode"):IsVisible() == 1 and g.watchingdialog == true) or g.usearts then
+    if (IsInChallengeMode() or g.usearts) and g.watchingdialog == true then
         DBGOUT("multiple")
         ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(" .. tostring(0) .. ")", 0.01)
     end
@@ -1242,16 +1224,14 @@ end
 
 
 function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
-    if g.watchingdialog and (ui.GetFrame("challenge_mode"):IsVisible() == 1 or g.usearts) then
+    if g.watchingdialog and (IsInChallengeMode() or g.usearts) then
         
         local go = false
-        if ui.GetFrame("challenge_mode"):IsVisible() == 1 then
+        if IsInChallengeMode() then
             local uiframe = ui.GetFrame('dialog')
             local text = uiframe:GetChildRecursively('textlist')
             local rawtext = g.latesttext
             local prefix = "{s20}{b}{#1f100b}"
-            DBGOUT(rawtext)
-            DBGOUT(ClMsg('AcceptNextLevelChallengeMode'))
             if g.settings.challengemodenextstep then
                 if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
                     go = true
@@ -1267,7 +1247,7 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
                     go = true
                 end
             end
-        else
+        elseif g.usearts then
             go = true
         end
         if go then
@@ -1278,9 +1258,19 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
                 local x=mouse.GetX();
                 local y=mouse.GetY();
                 ReserveScript('control.DialogSelect(]]
+                
+                
+                
+                
+                
+                
                 .. (select + 1) .. [[)',0.01);
                 ReserveScript(string.format('mouse.SetPos(%d,%d)',x,y),0.02)
-                ]]              
+                ]]
+                
+                
+                
+                
                 , 0.03);
         else
             DBGOUT("failed")
@@ -1292,51 +1282,51 @@ end
 function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(ok)
     if g.watchingdialog then
         
-        if ui.GetFrame("challenge_mode"):IsVisible() == 1 or g.usearts then
+        if IsInChallengeMode() then
             local go = false
-            if ui.GetFrame("challenge_mode"):IsVisible() == 1 then
-                local uiframe = ui.GetFrame('dialog')
-                local text = uiframe:GetChildRecursively('textlist')
-                local rawtext = g.latesttext
-                DBGOUT(rawtext)
-                DBGOUT(ClMsg('AcceptNextLevelChallengeMode'))
-                if g.settings.challengemodenextstep then
-                    if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
-                        go = true
-                    end
+            local uiframe = ui.GetFrame('dialog')
+            local text = uiframe:GetChildRecursively('textlist')
+            local rawtext = g.latesttext
+            if g.settings.challengemodenextstep then
+                if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
+                    go = true
                 end
-                if g.settings.challengemodecomplete then
-                    if rawtext == ClMsg('CompleteChallengeMode') then
-                        go = true
-                    end
-                end
-                if g.settings.challengemodeabort then
-                    if rawtext == ClMsg('AcceptStopLevelChallengeMode') then
-                        go = true
-                    end
-                end
-            else
-                go = true
             end
+            if g.settings.challengemodecomplete then
+                if rawtext == ClMsg('CompleteChallengeMode') then
+                    go = true
+                end
+            end
+            if g.settings.challengemodeabort then
+                if rawtext == ClMsg('AcceptStopLevelChallengeMode') then
+                    go = true
+                end
+            end
+            
             if ok then
                 if go then
-                    EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)
+                    --control.DialogOk();
+                    ReserveScript('EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)', 0.01)
                 end
             
+            else
+                if go then
+                    DBGOUT("Cancel")
+                    control.DialogCancel();
+                end
+            end
+        
+        elseif g.usearts then
+            
+            if ok then
+                DBGOUT("OK")
+                -- control.DialogOk();
+                ReserveScript('EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)', 0.01)
             else
                 DBGOUT("Cancel")
                 control.DialogCancel();
             end
         
-        else
-            if ok then
-                DBGOUT("OK")
-                control.DialogOk();
-            
-            else
-                DBGOUT("Cancel")
-                control.DialogCancel();
-            end
         end
     
     
@@ -1375,41 +1365,7 @@ end
 function EBIREMOVEDIALOG_APPLY()
     EBI_try_catch{
         try = function()
-            -- if g.settings.challengemodeenter then
-            --     assert(pcall(function()
-            --         function DIALOG_ACCEPT_CHALLENGE_MODE(handle)
-            --             ACCEPT_CHALLENGE_MODE(handle,1)
-            --         end
-            --     end))
-            -- end
-            -- if g.settings.challengehardmodeenter then
-            --     assert(pcall(function()
-            --         function DIALOG_ACCEPT_CHALLENGE_MODE_HARD_MODE(handle)
-            --             ACCEPT_CHALLENGE_MODE(handle,1)
-            --         end
-            --     end))
-            -- end
-            -- if g.settings.challengemodenextstep then
-            --     assert(pcall(function()
-            --         function DIALOG_ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(handle)
-            --             ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(handle)
-            --         end
-            --     end))
-            -- end
-            -- if g.settings.challengemodeabort then
-            --     assert(pcall(function()
-            --         function DIALOG_ACCEPT_STOP_LEVEL_CHALLENGE_MODE(handle)
-            --             ACCEPT_STOP_LEVEL_CHALLENGE_MODE(handle)
-            --         end
-            --     end))
-            -- end
-            -- if g.settings.challengemodecomplete then
-            --     assert(pcall(function()
-            --         function DIALOG_COMPLETE_CHALLENGE_MODE(handle)
-            --             ACCEPT_STOP_LEVEL_CHALLENGE_MODE(handle)
-            --         end
-            --     end))
-            -- end
+            
             if g.settings.cardremove then
                 assert(pcall(function()
                         -- 카드 슬롯 정보창 열기
@@ -1434,16 +1390,16 @@ function EBIREMOVEDIALOG_APPLY()
                             
                             -- 카드 슬롯 제거하기 위함
                             frame:SetUserValue("REMOVE_CARD_SLOTINDEX", slotIndex);
-                            EQUIP_CARDSLOT_BTN_REMOVE_WITHOUT_EFFECT(frame,nil)
+                            EQUIP_CARDSLOT_BTN_REMOVE_WITHOUT_EFFECT(frame, nil)
                         end
                 end
-                ))
+            ))
             end
             if g.settings.cardequip then
                 assert(pcall(function()
                     function CARD_SLOT_EQUIP(slot, item, groupNameStr)
                         local obj = GetIES(item:GetObject());
-                        if obj.GroupName == "Card" then			
+                        if obj.GroupName == "Card" then
                             local slotIndex = slot:GetSlotIndex();
                             if groupNameStr == 'ATK' then
                                 slotIndex = slotIndex + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
@@ -1455,15 +1411,15 @@ function EBIREMOVEDIALOG_APPLY()
                                 slotIndex = slotIndex + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
                             elseif groupNameStr == 'LEG' then
                                 slotIndex = 4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE
-                                -- leg 카드는 slotindex = 12, 13번째 슬롯
+                            -- leg 카드는 slotindex = 12, 13번째 슬롯
                             end
-                    
+                            
                             local cardInfo = equipcard.GetCardInfo(slotIndex + 1);
                             if cardInfo ~= nil then
                                 ui.SysMsg(ClMsg("AlreadyEquippedThatCardSlot"));
                                 return;
                             end
-                    
+                            
                             if groupNameStr == 'LEG' then
                                 local pcEtc = GetMyEtcObject();
                                 if pcEtc.IS_LEGEND_CARD_OPEN ~= 1 then
@@ -1471,24 +1427,24 @@ function EBIREMOVEDIALOG_APPLY()
                                     return
                                 end
                             end
-                    
+                            
                             if item.isLockState == true then
                                 ui.SysMsg(ClMsg("MaterialItemIsLock"));
                                 return
                             end
-                                    
+                            
                             local itemGuid = item:GetIESID();
-                            local invFrame = ui.GetFrame("inventory");	
+                            local invFrame = ui.GetFrame("inventory");
                             invFrame:SetUserValue("EQUIP_CARD_GUID", itemGuid);
-                            invFrame:SetUserValue("EQUIP_CARD_SLOTINDEX", slotIndex);	
-                            local textmsg = string.format("[ %s ]{nl}%s", obj.Name, ScpArgMsg("AreYouSureEquipCard"));	
-                            REQUEST_EQUIP_CARD_TX()		
+                            invFrame:SetUserValue("EQUIP_CARD_SLOTINDEX", slotIndex);
+                            local textmsg = string.format("[ %s ]{nl}%s", obj.Name, ScpArgMsg("AreYouSureEquipCard"));
+                            REQUEST_EQUIP_CARD_TX()
                             return 1;
                         end;
                         return 0;
                     end
                 end
-                ))
+            ))
             end
             if g.settings.bookreading then
                 assert(pcall(function()

@@ -625,5 +625,22 @@
       "barrack",
       "joystick"
     ]
-  }
+  },
+  {
+    "name": "cursorforhighres",
+    "file": "cursorforhighres",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "cursorforhighres-v0.0.1",
+    "unicode": "📖",
+    "description": "高解像度環境向けのカーソルです",
+    "tags": [
+      "ui",
+      "cursor",
+      "resolution",
+      "highres"
+      
+    ]
+  },
+  
 ]
