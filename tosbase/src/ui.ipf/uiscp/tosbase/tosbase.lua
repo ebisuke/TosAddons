@@ -169,6 +169,7 @@ function TB_SHOW_SKILL()
         end,
         catch = function(error)
             ERROUT(error)
+            --ERROUT(debug.traceback())
         end
     }
 end
@@ -178,12 +179,59 @@ function TB_EXIT_SKILLSIMULATOR()
     
     TB_LEAVEENV()
 end
-
+local TSkill={
+   
+    new=function(classname)
+        local skill=GetClass("Skill",classname)
+        local ies=CloneIES_UseCP(skill)
+        return setmetatable(
+        {
+           
+            GetObject = function(self)
+                return self
+            end,
+            Level = 12,
+            LevelByDB=12,
+            GetIESID = function(self)
+                return skill.ClassID
+            end,
+        },{__index=ies});
+    end
+}
+local TCommon={
+    GetSkillByName=function(name)
+        return TSkill.new(name)
+    end,
+    TryGetProp=TryGetProp
+}
 
 --TB_RETREAT
 function TB_ENTERENV()
     local TB_METATABLE = {
         session = setmetatable({
+            GetMySession=function()
+                return {
+                    GetSkillList=function(self)
+                        return {
+                            GetSkillByName=function(self)
+                                
+                            end
+                        }
+                    end,
+                    GetPCJobInfo=function(self)
+                        return {
+                            GetJobCount=function(self)
+                                return 3
+                            end,
+                            GetJobInfoByIndex=function(self,index)
+                                local list=   {{jobID=1001,startTime=0,changeTime=0},{jobID=1002,startTime=0,changeTime=0},{jobID=1003,startTime=0,changeTime=0}}
+                                return list[index+1]
+                            end
+                         
+                        }
+                    end,
+                }
+            end,
             GetMyHandle = function()
                 return nil
             end,
@@ -201,35 +249,25 @@ function TB_ENTERENV()
             end,
             GetSkillByName = function(classname)
                 local skill=GetClass("Skill",classname)
-                return nil
-                -- return setmetatable(
-                -- {
-                --     GetObject = function(self)
-                --         return nil
-                --     end,
-                --     Level = 12,
-                --     GetIESID = function(self)
-                --         return skill.ClassID
-                --     end,
-                -- },{__index=skill});
+                return TSkill.new(classname)
             end,
             GetSkillByGuid = function(arg)
                 local skill=GetClassByType("Skill",arg)
-                return nil
-                -- return setmetatable(
-                -- {
-                --     GetObject = function(self)
-                --         return nil
-                --     end,
-                --     Level = 12,
-                --     GetIESID = function(self)
-                --         return skill.ClassID
-                --     end,
-                -- },{__index=skill});
+                local clone= CloneIES_UseCP(skill);
+                clone.LevelByDB=4
+                clone.Level=4
+                return setmetatable({
+                    GetObject=function(self)
+                        return self
+                    end,
+                },{__index=clone})
+            end,
+            GetAbilityByName=function(classname)
+                return {}
             end,
             ability = setmetatable({
                 GetAbilityPoint = function()
-                    return '10000000000'
+                    return 1000000000
                 end
             }, {__index = session.ability})
         
@@ -249,12 +287,30 @@ function TB_ENTERENV()
             GetName = function(ses) return "Sim" end,
         }, {__index = info}),
         IsServerSection = function(pc) return 0 end,
-        GetMyPCObject = function() return {JobName = baseclass[g.baseclass].name} end,
-        GetMyJobList = function() return {1001} end,
+        GetMyPCObject = function() return {Lv=460,JobName = baseclass[g.baseclass].name} end,
+        GetMyJobList = function() return {1001,1002,1003} end,
         GetMyEtcObject = function() return {JobChanging = 1} end,
         GetAbilityNamesByJob = function(pc, classname) return {} end,
         GetAbilityIESObject = function(pc, classname) return nil end,
         GetIES = function(arg) return arg end,
+        GetRemainSkillPts=function(pc,classid)
+            return 15;
+        end,
+        GetSkill=function(pc,skillname)
+            return TSkill.new(skillname)
+        end,
+        TryGetProp=function(obj,name,default)
+            local ret=TCommon.TryGetProp(obj,name,default)
+            if ret then
+                return ret
+                
+            end
+            if obj[name] then
+                return obj[name]
+            else
+                return default
+            end
+        end
     }
     TB_RETREAT = TB_RETREAT or {}
     TB_LEAVEENV()
@@ -264,6 +320,12 @@ function TB_ENTERENV()
             _G[k] = v
         end
     end
+
+end
+function UNLOCK_BASE_LEVEL(pc, jobName, limitLevel, abilIES)
+    ERROUT(debug.traceback())
+
+		return "UNLOCK";
 
 end
 function TB_LEAVEENV()

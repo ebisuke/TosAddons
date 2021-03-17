@@ -18,6 +18,9 @@ local g = {}
 local whitelist={
     [640475]=true,
 }
+local whitelistcube={
+    [642785]=true,
+}
 g.debug = false
 g.framename="cubeopener"
 g.total=nil
@@ -175,7 +178,7 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                 local groupName = itemobj.GroupName;
                 DBGOUT(groupName)
                 local itemtype = invitem.type;
-                if(groupName=="Cube" or groupName=="Event" or whitelist[itemtype])then
+                if(groupName=="Cube" or groupName=="Event" or whitelist[itemtype] or whitelistcube[itemtype])then
                         
                     if true == invitem.isLockState then
                         ui.SysMsg(ClMsg("MaterialItemIsLock"));
@@ -209,9 +212,9 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                             return false
                         end
 
-                    elseif(groupName=="Cube")then
+                    elseif(groupName=="Cube" or whitelistcube[itemtype])then
                         local rerollPrice =TryGet(itemobj, "NumberArg1")
-                        if(rerollPrice==0 or not rerollPrice )then
+                        if(rerollPrice==0 or not rerollPrice or whitelistcube[itemtype] )then
                             if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
                                 --再開封可能

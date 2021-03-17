@@ -1,6 +1,5 @@
---imefixer
 --アドオン名（大文字）
-local addonName = "imefixer"
+local addonName = "quickslotswitcherindicator"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -11,29 +10,27 @@ _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
-g.version = 0
-g.settings = {x = 300, y = 300}
-g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 
-g.scriptpath = string.format('../addons/%s/imeon.exe', addonNameLower)
-g.personalsettingsFileLoc = ""
-g.framename = "imefixer"
+g.framename = "quickslotswitcherindicator"
 g.debug = false
-g.focused=false
+
+
 
 --ライブラリ読み込み
-CHAT_SYSTEM("[IMEFIXER]loaded")
 local acutil = require('acutil')
-local function EBI_try_catch(what)
+function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
         what.catch(result)
     end
     return result
 end
-local function EBI_IsNoneOrNil(val)
+function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
+
+
+
 
 
 local function DBGOUT(msg)
@@ -56,6 +53,7 @@ local function DBGOUT(msg)
     }
 
 end
+
 local function ERROUT(msg)
     EBI_try_catch{
         try = function()
@@ -68,41 +66,24 @@ local function ERROUT(msg)
 
 end
 
-
-function IMEFIXER_ON_INIT(addon, frame)
+--マップ読み込み時処理（1度だけ）
+function QUICKSLOTSWITCHERINDICATOR_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-            --acutil:setupHook("QUICKSLOT_MAKE_GAUGE", SMALLUI_QUICKSLOT_MAKE_GAUGE)
-            addon:RegisterMsg('FPS_UPDATE', 'IMEFIXER_FPS_UPDATE');
-            local timer=frame:GetChild('addontimer')
-            AUTO_CAST(timer)
-            timer:SetUpdateScript('IMEFIXER_ON_TIMER')
-            timer:Start(0.1)
-            timer:EnableHideUpdate(1)
-            g.focused=nil
 
+
+            if not g.loaded then
+                
+                g.loaded = true
+            end
+
+            g.frame:ShowWindow(1)
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
-end
-function IMEFIXER_FPS_UPDATE()
-    ui.GetFrame(g.framename):ShowWindow(1)
-end 
-function IMEFIXER_ON_TIMER()
-    local focus=ui.GetFocusObject()
-    if focus:GetClassString()=='ui::CEditControl' then
-        if g.focused==nil then
-            g.focused=focus
-            debug.ShellExecute(g.scriptpath)
-        end
-    else
-        g.focused=nil
-    end
-
-    
 end
