@@ -1,5 +1,3 @@
-#!/usr/bin/lua
---require 'DataDumper'   -- http://lua-users.org/wiki/DataDumper
 local M = {} -- public interface
 M.Version = 'VERSION'
 M.VersionDate = 'DATESTAMP'
