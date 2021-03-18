@@ -2521,29 +2521,7 @@ function MIDIPLAYER_ON_TIMER()
             
             if g.play then
                
-				for note, v in pairs(g.onoff) do
-					
-					if v == 0 then
-						
-						else
-						if not g.playstate[note] then
-							if ins then
-								
-								Instrument.ReqPlayInstrument(note)
-							-- g.prevnote_forcleanup[note] = note
-							else
-					
-								Piedpiper.ReqPlayFluting(note)
-							--g.prevnote_forcleanup[note] = note
-							end
-							
-						end
-						g.playstate[note] = note
-						g.onoff[note] = nil
-						--print('ON:'..note)
-					end
-				end
-                
+			
                 local timediff = os.clock() - g.prevtime
                 g.prevtime = os.clock();
                 local allover = true
@@ -2582,7 +2560,7 @@ function MIDIPLAYER_ON_TIMER()
                         ticker:SetText("{ol}ET:" .. track .. "/" ..
                             math.floor(g.delta[track] / g.score[1]) .. '/' .. math.floor(g.delta[track]) .. "/" .. g.score[1])
                         
-                        if g.soundcount < 1 then
+                        if g.soundcount < 4 then
                             
                             
                             if event[1] == 'note_on' and event[5] ~= 0 then
@@ -2631,8 +2609,10 @@ function MIDIPLAYER_ON_TIMER()
 						if g.playstate[note] then
 							if ins then
 								Instrument.ReqStopInstrument(note)
+								ReserveScript(string.format("Instrument.ReqStopInstrument(%d)",note),0.00)
 							else
 								Piedpiper.ReqStopFluting(note)
+								ReserveScript(string.format("Piedpiper.ReqStopFluting(%d)",note),0.00)
 							end
 						end
 						g.playstate[note] = nil
@@ -2641,7 +2621,29 @@ function MIDIPLAYER_ON_TIMER()
 					end
 					
 				end
-
+				for note, v in pairs(g.onoff) do
+					
+					if v == 0 then
+						
+						else
+						if not g.playstate[note] then
+							if ins then
+								
+								Instrument.ReqPlayInstrument(note)
+							-- g.prevnote_forcleanup[note] = note
+							else
+					
+								Piedpiper.ReqPlayFluting(note)
+							--g.prevnote_forcleanup[note] = note
+							end
+							
+						end
+						g.playstate[note] = note
+						g.onoff[note] = nil
+						--print('ON:'..note)
+					end
+				end
+                
                 if allover then
                     --MIDIPLAYER_STOP()
                     MIDIPLAYER_PLAY()
