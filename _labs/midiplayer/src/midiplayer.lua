@@ -1,8 +1,8 @@
 #!/usr/bin/lua
 --require 'DataDumper'   -- http://lua-users.org/wiki/DataDumper
 local M = {} -- public interface
-M.Version = '6.8'
-M.VersionDate = '20170917'
+M.Version = 'VERSION'
+M.VersionDate = 'DATESTAMP'
 -- 20170917 6.8 fix 153: bad argument #1 to 'char' and round dtime
 -- 20160702 6.7 to_millisecs() now handles set_tempo across multiple Tracks
 -- 20150921 6.5 segment restores controllers as well as patch and tempo
@@ -18,7 +18,7 @@ M.VersionDate = '20170917'
 -- 20110126 5.4 "previous message repeated N times" to save space on stderr
 -- 20110126 5.3 robustness fix if one note_on and multiple note_offs
 -- 20110125 5.2 opus2score terminates unended notes at the end of the track
--- 20110124 5.1 the warnings in midi2opus display track_num
+-- 20110124 5.1 the printings in midi2opus display track_num
 -- 20110122 5.0 sysex2midimode.get pythonism eliminated
 -- 20110119 4.9 copyright_text_event "time" item was missing
 -- 20110110 4.8 note_on with velocity=0 treated as a note-off
@@ -44,11 +44,11 @@ local sysex2midimode = {
 	["\126\127\09\03\247"] = 2,
 }
 
-local previous_warning = '' -- 5.4
+local previous_printing = '' -- 5.4
 local previous_times = 0    -- 5.4
-local function clean_up_warnings() -- 5.4
+local function clean_up_printings() -- 5.4
 	-- Call this before returning from any publicly callable function
-	-- whenever there's a possibility that a warning might have been printed
+	-- whenever there's a possibility that a printing might have been printed
 	-- by the function, or by any private functions it might have called.
 	if previous_times > 1 then
 		io.stderr:write('  previous message repeated '
@@ -57,19 +57,11 @@ local function clean_up_warnings() -- 5.4
 		io.stderr:write('  previous message repeated\n')
 	end
 	previous_times = 0
-	previous_warning = ''
+	previous_printing = ''
 end
-local function warn(str)
-	if str == previous_warning then -- 5.4
-		previous_times = previous_times + 1
-	else
-		clean_up_warnings()
-		io.stderr:write(str,'\n')
-		previous_warning = str
-	end
-end
+
 local function die(str)
-	clean_up_warnings()
+	clean_up_printings()
 	io.stderr:write(str,'\n')
 	os.exit(1)
 end
@@ -116,7 +108,7 @@ local function int2twobytes(i)
 end
 
 local function twobytes2int(s)
-	return 256*string.byte(string.sub(s,1)) + string.byte(string.sub(s,2))
+	return 256*s[1] + s[2]
 end
 
 local function int2fourbytes(i)
@@ -128,14 +120,14 @@ local function int2fourbytes(i)
 end
 
 local function fourbytes2int(s)
-	return 16777216*string.byte(string.sub(s,1)) +
-	 65536 * string.byte(string.sub(s,2)) +
-	 256*string.byte(string.sub(s,3)) + string.byte(string.sub(s,4))
+	return 16777216*s[1] +
+	 65536 *s[2] +
+	 256*s[3] + s[4]
 end
 
 local function read_14_bit(byte_a)
 	-- decode a 14 bit quantity from two bytes,
-	return string.byte(byte_a,1) + 128 * string.byte(byte_a,2)
+	return byte_a[1] + 128 * byte_a[2]
 end
 
 local function write_14_bit(integer)
@@ -151,7 +143,7 @@ most significant digit first, with as few digits as possible.
 Bit eight (the high bit) is set on each byte except the last.
 ]]
 -- stderr.write('integer = ..',integer)
-	-- warn('integer = '..tostring(integer)..' type '..type(integer))
+	-- print('integer = '..tostring(integer)..' type '..type(integer))
 	if integer == 0 then return '\000' end
 	local ber = { string.char(integer % 128) }
 	while integer > 127 do
@@ -161,6 +153,9 @@ Bit eight (the high bit) is set on each byte except the last.
 	end
 	return table.concat(ber)
 end
+local function byte(str,i)
+	return str[i]
+end
 
 local function str2ber_int(s, start)
 --[[Given (a string, and a position within it), returns
@@ -169,13 +164,13 @@ local function str2ber_int(s, start)
 	local i = start
 	local integer = 0
 	while true do
-		local byte = string.byte(s, i)
+		local byte = s[i]
 		integer = integer + (byte%128)
 		if byte < 127.5 then
 			return integer, i+1
 		end
 		if i >= #s then
-			warn('str2ber_int: no end-of-integer found')
+			print('str2ber_int: no end-of-integer found')
 			return 0, start
 		end
 		i = i + 1
@@ -244,7 +239,7 @@ The options:
 		time, i = str2ber_int(trackdata, i)
 
 		-- Now let's see what we can make of the command
-		local first_byte = string.byte(trackdata,i); i = i+1
+		local first_byte = trackdata[i]; i = i+1
 
 		if first_byte < 240 then  -- It's a MIDI event
 			if first_byte % 256 > 127 then
@@ -253,7 +248,7 @@ The options:
 				-- It wants running status; use last event_code value
 				i = i-1
 				if event_code == -1 then
-					warn("Running status not set; Aborting track.")
+					print("Running status not set; Aborting track.")
 					return {}
 				end
 			end
@@ -267,10 +262,10 @@ The options:
 			if command == 246 then  --  0-byte argument
 				--pass
 			elseif command == 192 or command == 208 then  --  1-byte arg
-				parameter = string.byte(trackdata, i); i = i+1
+				parameter = sbyte(trackdata, i); i = i+1
 			else -- 2-byte argument could be BB or 14-bit
-				param1 = string.byte(trackdata, i); i = i+1
-				param2 = string.byte(trackdata, i); i = i+1
+				param1 = sbyte(trackdata, i); i = i+1
+				param2 = sbyte(trackdata, i); i = i+1
 			end
 
 			----------------- MIDI events -----------------------
@@ -320,56 +315,56 @@ The options:
 					 128*param2+param1-8192}
 				end
 			else
-				warn("Shouldn't get here; command="..tostring(command))
+				print("Shouldn't get here; command="..tostring(command))
 			end
 
 		elseif first_byte == 255 then  -- It's a Meta-Event!
-			local command = string.byte(trackdata, i); i = i+1
+			local command = (trackdata[i]); i = i+1
 			local length
 			length, i = str2ber_int(trackdata, i)
 			if (command      == 0) then
 				if length == 2 then  -- 3.9
 					E = {'set_sequence_number', time,
-					 twobytes2int(string.sub(trackdata,i,i+1)) }
+					 twobytes2int(sub(trackdata,i,i+1)) }
 				else
-					warn('set_sequence_number: length must be 2, not '
+					print('set_sequence_number: length must be 2, not '
 					 .. tostring(length))
 					E = {'set_sequence_number', time, 0}
 				end
 
 			-- Defined text events ------
 			elseif command == 1 then
-				E = {'text_event', time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event', time, sub(trackdata,i,i+length-1)}
 			elseif command == 2 then  -- 4.9
-				E = {'copyright_text_event', time, string.sub(trackdata,i,i+length-1)}
+				E = {'copyright_text_event', time, sub(trackdata,i,i+length-1)}
 			elseif command == 3 then
-				E = {'track_name',time, string.sub(trackdata,i,i+length-1)}
+				E = {'track_name',time, sub(trackdata,i,i+length-1)}
 			elseif command == 4 then
-				E = {'instrument_name',time, string.sub(trackdata,i,i+length-1)}
+				E = {'instrument_name',time, sub(trackdata,i,i+length-1)}
 			elseif command == 5 then
-				E = {'lyric',time, string.sub(trackdata,i,i+length-1)}
+				E = {'lyric',time, sub(trackdata,i,i+length-1)}
 			elseif command == 6 then
-				E = {'marker',time, string.sub(trackdata,i,i+length-1)}
+				E = {'marker',time, sub(trackdata,i,i+length-1)}
 			elseif command == 7 then
-				E = {'cue_point',time, string.sub(trackdata,i,i+length-1)}
+				E = {'cue_point',time, sub(trackdata,i,i+length-1)}
 
 			-- Reserved but apparently unassigned text events -------------
 			elseif command == 8 then
-				E = {'text_event_08',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_08',time, sub(trackdata,i,i+length-1)}
 			elseif command == 9 then
-				E = {'text_event_09',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_09',time, sub(trackdata,i,i+length-1)}
 			elseif command == 10 then
-				E = {'text_event_0a',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_0a',time, sub(trackdata,i,i+length-1)}
 			elseif command == 11 then
-				E = {'text_event_0b',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_0b',time, sub(trackdata,i,i+length-1)}
 			elseif command == 12 then
-				E = {'text_event_0c',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_0c',time, sub(trackdata,i,i+length-1)}
 			elseif command == 13 then
-				E = {'text_event_0d',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_0d',time, sub(trackdata,i,i+length-1)}
 			elseif command == 14 then
-				E = {'text_event_0e',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_0e',time, sub(trackdata,i,i+length-1)}
 			elseif command == 15 then
-				E = {'text_event_0f',time, string.sub(trackdata,i,i+length-1)}
+				E = {'text_event_0f',time, sub(trackdata,i,i+length-1)}
 			
 			-- Now the sticky events -------------------------------------
 			elseif command == 47 then
@@ -378,49 +373,49 @@ The options:
 				-- in the event registrar.
 			elseif command == 81 then -- DTime, Microseconds/Crochet
 				if length ~= 3 then
-					warn('set_tempo event, but length='..length)
+					print('set_tempo event, but length='..length)
 				end
 				E = {'set_tempo', time,
-					string.byte(trackdata,i) * 65536
-					+ string.byte(trackdata,i+1) * 256
-					+ string.byte(trackdata,i+2)
+					byte(trackdata,i) * 65536
+					+ byte(trackdata,i+1) * 256
+					+ byte(trackdata,i+2)
 				}
 			elseif command == 84 then
 				if length ~= 5 then   -- DTime, HR, MN, SE, FR, FF
-					warn('smpte_offset event, but length='..length)
+					print('smpte_offset event, but length='..length)
 				end
 				E = {'smpte_offset', time,
-					string.byte(trackdata,i),
-					string.byte(trackdata,i+1),
-					string.byte(trackdata,i+2),
-					string.byte(trackdata,i+3),
-					string.byte(trackdata,i+4)
+					byte(trackdata,i),
+					byte(trackdata,i+1),
+					byte(trackdata,i+2),
+					byte(trackdata,i+3),
+					byte(trackdata,i+4)
 				}
 			elseif command == 88 then
 				if length ~= 4 then   -- DTime, NN, DD, CC, BB
-					warn('time_signature event, but length='..length)
+					print('time_signature event, but length='..length)
 				end
 				E = {'time_signature', time,
-					string.byte(trackdata,i),
-					string.byte(trackdata,i+1),
-					string.byte(trackdata,i+2),
-					string.byte(trackdata,i+3)
+					byte(trackdata,i),
+					byte(trackdata,i+1),
+					byte(trackdata,i+2),
+					byte(trackdata,i+3)
 				}
 			elseif command == 89 then
 				if length ~= 2 then   -- DTime, SF(signed), MI
-					warn('key_signature event, but length='..length)
+					print('key_signature event, but length='..length)
 				end
-				local b1 = string.byte(trackdata,i)
+				local b1 = sbyte(trackdata,i)
 				if b1 > 127 then b1 = b1 - 256 end   -- signed byte :-(
-				local b2 = string.byte(trackdata,i+1)
+				local b2 = sbyte(trackdata,i+1)
 				-- list(struct.unpack(">bB",trackdata[0:2]))}
 				E = {'key_signature', time, b1, b2 }
 			elseif (command == 127) then
 				E = {'sequencer_specific',time,
-					string.sub(trackdata,i,i+length-1)}
+					sub(trackdata,i,i+length-1)}
 			else
 				E = {'raw_meta_event', time, command,
-					string.sub(trackdata,i,i+length-1)}
+					sub(trackdata,i,i+length-1)}
 				--"[uninterpretable meta-event command of length length]"
 				-- DTime, Command, Binary Data
 				-- It's uninterpretable; record it as raw_data.
@@ -448,9 +443,9 @@ The options:
 			length, i = str2ber_int(trackdata, i)
 			if first_byte == 240 then
 				-- 20091008 added ISO-8859-1 to get an 8-bit str
-				E = {'sysex_f0', time, string.sub(trackdata,i,i+length-1)}
+				E = {'sysex_f0', time, sub(trackdata,i,i+length-1)}
 			else
-				E = {'sysex_f7', time, string.sub(trackdata,i,i+length-1)}
+				E = {'sysex_f7', time, sub(trackdata,i,i+length-1)}
 			end
 			i = i + length
 			-- trackdata =  string.sub(trackdata, length+1)
@@ -472,14 +467,14 @@ The options:
 		
 		elseif first_byte == 242 then   -- DTime, Beats
 			--  <song position msg> ::=     F2 <data pair>
-			E = {'song_position', time, read_14_bit(string.sub(trackdata,i))}
-			trackdata = string.sub(trackdata,3)
+			E = {'song_position', time, read_14_bit(sub(trackdata,i))}
+			trackdata = sub(trackdata,3)
 
 		elseif first_byte == 243 then -- <song select> ::= F3 <data singlet>
 			-- E=['song_select', time, struct.unpack('>B',trackdata.pop(0))[0]]
-			E = {'song_select', time, string.byte(trackdata,i)}
+			E = {'song_select', time, byte(trackdata,i)}
 			-- trackdata = trackdata[1:]
-			trackdata = string.sub(trackdata,2)
+			trackdata = sub(trackdata,2)
 			-- DTime, Thing (what?! song number?  whatever ...)
 
 		elseif first_byte == 246 then   -- DTime
@@ -508,10 +503,10 @@ The options:
 ]]
 		elseif first_byte > 240 then  -- Some unknown F-series event
 			-- Here we only produce a one-byte piece of raw data.
-			E = {'raw_data', time, string.byte(trackdata,i)}  -- 4.6
-			trackdata = string.sub(trackdata,2)  -- 4.6
+			E = {'raw_data', time, byte(trackdata,i)}  -- 4.6
+			trackdata = sub(trackdata,2)  -- 4.6
 		else  -- Fallthru.
-			warn(string.format("Aborting track.  Command-byte first_byte=0x%x",first_byte)) --4.6
+			print(string.format("Aborting track.  Command-byte first_byte=0x%x",first_byte)) --4.6
 			break
 		end
 		-- End of the big if-group
@@ -519,7 +514,7 @@ The options:
 
 		--#####################################################################
 		--  THE EVENT REGISTRAR...
-		-- warn('3: E='+str(E))
+		-- print('3: E='+str(E))
 		if E and  E[1] == 'end_track' then
 			-- This is the code for exceptional handling of the EOT event.
 			eot = true
@@ -629,7 +624,7 @@ local function _encode(events_lol)
 				status = 224 + (E[3] % 16)
 				parameters =  write_14_bit(E[4] + 8192)
 			else
-				warn("BADASS FREAKOUT ERROR 31415!")
+				print("BADASS FREAKOUT ERROR 31415!")
 			end
 
 			-- And now the encoding
@@ -717,14 +712,14 @@ local function _encode(events_lol)
 			elseif (event == 'tune_request') then
 				 event_data = "\246"
 			elseif (event == 'raw_data') then
-				warn("_encode: raw_data event not supported")
+				print("_encode: raw_data event not supported")
 				break
 			-- End of Other Stuff
 
 			-- The Big Fallthru
 			else
 				if not unknown_callback then
-					warn("Unknown event: "..tostring(event))
+					print("Unknown event: "..tostring(event))
 				end
 				break
 			end
@@ -869,7 +864,7 @@ M.Number2patch = readOnly{   -- General MIDI patch numbers:
 [86]='Lead 7 (fifths)',
 [87]='Lead 8 (bass+lead)',
 [88]='Pad 1 (new age)',
-[89]='Pad 2 (warm)',
+[89]='Pad 2 (printm)',
 [90]='Pad 3 (polysynth)',
 [91]='Pad 4 (choir)',
 [92]='Pad 5 (bowed)',
@@ -1087,52 +1082,75 @@ end
 function M.midi2ms_score(midi)
 	return M.opus2score(M.to_millisecs(M.midi2opus(midi)))
 end
-
+function sub(str,s,e)
+	local table={}
+	for i=s,e do
+		table[#table+1]=str[i]
+	end
+	return table
+end
+function ssub(str,s,e)
+	
+	local sstr=""
+	for i=s,e do
+		sstr=sstr..string.char(str[i])
+	end
+	return sstr
+end
+function sbyte(str,s)
+	
+	return str[s]
+end
 function M.midi2opus(s)
+
 	if not s then s = '' end
 	--my_midi=bytearray(midi)
 	if #s < 4 then return {1000,{},} end
 	local i = 1
-	local id = string.sub(s, i, i+3); i = i+4
+	local id = ssub(s, i, i+3); i = i+4
 	if id ~= 'MThd' then
-		warn("midi2opus: midi starts with "..id.." instead of 'MThd'")
-		clean_up_warnings()
+		print("midi2opus: midi starts with "..id.." instead of 'MThd'")
+		clean_up_printings()
 		return {1000,{},}
 	end
+	
 	-- h:short; H:unsigned short; i:int; I:unsigned int;
 	-- l:long; L:unsigned long; f:float; d:double.
 	-- [length, format, tracks_expected, ticks] = struct.unpack(
 	--  '>IHHH', bytes(my_midi[4:14]))  is this 10 bytes or 14 ?
 	-- NOT 2+4+4+4 grrr...   'MHhd'+4+2+2+2 !
-	local length          = fourbytes2int(string.sub(s,i,i+3)); i = i+4
-	local format          = twobytes2int(string.sub(s,i,i+1)); i = i+2
-	local tracks_expected = twobytes2int(string.sub(s,i,i+1)); i = i+2
-	local ticks           = twobytes2int(string.sub(s,i,i+1)); i = i+2
-	if length ~= 6 then
-		warn("midi2opus: midi header length was "..tostring(length).." instead of 6")
-		clean_up_warnings()
-		return {1000,{},}
-	end
+	local length          = fourbytes2int(sub(s,i,i+3)); i = i+4
+	local format          = twobytes2int(sub(s,i,i+1)); i = i+2
+	local tracks_expected = twobytes2int(sub(s,i,i+1)); i = i+2
+	local ticks           = twobytes2int(sub(s,i,i+1)); i = i+2
+	-- if length ~= 6 then
+	-- 	print("midi2opus: midi header length was "..tostring(length).." instead of 6")
+		
+	-- 	clean_up_printings()
+	-- 	return {1000,{},}
+	-- end
+
 	local my_opus = {ticks,}
 	local track_num = 1   -- 5.1
 	while i < #s-8 do
-		local track_type   = string.sub(s, i, i+3); i = i+4
+	
+		local track_type   = ssub(s, i, i+3); i = i+4
 		if track_type ~= 'MTrk' then
-			warn('midi2opus: Warning: track #'..track_num..' type is '..track_type.." instead of 'MTrk'")
+			print('midi2opus: printing: track #'..track_num..' type is '..track_type.." instead of 'MTrk'")
 		end
-		local track_length = fourbytes2int(string.sub(s,i,i+3)); i = i+4
+		local track_length = fourbytes2int(sub(s,i,i+3)); i = i+4
 		if track_length > #s then
-			warn('midi2opus: track #'..track_num..' length '..track_length..' is too large')
-			clean_up_warnings()
+			print('midi2opus: track #'..track_num..' length '..track_length..' is too large')
+			clean_up_printings()
 			return my_opus  -- 4.9
 		end
-		local my_midi_track = string.sub(s, i, i+track_length-1) -- 4.7
+		local my_midi_track = sub(s, i, i+track_length-1) -- 4.7
 		i = i+track_length
 		local my_track = _decode(my_midi_track) -- 4.7
 		my_opus[#my_opus+1] = my_track
 		track_num = track_num + 1   -- 5.1
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return my_opus
 end
 
@@ -1179,7 +1197,7 @@ function M.opus2midi(opus)
 		-- should really do an array and then concat...
 		my_midi = my_midi .. 'MTrk' .. int2fourbytes(#events) .. events
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return my_midi
 end
 
@@ -1205,10 +1223,10 @@ function M.opus2score(opus)
 					new_e[3] = ticks_so_far - new_e[2]
 					score_track[#score_track+1] = new_e
 				elseif pitch > 127 then
-					warn('opus2score: note_off with no note_on, bad pitch='
+					print('opus2score: note_off with no note_on, bad pitch='
 					 ..tostring(pitch))
 				else
-					warn('opus2score: note_off with no note_on cha='
+					print('opus2score: note_off with no note_on cha='
 					 ..tostring(cha)..' pitch='..tostring(pitch))
 				end
 			elseif opus_event[1] == 'note_on' then
@@ -1232,16 +1250,16 @@ function M.opus2score(opus)
 			for k,new_e in ipairs(note_on_events) do
 				new_e[3] = ticks_so_far - new_e[2]
 				score_track[#score_track+1] = new_e
-				--warn("adding unterminated note: {'"..new_e[1].."', "..new_e[2]
+				--print("adding unterminated note: {'"..new_e[1].."', "..new_e[2]
 				-- ..', '..new_e[3]..', '..new_e[4]..', '..new_e[5]..'}')
-				warn("opus2score: note_on with no note_off cha="..new_e[4]
+				print("opus2score: note_on with no note_off cha="..new_e[4]
 				 ..' pitch='..new_e[5]..'; adding note_off at end')
 			end
 		end
 		score[#score+1] = score_track
 		itrack = itrack + 1
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return score
 end
 
@@ -1303,7 +1321,7 @@ function M.score2opus(score)
 		opus[#opus+1] = sorted_events
 		itrack = itrack + 1
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return opus
 end
 
@@ -1493,8 +1511,8 @@ function M.segment(...)
 	end
 	if my_type == 'opus' then
 		-- more difficult (disconnecting note_on's from their note_off's)...
-		warn("segment: opus format is not supported\n")
-		clean_up_warnings()
+		print("segment: opus format is not supported\n")
+		clean_up_printings()
 		return new_score
 	end
 	tracks = dict(tracks)  -- convert list to lookup
@@ -1550,7 +1568,7 @@ function M.segment(...)
 			end
 		end
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return new_score
 end
 
@@ -1573,12 +1591,12 @@ function M.timeshift(...)
 	local my_type = M.score_type(score)
 	if my_type == '' then return new_score end
 	if my_type == 'opus' then
-		warn("timeshift: opus format is not supported\n")
-		clean_up_warnings()
+		print("timeshift: opus format is not supported\n")
+		clean_up_printings()
 		return new_score
 	end
 	if shift ~= nil and start_time ~= nil then
-		warn("timeshift: shift and start_time specified: ignoring shift\n")
+		print("timeshift: shift and start_time specified: ignoring shift\n")
 		shift = nil
 	end
 	if shift == nil then
@@ -1646,7 +1664,7 @@ function M.timeshift(...)
 			i = i + 1
 		end
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return new_score
 end
 
@@ -1661,8 +1679,8 @@ function M.to_millisecs(old_opus)   -- 6.7
 		local ticks_so_far = 0
 		local k; for k,old_event in ipairs(old_opus[itrack]) do
 			if old_event[1] == 'note' then
-				warn('to_millisecs needs an opus, not a score')
-				clean_up_warnings()
+				print('to_millisecs needs an opus, not a score')
+				clean_up_printings()
 				return {1000,{},}
 			end
 			ticks_so_far = ticks_so_far + old_event[2]
@@ -1709,10 +1727,11 @@ function M.to_millisecs(old_opus)   -- 6.7
 		new_opus[#new_opus+1] = new_track
 		itrack = itrack + 1
 	end
-	clean_up_warnings()
+	clean_up_printings()
 	return new_opus
 end
 
+--return M
 
 -- http://lua-users.org/wiki/ModuleDefinition
 -- http://lua-users.org/wiki/LuaModuleFunctionCritiqued
@@ -1964,7 +1983,7 @@ If "tracks" are specified, then only those tracks (0 to 15) get shifted.
 "tracks" should be an array.
 
 It is deprecated to specify both "shift" and "start_time".
-If this does happen, timeshift() will print a warning to
+If this does happen, timeshift() will print a printing to
 stderr and ignore the "shift" argument.
 
 If "shift" is negative and sufficiently large that it would
@@ -2119,4 +2138,550 @@ Peter J Billam, http://www.pjb.com.au/comp/contact.html
 =cut
 
 ]=]
-MIDI=M
+LIBMIDI=M
+
+--アドオン名（大文字）
+local addonName = "midiplayer"
+local addonNameLower = string.lower(addonName)
+--作者名
+local author = 'ebisuke'
+--アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
+_G['ADDONS'] = _G['ADDONS'] or {}
+_G['ADDONS'][author] = _G['ADDONS'][author] or {}
+_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
+local g = _G['ADDONS'][author][addonName]
+local function DBGOUT(msg)
+    
+    EBI_try_catch{
+        try = function()
+            if (g.debug == true) then
+                CHAT_SYSTEM(msg)
+                
+                print(msg)
+                local fd = io.open(g.logpath, "a")
+                fd:write(msg .. "\n")
+                fd:flush()
+                fd:close()
+            
+            end
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+local function ERROUT(msg)
+    EBI_try_catch{
+        try = function()
+            CHAT_SYSTEM(msg)
+            print(msg)
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+
+--ライブラリ読み込み
+CHAT_SYSTEM("[MIDI]loaded")
+local acutil = require('acutil')
+local function EBI_try_catch(what)
+    local status, result = pcall(what.try)
+    if not status then
+        what.catch(result)
+    end
+    return result
+end
+local function EBI_IsNoneOrNil(val)
+    return val == nil or val == "None" or val == "nil"
+end
+local function IsLesserThanForBigNumber(a, b)
+    if a == b or (IsGreaterThanForBigNumber(a, b) == 1) then
+        return 0
+    end
+    return 1
+end
+
+
+local translationtable = {
+    
+    }
+
+local function L_(str)
+    if (translationtable[str] == nil) then
+        return str
+    end
+    if (option.GetCurrentCountry() == "Japanese") then
+        return translationtable[str].jp
+    end
+    if (translationtable[str].eng ~= nil) then
+        return translationtable[str].eng
+    end
+    return str
+
+end
+
+--デフォルト設定
+if (not g.loaded) then
+    --シンタックス用に残す
+    g.settings = {
+        version = nil,
+        --フレーム表示場所
+        position = {
+            x = 0,
+            y = 0
+        },
+    }
+
+
+end
+g.midifile = string.format('../addons/%s/play.mid', addonNameLower)
+g.debug = true
+g.framename = "midiplayer"
+g.notebind = {
+    [48] = 1,
+    [49] = 15,
+    [50] = 2,
+    [51] = 16,
+    [52] = 3,
+    [53] = 4,
+    [54] = 17,
+    [55] = 5,
+    [56] = 18,
+    [57] = 6,
+    [58] = 19,
+    [59] = 7,
+    [60] = 8,
+    [61] = 20,
+    [62] = 9,
+    [63] = 21,
+    [64] = 10,
+    [65] = 11,
+    [66] = 22,
+    [67] = 12,
+    [68] = 23,
+    [69] = 13,
+    [70] = 24,
+    [71] = 14,
+    [72] = 25,
+    [73] = 32,
+    [74] = 26,
+    [75] = 33,
+    [76] = 27,
+    [77] = 28,
+    [78] = 34,
+    [79] = 29,
+    [80] = 35,
+    [81] = 30,
+    [82] = 36,
+    [83] = 37
+}
+g.notebind_minista = {
+    [24] = 1,
+    [25] = 15,
+    [26] = 2,
+    [27] = 16,
+    [28] = 3,
+    [29] = 4,
+    [30] = 17,
+    [31] = 5,
+    [32] = 18,
+    [33] = 6,
+    [34] = 19,
+    [35] = 7,
+    [36] = 1,
+    [37] = 15,
+    [38] = 2,
+    [39] = 16,
+    [40] = 3,
+    [41] = 4,
+    [42] = 17,
+    [43] = 5,
+    [44] = 18,
+    [45] = 6,
+    [46] = 19,
+    [47] = 7,
+    [48] = 1,
+    [49] = 15,
+    [50] = 2,
+    [51] = 16,
+    [52] = 3,
+    [53] = 4,
+    [54] = 17,
+    [55] = 5,
+    [56] = 18,
+    [57] = 6,
+    [58] = 19,
+    [59] = 7,
+    [60] = 8,
+    [61] = 20,
+    [62] = 9,
+    [63] = 21,
+    [64] = 10,
+    [65] = 11,
+    [66] = 22,
+    [67] = 12,
+    [68] = 23,
+    [69] = 13,
+    [70] = 24,
+    [71] = 14,
+    [72] = 8,
+    [73] = 20,
+    [74] = 9,
+    [75] = 21,
+    [76] = 10,
+    [77] = 11,
+    [78] = 22,
+    [79] = 12,
+    [80] = 23,
+    [81] = 13,
+    [82] = 24,
+    [83] = 14,
+    [84] = 8,
+    [85] = 20,
+    [86] = 9,
+    [87] = 21,
+    [88] = 10,
+    [89] = 11,
+    [90] = 22,
+    [91] = 12,
+    [92] = 23,
+    [93] = 13,
+    [94] = 24,
+    [95] = 14,
+
+}
+
+function MIDIPLAYER_SAVE_SETTINGS()
+    DBGOUT("SAVE_SETTINGS")
+    
+    acutil.saveJSON(g.settingsFileLoc, g.settings)
+
+end
+
+function MIDIPLAYER_LOAD_SETTINGS()
+    
+    g.settings = {}
+    local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
+    if err then
+        --設定ファイル読み込み失敗時処理
+        MIDIPLAYER_DBGOUT(string.format('[%s] cannot load setting files', addonName))
+        g.settings = {items = {}}
+    else
+        --設定ファイル読み込み成功時処理
+        g.settings = t
+        if (not g.settings.version) then
+            g.settings.version = 0
+        end
+    end
+    
+    local upc = MIDIPLAYER_UPGRADE_SETTINGS()
+    
+    -- ショートサーキット評価を回避するため、いったん変数に入れる
+    if upc then
+        MIDIPLAYER_SAVE_SETTINGS()
+    end
+
+end
+function MIDIPLAYER_UPGRADE_SETTINGS()
+    local upgraded = false
+    --1->2
+    if (g.settings.version == nil or g.settings.version == 1) then
+        CHAT_SYSTEM(L_("Tsettingsupdt12"))
+        
+        g.settings.version = 2
+        upgraded = true
+    end
+    --1->2
+    if (g.settings.version == 2) then
+        CHAT_SYSTEM(L_("Tsettingsupdt23"))
+        g.settings.itemmanagetempdisabled = false
+        g.settings.version = 3
+        upgraded = true
+    end
+    return upgraded
+end
+
+--マップ読み込み時処理（1度だけ）
+function MIDIPLAYER_ON_INIT(addon, frame)
+    EBI_try_catch{
+        try = function()
+            frame = ui.GetFrame(g.framename)
+            g.addon = addon
+            g.frame = frame
+            g.play=false
+            frame:ShowWindow(0)
+            acutil.addSysIcon("midiplayer", "sysmenu_inv", "MidiPlayer", "MIDIPLAYER_TOGGLE_FRAME")
+            addon:RegisterMsg('GAME_START_3SEC', 'MIDIPLAYER_3SEC')
+            --ccするたびに設定を読み込む
+            if not g.loaded then
+                g.loaded = true
+            end
+            local timer = GET_CHILD(frame, "addontimer", "ui::CAddOnTimer");
+            timer:SetUpdateScript("MIDIPLAYER_ON_TIMER");
+            timer:Start(0.016);
+            frame:Resize(500, 300)
+            local btnplay=frame:CreateOrGetControl('button','btnplay',10,200,100,80)
+            btnplay:SetText("PLAY")
+            btnplay:SetEventScript(ui.LBUTTONUP,"MIDIPLAYER_PLAY")
+
+            local btnstop=frame:CreateOrGetControl('button','btnstop',110,200,100,80)
+            btnstop:SetText("STOP")
+            btnstop:SetEventScript(ui.LBUTTONUP,"MIDIPLAYER_STOP")
+            
+            local edittempo=frame:CreateOrGetControl('edit','edittempo',210,200,100,30)
+            edittempo:SetText("90")
+            edittempo:SetSkinName("test_weight_skin")
+            edittempo:SetFontName("white_14_ol")
+            local editch=frame:CreateOrGetControl('edit','editch',210,240,100,30)
+            editch:SetText("")
+            editch:SetSkinName("test_weight_skin")
+            editch:SetFontName("white_14_ol")
+            local editp=frame:CreateOrGetControl('edit','editp',310,240,100,30)
+            editp:SetText("0")
+            editp:SetSkinName("test_weight_skin")
+            editp:SetFontName("white_14_ol")
+            --MIDIPLAYER_SHOW()
+        
+        --MIDIPLAYER_UPDATEBOARD()
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+
+
+function MIDIPLAYER_3SEC()
+
+
+
+end
+local function split(str, ts)
+    -- 引数がないときは空tableを返す
+    if ts == nil then return {} end
+  
+    local t = {} ; 
+    local i=1
+    for s in string.gmatch(str, "([^"..ts.."]+)") do
+      t[i] = s
+      i = i + 1
+    end
+  
+    return t
+  end
+function MIDIPLAYER_PLAY()
+    local frame = ui.GetFrame(g.framename)
+   
+    
+    local edittempo=frame:CreateOrGetControl('edit','edittempo',210,200,100,30)
+    g.tempo=tonumber(edittempo:GetText()) or 90
+
+    local editch=frame:CreateOrGetControl('edit','editch',210,240,100,30)
+    local ch=tostring(editch:GetText())
+    local editp=frame:CreateOrGetControl('edit','editp',310,240,100,30)
+    local p=tostring(editp:GetText()) or 0
+    if ch=="" or not ch then
+        
+        g.ch =nil
+    else
+        g.ch={}
+        for _,v in ipairs(split(ch,",")) do
+            g.ch[#g.ch+1] = tonumber(v)
+        end
+    end
+    MIDIPLAYER_LOAD(g.midifile)
+    g.beat = 0
+    g.track = 2
+  
+    g.idx = {}
+    g.play = true
+    g.delta = {}
+    g.elapsed = 0
+    g.prevdt = 0
+    g.pitch=p
+    g.prevnote={}
+end
+function MIDIPLAYER_STOP()
+    if (g.prevnote ~= nil) then
+        for _,v in pairs(g.prevnote) do
+            if v then
+                Piedpiper.ReqStopFluting(v)
+            end
+        end
+        g.prevnote = nil
+    end
+    
+    g.play = false
+end
+local function isIn(val,tbl)
+    if tbl==nil then
+        return false
+    end
+    for index, value in ipairs(tbl) do
+        if value==val then
+            return true
+        end
+    end
+    return false
+end
+function MIDIPLAYER_ON_TIMER()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame("fluting_keyboard");
+            local cframe = ui.GetFrame(g.framename)
+            local joystickrestquickslot = ui.GetFrame('joystickrestquickslot')
+            local restquickslot = ui.GetFrame('restquickslot')
+            
+            if frame:IsVisible() == 1 and g.play then
+                local allover=true
+                g.elapsed = g.elapsed + g.score[1] / (60/2*60/g.tempo)  --60BPM base
+                for track = 2, #g.score do
+                    -- if track== #g.score+1 then
+                    --     allover=true
+                    --     break
+                    -- end
+                    
+                    g.track=track
+                    local idx=g.idx[track] or 1
+                    local noteon = false
+                    local pass = false
+                    local event
+                    local dt = cframe:CreateOrGetControl("richtext", "delta", 0, 120, 100, 40)
+                    dt:SetText("{ol}Time:" .. math.floor(g.elapsed / g.score[1]))
+                    for i = idx, #g.score[track]+1 do
+                        event = g.score[track][i]
+                       
+                        g.delta[track]=g.delta[track] or 0
+                        g.idx[track] = i
+                        idx=i
+                        if event then
+                            allover=false
+                        end
+                        -- print(g.delta..'/'.. g.elapsed)
+                        if not event or (event[2]~=0 and (g.delta[track] + event[2]) > g.elapsed) then
+                            
+                            break
+                        else
+                            --print(g.delta[track]..'/'.. g.elapsed)
+                            
+                        end
+                        
+                        pass=true
+                     
+                        g.delta[track] = event[2] + g.delta[track]
+                        
+                        local delay=0.00
+                        local notes = cframe:CreateOrGetControl("richtext", "note", 0, 140, 100, 20)
+                        local ticker = cframe:CreateOrGetControl("richtext", "ticker", 0, 100, 100, 20)
+                                ticker:SetText("{ol}ET:" ..track.."/".. 
+                                math.floor(g.delta[track] / g.score[1]) .. '/' .. math.floor(g.delta[track]) .. "/" .. g.score[1])
+                                
+                        if not noteon then
+                            
+                            
+                            if event[1] == 'note_on' and event[5]~=0 then
+                                --print("NOTE:"..event[3].."/"..event[4])
+                                
+                                if (not g.ch and event[3]~=9) or isIn(event[3],g.ch) then
+                                    --if (event[2] >= prevtrack and event[2] <= curtrack and event[3] == g.ch) then
+                                    --ならす
+                                    local note = g.notebind_minista[event[4]+g.pitch]
+                                    -- if (g.prevnote[note] ~= nil) then
+                                        
+                                    --     --notes:SetText("{ol}")
+                                    --     Piedpiper.ReqStopFluting(g.prevnote)
+                                    --     g.prevnote[note] = nil
+                                    -- end
+                                    if note ~= nil and g.prevnote[note] ==nil  then
+                                        Piedpiper.ReqStopFluting(note)
+                                        --Piedpiper.ReqPlayFluting(note)
+                                        ReserveScript(string.format("Piedpiper.ReqPlayFluting(%d)",note),delay)
+                                        delay=delay+0.01
+                                        g.prevnote[note] = note
+                                        --print("SUCC:"..event[3].."/"..note)
+                                    else
+                                        --print("FAIL:"..event[4]+g.pitch)
+                                    end
+                                    --noteon = true
+                                end
+                            end
+                        end
+                        delay=delay+0.03
+                        if event[1] == 'note_off' or (event[1]=="note_on" and event[5]==0) then
+                            
+                            local note = g.notebind_minista[event[4]+g.pitch]
+                            if (note ~= nil and ((not g.ch and event[3]~=9) or isIn(event[3],g.ch))) and g.prevnote[note] then
+                                Piedpiper.ReqStopFluting(note)
+                                ReserveScript(string.format("Piedpiper.ReqStopFluting(%d)",note),delay)
+                                delay=delay+0.01
+                                g.prevnote[note]=nil
+                            end
+                        end
+                        local str=''
+                        for k,v in pairs(g.prevnote) do
+                            str=str..v..','
+                        end
+
+                        notes:SetText("{ol}" .. str)
+                    end
+                    -- if #g.score[track]<idx or not event then
+                       
+                    -- else
+                    --     break
+                    -- end
+                end
+                if allover then
+                    --MIDIPLAYER_STOP()
+                    MIDIPLAYER_PLAY()
+                end
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+
+
+function MIDIPLAYER_LOAD(path)
+    EBI_try_catch{
+        try = function()
+            
+            os.setlocale("C", "ctype")
+            local f = io.open(path, "rb")
+            local size = f:seek("end", 0)
+            local total = ""
+            local mid = {}
+            for i = 0, size - 1 do
+                f:seek("set", i)
+                local part = f:read(1)
+                mid[#mid + 1] = string.byte(part)
+            end
+            f:close()
+            --print(tostring(string.byte(total:sub(8,8))))
+            g.score = LIBMIDI.midi2opus(mid)
+            SCORE = g.score
+            --table.sort(g.score, function (e1,e2) return e1[2]<e2[2] end)
+            g.play = false
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function MIDIPLAYER_SHOW()
+    ui.GetFrame(g.framename):ShowWindow(1)
+--MIDIPLAYER_SAVE_SETTINGS()
+end
+
+function MIDIPLAYER_TOGGLE_FRAME()
+    ui.ToggleFrame(g.framename)
+   
+--MIDIPLAYER_SAVE_SETTINGS()
+end
+
+function MIDIPLAYER_CLOSE(frame)
+    frame:ShowWindow(0)
+--MIDIPLAYER_SAVE_SETTINGS()
+end
