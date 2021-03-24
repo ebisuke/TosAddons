@@ -92,7 +92,7 @@ function HIDEWEAPON_ON_INIT(addon, frame)
 end
 function HIDEWEAPON_LOAD()
     g.personalsettings = {}
-    g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower, session.GetMySession():GetCID())
+    g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower, tostring(session.GetMySession():GetCID()))
     local t, err = acutil.loadJSON(g.personalsettingsFileLoc, g.personalsettings)
     if err then
         --設定ファイル読み込み失敗時処理
@@ -210,22 +210,22 @@ function HIDEWEAPON_TIMER()
     HIDEWEAPON_HIDE_EQUIP()
 end
 function HIDEWEAPON_HIDE_EQUIP()
-    if not  g.personalsettings.LHPic then
+    if not  g.personalsettings.LHPic  and not  g.personalsettings.RHPic  then
+            local actor = GetMyActor()
+            actor:ChangeEquipNode(EmAttach.eLHand, "");
+            actor:ChangeEquipNode(EmAttach.eRHand, "");
+
+    elseif  g.personalsettings.LHPic  and  g.personalsettings.RHPic  then
+        local actor = GetMyActor()
+        actor:ChangeEquipNode(EmAttach.eLHand, "Dummy_R_HAND");
+        actor:ChangeEquipNode(EmAttach.eRHand, "Dummy_L_HAND");
+    elseif not g.personalsettings.LHPic  and  g.personalsettings.RHPic  then
         local actor = GetMyActor()
         actor:ChangeEquipNode(EmAttach.eLHand, "");
-
-    else
+        actor:ChangeEquipNode(EmAttach.eRHand, "Dummy_L_HAND");
+    elseif g.personalsettings.LHPic  and  not g.personalsettings.RHPic  then
         local actor = GetMyActor()
-        actor:ChangeEquipNode(EmAttach.eLHand, "Dummy_L_HAND");
-
-    end
-    if not  g.personalsettings.RHPic then
-        local actor = GetMyActor()
+        actor:ChangeEquipNode(EmAttach.eLHand, "Dummy_R_HAND");
         actor:ChangeEquipNode(EmAttach.eRHand, "");
-
-    else
-        local actor = GetMyActor()
-        actor:ChangeEquipNode(EmAttach.eRHand, "Dummy_Sword");
-
     end
 end
