@@ -171,14 +171,14 @@ function TESTBOARD_INIT()
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
             timer:Start(0.01);
             timer:EnableHideUpdate(true)
-        
-        
+            
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
+
 function TESTBOARD_GETFRAME(name)
     
     local frame = TESTBOARD_GETFRAME_OLD(name)

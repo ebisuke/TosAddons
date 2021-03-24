@@ -642,5 +642,19 @@
       
     ]
   }
+  ,
+  {
+    "name": "Hide Weapon",
+    "file": "hideweapon",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "hideweapon-v0.0.1",
+    "unicode": "📖",
+    "description": "左手・右手装備を隠します",
+    "tags": [
+      "hide",
+      "weapon"
+    ]
+  }
   
 ]

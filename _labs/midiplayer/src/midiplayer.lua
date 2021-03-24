@@ -2520,7 +2520,7 @@ function MIDIPLAYER_ON_TIMER()
             local ins = iframe:IsVisible() == 1
             
             if g.play then
-               
+                g.prevtime =   g.prevtime  or os.clock()
 			
                 local timediff = os.clock() - g.prevtime
                 g.prevtime = os.clock();
@@ -2560,7 +2560,7 @@ function MIDIPLAYER_ON_TIMER()
                         ticker:SetText("{ol}ET:" .. track .. "/" ..
                             math.floor(g.delta[track] / g.score[1]) .. '/' .. math.floor(g.delta[track]) .. "/" .. g.score[1])
                         
-                        if g.soundcount < 2 then
+                        if g.soundcount < 3 then
                             
                             
                             if event[1] == 'note_on' and event[5] ~= 0 then

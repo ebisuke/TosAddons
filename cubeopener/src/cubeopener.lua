@@ -17,9 +17,10 @@ local acutil = require('acutil')
 local g = {}
 local whitelist={
     [640475]=true,
+    [642785]=true,
 }
 local whitelistcube={
-    [642785]=true,
+    
 }
 g.debug = false
 g.framename="cubeopener"
@@ -212,9 +213,9 @@ function CUBEOPENER_INVENTORY_RBDC_ITEMUSE(frame, object, argStr, argNum)
                             return false
                         end
 
-                    elseif(groupName=="Cube" or whitelistcube[itemtype])then
+                    elseif(groupName=="Cube" )then
                         local rerollPrice =TryGet(itemobj, "NumberArg1")
-                        if(rerollPrice==0 or not rerollPrice or whitelistcube[itemtype] )then
+                        if(rerollPrice==0 or not rerollPrice )then
                             if keyboard.IsKeyPressed("LALT") == 1 or keyboard.IsKeyPressed("RALT") == 1 then
 
                                 --再開封可能
