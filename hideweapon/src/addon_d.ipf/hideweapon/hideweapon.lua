@@ -196,6 +196,7 @@ function HIDEWEAPONINV_VISIBLE_STATE_SET(_, ctrl)
         end
     
     end
+    HIDEWEAPON_SAVE()
     HIDEWEAPON_UPDATE_BUTTON()
 end
 
