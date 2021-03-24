@@ -644,7 +644,7 @@
   }
   ,
   {
-    "name": "Hidden Weapon",
+    "name": "Hide Weapon",
     "file": "hiddeneweapon",
     "extension": "ipf",
     "fileVersion": "v0.0.1",
