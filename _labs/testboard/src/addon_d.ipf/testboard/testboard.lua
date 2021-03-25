@@ -226,35 +226,37 @@ function TESTBOARD_TEST()
             else
                 g.b = true
             end
-            
+            DAMAGE_METER_UI_OPEN(ui.GetFrame('damage_meter'),nil,'0/PRACTICE',1)
+            geMGame.ReqMGameCmd("WEEKLY_BOSS_RAID_01",2) 
+
             --local pc = GetMyActor()
-            local itemClsList, cnt = GetClassList('NormalTX');
-            for i = 0, cnt - 1 do
-                local itemCls = GetClassByIndexFromList(itemClsList, i);
-                CHAT_SYSTEM(string.format('%d/%s', itemCls.ClassID, itemCls.ClassName))
-            end
+            -- local itemClsList, cnt = GetClassList('NormalTX');
+            -- for i = 0, cnt - 1 do
+            --     local itemCls = GetClassByIndexFromList(itemClsList, i);
+            --     CHAT_SYSTEM(string.format('%d/%s', itemCls.ClassID, itemCls.ClassName))
+            -- end
             
-            local target = session.GetTargetHandle()
+            -- local target = session.GetTargetHandle()
             
-            if not target then
+            -- if not target then
                 
-                return
-            end
-            local targetinfo = info.GetTargetInfo(target);
-            local monactor = world.GetActor(target);
-            local montype = monactor:GetType()
+            --     return
+            -- end
+            -- local targetinfo = info.GetTargetInfo(target);
+            -- local monactor = world.GetActor(target);
+            -- local montype = monactor:GetType()
             
-            local monclass = GetClassByType("Monster", montype);
-            local tempObj = CreateGCIES('Monster', monclass.ClassName);
-            SetExProp(tempObj, 'STARRANK', info.GetMonRankbyHandle(target))
-            tempObj.Lv = targetinfo.level
-            CHAT_SYSTEM("HP:" .. math.floor(SCR_Get_MON_MHP(tempObj)))
-            CHAT_SYSTEM("PATK:" .. math.floor(SCR_Get_MON_MAXPATK(tempObj)))
-            CHAT_SYSTEM("MATK:" .. math.floor(SCR_Get_MON_MAXMATK(tempObj)))
-            CHAT_SYSTEM("PDEF:" .. math.floor(SCR_Get_MON_DEF(tempObj)))
-            CHAT_SYSTEM("MDEF:" .. math.floor(SCR_Get_MON_MDEF(tempObj)))
+            -- local monclass = GetClassByType("Monster", montype);
+            -- local tempObj = CreateGCIES('Monster', monclass.ClassName);
+            -- SetExProp(tempObj, 'STARRANK', info.GetMonRankbyHandle(target))
+            -- tempObj.Lv = targetinfo.level
+            -- CHAT_SYSTEM("HP:" .. math.floor(SCR_Get_MON_MHP(tempObj)))
+            -- CHAT_SYSTEM("PATK:" .. math.floor(SCR_Get_MON_MAXPATK(tempObj)))
+            -- CHAT_SYSTEM("MATK:" .. math.floor(SCR_Get_MON_MAXMATK(tempObj)))
+            -- CHAT_SYSTEM("PDEF:" .. math.floor(SCR_Get_MON_DEF(tempObj)))
+            -- CHAT_SYSTEM("MDEF:" .. math.floor(SCR_Get_MON_MDEF(tempObj)))
             
-            DestroyIES(tempObj);
+            -- DestroyIES(tempObj);
         --pc.ReqExecuteTx_NumArgs('SCR_TX_TP_SHOP',{1})
         --RunScript('SCR_WEEKLY_BOSS_DPS_START()')
         --pc.ReqExecuteTx_Item("ABILITY_POINT_RESET", "SCR_WEEKLY_BOSS_DPS_START",'SCR_WEEKLY_BOSS_DPS_START');
