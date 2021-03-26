@@ -118,6 +118,26 @@ function ACQUIRERELICREWARD_PROCESS()
             end
         end
 
+        -- 퀘스트 정보 업데이트
+        local clsList, cnt = GetClassList("Relic_Reward")
+        for i = 0, cnt - 1 do
+            local relicCls = GetClassByIndexFromList(clsList, i)
+
+            local pcObj = GetMyPCObject()
+            local result = SCR_RELIC_QUEST_CHECK(pcObj, relicCls.ClassName)
+            if result == "Reward" then
+                if ccnt==0 then
+                    --ui.SysMsg('[ARR]Acquiring Relic Rewards.')
+                end
+                --ReserveScript(string.format('ACQUIRERELICREWARD_ACQUIRE_REWARD("%s")', relicCls.ClassName),ccnt*3)
+                ACQUIRERELICREWARD_ACQUIRE_REWARD(relicCls.ClassName)
+
+                ccnt=ccnt+1
+                ReserveScript("ACQUIRERELICREWARD_PROCESS()",1)
+                break
+            end
+            
+        end
     end
 
     

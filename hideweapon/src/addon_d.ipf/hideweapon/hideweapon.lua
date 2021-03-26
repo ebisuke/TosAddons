@@ -207,7 +207,7 @@ function HIDEWEAPON_UPDATE_EQUIP()
     HIDEWEAPON_HIDE_EQUIP()
 end
 function HIDEWEAPON_TIMER()
-    --HIDEWEAPON_HIDE_EQUIP()
+    HIDEWEAPON_HIDE_EQUIP()
 end
 function DoubleGunStance_ENTER(actor, obj, buff)
     --    actor:ChangeEquipNode(EmAttach.eRHand, "Dummy_Sword");
