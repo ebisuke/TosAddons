@@ -544,8 +544,8 @@
     "name": "Acquire Relic Reward",
     "file": "acquirerelicreward",
     "extension": "ipf",
-    "fileVersion": "v0.0.3",
-    "releaseTag": "acquirerelicreward-v0.0.3",
+    "fileVersion": "v0.0.4",
+    "releaseTag": "acquirerelicreward-v0.0.4",
     "unicode": "📖",
     "description": "レリッククエストの報酬を自動で受け取ります",
     "tags": [
