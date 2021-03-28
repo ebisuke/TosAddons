@@ -17,14 +17,41 @@ function AS_LOGIN_SERVERLIST_DELAY()
         timer:Start(0.00)
     end
 end
+local function SetMousePos_Fixed(x, y)
+    local sw = option.GetClientWidth()
+    local sh = option.GetClientHeight()
+    --representative fullscreen frame
+    local frame = ui.GetFrame('worldmap2_mainmap')
+    local ow = frame:GetWidth()
+    local oh = frame:GetHeight()
+    --return x*(sw/ow),y*(sh/oh)
+    mouse.SetPos(x * (sw / ow), y * (sh / oh))
+end
+local function GetScreenWidth()
+    --representative fullscreen frame
+    local frame = ui.GetFrame('worldmap2_mainmap')
+    local ow = frame:GetWidth()
+    local oh = frame:GetHeight()
+    return ow
+end
+local function GetScreenHeight()
+    --representative fullscreen frame
+    local frame = ui.GetFrame('worldmap2_mainmap')
+    local ow = frame:GetWidth()
+    local oh = frame:GetHeight()
+    return oh
+end
 local function CalcPos(x, y)
-    if option.GetClientWidth() >= 3000 then
-        x = x * 2
-        y = y * 2
-    end
-    return x, y
+    local sw = option.GetClientWidth()
+    local sh = option.GetClientHeight()
+    --representative fullscreen frame
+    local frame = ui.GetFrame('loginui_autojoin')
+    local ow = frame:GetWidth()
+    local oh = frame:GetHeight()
+    return x * (sw / ow), y * (sh / oh)
 
 end
+
 function ADVANCEDSTART_ON_TIMER(frame)
     local sframe = ui.GetFrame('loginui_autojoin_serverselect')
     local serverlist = sframe:GetChildRecursively('select server')

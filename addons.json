@@ -601,8 +601,8 @@
     "name": "joystickenhancer",
     "file": "joystickenhancer",
     "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "joystickenhancer-v0.0.1",
+    "fileVersion": "v0.1.3",
+    "releaseTag": "joystickenhancer-v0.1.3",
     "unicode": "📖",
     "description": "ワールドマップ・スキル画面を開くと自動でUIモードになります。  ",
     "tags": [
@@ -614,8 +614,8 @@
     "name": "advancedstart",
     "file": "advancedstart",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "advancedstart-v0.0.2",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "advancedstart-v0.0.3",
     "unicode": "📖",
     "description": "スタート画面・バラック画面で一部操作をキーボード・ジョイスティックで行えるようにします。 ",
     "tags": [
