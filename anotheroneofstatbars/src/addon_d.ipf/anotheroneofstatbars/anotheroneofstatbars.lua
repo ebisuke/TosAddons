@@ -941,7 +941,7 @@ function AOS_DRAW_SPBAR(frame, pic)
     local ox = 500 - 20 + 2
     local oy = 30 - 2
     if (g.fixsp) then
-        fixspw = math.max(0, math.min(len, g.fixsp * len / g.settings.maxsp))
+        fixspw = math.max(0, math.min(len, g.fixsp * len / stat.maxSP))
     end
     if (stat.SP <= stat.maxSP * 0.3) then
         local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
@@ -1278,7 +1278,8 @@ function AOS_DRAW_SPBAR_B(frame, pic)
     local ox = 60 + 20 - 5 + 5 - 15 + 1
     local oy = 50 - 20 - 5 - 5 + 15
     if (g.fixsp) then
-        fixspw = math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
+       -- fixspw = math.max(0, math.min(g.settings.maxlensp, g.fixsp * g.settings.maxlensp / g.settings.maxsp))
+        fixspw=math.max(0, math.min(len, g.fixsp * len / stat.maxSP))
     end
     if (stat.SP <= stat.maxSP * 0.3) then
         local lowstr = string.format("AA4444%02X", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
