@@ -349,12 +349,12 @@ function AWWARDROBE_VALIDATE_SETTINGS()
         
         end
     end
-    for k, v in pairs(g.settings.wardrobecard) do
-        if (EBI_IsNoneOrNilOrWhitespace(k)) then
-            g.settings.wardrobecard[k] = nil
+    -- for k, v in pairs(g.settings.wardrobecard) do
+    --     if (EBI_IsNoneOrNilOrWhitespace(k)) then
+    --         g.settings.wardrobecard[k] = nil
         
-        end
-    end
+    --     end
+    -- end
     for k, v in pairs(g.settings.wardrobeikor) do
         if (EBI_IsNoneOrNilOrWhitespace(k)) then
             g.settings.wardrobeikor[k] = nil
