@@ -330,10 +330,10 @@ function AWWARDROBE_LOAD_SETTINGS()
             g.personalsettings.version = AWWARDROBE_DEFAULTPERSONALSETTINGS().version
         end
     end
-    AWWARDROBE_VALIDATE_SETTINGS()
+    
     local upc = AWWARDROBE_UPGRADE_SETTINGS()
     local upp = AWWARDROBE_UPGRADE_PERSONALSETTINGS()
-    
+    AWWARDROBE_VALIDATE_SETTINGS()
     
     --ソート
     AWWARDROBE_SORTING()
