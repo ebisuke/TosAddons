@@ -296,8 +296,11 @@ function AWWARDROBE_SAVE_SETTINGS()
 end
 function AWWARDROBE_SORTING()
     AWWARDROBE_DBGOUT("SORT")
+    g.settings.wardrobe=g.settings.wardrobe or {}
+    g.settings.wardrobeikor=g.settings.wardrobeikor or {}
+    
     table.sort(g.settings.wardrobe, AWWARDROBE_COMPARE)
-    table.sort(g.settings.wardrobecard, AWWARDROBE_COMPARE)
+    --table.sort(g.settings.wardrobecard, AWWARDROBE_COMPARE)
     table.sort(g.settings.wardrobeikor, AWWARDROBE_COMPARE)
 end
 function AWWARDROBE_LOAD_SETTINGS()
@@ -343,6 +346,9 @@ function AWWARDROBE_LOAD_SETTINGS()
     end
 end
 function AWWARDROBE_VALIDATE_SETTINGS()
+    g.settings.wardrobe=g.settings.wardrobe or {}
+    g.settings.wardrobeikor=g.settings.wardrobeikor or {}
+    
     for k, v in pairs(g.settings.wardrobe) do
         if (EBI_IsNoneOrNilOrWhitespace(k)) then
             g.settings.wardrobe[k] = nil
