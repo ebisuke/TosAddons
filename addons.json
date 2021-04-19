@@ -288,8 +288,8 @@
     "name": "Buff Remain Visualizer",
     "file": "buffremainvisualizer",
     "extension": "ipf",
-    "fileVersion": "v0.2.0",
-    "releaseTag": "buffremainvisualizer-v0.2.0",
+    "fileVersion": "v0.2.1",
+    "releaseTag": "buffremainvisualizer-v0.2.1",
     "unicode": "📖",
     "description": "バフの残り時間を可視化します 今のところプレイヤーのみの適用です  ",
     "tags": [
