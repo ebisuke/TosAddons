@@ -1418,6 +1418,8 @@ function YAI_DRAW_ITEM(invItem, slot)
     else
         CLEAR_ICON_REMAIN_LIFETIME(slot, icon);
     end
+    -- 아이커 종류 표시
+	SET_SLOT_ICOR_CATEGORY(slot, itemCls);
 
 end
 
@@ -1507,7 +1509,9 @@ function YAI_INSERT_ITEM_TO_TREE(frame, tree, invItem, itemCls, baseidcls, typeS
         else
             CLEAR_ICON_REMAIN_LIFETIME(slot, icon);
         end
-    
+        -- 아이커 종류 표시
+    	SET_SLOT_ICOR_CATEGORY(slot, itemCls);
+
     end
     --INV_ICON_SETINFO(frame, slot, invItem, nil, nil, nil);
     _DRAW_ITEM(invItem, slot, nil)
