@@ -1,3 +1,3 @@
 $addonname="awakenroller"
 
-$version="v0.0.3TR2"
+$version="v0.0.4"

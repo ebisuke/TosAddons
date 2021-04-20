@@ -470,6 +470,21 @@
     ]
   },
   {
+    "name": "Awaken Roller",
+    "file": "awakenroller",
+    "extension": "ipf",
+    "fileVersion": "v0.0.4",
+    "releaseTag": "awakenroller-v0.0.4",
+    "unicode": "📖",
+    "description": "アイテム覚醒で指定した以上の数値のオプションが出るまでロールするアドオンです",
+    "tags": [
+      "ui",
+      "awaken",
+      "prop",
+      "item"
+    ]
+  },
+  {
     "name": "ikorextractionresetinhibiter",
     "file": "ikorextractionresetinhibiter",
     "extension": "ipf",

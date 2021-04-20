@@ -139,6 +139,7 @@ function TESTBOARD_ON_INIT(addon, frame)
             --ui.GetFrame=TESTBOARD_GETFRAME
             TESTBOARD_INIT()
             g.frame:ShowWindow(0)
+            
         end,
         catch = function(error)
             ERROUT(error)
@@ -171,6 +172,15 @@ function TESTBOARD_INIT()
             timer:SetUpdateScript("TESTBOARD_ON_TIMER");
             timer:Start(0.01);
             timer:EnableHideUpdate(true)
+            local cframe=ui.GetFrame("chat_option")
+            local chks=cframe:CreateOrGetControl("checkbox","damageCheck_my",200,200,100,30)
+            AUTO_CAST(chks)
+            local chkm=cframe:CreateOrGetControl("checkbox","damageCheck_others",200,230,100,30)
+            AUTO_CAST(chkm)
+            chks:SetConfigName("BattleMsg_Damage_others")
+            chkm:SetConfigName("BattleMsg_Damage_my")
+            chks:SetEventScript(ui.LBUTTONUP,"CHAT_OPTION_UPDATE_CHECKBOX")
+            chkm:SetEventScript(ui.LBUTTONUP,"CHAT_OPTION_UPDATE_CHECKBOX")
             
         end,
         catch = function(error)
@@ -178,7 +188,180 @@ function TESTBOARD_INIT()
         end
     }
 end
+function C_SR_EFT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
 
+	if delayTime == nil then
+		delayTime = 0;
+	end
+    CHAT_SYSTEM(tostring(hitInfo))
+	local key = "None"
+	local radAngle = 0;
+	effect.PlayGroundEffect(self, eft, scl, x, y, z, lifeTime, key, radAngle, delayTime);	
+end
+
+function C_SR_EFT_DEFAULT(self, target, sklLevel, hitInfo, hitIndex, selfEeffectName, selfScale, selfOffset, targetEeffectName, targetScale, targetOffset)
+	if selfEeffectName ~= nil and selfEeffectName ~= 'None' and selfEeffectName ~= '' then
+		self:GetEffect():PlayEffect(selfEeffectName, selfScale, GetOffsetEnum(selfOffset));
+	end
+	CHAT_SYSTEM(tostring(hitInfo))
+	if targetEeffectName ~= nil and targetEeffectName ~= 'None' and targetEeffectName ~= '' then
+		local isMyEffect = self:GetHandleVal() == GetMyActor():GetHandleVal();
+		local isBoss = false;
+		if self:GetObjType() == GT_MONSTER then
+			if self.MonRank == "Boss" then
+				isBoss = true;
+			end
+		end
+		
+		target:GetEffect():PlayEffect(isMyEffect, isBoss, targetEeffectName, targetScale, GetOffsetEnum(targetOffset));
+	end
+end
+
+function C_SR_EFT2(self, target, sklLevel, hitInfo, hitIndex, effectName,  scale, nodeName, lifeTime)
+
+	if lifeTime == nil then
+
+		lifeTime = 0;
+
+	end
+    CHAT_SYSTEM(tostring(hitInfo))
+	effect.PlayActorEffect(self, effectName, nodeName, lifeTime, scale);
+
+end
+
+function C_EFFECT_USE_XYZ(actor, obj, effectName, scale, nodeName, x, y, z)
+
+    CHAT_SYSTEM(tostring(nodeName))
+    effect.PlayActorEffect(actor, effectName, nodeName, lifeTime, scale,x,y,z);
+
+end
+function C_EFFECT_POS(actor, obj, eftName, scl, x, y, z, lifeTime, key)
+    if key == nil then
+        key = "None";
+    end
+    CHAT_SYSTEM(tostring(eftName))
+    effect.PlayGroundEffect(actor, eftName, scl, x, y, z, lifeTime, key);
+end
+
+function C_EFFECT_ATTACH(actor, obj, eftName, scl, scl2, x, y, z, autoDetach, angle)
+	if angle == nil then
+		angle = -1;
+	end
+
+    if x == nil then
+        effect.AddActorEffect(actor, eftName, scl * scl2, 0, 0, 0, angle);
+    else
+        effect.AddActorEffect(actor, eftName, scl * scl2, x, y, z, angle);
+    end
+    CHAT_SYSTEM(tostring(eftName))
+	-- �� ���̾�ó�� ��ų�� ���� ScpArgMsg("Auto_iPegTeuTteKi")�� ������������ ����ϸ� ��
+    if autoDetach == 1 then
+        actor:GetEffect():AddAutoDetachEffect(eftName);
+    end
+end
+
+function C_EFFECT(actor, obj, effectName, scale, nodeName, lifeTime)
+    
+    if lifeTime == nil then
+
+        lifeTime = 0;
+    end
+
+    -- 포포팝 피스톨 체크
+    if IS_EXIST_BRIQUETTING_OR_BEAUTYSHOP_ITEM(actor, "LH", "Pistol", obj.type, 634214) == true then
+        effectName = "None";
+    end
+    CHAT_SYSTEM(tostring(effectName))
+    effect.PlayActorEffect(actor, effectName, nodeName, lifeTime, scale);
+
+end
+function I_SYS_damage_self(arg)
+    CHAT_SYSTEM(tostring(arg))
+end
+function SYS_heal2(arg)
+    CHAT_SYSTEM(tostring(arg))
+end
+function SKL_TGT_DMG(arg)
+    CHAT_SYSTEM(tostring(arg))
+end
+function C_FORCE_EFT(actor, obj, eft, scale, snd, finEft, finEftScale, finSnd, destroy, fSpeed, easing, gravity, angle, hitIndex, collrange, createLength, radiusSpd, isLastForce, useHitEffect, linkTexName, dist, offSetAngle, height, delayStart, fixVerDir)
+    CHAT_SYSTEM(tostring(eft))
+    local item = session.GetEquipItemBySpot(item.GetEquipSpotNum("RH"))
+    if item ~= nil then
+        local equipItemObj = GetIES(item:GetObject());
+    
+        if obj.type == 30005 and equipItemObj.ClassType == "Musket" then
+            eft = "I_archer_musket_atk#Dummy_Force_musket";
+        end
+    end
+
+    if useHitEffect== nil then
+        useHitEffect = 1;
+    end
+
+    if radiusSpd == nil then
+        radiusSpd = 0.0;
+    end
+
+    if createLength == nil then
+        createLength = 0.0;
+    end
+
+    if linkTexName == nil then
+        linkTexName = 'None';
+    end
+        
+    if customTarget == nil then
+        customTarget = 0;
+    end
+    
+    if delayStart == nil then
+        delayStart = 0;
+    end
+
+    local addX = 0;
+    local addY = 0;
+    local addZ = 0;
+    if dist == nil or offSetAngle == nil or height == nil then
+
+    else
+        if dist > 0 then
+            offSetAngle = DegToRad(offSetAngle);
+            addX = math.cos(offSetAngle) * dist;
+            addY = height;
+            addZ = math.sin(offSetAngle) * dist;
+        end
+    end
+
+    if fixVerDir == nil then
+        fixVerDir = 0;
+    end
+    
+    local ret = actor:GetForce():PlayForce_Tool(eft, scale, snd, finEft, finEftScale, finSnd, destroy, fSpeed, easing, gravity, angle, hitIndex, collrange, createLength, radiusSpd, useHitEffect, customTarget, linkTexName, delayStart, addX, addY, addZ, fixVerDir);
+
+	-- ������������ ������ ��ųĵ�� �����ϰ� ���ش�.
+	if isLastForce == 1 or isLastForce == nil then	-- nil�� üũ�ϴ������� �����þȵȰ� �� ������ ������������� ������
+        actor:EnableSkillCancel(1);
+    end
+
+    return ret;
+end
+function C_EFFECT_ATTACH_OOBE(actor, obj, eftName, scl, scl2, x, y, z, autoDetach)
+    local oobeActor = actor:GetOOBEActor();
+    if oobeActor ~= nil then
+        if x == nil then
+            effect.AddActorEffect(oobeActor, eftName, scl * scl2, 0, 0, 0);
+        else
+            effect.AddActorEffect(oobeActor, eftName, scl * scl2, x, y, z);
+        end
+
+		-- �� ���̾�ó�� ��ų�� ���� ScpArgMsg("Auto_iPegTeuTteKi")�� ������������ ����ϸ� ��
+        if autoDetach == 1 then
+            oobeActor:GetEffect():AddAutoDetachEffect(eftName);
+        end
+    end
+    CHAT_SYSTEM(tostring(eftName))
+end
 function TESTBOARD_GETFRAME(name)
     
     local frame = TESTBOARD_GETFRAME_OLD(name)
@@ -226,9 +409,9 @@ function TESTBOARD_TEST()
             else
                 g.b = true
             end
-            DAMAGE_METER_UI_OPEN(ui.GetFrame('damage_meter'),nil,'0/PRACTICE',1)
-            geMGame.ReqMGameCmd("WEEKLY_BOSS_RAID_01",2) 
-
+            --DAMAGE_METER_UI_OPEN(ui.GetFrame('damage_meter'),nil,'0/PRACTICE',1)
+            --geMGame.ReqMGameCmd("WEEKLY_BOSS_RAID_01",2) 
+            --ui.PropertyCompare(session.GetTargetHandle(), 1, 0);
             --local pc = GetMyActor()
             -- local itemClsList, cnt = GetClassList('NormalTX');
             -- for i = 0, cnt - 1 do
@@ -240,9 +423,11 @@ function TESTBOARD_TEST()
             
             -- if not target then
                 
-            --     return
+            --      return
             -- end
             -- local targetinfo = info.GetTargetInfo(target);
+            -- local monactor = world.GetActor(target);
+            -- local ies=GetIES(targetinfo:GetIESObject())
             -- local monactor = world.GetActor(target);
             -- local montype = monactor:GetType()
             
@@ -272,24 +457,27 @@ function TESTBOARD_TEST()
         -- effect.PlayTextEffect(pc,"I_SYS_damage",'100');
         -- effect.PlayTextEffect(pc,"SHOW_DMG_SHIELD","100");
         -- effect.PlayTextEffect(pc,"I_SYS_heal2","100");
-        --local objList, objCount = SelectObject(self, 300, 'ALL')
-        -- CHAT_SYSTEM("Thaurge BEGIN")
-        -- for i = 1, objCount do
-        --     local enemyHandle = GetHandle(objList[i]);
-        --     local enemy = world.GetActor(enemyHandle);
-        --     if objList[i].ClassName == 'pcskill_Warlock_DarkTheurge' then
-        --         local enemyDestPos = enemy:GetArgPos(0);
-        --         local enemyPos = enemy:GetPos();
-        --         local distFromActor = imcMath.Vec3Dist(enemyPos, pos);
-        --         CHAT_SYSTEM("Thaurge"..enemyHandle..":"..tostring(objList[i].Faction))
-        --     end
-        --     if objList[i].ClassID==150011 then
-        --         ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(enemyHandle)
-        --     end
-        --     if objList[i].ClassID==150010 then
-        --         ACCEPT_CHALLENGE_MODE(enemyHandle)
-        --     end
-        -- end
+        local objList, objCount = SelectObject(self, 300, 'ALL')
+        CHAT_SYSTEM("Thaurge BEGIN")
+        for i = 1, objCount do
+            local enemyHandle = GetHandle(objList[i]);
+            local enemy = world.GetActor(enemyHandle);
+            local ies=GetIES(GetObject(enemyHandle))
+            print(tostring(ies)..GetObject(enemyHandle))
+            -- if objList[i].ClassName == 'pcskill_Warlock_DarkTheurge' then
+            --     local enemyDestPos = enemy:GetArgPos(0);
+            --     local enemyPos = enemy:GetPos();
+            --     local distFromActor = imcMath.Vec3Dist(enemyPos, pos);
+            --     CHAT_SYSTEM("Thaurge"..enemyHandle..":"..tostring(objList[i].Faction))
+            -- end
+            -- if objList[i].ClassID==150011 then
+            --     ACCEPT_NEXT_LEVEL_CHALLENGE_MODE(enemyHandle)
+            -- end
+            -- if objList[i].ClassID==150010 then
+            --     ACCEPT_CHALLENGE_MODE(enemyHandle)
+            -- end
+            break
+        end
         -- for i = 1, objCount do
         --     local enemyHandle = GetHandle(objList[i]);
         --     local enemy = world.GetActor(enemyHandle);
