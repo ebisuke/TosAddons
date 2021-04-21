@@ -685,5 +685,20 @@
       "kitchen",
       "buff"
     ]
+  },
+  {
+    "name": "Ancient Monster Bookshelf",
+    "file": "ancientmonsterbookshelf",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "ancientmonsterbookshelf-v0.0.1",
+    "unicode": "📖",
+    "description": "アシスターカードを整理するアドオンです",
+    "tags": [
+      "ui",
+      "assister",
+      
+      "card"
+    ]
   }
 ]

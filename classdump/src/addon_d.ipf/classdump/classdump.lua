@@ -1139,10 +1139,10 @@ local function file_exists(name)
 
 function CLASSDUMP_3SEC()
   
---    if not g.firsttouch then
---         g.firsttouch=true
---         --CLASSDUMP_DUMP()
---     end
+   if not g.firsttouch then
+        g.firsttouch=true
+        --CLASSDUMP_DUMP()
+    end
 end
 function CLASSDUMP_DUMP()
     local classlistlist={
@@ -1169,7 +1169,7 @@ function CLASSDUMP_DUMP()
          'statistics_monster',
          'Buff',
          'Housing_Furniture',
-         'account_ability',
+         'Account_Ability',
          'Guild_Ability'
     }
     for _,classlistname in ipairs(classlistlist) do
@@ -1197,13 +1197,31 @@ function CLASSDUMP_DUMP()
                     ls[#ls+1] = pack
                 end
                 acutil.saveJSON(g.basepath..'/'..classlistname..'.json',ls)
+                local ls={}
+                local f=io.open(ies,"r")
+                local line=f:read("*l")
+                local spr=StringSplit(line, ",");
+    
+    
+                for i = 0, cnt - 1 do
+                    local pack={}
+                    local cls = GetClassByIndexFromList(list,i);
+                    -- repackaging
+                    for _,elem in ipairs(spr) do
+                        pack[elem]=dictionary.ReplaceDicIDInCompStr(cls[elem])
+                    end
+                    
+                    ls[#ls+1] = pack
+                end
+                acutil.saveJSON(g.basepath..'/_dicid_'..classlistname..'.json',ls)
             end
         end
     end
+   
     local joblist,jobcnt= GetClassList("Job");
     for i = 0, jobcnt - 1 do
         local jobcls = GetClassByIndexFromList(joblist,i);
-        local ls={}
+        
         local list, cnt = GetClassList('Ability_'..jobcls.EngName);
         if list then
 
@@ -1212,11 +1230,12 @@ function CLASSDUMP_DUMP()
                 CHAT_SYSTEM('[CD]ability_'..jobcls.EngName..' not found')
             
             else
+                
                 local f=io.open(ies,"r")
                 local line=f:read("*l")
                 local spr=StringSplit(line, ",");
 
-
+                local ls={}
                 for ii = 0, cnt - 1 do
                     local pack={}
                     local cls = GetClassByIndexFromList(list,ii);
@@ -1227,8 +1246,28 @@ function CLASSDUMP_DUMP()
                     ls[#ls+1] = pack
                 end
                 acutil.saveJSON(g.basepath..'/ability_'..jobcls.EngName..'.json',ls)
+                local ls={}
+                local f=io.open(ies,"r")
+                local line=f:read("*l")
+                local spr=StringSplit(line, ",");
+    
+    
+                for i = 0, cnt - 1 do
+                    local pack={}
+                    local cls = GetClassByIndexFromList(list,i);
+                    -- repackaging
+                    for _,elem in ipairs(spr) do
+                        pack[elem]=dictionary.ReplaceDicIDInCompStr(cls[elem])
+                    end
+                    
+                    ls[#ls+1] = pack
+                end
+                acutil.saveJSON(g.basepath..'/_dicid_ability_'..jobcls.EngName..'.json',ls)
             end
+          
         end
     end
+  
+
     CHAT_SYSTEM("[CD]DUMPED")
 end
