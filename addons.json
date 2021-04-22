@@ -616,8 +616,8 @@
     "name": "joystickenhancer",
     "file": "joystickenhancer",
     "extension": "ipf",
-    "fileVersion": "v0.1.3",
-    "releaseTag": "joystickenhancer-v0.1.3",
+    "fileVersion": "v0.1.4",
+    "releaseTag": "joystickenhancer-v0.1.4",
     "unicode": "📖",
     "description": "ワールドマップ・スキル画面を開くと自動でUIモードになります。  ",
     "tags": [

@@ -56,7 +56,9 @@ g.sys = {
         "induninfo",
         "companion_shop",
         "status",
-        "systemoption"
+        "systemoption",
+        "select_mgame_buff_solo",
+        "select_mgame_buff_party"
     }
 }
 

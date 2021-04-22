@@ -1170,7 +1170,8 @@ function CLASSDUMP_DUMP()
          'Buff',
          'Housing_Furniture',
          'Account_Ability',
-         'Guild_Ability'
+         'Guild_Ability',
+         'recycle_shop'
     }
     for _,classlistname in ipairs(classlistlist) do
         local ls={}
