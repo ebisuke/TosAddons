@@ -58,7 +58,12 @@ g.sys = {
         "status",
         "systemoption",
         "select_mgame_buff_solo",
-        "select_mgame_buff_party"
+        "select_mgame_buff_party",
+        "foodtable_ui",
+        "foodtable_register",
+        "camp_register",
+        "camp_ui",
+        "coinshopindunenter"
     }
 }
 

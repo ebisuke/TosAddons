@@ -616,8 +616,8 @@
     "name": "joystickenhancer",
     "file": "joystickenhancer",
     "extension": "ipf",
-    "fileVersion": "v0.1.4",
-    "releaseTag": "joystickenhancer-v0.1.4",
+    "fileVersion": "v0.1.5",
+    "releaseTag": "joystickenhancer-v0.1.5",
     "unicode": "📖",
     "description": "ワールドマップ・スキル画面を開くと自動でUIモードになります。  ",
     "tags": [
@@ -713,5 +713,19 @@
       "ui",
       "rtt"
     ]
-  }
+  },
+  {
+    "name": "Camp Extender",
+    "file": "campextender",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "campextender-v0.0.1",
+    "unicode": "📖",
+    "description": "キッチンの調理及び材料調達を簡単にします。",
+    "tags": [
+      "squire",
+      "camp",
+      "kitchen"
+    ]
+  },
 ]
