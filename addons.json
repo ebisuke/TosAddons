@@ -700,5 +700,18 @@
       
       "card"
     ]
+  },
+  {
+    "name": "Pseudo RTT",
+    "file": "pseudortt",
+    "extension": "ipf",
+    "fileVersion": "v0.0.1",
+    "releaseTag": "pseudortt-v0.0.1",
+    "unicode": "📖",
+    "description": "疑似的にRTT(ラウンドトリップタイム)を算出します",
+    "tags": [
+      "ui",
+      "rtt"
+    ]
   }
 ]
