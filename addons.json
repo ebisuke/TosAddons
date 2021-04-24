@@ -721,11 +721,11 @@
     "fileVersion": "v0.0.1",
     "releaseTag": "campextender-v0.0.1",
     "unicode": "📖",
-    "description": "キッチンの調理及び材料調達を簡単にします。",
+    "description": "キャンプの有効期間を自動延長します",
     "tags": [
+      "ui",
       "squire",
-      "camp",
-      "kitchen"
+      "camp"
     ]
   }
 ]
