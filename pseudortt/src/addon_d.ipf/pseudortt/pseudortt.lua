@@ -30,6 +30,8 @@ function PSEUDORTT_ON_INIT(addon, frame)
         session.inventory.ReqTrustPoint=PSEUDORTT_REQTRUSTPOINT
     end
     g.fallback=false
+    g.reqtime=nil
+    g.tick=0
 end
 function PSEUDORTT_REQUEST_RTT(...)
     g.oldRequestChannelTraffics(...)
