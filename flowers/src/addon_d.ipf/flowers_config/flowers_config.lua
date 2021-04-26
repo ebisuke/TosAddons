@@ -83,19 +83,44 @@ function FLOWERS_CONFIG_INITFLOWERORPETAL()
             gbox:SetMargin(0,40,20,0)
             gbox:SetGravity(ui.RIGHT,ui.TOP)
             gbox:SetSkinName("bg2")
+            local gboxp=gbox:CreateOrGetControl("groupbox","gboxp",10,0,280,400)
+            gboxp:RemoveAllChild()
+            gboxp:SetMargin(20,40,20,0)
+            gboxp:SetGravity(ui.LEFT,ui.TOP)
+            gboxp:SetSkinName("bg2")
+            local labelframeconfig=gboxp:CreateOrGetControl("richtext","labelframeconfig",0,0,200,40)
+            labelframeconfig:SetGravity(ui.LEFT,ui.TOP)
+            labelframeconfig:SetMargin(10,10,50,20)
+            labelframeconfig:SetText("{ol}"..g.L("Flower/Petal Config"))
+
             if g.garden.selecteditem==nil then
                 return
             end
             local labeltitle=gboxparent:CreateOrGetControl("richtext","labeltitle",0,0,200,40)
             labeltitle:SetGravity(ui.RIGHT,ui.TOP)
-            labeltitle:SetMargin(20,10,50,20)
+            labeltitle:SetMargin(320,10,50,20)
             labeltitle:SetText("{ol}{s20}"..g.garden.selecteditem:is().."/{s24}"..g.garden.selecteditem.name)
 
             local labelcondition=gbox:CreateOrGetControl("richtext","labelcondition",0,0,200,80)
             labelcondition:SetGravity(ui.LEFT,ui.TOP)
-            labelcondition:SetMargin(20,20)
-            labelcondition:SetText("{ol}{s20}Conditions")
+            labelcondition:SetMargin(320,20)
+            labelcondition:SetText("{ol}{s20}"..g.L("Conditions"))
             FLOWERS_CONFIG_INITCONDITION()
+
+            
+            local labelaction=gbox:CreateOrGetControl("richtext","labelaction",0,0,200,80)
+            labelaction:SetGravity(ui.LEFT,ui.TOP)
+            labelaction:SetMargin(320,360)
+            labelaction:SetText("{ol}{s20}"..g.L("Actions"))
+            FLOWERS_CONFIG_INITACTION()
+
+            local labelaction=gbox:CreateOrGetControl("richtext","labelvariables",0,0,200,80)
+            labelaction:SetGravity(ui.LEFT,ui.TOP)
+            labelaction:SetMargin(320,730)
+            labelaction:SetText("{ol}{s20}"..g.L("Variables"))
+            FLOWERS_CONFIG_INITVARIABLES()
+
+            FLOWERS_CONFIG_INITFLOWERPETALVALUE()
         end,
         catch = function(error)
             ERROUT(error)
@@ -114,17 +139,70 @@ function FLOWERS_CONFIG_INITCONDITION_DIG(cond,level)
         end
     }
 end
+function FLOWERS_CONFIG_INITFLOWERPETALVALUE()
+    EBI_try_catch{
+        try = function()
+            local frame=ui.GetFrame("flowers_config")
+            local gbox=frame:GetChildRecursively("gboxp")
+            g.prefab.generateValueSetterList(frame,gbox,"gboxvalues",40,40,gbox:GetWidth(),gbox:GetHeight()-40,g.garden.selecteditem.fixedaction[1].inout)
+            
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function FLOWERS_CONFIG_INITVARIABLES()
+    EBI_try_catch{
+        try = function()
+            local frame=ui.GetFrame("flowers_config")
+            local gboxparent=frame:GetChildRecursively("gboxm")
+            local gbox=gboxparent:CreateOrGetControl("groupbox","gboxvariables",0,0,gboxparent:GetWidth()-360,320)
+            gbox:SetMargin(320,760)
+            gbox:SetSkinName("bg2")
+            local btnAddCond=gboxparent:CreateOrGetControl("button","btnaddvariables",0,0,100,30)
+            AUTO_CAST(btnAddCond)
+            btnAddCond:SetText("{ol}"..g.L("Add Variable"))
+            btnAddCond:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_ADD_ACTION")
+            btnAddCond:SetGravity(ui.RIGHT,ui.TOP)
+            btnAddCond:SetMargin(0,730,20,30)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function FLOWERS_CONFIG_INITACTION()
+    EBI_try_catch{
+        try = function()
+            local frame=ui.GetFrame("flowers_config")
+            local gboxparent=frame:GetChildRecursively("gboxm")
+            local gbox=gboxparent:CreateOrGetControl("groupbox","gboxaction",0,0,gboxparent:GetWidth()-360,320)
+            gbox:SetMargin(320,400)
+            gbox:SetSkinName("bg2")
+            local btnAddCond=gboxparent:CreateOrGetControl("button","btnaddaction",0,0,100,30)
+            AUTO_CAST(btnAddCond)
+            btnAddCond:SetText("{ol}"..g.L("Add Action"))
+            btnAddCond:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_ADD_ACTION")
+            btnAddCond:SetGravity(ui.RIGHT,ui.TOP)
+            btnAddCond:SetMargin(0,370,20,30)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
 function FLOWERS_CONFIG_INITCONDITION()
     EBI_try_catch{
         try = function()
             local frame=ui.GetFrame("flowers_config")
             local gboxparent=frame:GetChildRecursively("gboxm")
-            local gbox=gboxparent:CreateOrGetControl("groupbox","gboxcondition",0,0,gboxparent:GetWidth()-40,300)
-            gbox:SetMargin(20,60)
+            local gbox=gboxparent:CreateOrGetControl("groupbox","gboxcondition",0,0,gboxparent:GetWidth()-360,300)
+            gbox:SetMargin(320,60)
             gbox:SetSkinName("bg2")
             local btnAddCond=gboxparent:CreateOrGetControl("button","btnaddcondition",0,0,100,30)
             AUTO_CAST(btnAddCond)
-            btnAddCond:SetText("{ol}Add Condition")
+            btnAddCond:SetText("{ol}"..g.L("Add Condition"))
             btnAddCond:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_ADD_CONDITION")
             btnAddCond:SetGravity(ui.RIGHT,ui.TOP)
             btnAddCond:SetMargin(0,30,20,30)
@@ -165,7 +243,7 @@ function FLOWERS_CONFIG_INITFRAME()
             lstflowers:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_SELECT_FLOWER")
             local btnadd=gbox:CreateOrGetControl("button","btnaddflower",0,0,50,30)
             AUTO_CAST(btnadd)
-            btnadd:SetText("{ol}Add")
+            btnadd:SetText("{ol}"..g.L("Add"))
             btnadd:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_ADDFLOWER")
             btnadd:SetGravity(ui.LEFT,ui.TOP)
             btnadd:SetMargin(150+20,15,0,0)
@@ -180,13 +258,14 @@ function FLOWERS_CONFIG_INITFRAME()
             lstpetals:SetGravity(ui.LEFT,ui.TOP)
             lstpetals:SetMargin(20,gbox:GetHeight()/2-80+40+40,0,0)
             lstpetals:ClearItemAll();
+            
+            lstpetals:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_SELECT_PETAL")
             local btnadd=gbox:CreateOrGetControl("button","btnaddpetal",0,0,50,30)
             AUTO_CAST(btnadd)
-            btnadd:SetText("{ol}Add")
+            btnadd:SetText("{ol}"..g.L("Add"))
             btnadd:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_ADDPETAL")
             btnadd:SetGravity(ui.LEFT,ui.TOP)
             btnadd:SetMargin(150+20,gbox:GetHeight()/2-80+40+15,0,0)
-            lstflowers:SetEventScript(ui.LBUTTONUP,"FLOWERS_CONFIG_SELECT_PETAL")
         end,
         catch = function(error)
             ERROUT(error)
@@ -194,7 +273,7 @@ function FLOWERS_CONFIG_INITFRAME()
     }
 end
 function FLOWERS_CONFIG_ADDFLOWER()
-    INPUT_STRING_BOX_CB(ui.GetFrame("flowers_config"),"Enter Flower Name", "FLOWERS_CONFIG_DO_ADDFLOWER", "", nil, nil,  128,false);
+    INPUT_STRING_BOX_CB(ui.GetFrame("flowers_config"),g.L("Enter Flower Name"), "FLOWERS_CONFIG_DO_ADDFLOWER", "", nil, nil,  128,false);
 
 end
 function FLOWERS_CONFIG_DO_ADDFLOWER(inputframe,changedName )

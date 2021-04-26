@@ -43,3 +43,76 @@ local function ERROUT(msg)
 
 end
 
+g.prefab={
+    pipecache={},
+    
+    generateValueSetter=function(gbox,offsety,inpipe)
+        local gboxinner=gbox:CreateOrGetControl("groupbox","gboxinner_"..inpipe.name,0,offsety,300,60)
+        AUTO_CAST(gboxinner)
+        gboxinner:RemoveAllChild()
+        local rtext=gboxinner:CreateOrGetControl("richtext","in_"..inpipe.name,40,3,200,30)
+        rtext:SetText("{ol}"..inpipe.description)
+        local btn=gboxinner:CreateOrGetControl("button","toggler",0,0,40,30)
+        AUTO_CAST(btn)
+        btn:SetEventScript(ui.LBUTTONUP,"FLOWERS_CLASS_CONF_PREFAB_TOGGLE_VALUETYPE")
+        btn:SetEventScriptArgString(ui.LBUTTONUP,inpipe.name)
+        g.prefab.pipecache[inpipe.name]={gbox=gbox,offsety=offsety,inpipe=inpipe}
+     
+        if inpipe.variable.is()=="TVariable" then
+            -- immediate value
+           
+            AUTO_CAST(edit)
+            btn:SetText("{ol}IM")
+            local edit=gboxinner:CreateOrGetControl("edit","inedit",0,30,150,30)
+            edit:SetText(tostring(inpipe.variable:GetValue()))
+        elseif inpipe.variable:is()=="TVariableLua" then
+            -- lua
+            local edit=gboxinner:CreateOrGetControl("edit","inedit",0,30,150,30)
+            AUTO_CAST(edit)
+            btn:SetText("{ol}Lua")
+            edit:SetText(tostring(inpipe.variable:GetValue()))
+        elseif inpipe.variable:is()=="TVariableReference" then
+            -- refer
+            local btn2=gboxinner:CreateOrGetControl("button","inref",0,30,150,30)
+            AUTO_CAST(btn2)
+            btn:SetText("{ol}Ref")             
+        elseif inpipe.variable:is()=="TVariableFunction" then
+            -- func
+            local btn2=gboxinner:CreateOrGetControl("button","infunc",0,30,150,30)
+            AUTO_CAST(btn2)
+            btn:SetText("{ol}Func")
+        end
+        return 60
+    end,
+    generateValueSetterList=function(frame,parent,gboxname,x,y,w,h,inout)
+        if parent==nil then
+            parent=frame
+        end
+        local gbox=parent:CreateOrGetControl("groupbox",gboxname,x,y,w,h)
+        AUTO_CAST(gbox)
+        local height=0
+        for k,v in ipairs(inout.ins) do
+            
+            height=height+g.prefab.generateValueSetter(gbox,height,v)
+        end
+    end
+}
+function FLOWERS_CLASS_CONF_PREFAB_TOGGLE_VALUETYPE(frame,ctrl,argstr,argnum)
+
+    local pipe=g.prefab.pipecache[argstr]
+    local inpipe=pipe.inpipe
+    if inpipe.variable:is()=="TVariable" then
+        inpipe.variable=g.classes.TVariableLua.new()
+    elseif inpipe.variable:is()=="TVariableLua" then
+        inpipe.variable=g.classes.TVariableReference.new()
+    elseif inpipe.variable:is()=="TVariableReference" then
+        inpipe.variable=g.classes.TVariableFunction.Functions.Noop()
+    elseif inpipe.variable:is()=="TVariableFunction" then
+        inpipe.variable=g.classes.TVariable.new(nil,nil,nil,inpipe.type)
+    end
+
+
+    if pipe then
+        g.prefab.generateValueSetter(pipe.gbox,pipe.offsety,pipe.inpipe)
+    end
+end

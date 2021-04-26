@@ -20,8 +20,8 @@ end
 local function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
-local currentvalue=nil
-local okcb=nil
+local cv={}
+local okcallbacks={}
 local function DBGOUT(msg)
     
     EBI_try_catch{
@@ -65,73 +65,68 @@ function FLOWERS_VALUE_ON_INIT(addon, frame)
     }
 end
 
-function FLOWERS_VALUE_TOGGLE_FRAME()
-    
-end
-function FLOWERS_VALUE_INITFRAME()
+function FLOWERS_VALUE_INITFRAME(frame,currentinpipe)
     
     EBI_try_catch{
         try = function()
             local frame=ui.GetFrame("flowers_value")
             local gbox=frame:CreateOrGetControl("groupbox","gbox",0,100,frame:GetWidth(),frame:GetHeight()-100)
+            gbox:RemoveAllChild()
             local btnok=gbox:CreateOrGetControl("button","btnok",0,0,100,30)
+
+            
+
+
             btnok:SetMargin(60,0,0,20)
             btnok:SetGravity(ui.LEFT,ui.BOTTOM)
-            btnok:SetText("{ol}OK")
+            btnok:SetText("{ol}"..g.L("OK"))
             btnok:SetEventScript(ui.LBUTTONUP,"FLOWERS_VALUE_ONOK")
+         
+
             local btncancel=gbox:CreateOrGetControl("button","btncancel",0,0,100,30)
             btncancel:SetMargin(20,0,60,20)
             btncancel:SetGravity(ui.RIGHT,ui.BOTTOM)
-            btncancel:SetText("{ol}Cancel")
+            btncancel:SetText("{ol}"..g.L("Cancel"))
             btncancel:SetEventScript(ui.LBUTTONUP,"FLOWERS_VALUE_ONCANCEL")
-
-            local label=gbox:CreateOrGetControl("richtext","labellhs",0,0,100,30)
-            label:SetText("{ol}LHS")
-            label:SetMargin(20,100,20,0)
-            label:SetGravity(ui.LEFT,ui.TOP)
-            local label=gbox:CreateOrGetControl("richtext","labelcomp",0,0,100,30)
-            label:SetText("{ol}Comparator")
-            label:SetMargin(20,100,20,0)
-            label:SetGravity(ui.CENTER_HORZ,ui.TOP)
-            local label=gbox:CreateOrGetControl("richtext","labelrhs",0,0,100,30)
-            label:SetText("{ol}RHS")
-            label:SetMargin(20,100,20,0)
-            label:SetGravity(ui.RIGHT,ui.TOP)
-            local button=gbox:CreateOrGetControl("button","buttonlhs",0,0,200,30)
-    
-            button:SetMargin(20,150,20,0)
-            button:SetGravity(ui.LEFT,ui.TOP)
-            local list=gbox:CreateOrGetControl("droplist","listcomp",0,0,100,30)
-            AUTO_CAST(list)
-            list:SetText("{ol}Comparator")
-            list:SetMargin(20,150,20,0)
-            list:SetGravity(ui.CENTER_HORZ,ui.TOP)
-            list:SetSkinName("bg2")
-            local button=gbox:CreateOrGetControl("button","buttonrhs",0,0,200,30)
-
-            button:SetMargin(20,150,20,0)
-            button:SetGravity(ui.RIGHT,ui.TOP)
+            local gbox2=frame:CreateOrGetControl("groupbox","gboxv",50,300,300,100)
+            
+            g.prefab.generateValueSetter(gbox2,0,currentinpipe)
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function FLOWERS_VALUE_ONOK()
-    if okcb then
-        okcb(currentvalue)
+function FLOWERS_VALUE_ONOK(frame)
+    if okcallbacks then
+        okcallbacks[#okcallbacks](cv[#cv])
     end
-    local frame=ui.GetFrame("flowers_value")
+    
     frame:ShowWindow(0)
 end
-function FLOWERS_VALUE_ONCANCEL()
-    local frame=ui.GetFrame("flowers_value")
+function FLOWERS_VALUE_ONCANCEL(frame)
+    
+    frame:ShowWindow(0)
+    
+end
+function FLOWERS_VALUE_ON_CLOSE(frame)
     frame:ShowWindow(0)
 end
-function FLOWERS_VALUE_SHOW(currentvalue,okcb)
-    currentvalue=cond
-    okcb=okcb
-    local frame=ui.GetFrame("flowers_value")
+function FLOWERS_VALUE_ON_CLOSE(frame)
+    local frameno=frame:GetUserIValue("FRAME_NO")
+    ui.DestroyFrame("flowers_value_"..frameno)
+    cv[frameno]=nil
+    okcallbacks[frameno]=nil
+    --table.remove(cv,frameno)
+    --table.remove(okcallbacks,frameno)
+end
+
+function FLOWERS_VALUE_SHOW(currentinpipe,okcb)
+    table.insert(cv,currentinpipe)
+    table.insert(okcallbacks,okcb)
+
+    local frame=ui.CreateNewFrame("flowers_value","flowers_value_"..#cv)
     frame:ShowWindow(1)
-    FLOWERS_VALUE_INITFRAME()
+    frame:SetUserValue("FRAME_NO",#cv)
+    FLOWERS_VALUE_INITFRAME(frame,currentinpipe)
 end
