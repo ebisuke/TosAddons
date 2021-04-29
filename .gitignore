@@ -1,6 +1,7 @@
 */bin/*
 */obj/*
 /.*/*
+_buildenv/
 .idea
 .vs
 pseudoforecast/converter/xml/*
