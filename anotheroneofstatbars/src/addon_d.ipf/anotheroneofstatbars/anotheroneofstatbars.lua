@@ -83,6 +83,16 @@ local function DrawPolyLine(pic, poly, brush, color)
         prev = v
     end
 end
+local function CalcPos(x, y)
+    local sw = option.GetClientWidth()
+    local sh = option.GetClientHeight()
+    --representative fullscreen frame
+    local frame = ui.GetFrame('worldmap2_mainmap')
+    local ow = frame:GetWidth()
+    local oh = frame:GetHeight()
+    return x * (sw / ow), y * (sh / oh)
+
+end
 
 
 
@@ -332,19 +342,13 @@ function ANOTHERONEOFSTATBARS_ON_INIT(addon, frame)
             addon:RegisterMsg('BUFF_UPDATE', 'AOS_BUFF_UPDATE');
             addon:RegisterMsg("SHOW_SOUL_CRISTAL", "AOS_SHOW_SOUL_CRISTAL");
             addon:RegisterMsg("UPDATE_SOUL_CRISTAL", "AOS_UPDATE_SOUL_CRISTAL");
+            acutil.slashCommand("/aos", AOS_PROCESS_COMMAND);
+            acutil.slashCommand("/anotheroneofstatbars", AOS_PROCESS_COMMAND);
             
             if not g.loaded then
                 
                 g.loaded = true
             end
-            
-            --  --コンテキストメニュー
-            -- frame:SetEventScript(ui.RBUTTONDOWN, "AFKMUTE_TOGGLE")
-            -- --ドラッグ
-            -- frame:SetEventScript(ui.LBUTTONUP, "AFKMUTE_END_DRAG")
-            --CHALLENGEMODESTUFF_SHOW(g.frame)
-            DBGOUT("INIT")
-        --CHALLENGEMODESTUFF_INIT()
         end,
         catch = function(error)
             ERROUT(error)
@@ -877,14 +881,14 @@ function AOS_DRAW_HPBAR(frame, pic)
     local len = math.max(math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp), g.settings.minlenhp)
     local maxw = len
     local colw = stat.HP * maxw / stat.maxHP
-    local colsw = math.min(len, stat.shield * len / g.settings.maxhp)
+    local colsw = math.min(len, stat.shield * len / stat.maxHP)
     
     local curw = g.curhpw
     local fixhpw = curw
     local ox = 500 + 20 - 2
     local oy = 30 - 2
     if (g.fixhp) then
-        fixhpw = math.max(0, math.min(len, g.fixhp * len / g.settings.maxhp))
+        fixhpw=math.max(0, math.min(len, g.fixhp * len / stat.maxHP))
     end
     if (stat.HP <= stat.maxHP * 0.3) then
         local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
@@ -1214,14 +1218,15 @@ function AOS_DRAW_HPBAR_B(frame, pic)
     local len = math.max(math.min(g.settings.maxlenhp, stat.maxHP * g.settings.maxlenhp / g.settings.maxhp), g.settings.minlenhp)
     local maxw = len
     local colw = stat.HP * maxw / stat.maxHP
-    local colsw = math.min(len, stat.shield * len / g.settings.maxhp)
+    local colsw = math.min(len, stat.shield * len / stat.maxHP)
     
     local curw = g.curhpw
     local fixhpw = curw
     local ox = 60 + 20 - 5 + 5 + 1
     local oy = 50 - 20 - 5 - 5
     if (g.fixhp) then
-        fixhpw = math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
+        --fixhpw = math.max(0, math.min(g.settings.maxlenhp, g.fixhp * g.settings.maxlenhp / g.settings.maxhp))
+        fixhpw=math.max(0, math.min(len, g.fixhp * len / stat.maxHP))
     end
     if (stat.HP <= stat.maxHP * 0.3) then
         local lowstr = string.format("AA%02X4444", 0x44 + math.floor(0xBB * math.abs(g.tick % 50 - 25) / 25))
@@ -1462,24 +1467,21 @@ function AOS_PROCESS_MOUSE(ctrl)
             local dy = my - y;
             dx = dx;
             dy = dy;
-            
+            dx,dy=CalcPos(dx,dy)
             local cx = frame:GetX();
             local cy = frame:GetY();
             local curWidth = option.GetClientWidth();
             local curHeight = option.GetClientHeight();
-            if (curWidth >= 3000) then
-                cx = cx + dx / 2;
-                cy = cy + dy / 2;
-            else
+            
                 cx = cx + dx;
                 cy = cy + dy;
-            end
+            
             g.x = mx
             g.y = my
             
             
-            cx = math.max(-frame:GetWidth() / 2, math.min(cx, curWidth - 30))
-            cy = math.max(-frame:GetHeight() / 2, math.min(cy, curHeight - 30))
+            --cx = math.max(-frame:GetWidth() / 2, math.min(cx, curWidth - 30))
+            --cy = math.max(-frame:GetHeight() / 2, math.min(cy, curHeight - 30))
             g.settings.x = cx;
             g.settings.y = cy;
             AOS_SAVE_SETTINGS()
@@ -1491,4 +1493,18 @@ function AOS_PROCESS_MOUSE(ctrl)
             ERROUT(error)
         end
     }
+end
+function AOS_PROCESS_COMMAND(command)
+    local cmd = "";
+    
+    if #command > 0 then
+        cmd = table.remove(command, 1);
+    else
+        return
+    end
+    if cmd=="resetpos" then
+        g.frame:SetOffset(40, 40)
+        g.settings.lock = false
+        AOS_SAVE_SETTINGS()
+    end
 end
