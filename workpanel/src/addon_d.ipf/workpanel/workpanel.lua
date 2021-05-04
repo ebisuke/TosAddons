@@ -11,12 +11,11 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.version = 0
-g.settings = {x = 300, y = 300, volume = 100, mute = false}
+g.settings = {x = 300, y = 300, isopen=false}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "workpanel"
 g.debug = false
-g.isopen=false
 --ライブラリ読み込み
 CHAT_SYSTEM("[WP]loaded")
 local acutil = require('acutil')
@@ -76,8 +75,9 @@ function WORKPANEL_ON_INIT(addon, frame)
             local addontimer = frame:GetChild("addontimer")
             g.frame:ShowWindow(1)
             g.frame:SetOffset(0,0)
-            g.isopen=false
-            WORKPANEL_INITFRAME()
+            addon:RegisterMsg('GAME_START_3SEC', 'WORKPANEL_INITFRAME')
+            
+            WORKPANEL_LOAD_SETTINGS()
         end,
         catch = function(error)
             ERROUT(error)
@@ -96,7 +96,7 @@ function  WORKPANEL_LOAD_SETTINGS()
     if err then
         --設定ファイル読み込み失敗時処理
         ERROUT(string.format('[%s] cannot load setting files', addonName))
-        g.settings = {}
+        g.settings = {isopen=false}
     else
         --設定ファイル読み込み成功時処理
         g.settings = t
@@ -123,7 +123,7 @@ function WORKPANEL_INITFRAME()
             frame:RemoveAllChild()
             frame:SetLayerLevel(100)
             frame:SetSkinName("bg2")
-            if g.isopen==false then
+            if g.settings.isopen==false then
                 frame:Resize(50,20)
 
                 --frame:SetMargin(0,0,0,0)
@@ -157,7 +157,8 @@ function WORKPANEL_INITFRAME()
                 ("richtext","label5",70,"{ol}Giltine","")
                 ("button","btngiltine",50,WORKPANEL_GETINDUNENTERCOUNT(635),"WORKPANEL_ENTER_GILTINE")
                 ("richtext","label6",60,"{ol}Relic","")
-                ("button","btnrelic",50,WORKPANEL_GETINDUNENTERCOUNT(WORKPANEL_GET_RELIC_CLSID()),"WORKPANEL_ENTER_RELIC")
+                ("button","btnrelic",50,GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType).."/"..
+                GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun",WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType),"WORKPANEL_ENTER_RELIC")
                 ("richtext","label7",70,"{ol}Assister","")
                 ("button","btnassister",50,""..stage,"WORKPANEL_ENTER_ASSISTER")
                 ("richtext","label8",70,"{ol}Velnice","")
@@ -165,7 +166,13 @@ function WORKPANEL_INITFRAME()
             end
         end,
         catch = function(error)
-            ERROUT(error)
+            DBGOUT(error)
+            local frame = ui.GetFrame(g.framename)
+            frame:SetGravity(ui.RIGHT,ui.TOP)
+            frame:RemoveAllChild()
+            frame:Resize(10,10)
+            --retry 
+            ReserveScript("WORKPANEL_INITFRAME()",1)
         end
     }
 end
@@ -179,7 +186,11 @@ function WORKPANEL_GETREMAININDUNENTERCOUNT(clsid)
     local indunCls=GetClassByType("Indun",clsid)
     
     local etc=GetMyEtcObject()
-    return indunCls.WeeklyEnterableCount-TryGetProp(etc, "IndunWeeklyEnteredCount_"..tostring(TryGetProp(indunCls, "PlayPerResetType")))
+    if indunCls.DungeonType == "Challenge_Auto" then
+        return indunCls.WeeklyEnterableCount-TryGetProp(etc, "IndunWeeklyEnteredCount_"..tostring(TryGetProp(indunCls, "PlayPerResetType")))
+    else
+        
+    end
 end
 function WORKPANEL_BUY_ITEM(recipeNameArray,retrystring)
     EBI_try_catch{
@@ -188,13 +199,25 @@ function WORKPANEL_BUY_ITEM(recipeNameArray,retrystring)
         local fail=true
         for _,recipeName in ipairs(recipeNameArray) do
             recipeCls = GetClass("ItemTradeShop", recipeName)
-            local aObj = GetMyAccountObj()
-            local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty); 
-            
-            if sCount > 0 then
+            if recipeCls.NeedProperty ~= 'None' then
+                local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop");
+                local sCount = TryGetProp(sObj, recipeCls.NeedProperty); 
                 
-                fail=false
-                break
+                if sCount > 0 then
+                    fail=false
+                    break
+                end;
+            end;
+            
+            if recipeCls.AccountNeedProperty ~= 'None' then
+                local aObj = GetMyAccountObj()
+                local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty); 
+                
+                local tradeBtn = GET_CHILD(ctrlset, "tradeBtn");
+                if sCount > 0 then
+                    fail=false
+                    break
+                end;
             end
         end
         if fail then
@@ -302,8 +325,13 @@ function WORKPANEL_ENTER_RELIC(rep)
 end
 
 function WORKPANEL_TOGGLE_PANEL()
-    g.isopen=not g.isopen
+    if g.settings.isopen==nil then
+        g.settings.isopen=true
+    else
+        g.settings.isopen=not g.settings.isopen
+    end
     WORKPANEL_INITFRAME()
+    WORKPANEL_SAVE_SETTINGS()
 end
 function WORKPANEL_CREATECONTROL(frame)
     
