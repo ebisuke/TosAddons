@@ -4,7 +4,7 @@
 	<draw drawnotitlebar="false" drawtitlebar="false"/>
 
 	<frame title="" fullheight="false" fasthide="true" layout_gravity="left top" margin="100 100 0 0"/>
-	<input moveable="false" hittestframe="false" moveintitlebar="false"/>
+	<input moveable="true" hittestframe="false" moveintitlebar="false"/>
 	<layer layerlevel="10"/>
 	<option closebutton="false" hideable="false"/>
 
