@@ -16,6 +16,7 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "workpanel"
 g.debug = false
+g.disablevelnicescoreboard=nil
 --ライブラリ読み込み
 CHAT_SYSTEM("[WP]loaded")
 local acutil = require('acutil')
@@ -65,7 +66,13 @@ local function ERROUT(msg)
     }
 
 end
-
+function WORKPANEL_SOLODUNGEON_RANKINGPAGE_OPEN(frame)
+    if g.disablevelnicescoreboard then
+        --pass
+    else
+        return SOLODUNGEON_RANKINGPAGE_OPEN_OLD(frame)
+    end
+end
 function WORKPANEL_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -75,8 +82,12 @@ function WORKPANEL_ON_INIT(addon, frame)
             local addontimer = frame:GetChild("addontimer")
             g.frame:ShowWindow(1)
             g.frame:SetOffset(0,0)
-            addon:RegisterMsg('GAME_START_3SEC', 'WORKPANEL_INITFRAME')
-            
+            --addon:RegisterMsg('GAME_START_3SEC', 'WORKPANEL_INITFRAME')
+            acutil.setupHook(WORKPANEL_SOLODUNGEON_RANKINGPAGE_OPEN,"SOLODUNGEON_RANKINGPAGE_OPEN")
+
+            addon:RegisterMsg("DO_SOLODUNGEON_RANKINGPAGE_OPEN", "WORKPANEL_INITFRAME");
+            soloDungeonClient.ReqSoloDungeonRankingPage()
+            g.disablevelnicescoreboard=true
             WORKPANEL_LOAD_SETTINGS()
         end,
         catch = function(error)
@@ -123,6 +134,28 @@ function WORKPANEL_INITFRAME()
             frame:RemoveAllChild()
             frame:SetLayerLevel(100)
             frame:SetSkinName("bg2")
+            local mapClsName = session.GetMapName();
+
+            if(mapClsName ~=  "c_Klaipe" and mapClsName ~=  "c_fedimian" and mapClsName ~=  "c_orsha")then
+                frame:ShowWindow(0)
+                g.disablevelnicescoreboard=false
+                return
+            end
+            local etc=GetMyEtcObject()
+            --frame:SetMargin(0,0,0,0)
+            local acc_obj = GetMyAccountObj()
+            local stage=TryGetProp(acc_obj,"ANCIENT_SOLO_STAGE_WEEK",0)
+        
+            local scoreInfo = session.soloDungeon.GetMyScore(soloDungeonShared.ThisWeek, 0)
+            --local stageScore = session.soloDungeon.GetStageScore()
+            
+            local velnicestage=0
+            if scoreInfo then
+                velnicestage=scoreInfo.stage
+            else
+                --error "fail"
+            end
+            frame:ShowWindow(1)
             if g.settings.isopen==false then
                 frame:Resize(50,20)
 
@@ -132,18 +165,13 @@ function WORKPANEL_INITFRAME()
                 
             else
                 frame:Resize(1300,20)
-                local etc=GetMyEtcObject()
-                --frame:SetMargin(0,0,0,0)
-                local acc_obj = GetMyAccountObj()
-                local stage=TryGetProp(acc_obj,"ANCIENT_SOLO_STAGE_WEEK",0)
-            
+                
                 WORKPANEL_CREATECONTROL(frame)
                 ("button","btntoggleopen",50,">>","WORKPANEL_TOGGLE_PANEL")
                 
-                ("richtext","label1",120,"{ol}Hard C Left:"..
-                GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",647).PlayPerResetType),"")
-                ("button","btnsinglularity",50,"Enter","WORKPANEL_ENTER_HARDCHALLENGE")
-                ("richtext","label2",120,"{ol}Normal C "..
+                ("richtext","label1",90,"{ol}Singularity","")
+                ("button","btnsinglularity",70,"Left:"..GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",647).PlayPerResetType),"WORKPANEL_ENTER_HARDCHALLENGE")
+                ("richtext","label2",120,"{ol}Challenge"..
                 GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",646).PlayPerResetType).."/"..
                 GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun",646).PlayPerResetType)
                 ,"")
@@ -162,8 +190,9 @@ function WORKPANEL_INITFRAME()
                 ("richtext","label7",70,"{ol}Assister","")
                 ("button","btnassister",50,""..stage,"WORKPANEL_ENTER_ASSISTER")
                 ("richtext","label8",70,"{ol}Velnice","")
-                ("button","btnvelnice",50,"Enter","WORKPANEL_ENTER_VELNICE")
+                ("button","btnvelnice",50,""..velnicestage,"WORKPANEL_ENTER_VELNICE")
             end
+            g.disablevelnicescoreboard=false
         end,
         catch = function(error)
             DBGOUT(error)
