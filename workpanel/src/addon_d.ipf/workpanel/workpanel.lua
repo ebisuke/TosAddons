@@ -209,17 +209,15 @@ function WORKPANEL_GETINDUNENTERCOUNT(clsid)
     local indunCls=GetClassByType("Indun",clsid)
     
     local etc=GetMyEtcObject()
-    return TryGetProp(etc, "IndunWeeklyEnteredCount_"..tostring(TryGetProp(indunCls, "PlayPerResetType"))).."/"..indunCls.WeeklyEnterableCount
+    return GET_CURRENT_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType")).."/"..GET_INDUN_MAX_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))
 end
 function WORKPANEL_GETREMAININDUNENTERCOUNT(clsid)
     local indunCls=GetClassByType("Indun",clsid)
     
     local etc=GetMyEtcObject()
-    if indunCls.DungeonType == "Challenge_Auto" then
-        return indunCls.WeeklyEnterableCount-TryGetProp(etc, "IndunWeeklyEnteredCount_"..tostring(TryGetProp(indunCls, "PlayPerResetType")))
-    else
-        
-    end
+    
+    return GET_INDUN_MAX_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))-GET_CURRENT_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))
+  
 end
 function WORKPANEL_BUY_ITEM(recipeNameArray,retrystring)
     EBI_try_catch{
