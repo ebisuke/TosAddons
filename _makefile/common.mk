@@ -26,7 +26,8 @@ $(BINDIR)/$(IPFNAME_WITHOUT_EMOJI):generateipf
 	$(generateipf)
 generateipf: 
 	@echo generateipf
-	$(clean)
+	rm -r $(OBJDIR) | true
+	rm -r $(BINDIR) | true
 	mkdir $(OBJDIR) | true
 	mkdir $(BINDIR) | true
 	cp -r src/* obj/

@@ -409,6 +409,8 @@ function TESTBOARD_TEST()
             else
                 g.b = true
             end
+            ui.Chat('!! 90   {#ec0000}85   80 ')
+
             --DAMAGE_METER_UI_OPEN(ui.GetFrame('damage_meter'),nil,'0/PRACTICE',1)
             --geMGame.ReqMGameCmd("WEEKLY_BOSS_RAID_01",2) 
             --ui.PropertyCompare(session.GetTargetHandle(), 1, 0);
