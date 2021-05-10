@@ -116,7 +116,7 @@ function IMEHANDLER_FPS_UPDATE(frame)
                 local txt=f:read("a")
                 f:close()
                 local ctrl=ui.GetFocusObject()
-                if ctrl:GetClassString()=="ui::CEditControl" then
+                if ctrl and  ctrl:GetClassString()=="ui::CEditControl" then
                     ctrl:SetText(txt)
                 end
                 os.remove(g.txFileLoc)
@@ -141,7 +141,7 @@ function IMEHANDLER_TIMER()
 
                     g.timelimit=0
                     local ctrl=ui.GetFocusObject()
-                    if ctrl:GetClassString()=="ui::CEditControl" then
+                    if ctrl and ctrl:GetClassString()=="ui::CEditControl" then
                         AUTO_CAST(ctrl)
                         if not file_exists(g.execFileLoc) then
                             ui.SysMsg("Not found imehandler.")
