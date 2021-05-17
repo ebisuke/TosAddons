@@ -487,9 +487,14 @@ function WORKPANEL_ENTER_RELIC(rep)
             
                 local pattern_info = mythic_dungeon.GetPattern(mythic_dungeon.GetCurrentSeason())
                 local mapCls = GetClassByType("Map",pattern_info.mapID)
-
-                local cls = GetClass("Indun",mapCls.ClassName.."_Auto")
-                
+                local auto={
+                    Mythic_firetower="Mythic_FireTower_Auto",
+                    Mythic_startower="Mythic_startower_Auto",
+                    Mythic_thorn1="Mythic_thorn2_Auto",
+                    Mythic_castle="Mythic_castle_Auto"
+                    
+                }
+                local cls = GetClass("Indun",auto[mapCls.ClassName])
                 ReqRaidAutoUIOpen(cls.ClassID)
             end
         end,
