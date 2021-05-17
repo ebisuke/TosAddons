@@ -16,7 +16,7 @@ g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "workpanel"
 g.debug = false
-g.disablevelnicescoreboard=nil
+g.suppressshop=true
 --ライブラリ読み込み
 CHAT_SYSTEM("[WP]loaded")
 local acutil = require('acutil')
@@ -66,12 +66,24 @@ local function ERROUT(msg)
     }
 
 end
-function WORKPANEL_SOLODUNGEON_RANKINGPAGE_OPEN(frame)
-    if g.disablevelnicescoreboard then
-        --pass
+-- function WORKPANEL_SOLODUNGEON_RANKINGPAGE_OPEN(frame)
+--     if g.disablevelnicescoreboard then
+--         --pass
+--     else
+--         return SOLODUNGEON_RANKINGPAGE_OPEN_OLD(frame)
+--     end
+-- end
+function WORKPANEL_REQ_PVP_MINE_SHOP_OPEN()
+    if g.suppressshop==true then
+        g.suppressshop=false
+        WORKPANEL_INITFRAME()
     else
-        return SOLODUNGEON_RANKINGPAGE_OPEN_OLD(frame)
+        WORKPANEL_INITFRAME()
+        REQ_PVP_MINE_SHOP_OPEN_OLD()
     end
+end
+function WORKPANEL_3SEC()
+    pc.ReqExecuteTx_NumArgs("SCR_PVP_MINE_SHOP_OPEN", 0);
 end
 function WORKPANEL_ON_INIT(addon, frame)
     EBI_try_catch{
@@ -83,11 +95,13 @@ function WORKPANEL_ON_INIT(addon, frame)
             g.frame:ShowWindow(1)
             g.frame:SetOffset(0,0)
             --addon:RegisterMsg('GAME_START_3SEC', 'WORKPANEL_INITFRAME')
-            acutil.setupHook(WORKPANEL_SOLODUNGEON_RANKINGPAGE_OPEN,"SOLODUNGEON_RANKINGPAGE_OPEN")
+            acutil.setupHook(WORKPANEL_REQ_PVP_MINE_SHOP_OPEN,"REQ_PVP_MINE_SHOP_OPEN")
 
-            addon:RegisterMsg("DO_SOLODUNGEON_RANKINGPAGE_OPEN", "WORKPANEL_INITFRAME");
-            soloDungeonClient.ReqSoloDungeonRankingPage()
-            g.disablevelnicescoreboard=true
+            addon:RegisterMsg("GAME_START_3SEC", "WORKPANEL_3SEC");
+            --addon:RegisterMsg("DO_SOLODUNGEON_RANKINGPAGE_OPEN", "WORKPANEL_INITFRAME");
+            --soloDungeonClient.ReqSoloDungeonRankingPage()
+            g.suppressshop=true
+           
             WORKPANEL_LOAD_SETTINGS()
         end,
         catch = function(error)
@@ -153,15 +167,7 @@ function WORKPANEL_INITFRAME()
             local acc_obj = GetMyAccountObj()
             local stage=TryGetProp(acc_obj,"ANCIENT_SOLO_STAGE_WEEK",0)
         
-            local scoreInfo = session.soloDungeon.GetMyScore(soloDungeonShared.ThisWeek, 0)
-            --local stageScore = session.soloDungeon.GetStageScore()
-            
-            local velnicestage=0
-            if scoreInfo then
-                velnicestage=scoreInfo.stage
-            else
-                --error "fail"
-            end
+           
             if WORKPANEL_GET_RECIPE_TRADE_COUNT("PVP_MINE_42")==nil then
                 error "fail"
             end
@@ -183,7 +189,7 @@ function WORKPANEL_INITFRAME()
                 .under("button","btnhardchaweekly",60,"{ol}W "..WORKPANEL_GET_RECIPE_TRADE_COUNT("PVP_MINE_42"),"WORKPANEL_BUYITEM_HARDCHALLENGE_WEEKLY")
                 .under("button","btnhardchadaily",60,"{ol}D "..WORKPANEL_GET_RECIPE_TRADE_COUNT("PVP_MINE_43"),"WORKPANEL_BUYITEM_HARDCHALLENGE_DAILY")
                 .next("button","btnsinglularity",70,"Left:"..GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",647).PlayPerResetType),"WORKPANEL_ENTER_HARDCHALLENGE")
-                .upper("richtext","label2",120,"{ol}Challenge"..
+                .upper("richtext","label2",120,"{ol}Challenge:"..
                 GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",646).PlayPerResetType).."/"..
                 GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun",646).PlayPerResetType)
                 ,"")
@@ -207,7 +213,7 @@ function WORKPANEL_INITFRAME()
                 .next("richtext","label7",70,"{ol}Assister","")
                 .next("button","btnassister",50,""..stage,"WORKPANEL_ENTER_ASSISTER")
                 .next("richtext","label8",70,"{ol}Velnice","")
-                .next("button","btnvelnice",50,""..velnicestage,"WORKPANEL_ENTER_VELNICE")
+                .next("button","btnvelnice",50,"Enter:"..GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun",201).PlayPerResetType),"WORKPANEL_ENTER_VELNICE")
             end
             g.disablevelnicescoreboard=false
         end,
@@ -234,6 +240,14 @@ function WORKPANEL_GETREMAININDUNENTERCOUNT(clsid)
     local etc=GetMyEtcObject()
     
     return GET_INDUN_MAX_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))-GET_CURRENT_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))
+  
+end
+function WORKPANEL_GETCURRENTINDUNENTERCOUNT(clsid)
+    local indunCls=GetClassByType("Indun",clsid)
+    
+    local etc=GetMyEtcObject()
+    
+    return GET_CURRENT_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))
   
 end
 function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
@@ -286,7 +300,11 @@ function WORKPANEL_BUYANDUSE(recipeName,indunclsid,force)
         ui.SysMsg("No trade count.")
         return
     end
-    if not force and WORKPANEL_GETREMAININDUNENTERCOUNT(indunclsid) > 0 then
+    local remain=WORKPANEL_GETREMAININDUNENTERCOUNT(indunclsid)
+    if indunclsid==647 then
+        remain=WORKPANEL_GETCURRENTINDUNENTERCOUNT(indunclsid)
+    end
+    if not force and remain > 0 then
         ui.MsgBox("回数が残っていますが使用しますか？",string.format("WORKPANEL_BUYANDUSE('%s',%d,true)",recipeName,indunclsid),"None")
         return
     end
@@ -447,8 +465,14 @@ end
 function WORKPANEL_GET_RELIC_CLSID()
     local pattern_info = mythic_dungeon.GetPattern(mythic_dungeon.GetCurrentSeason())
     local mapCls = GetClassByType("Map",pattern_info.mapID)
-
-    local cls = GetClass("Indun",mapCls.ClassName.."_Auto")
+    local auto={
+        Mythic_firetower="Mythic_FireTower_Auto",
+        Mythic_startower="Mythic_startower_Auto",
+        Mythic_thorn1="Mythic_thorn2_Auto",
+        Mythic_castle="Mythic_castle_Auto"
+        
+    }
+    local cls = GetClass("Indun",auto[mapCls.ClassName])
     return cls.ClassID
 end
 function WORKPANEL_ENTER_RELIC(rep)
