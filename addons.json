@@ -748,10 +748,10 @@
     "name": "imehandler",
     "file": "imehandler",
     "extension": "ipf",
-    "fileVersion": "v0.0.1",
-    "releaseTag": "imehandler-v0.0.1",
+    "fileVersion": "v0.0.2",
+    "releaseTag": "imehandler-v0.0.2",
     "unicode": "📖",
-    "description": "各種レイド・チャレンジに入るためのパネルを表示します",
+    "description": "文字入力画面を表示します。（通常のToSで日本語入力できない人向け）",
     "tags": [
       "ui",
       "ime",
