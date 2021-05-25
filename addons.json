@@ -758,5 +758,22 @@
       "japanese",
       "mac"
     ]
+  },
+  {
+    "name": "Ebi remove dialog",
+    "file": "ebiremovedialog",
+    "extension": "ipf",
+    "fileVersion": "v0.1.4",
+    "releaseTag": "ebiremovedialog-v0.1.4",
+    "unicode": "📖",
+    "description": "各種確認ダイアログを削除します",
+    "tags": [
+      "arts",
+      "ui",
+      "mysteriousbook",
+      "class",
+      "job",
+      "ability"
+    ]
   }
 ]
