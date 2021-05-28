@@ -119,7 +119,7 @@ function IMEHANDLER_FPS_UPDATE(frame)
                 local chat=ui.GetFrame("chat")
 
                 if ctrl and ctrl:GetClassString()=="ui::CEditControl" or chat:IsVisible()==1 then
-                    if ctrl:GetClassString()~="ui::CEditControl" then
+                    if ctrl and  ctrl:GetClassString()~="ui::CEditControl" then
                         ctrl=nil
                     end
                     if ctrl==nil and chat:IsVisible()==1 then
@@ -153,7 +153,7 @@ function IMEHANDLER_TIMER()
                     local chat=ui.GetFrame("chat")
 
                     if ctrl and ctrl:GetClassString()=="ui::CEditControl" or chat:IsVisible()==1 then
-                        if ctrl:GetClassString()~="ui::CEditControl" then
+                        if ctrl and ctrl:GetClassString()~="ui::CEditControl" then
                             ctrl=nil
                         end
                         if ctrl==nil and chat:IsVisible()==1 then
