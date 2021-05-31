@@ -99,7 +99,12 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
                 type = "boolean",
                 default = false,
             },
-             
+            {
+                name = "goldroupedialog",
+                vname = "Remove confirmation dialog of Gold Roupe.And keep selected item.",
+                type = "boolean",
+                default = false,
+            },
         }
     }
 }
@@ -256,7 +261,7 @@ function EBIREMOVEDIALOGCONFIG_SAVETOSTRUCTURE(gbox, config, node)
     gbox=gbox or AUTO_CAST(g.cframe :GetChild("gbox"))
     config=config or g.settings
     node = node or EBIREMOVEDIALOGCONFIG_CONFIG_DEFS
-    for k, v in ipairs(node) do
+    for k, v in ipairs(EBIREMOVEDIALOGCONFIG_CONFIG_DEFS) do
         if (v.type == "boolean") then
             local ctrl = gbox:GetChild("chk" .. v.name)
             AUTO_CAST(ctrl)

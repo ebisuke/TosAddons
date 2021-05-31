@@ -1722,7 +1722,100 @@ function EBIREMOVEDIALOG_APPLY()
                 
                 end))
             end
-            
+            if g.settings.goldroupedialog then
+                assert(pcall(function()
+                    function ITEM_OPTION_SELECT_BEFORE(frame)
+                        local frame = ui.GetFrame("itemrevertrandom");
+                        local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                        local icon = slot:GetIcon()
+                        if icon == nil then
+                            return ""
+                        end
+                    
+                        local iconInfo = icon:GetInfo();
+                        if iconInfo == nil then
+                            return ""
+                        end
+                    
+                        local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
+                        if invItem == nil then
+                            return ""
+                        end
+                    
+                        local obj = GetIES(invItem:GetObject());
+                        if obj == nil then
+                            return ""
+                        end
+                    
+                        ITEMREVERTRANDOM_SEND_ANSWER(nil,nil,"No")
+                    end
+                    function ITEM_OPTION_SELECT_AFTER(frame)
+
+                        local frame = ui.GetFrame("itemrevertrandom");
+                        local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                        local icon = slot:GetIcon()
+                        if icon == nil then
+                            return ""
+                        end
+                    
+                        local iconInfo = icon:GetInfo();
+                        if iconInfo == nil then
+                            return ""
+                        end
+                    
+                        local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
+                        if invItem == nil then
+                            return ""
+                        end
+                    
+                        local obj = GetIES(invItem:GetObject());
+                        if obj == nil then
+                            return ""
+                        end
+                        ITEMREVERTRANDOM_SEND_ANSWER(nil,nil,"Yes")
+                    end
+
+                    function ITEM_REVERT_RANDOM_EXEC(frame)
+                        frame = frame:GetTopParentFrame();
+                        local slot = GET_CHILD_RECURSIVELY(frame, "slot");
+                        local invItem = GET_SLOT_ITEM(slot);
+                        if invItem == nil then		
+                            return;
+                        end
+
+                        local text_havematerial = GET_CHILD_RECURSIVELY(frame, "text_havematerial")
+                        local materialCnt = text_havematerial:GetTextByKey("count")
+                        if materialCnt == '0' then
+                            ui.SysMsg(ClMsg("LackOfRevertRandomMaterial"));
+                            return
+                        end
+                        
+                        if invItem.isLockState == true then
+                            ui.SysMsg(ClMsg("MaterialItemIsLock"));
+                            return;
+                        end
+
+                        local clmsg = ScpArgMsg("DoRevertRandomReset")
+                        _ITEM_REVERT_RANDOM_EXEC()
+                    end
+                    function ITEM_REVERT_RANDOM_SEND_OK()
+                        local frame = ui.GetFrame("itemrevertrandom")
+                    
+                        if frame:GetUserValue("REVERTITEM_GUID") == nil or frame:GetUserValue("REVERTITEM_GUID") == "None" then
+                            ui.CloseFrame("itemrevertrandom")
+                            return
+                        end
+                        local slot=GET_CHILD_RECURSIVELY(frame, "slot");
+                        local icon = slot:GetIcon();
+                        local iconInfo = icon:GetInfo();
+                        CLEAR_ITEM_REVERT_RANDOM_UI()
+                        
+                        ITEM_REVERT_RANDOM_REG_TARGETITEM(frame, iconInfo:GetIESID()); 
+                    end
+                end
+                
+                ))
+            end
             if g.settings.dimension then
                 assert(pcall(function()
                         

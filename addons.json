@@ -763,8 +763,8 @@
     "name": "Ebi remove dialog",
     "file": "ebiremovedialog",
     "extension": "ipf",
-    "fileVersion": "v0.1.4",
-    "releaseTag": "ebiremovedialog-v0.1.4",
+    "fileVersion": "v0.2.0",
+    "releaseTag": "ebiremovedialog-v0.2.0",
     "unicode": "📖",
     "description": "各種確認ダイアログを削除します",
     "tags": [
