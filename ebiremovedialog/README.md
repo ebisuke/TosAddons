@@ -6,15 +6,15 @@
 それぞれの項目は以下の通りとなります。  
 設定はToS再起動後に反映されます。  
 - Remove dialog of entering in challengemode
-ONにするとチャレンジモード入場時の確認ダイアログを削除します。
+ONにするとチャレンジモード入場時の確認ダイアログを削除（自動処理）します。
 - Remove dialog of entering in challenge hardmode 
-ONにすると次元チャレンジモード入場時の確認ダイアログを削除します。
+ONにすると次元チャレンジモード入場時の確認ダイアログを削除（自動処理）します。
 - Remove dialog of going to next level in challengemode
-ONにするとチャレンジモードの次のレベルへ入場するときの確認ダイアログを削除します。
+ONにするとチャレンジモードの次のレベルへ入場するときの確認ダイアログを削除（自動処理）します。
 - Remove dialog of complete challengemode
-ONにするとチャレンジモード終了時（中断時ではありません）の確認ダイアログを削除します。
+ONにするとチャレンジモード終了時（中断時ではありません）の確認ダイアログを削除（自動処理）します。
 - Remove dialog of abort challengemode
-ONにするとチャレンジモード中断時の確認ダイアログを削除します。
+ONにするとチャレンジモード中断時の確認ダイアログを削除（自動処理）します。
 - Remove dialog of reading a monster cardbook
 ONにするとモンスターカードブック使用時の確認ダイアログを削除します。
 - Remove dialog of timelimited item in storage.
