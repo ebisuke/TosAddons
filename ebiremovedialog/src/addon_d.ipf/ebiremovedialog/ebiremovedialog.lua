@@ -1724,6 +1724,37 @@ function EBIREMOVEDIALOG_APPLY()
             end
             if g.settings.goldroupedialog then
                 assert(pcall(function()
+                    function ERD_ITEMREVERTRANDOM_SEND_ANSWER(parent, ctrl, argStr, argNum)
+                        ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD(parent, ctrl, argStr, argNum)
+                        local frame = ui.GetFrame("itemrevertrandom")
+                        if frame == nil then 
+                            return
+                        end
+                        local do_revertrandom = GET_CHILD_RECURSIVELY(frame, "do_revertrandom")
+                        do_revertrandom:ShowWindow(1)
+                        local send_ok = GET_CHILD_RECURSIVELY(frame, "send_ok")
+                        send_ok:ShowWindow(0)
+                        local slot = GET_CHILD_RECURSIVELY(frame, "slot");
+                        local invItem = GET_SLOT_ITEM(slot);
+
+                        local icon = slot:GetIcon()
+                        if icon == nil then
+                            return ""
+                        end
+                    
+                        local iconInfo = icon:GetInfo();
+                        if iconInfo == nil then
+                            return ""
+                        end
+                    end
+                    if ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD==nil or ITEMREVERTRANDOM_SEND_ANSWER~= ERD_ITEMREVERTRANDOM_SEND_ANSWER then
+                        if ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD==nil then
+                            ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD=ITEMREVERTRANDOM_SEND_ANSWER
+                        end
+                        ITEMREVERTRANDOM_SEND_ANSWER=ERD_ITEMREVERTRANDOM_SEND_ANSWER
+                    end
+                    
+                    
                     function ITEM_OPTION_SELECT_BEFORE(frame)
                         local frame = ui.GetFrame("itemrevertrandom");
                         local slot = GET_CHILD_RECURSIVELY(frame, "slot")
@@ -1777,12 +1808,21 @@ function EBIREMOVEDIALOG_APPLY()
 
                     function ITEM_REVERT_RANDOM_EXEC(frame)
                         frame = frame:GetTopParentFrame();
+                        
                         local slot = GET_CHILD_RECURSIVELY(frame, "slot");
                         local invItem = GET_SLOT_ITEM(slot);
                         if invItem == nil then		
                             return;
                         end
-
+                        local icon = slot:GetIcon()
+                        if icon == nil then
+                            return ""
+                        end
+                        local iconInfo = icon:GetInfo();
+                        if iconInfo == nil then
+                            return ""
+                        end
+                        ITEM_REVERT_RANDOM_REG_TARGETITEM(frame, iconInfo:GetIESID());
                         local text_havematerial = GET_CHILD_RECURSIVELY(frame, "text_havematerial")
                         local materialCnt = text_havematerial:GetTextByKey("count")
                         if materialCnt == '0' then
@@ -1798,20 +1838,7 @@ function EBIREMOVEDIALOG_APPLY()
                         local clmsg = ScpArgMsg("DoRevertRandomReset")
                         _ITEM_REVERT_RANDOM_EXEC()
                     end
-                    function ITEM_REVERT_RANDOM_SEND_OK()
-                        local frame = ui.GetFrame("itemrevertrandom")
-                    
-                        if frame:GetUserValue("REVERTITEM_GUID") == nil or frame:GetUserValue("REVERTITEM_GUID") == "None" then
-                            ui.CloseFrame("itemrevertrandom")
-                            return
-                        end
-                        local slot=GET_CHILD_RECURSIVELY(frame, "slot");
-                        local icon = slot:GetIcon();
-                        local iconInfo = icon:GetInfo();
-                        CLEAR_ITEM_REVERT_RANDOM_UI()
-                        
-                        ITEM_REVERT_RANDOM_REG_TARGETITEM(frame, iconInfo:GetIESID()); 
-                    end
+                  
                 end
                 
                 ))
