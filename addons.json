@@ -394,8 +394,8 @@
     "name": "Advanced Money Input",
     "file": "advancedmoneyinput",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "advancedmoneyinput-v0.0.2",
+    "fileVersion": "v0.1.0",
+    "releaseTag": "advancedmoneyinput-v0.1.0",
     "unicode": "📖",
     "description": "入出金時に簡単に金額を入力できるようにします。  ",
     "tags": [
