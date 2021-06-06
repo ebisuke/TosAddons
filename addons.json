@@ -779,8 +779,8 @@
     "name": "SkillWithGesture",
     "file": "skillwithgesture",
     "extension": "ipf",
-    "fileVersion": "v0.0.2",
-    "releaseTag": "skillwithgesture-v0.0.2",
+    "fileVersion": "v0.0.3",
+    "releaseTag": "skillwithgesture-v0.0.3",
     "unicode": "📖",
     "description": "スキル発動時にジェスチャーします（キャスティングスキルのみ） ",
     "tags": [
