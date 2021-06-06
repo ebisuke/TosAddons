@@ -16,10 +16,7 @@ g.confslots = g.confslots or {}
 function SKILLWITHGESTURECONFIG_ON_INIT(addon, frame)
     EBI_try_catch {
         try = function()
-            SKILLWITHGESTURE_LOAD_SETTINGS()
-
-            SKILLWITHGESTURECONFIG_INIT()
-            SKILLWITHGESTURECONFIG_LOADFROMSTRUCTURE()
+     
         end,
         catch = function(error)
             ERROUT(error)

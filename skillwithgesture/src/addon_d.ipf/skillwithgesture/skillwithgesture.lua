@@ -95,6 +95,7 @@ function SKILLWITHGESTURE_ON_INIT(addon, frame)
             
             addon:RegisterMsg('CAST_END', 'SKILLWITHGESTURE_CASTINGBAR_ON_MSG');
             
+            addon:RegisterMsg('GAME_START_3SEC', 'SKILLWITHGESTURE_3SEC');
             -- 다이나믹 캐스팅바 (스킬키 누르고있는 상태에서만 게이지증가. 스킬키때면 스킬시전)
             addon:RegisterMsg('DYNAMIC_CAST_BEGIN', 'SKILLWITHGESTURE_CASTINGBAR_ON_MSG');
             addon:RegisterMsg('DYNAMIC_CAST_END', 'SKILLWITHGESTURE_CASTINGBAR_ON_MSG');
@@ -109,6 +110,10 @@ function SKILLWITHGESTURE_ON_INIT(addon, frame)
             ERROUT(error)
         end
     }
+end
+function SKILLWITHGESTURE_3SEC()
+    SKILLWITHGESTURE_LOAD_SETTINGS()
+    SKILLWITHGESTURECONFIG_LOADFROMSTRUCTURE()
 end
 function SKILLWITHGESTURECONFIG_DEBUG()
     dofile([[\\Mac\Home\E\TosProject\TosAddons\skillwithgesture\src\addon_d.ipf\skillwithgesture\skillwithgesture.lua]])
@@ -126,6 +131,8 @@ function SKILLWITHGESTURE_SAVE_SETTINGS()
 end
 
 function SKILLWITHGESTURE_LOAD_SETTINGS()
+
+    g.personalsettingsFileLoc = string.format('../addons/%s/settings_%s.json', addonNameLower, tostring(session.GetMySession():GetCID()))
     DBGOUT("LOAD_SETTINGS " .. tostring(session.GetMySession():GetCID()))
     g.settings = {}
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
