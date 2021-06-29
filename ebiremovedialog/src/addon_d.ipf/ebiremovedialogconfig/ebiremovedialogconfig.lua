@@ -105,6 +105,12 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
                 type = "boolean",
                 default = false,
             },
+            {
+                name = "normalroupedialog",
+                vname = "Remove confirmation dialog of Normal Roupe.And keep selected item.",
+                type = "boolean",
+                default = false,
+            },
         }
     }
 }

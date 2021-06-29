@@ -82,7 +82,7 @@ local upper = string.upper
 local function utf8charbytes(s, i)
     -- argument defaults
     i = i or 1
-    
+
     -- argument checking
     if type(s) ~= "string" then
         error("bad argument #1 to 'utf8charbytes' (string expected, got " .. type(s) .. ")")
@@ -90,39 +90,37 @@ local function utf8charbytes(s, i)
     if type(i) ~= "number" then
         error("bad argument #2 to 'utf8charbytes' (number expected, got " .. type(i) .. ")")
     end
-    
+
     local c = byte(s, i)
-    
+
     -- determine bytes needed for character, based on RFC 3629
     -- validate byte 1
     if c > 0 and c <= 127 then
         -- UTF8-1
         return 1
-    
     elseif c >= 194 and c <= 223 then
         -- UTF8-2
         local c2 = byte(s, i + 1)
-        
+
         if not c2 then
             error("UTF-8 string terminated early")
         end
-        
+
         -- validate byte 2
         if c2 < 128 or c2 > 191 then
             error("Invalid UTF-8 character")
         end
-        
+
         return 2
-    
     elseif c >= 224 and c <= 239 then
         -- UTF8-3
         local c2 = byte(s, i + 1)
         local c3 = byte(s, i + 2)
-        
+
         if not c2 or not c3 then
             error("UTF-8 string terminated early")
         end
-        
+
         -- validate byte 2
         if c == 224 and (c2 < 160 or c2 > 191) then
             error("Invalid UTF-8 character")
@@ -131,24 +129,23 @@ local function utf8charbytes(s, i)
         elseif c2 < 128 or c2 > 191 then
             error("Invalid UTF-8 character")
         end
-        
+
         -- validate byte 3
         if c3 < 128 or c3 > 191 then
             error("Invalid UTF-8 character")
         end
-        
+
         return 3
-    
     elseif c >= 240 and c <= 244 then
         -- UTF8-4
         local c2 = byte(s, i + 1)
         local c3 = byte(s, i + 2)
         local c4 = byte(s, i + 3)
-        
+
         if not c2 or not c3 or not c4 then
             error("UTF-8 string terminated early")
         end
-        
+
         -- validate byte 2
         if c == 240 and (c2 < 144 or c2 > 191) then
             error("Invalid UTF-8 character")
@@ -157,19 +154,18 @@ local function utf8charbytes(s, i)
         elseif c2 < 128 or c2 > 191 then
             error("Invalid UTF-8 character")
         end
-        
+
         -- validate byte 3
         if c3 < 128 or c3 > 191 then
             error("Invalid UTF-8 character")
         end
-        
+
         -- validate byte 4
         if c4 < 128 or c4 > 191 then
             error("Invalid UTF-8 character")
         end
-        
+
         return 4
-    
     else
         error("Invalid UTF-8 character")
     end
@@ -179,19 +175,21 @@ end
 local function utf8len(s)
     -- argument checking
     if type(s) ~= "string" then
-        for k, v in pairs(s) do print('"', tostring(k), '"', tostring(v), '"') end
+        for k, v in pairs(s) do
+            print('"', tostring(k), '"', tostring(v), '"')
+        end
         error("bad argument #1 to 'utf8len' (string expected, got " .. type(s) .. ")")
     end
-    
+
     local pos = 1
     local bytes = len(s)
     local len = 0
-    
+
     while pos <= bytes do
         len = len + 1
         pos = pos + utf8charbytes(s, pos)
     end
-    
+
     return len
 end
 
@@ -200,45 +198,48 @@ end
 local function utf8sub(s, i, j)
     -- argument defaults
     j = j or -1
-    
+
     local pos = 1
     local bytes = len(s)
     local len = 0
-    
+
     -- only set l if i or j is negative
     local l = (i >= 0 and j >= 0) or utf8len(s)
     local startChar = (i >= 0) and i or l + i + 1
     local endChar = (j >= 0) and j or l + j + 1
-    
+
     -- can't have start before end!
     if startChar > endChar then
         return ""
     end
-    
+
     -- byte offsets to pass to string.sub
     local startByte, endByte = 1, bytes
-    
+
     while pos <= bytes do
         len = len + 1
-        
+
         if len == startChar then
             startByte = pos
         end
-        
+
         pos = pos + utf8charbytes(s, pos)
-        
+
         if len == endChar then
             endByte = pos - 1
             break
         end
     end
-    
-    if startChar > len then startByte = bytes + 1 end
-    if endChar < 1 then endByte = 0 end
-    
+
+    if startChar > len then
+        startByte = bytes + 1
+    end
+    if endChar < 1 then
+        endByte = 0
+    end
+
     return sub(s, startByte, endByte)
 end
-
 
 -- replace UTF-8 characters based on a mapping table
 local function utf8replace(s, mapping)
@@ -249,24 +250,23 @@ local function utf8replace(s, mapping)
     if type(mapping) ~= "table" then
         error("bad argument #2 to 'utf8replace' (table expected, got " .. type(mapping) .. ")")
     end
-    
+
     local pos = 1
     local bytes = len(s)
     local charbytes
     local newstr = ""
-    
+
     while pos <= bytes do
         charbytes = utf8charbytes(s, pos)
         local c = sub(s, pos, pos + charbytes - 1)
-        
+
         newstr = newstr .. (mapping[c] or c)
-        
+
         pos = pos + charbytes
     end
-    
+
     return newstr
 end
-
 
 -- identical to string.upper except it knows about unicode simple case conversions
 local function utf8upper(s)
@@ -284,61 +284,63 @@ local function utf8reverse(s)
     if type(s) ~= "string" then
         error("bad argument #1 to 'utf8reverse' (string expected, got " .. type(s) .. ")")
     end
-    
+
     local bytes = len(s)
     local pos = bytes
     local charbytes
     local newstr = ""
-    
+
     while pos > 0 do
         c = byte(s, pos)
         while c >= 128 and c <= 191 do
             pos = pos - 1
             c = byte(s, pos)
         end
-        
+
         charbytes = utf8charbytes(s, pos)
-        
+
         newstr = newstr .. sub(s, pos, pos + charbytes - 1)
-        
+
         pos = pos - 1
     end
-    
+
     return newstr
 end
 
 -- http://en.wikipedia.org/wiki/Utf8
 -- http://developer.coronalabs.com/code/utf-8-conversion-utility
 local function utf8char(unicode)
-    if unicode <= 0x7F then return char(unicode) end
-    
+    if unicode <= 0x7F then
+        return char(unicode)
+    end
+
     if (unicode <= 0x7FF) then
-        local Byte0 = 0xC0 + math.floor(unicode / 0x40);
-        local Byte1 = 0x80 + (unicode % 0x40);
-        return char(Byte0, Byte1);
-    end;
-    
+        local Byte0 = 0xC0 + math.floor(unicode / 0x40)
+        local Byte1 = 0x80 + (unicode % 0x40)
+        return char(Byte0, Byte1)
+    end
+
     if (unicode <= 0xFFFF) then
-        local Byte0 = 0xE0 + math.floor(unicode / 0x1000);
-        local Byte1 = 0x80 + (math.floor(unicode / 0x40) % 0x40);
-        local Byte2 = 0x80 + (unicode % 0x40);
-        return char(Byte0, Byte1, Byte2);
-    end;
-    
+        local Byte0 = 0xE0 + math.floor(unicode / 0x1000)
+        local Byte1 = 0x80 + (math.floor(unicode / 0x40) % 0x40)
+        local Byte2 = 0x80 + (unicode % 0x40)
+        return char(Byte0, Byte1, Byte2)
+    end
+
     if (unicode <= 0x10FFFF) then
         local code = unicode
-        local Byte3 = 0x80 + (code % 0x40);
+        local Byte3 = 0x80 + (code % 0x40)
         code = math.floor(code / 0x40)
-        local Byte2 = 0x80 + (code % 0x40);
+        local Byte2 = 0x80 + (code % 0x40)
         code = math.floor(code / 0x40)
-        local Byte1 = 0x80 + (code % 0x40);
+        local Byte1 = 0x80 + (code % 0x40)
         code = math.floor(code / 0x40)
-        local Byte0 = 0xF0 + code;
-        
-        return char(Byte0, Byte1, Byte2, Byte3);
-    end;
-    
-    error 'Unicode cannot be greater than U+10FFFF!'
+        local Byte0 = 0xF0 + code
+
+        return char(Byte0, Byte1, Byte2, Byte3)
+    end
+
+    error "Unicode cannot be greater than U+10FFFF!"
 end
 
 local shift_6 = 2 ^ 6
@@ -349,11 +351,13 @@ local utf8unicode
 utf8unicode = function(str, i, j, byte_pos)
     i = i or 1
     j = j or i
-    
-    if i > j then return end
-    
+
+    if i > j then
+        return
+    end
+
     local char, bytes
-    
+
     if byte_pos then
         bytes = utf8charbytes(str, byte_pos)
         char = sub(str, byte_pos, byte_pos - 1 + bytes)
@@ -361,10 +365,12 @@ utf8unicode = function(str, i, j, byte_pos)
         char, byte_pos = utf8sub(str, i, i), 0
         bytes = #char
     end
-    
+
     local unicode
-    
-    if bytes == 1 then unicode = byte(char) end
+
+    if bytes == 1 then
+        unicode = byte(char)
+    end
     if bytes == 2 then
         local byte0, byte1 = byte(char, 1, 2)
         local code0, code1 = byte0 - 0xC0, byte1 - 0x80
@@ -380,7 +386,7 @@ utf8unicode = function(str, i, j, byte_pos)
         local code0, code1, code2, code3 = byte0 - 0xF0, byte1 - 0x80, byte2 - 0x80, byte3 - 0x80
         unicode = code0 * shift_18 + code1 * shift_12 + code2 * shift_6 + code3
     end
-    
+
     return unicode, utf8unicode(str, i + 1, j, byte_pos + bytes)
 end
 
@@ -390,17 +396,20 @@ local function utf8gensub(str, sub_len)
     local byte_pos = 1
     local len = #str
     return function(skip)
-        if skip then byte_pos = byte_pos + skip end
+        if skip then
+            byte_pos = byte_pos + skip
+        end
         local char_count = 0
         local start = byte_pos
         repeat
-            if byte_pos > len then return end
+            if byte_pos > len then
+                return
+            end
             char_count = char_count + 1
             local bytes = utf8charbytes(str, byte_pos)
             byte_pos = byte_pos + bytes
-        
         until char_count == sub_len
-        
+
         local last = byte_pos - 1
         local sub = sub(str, start, last)
         return sub, start, last
@@ -420,7 +429,7 @@ local function binsearch(sortedTable, item, comp)
             mid = math.floor((head + tail) / 2)
         end
     else
-        end
+    end
     if sortedTable[tonumber(head)] == item then
         return true, tonumber(head)
     elseif sortedTable[tonumber(tail)] == item then
@@ -436,9 +445,9 @@ local function classMatchGenerator(class, plain)
     local range = false
     local firstletter = true
     local unmatch = false
-    
+
     local it = utf8gensub(class)
-    
+
     local skip
     for c, bs, be in it do
         skip = be
@@ -450,31 +459,35 @@ local function classMatchGenerator(class, plain)
                 range = true
             elseif c == "^" then
                 if not firstletter then
-                    error('!!!')
+                    error("!!!")
                 else
                     unmatch = true
                 end
-            elseif c == ']' then
+            elseif c == "]" then
                 break
             else
                 if not range then
                     table.insert(codes, utf8unicode(c))
                 else
-                    table.remove(codes)-- removing '-'
+                    table.remove(codes)
+                    -- removing '-'
                     table.insert(ranges, {table.remove(codes), utf8unicode(c)})
                     range = false
                 end
             end
         elseif ignore and not plain then
-            if c == 'a' then -- %a: represents all letters. (ONLY ASCII)
-                table.insert(ranges, {65, 90})-- A - Z
-                table.insert(ranges, {97, 122})-- a - z
-            elseif c == 'c' then -- %c: represents all control characters.
+            if c == "a" then -- %a: represents all letters. (ONLY ASCII)
+                -- a - z
+                table.insert(ranges, {65, 90})
+                -- A - Z
+                table.insert(ranges, {97, 122})
+            elseif c == "c" then -- %c: represents all control characters.
                 table.insert(ranges, {0, 31})
                 table.insert(codes, 127)
-            elseif c == 'd' then -- %d: represents all digits.
-                table.insert(ranges, {48, 57})-- 0 - 9
-            elseif c == 'g' then -- %g: represents all printable characters except space.
+            elseif c == "d" then -- %d: represents all digits.
+                -- 0 - 9
+                table.insert(ranges, {48, 57})
+            elseif c == "g" then -- %g: represents all printable characters except space.
                 table.insert(ranges, {1, 8})
                 table.insert(ranges, {14, 31})
                 table.insert(ranges, {33, 132})
@@ -485,14 +498,15 @@ local function classMatchGenerator(class, plain)
                 table.insert(ranges, {8234, 8238})
                 table.insert(ranges, {8240, 8286})
                 table.insert(ranges, {8288, 12287})
-            elseif c == 'l' then -- %l: represents all lowercase letters. (ONLY ASCII)
-                table.insert(ranges, {97, 122})-- a - z
-            elseif c == 'p' then -- %p: represents all punctuation characters. (ONLY ASCII)
+            elseif c == "l" then -- %l: represents all lowercase letters. (ONLY ASCII)
+                -- a - z
+                table.insert(ranges, {97, 122})
+            elseif c == "p" then -- %p: represents all punctuation characters. (ONLY ASCII)
                 table.insert(ranges, {33, 47})
                 table.insert(ranges, {58, 64})
                 table.insert(ranges, {91, 96})
                 table.insert(ranges, {123, 126})
-            elseif c == 's' then -- %s: represents all space characters.
+            elseif c == "s" then -- %s: represents all space characters.
                 table.insert(ranges, {9, 13})
                 table.insert(codes, 32)
                 table.insert(codes, 133)
@@ -504,21 +518,29 @@ local function classMatchGenerator(class, plain)
                 table.insert(codes, 8239)
                 table.insert(codes, 8287)
                 table.insert(codes, 12288)
-            elseif c == 'u' then -- %u: represents all uppercase letters. (ONLY ASCII)
-                table.insert(ranges, {65, 90})-- A - Z
-            elseif c == 'w' then -- %w: represents all alphanumeric characters. (ONLY ASCII)
-                table.insert(ranges, {48, 57})-- 0 - 9
-                table.insert(ranges, {65, 90})-- A - Z
-                table.insert(ranges, {97, 122})-- a - z
-            elseif c == 'x' then -- %x: represents all hexadecimal digits.
-                table.insert(ranges, {48, 57})-- 0 - 9
-                table.insert(ranges, {65, 70})-- A - F
-                table.insert(ranges, {97, 102})-- a - f
+            elseif c == "u" then -- %u: represents all uppercase letters. (ONLY ASCII)
+                -- A - Z
+                table.insert(ranges, {65, 90})
+            elseif c == "w" then -- %w: represents all alphanumeric characters. (ONLY ASCII)
+                -- a - z
+                table.insert(ranges, {48, 57})
+                -- 0 - 9
+                table.insert(ranges, {65, 90})
+                -- A - Z
+                table.insert(ranges, {97, 122})
+            elseif c == "x" then -- %x: represents all hexadecimal digits.
+                -- a - f
+                table.insert(ranges, {48, 57})
+                -- 0 - 9
+                table.insert(ranges, {65, 70})
+                -- A - F
+                table.insert(ranges, {97, 102})
             else
                 if not range then
                     table.insert(codes, utf8unicode(c))
                 else
-                    table.remove(codes)-- removing '-'
+                    table.remove(codes)
+                    -- removing '-'
                     table.insert(ranges, {table.remove(codes), utf8unicode(c)})
                     range = false
                 end
@@ -528,18 +550,19 @@ local function classMatchGenerator(class, plain)
             if not range then
                 table.insert(codes, utf8unicode(c))
             else
-                table.remove(codes)-- removing '-'
+                table.remove(codes)
+                -- removing '-'
                 table.insert(ranges, {table.remove(codes), utf8unicode(c)})
                 range = false
             end
             ignore = false
         end
-        
+
         firstletter = false
     end
-    
+
     table.sort(codes)
-    
+
     local function inRanges(charCode)
         for _, r in ipairs(ranges) do
             if r[1] <= charCode and charCode <= r[2] then
@@ -563,51 +586,63 @@ end
 local function utf8subWithBytes(s, i, j, sb)
     -- argument defaults
     j = j or -1
-    
+
     local pos = sb or 1
     local bytes = len(s)
     local len = 0
-    
+
     -- only set l if i or j is negative
     local l = (i >= 0 and j >= 0) or utf8len(s)
     local startChar = (i >= 0) and i or l + i + 1
     local endChar = (j >= 0) and j or l + j + 1
-    
+
     -- can't have start before end!
     if startChar > endChar then
         return ""
     end
-    
+
     -- byte offsets to pass to string.sub
     local startByte, endByte = 1, bytes
-    
+
     while pos <= bytes do
         len = len + 1
-        
+
         if len == startChar then
             startByte = pos
         end
-        
+
         pos = pos + utf8charbytes(s, pos)
-        
+
         if len == endChar then
             endByte = pos - 1
             break
         end
     end
-    
-    if startChar > len then startByte = bytes + 1 end
-    if endChar < 1 then endByte = 0 end
-    
+
+    if startChar > len then
+        startByte = bytes + 1
+    end
+    if endChar < 1 then
+        endByte = 0
+    end
+
     return sub(s, startByte, endByte), endByte + 1
 end
 
-local cache = setmetatable({}, {
-    __mode = 'kv'
-})
-local cachePlain = setmetatable({}, {
-    __mode = 'kv'
-})
+local cache =
+    setmetatable(
+    {},
+    {
+        __mode = "kv"
+    }
+)
+local cachePlain =
+    setmetatable(
+    {},
+    {
+        __mode = "kv"
+    }
+)
 local function matcherGenerator(regex, plain)
     local matcher = {
         functions = {},
@@ -655,7 +690,7 @@ local function matcherGenerator(regex, plain)
             matcher:nextFunc()
         end
     end
-    
+
     local function capture(id)
         return function(cC)
             local l = matcher.captures[id][2] - matcher.captures[id][1]
@@ -683,7 +718,7 @@ local function matcherGenerator(regex, plain)
             matcher:nextFunc()
         end
     end
-    
+
     local function balancer(str)
         local sum = 0
         local bc, ec = utf8sub(str, 1, 1), utf8sub(str, 2, 2)
@@ -709,7 +744,7 @@ local function matcherGenerator(regex, plain)
             end
         end, skip
     end
-    
+
     matcher.functions[1] = function(cC)
         matcher:fullResetOnNextStr()
         matcher.seqStart = matcher.str
@@ -719,7 +754,7 @@ local function matcherGenerator(regex, plain)
             matcher.seqStart = nil
         end
     end
-    
+
     local lastFunc
     local ignore = false
     local skip = nil
@@ -736,13 +771,13 @@ local function matcherGenerator(regex, plain)
             table.insert(matcher.functions, simple(classMatchGenerator(c, plain)))
         else
             if ignore then
-                if find('123456789', c, 1, true) then
+                if find("123456789", c, 1, true) then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                         lastFunc = nil
                     end
                     table.insert(matcher.functions, capture(tonumber(c)))
-                elseif c == 'b' then
+                elseif c == "b" then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                         lastFunc = nil
@@ -751,57 +786,57 @@ local function matcherGenerator(regex, plain)
                     b, skip = balancer(sub(regex, be + 1, be + 9))
                     table.insert(matcher.functions, b)
                 else
-                    lastFunc = classMatchGenerator('%' .. c)
+                    lastFunc = classMatchGenerator("%" .. c)
                 end
                 ignore = false
             else
-                if c == '*' then
+                if c == "*" then
                     if lastFunc then
                         table.insert(matcher.functions, star(lastFunc))
                         lastFunc = nil
                     else
-                        error('invalid regex after ' .. sub(regex, 1, bs))
+                        error("invalid regex after " .. sub(regex, 1, bs))
                     end
-                elseif c == '+' then
+                elseif c == "+" then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                         table.insert(matcher.functions, star(lastFunc))
                         lastFunc = nil
                     else
-                        error('invalid regex after ' .. sub(regex, 1, bs))
+                        error("invalid regex after " .. sub(regex, 1, bs))
                     end
-                elseif c == '-' then
+                elseif c == "-" then
                     if lastFunc then
                         table.insert(matcher.functions, minus(lastFunc))
                         lastFunc = nil
                     else
-                        error('invalid regex after ' .. sub(regex, 1, bs))
+                        error("invalid regex after " .. sub(regex, 1, bs))
                     end
-                elseif c == '?' then
+                elseif c == "?" then
                     if lastFunc then
                         table.insert(matcher.functions, question(lastFunc))
                         lastFunc = nil
                     else
-                        error('invalid regex after ' .. sub(regex, 1, bs))
+                        error("invalid regex after " .. sub(regex, 1, bs))
                     end
-                elseif c == '^' then
+                elseif c == "^" then
                     if bs == 1 then
                         matcher.fromStart = true
                     else
-                        error('invalid regex after ' .. sub(regex, 1, bs))
+                        error("invalid regex after " .. sub(regex, 1, bs))
                     end
-                elseif c == '$' then
+                elseif c == "$" then
                     if be == len(regex) then
                         matcher.toEnd = true
                     else
-                        error('invalid regex after ' .. sub(regex, 1, bs))
+                        error("invalid regex after " .. sub(regex, 1, bs))
                     end
-                elseif c == '[' then
+                elseif c == "[" then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                     end
                     lastFunc, skip = classMatchGenerator(sub(regex, be + 1))
-                elseif c == '(' then
+                elseif c == "(" then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                         lastFunc = nil
@@ -809,8 +844,10 @@ local function matcherGenerator(regex, plain)
                     table.insert(matcher.captures, {})
                     table.insert(cs, #matcher.captures)
                     table.insert(matcher.functions, captureStart(cs[#cs]))
-                    if sub(regex, be + 1, be + 1) == ')' then matcher.captures[#matcher.captures].empty = true end
-                elseif c == ')' then
+                    if sub(regex, be + 1, be + 1) == ")" then
+                        matcher.captures[#matcher.captures].empty = true
+                    end
+                elseif c == ")" then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                         lastFunc = nil
@@ -820,12 +857,14 @@ local function matcherGenerator(regex, plain)
                         error('invalid capture: "(" missing')
                     end
                     table.insert(matcher.functions, captureStop(cap))
-                elseif c == '.' then
+                elseif c == "." then
                     if lastFunc then
                         table.insert(matcher.functions, simple(lastFunc))
                     end
-                    lastFunc = function(cC) return cC ~= -1 end
-                elseif c == '%' then
+                    lastFunc = function(cC)
+                        return cC ~= -1
+                    end
+                elseif c == "%" then
                     ignore = true
                 else
                     if lastFunc then
@@ -844,15 +883,18 @@ local function matcherGenerator(regex, plain)
     end
     lastFunc = nil
     ignore = nil
-    
-    table.insert(matcher.functions, function()
-        if matcher.toEnd and matcher.str ~= matcher.stringLen then
-            matcher:reset()
-        else
-            matcher.stop = true
+
+    table.insert(
+        matcher.functions,
+        function()
+            if matcher.toEnd and matcher.str ~= matcher.stringLen then
+                matcher:reset()
+            else
+                matcher.stop = true
+            end
         end
-    end)
-    
+    )
+
     matcher.nextFunc = function(self)
         self.func = self.func + 1
     end
@@ -887,28 +929,27 @@ local function matcherGenerator(regex, plain)
             s.reset = oldReset
         end
     end
-    
+
     matcher.process = function(self, str, start)
-            
-            self.func = 1
-            start = start or 1
-            self.startStr = (start >= 0) and start or utf8len(str) + start + 1
-            self.seqStart = self.startStr
-            self.str = self.startStr
-            self.stringLen = utf8len(str) + 1
-            self.string = str
-            self.stop = false
-            
-            self.reset = function(s)
-                s.func = 1
-            end
-            
-            local lastPos = self.str
-            local lastByte
-            local char
-            while not self.stop do
-                if self.str < self.stringLen then
-                    --[[ if lastPos < self.str then
+        self.func = 1
+        start = start or 1
+        self.startStr = (start >= 0) and start or utf8len(str) + start + 1
+        self.seqStart = self.startStr
+        self.str = self.startStr
+        self.stringLen = utf8len(str) + 1
+        self.string = str
+        self.stop = false
+
+        self.reset = function(s)
+            s.func = 1
+        end
+
+        local lastPos = self.str
+        local lastByte
+        local char
+        while not self.stop do
+            if self.str < self.stringLen then
+                --[[ if lastPos < self.str then
                     print('last byte', lastByte)
                     char, lastByte = utf8subWithBytes(str, 1, self.str - lastPos - 1, lastByte)
                     char, lastByte = utf8subWithBytes(str, 1, 1, lastByte)
@@ -917,27 +958,27 @@ local function matcherGenerator(regex, plain)
                     char, lastByte = utf8subWithBytes(str, self.str, self.str)
                     end
                     lastPos = self.str ]]
-                    char = utf8sub(str, self.str, self.str)
-                    --print('char', char, utf8unicode(char))
-                    self.functions[self.func](utf8unicode(char))
+                char = utf8sub(str, self.str, self.str)
+                --print('char', char, utf8unicode(char))
+                self.functions[self.func](utf8unicode(char))
+            else
+                self.functions[self.func](-1)
+            end
+        end
+
+        if self.seqStart then
+            local captures = {}
+            for _, pair in pairs(self.captures) do
+                if pair.empty then
+                    table.insert(captures, pair[1])
                 else
-                    self.functions[self.func](-1)
+                    table.insert(captures, utf8sub(str, pair[1], pair[2]))
                 end
             end
-            
-            if self.seqStart then
-                local captures = {}
-                for _, pair in pairs(self.captures) do
-                    if pair.empty then
-                        table.insert(captures, pair[1])
-                    else
-                        table.insert(captures, utf8sub(str, pair[1], pair[2]))
-                    end
-                end
-                return self.seqStart, self.str - 1, unpack(captures)
-            end
+            return self.seqStart, self.str - 1, unpack(captures)
+        end
     end
-    
+
     return matcher
 end
 
@@ -961,7 +1002,7 @@ end
 
 -- string.gmatch
 local function utf8gmatch(str, regex, all)
-    regex = (utf8sub(regex, 1, 1) ~= '^') and regex or '%' .. regex
+    regex = (utf8sub(regex, 1, 1) ~= "^") and regex or "%" .. regex
     local lastChar = 1
     return function()
         local found = {utf8find(str, regex, lastChar)}
@@ -976,13 +1017,13 @@ local function utf8gmatch(str, regex, all)
 end
 
 local function replace(repl, args)
-    local ret = ''
-    if type(repl) == 'string' then
+    local ret = ""
+    if type(repl) == "string" then
         local ignore = false
         local num = 0
         for c in utf8gensub(repl) do
             if not ignore then
-                if c == '%' then
+                if c == "%" then
                     ignore = true
                 else
                     ret = ret .. c
@@ -997,13 +1038,13 @@ local function replace(repl, args)
                 ignore = false
             end
         end
-    elseif type(repl) == 'table' then
-        ret = repl[args[1] or args[0]] or ''
-    elseif type(repl) == 'function' then
+    elseif type(repl) == "table" then
+        ret = repl[args[1] or args[0]] or ""
+    elseif type(repl) == "function" then
         if #args > 0 then
-            ret = repl(unpack(args, 1)) or ''
+            ret = repl(unpack(args, 1)) or ""
         else
-            ret = repl(args[0]) or ''
+            ret = repl(args[0]) or ""
         end
     end
     return ret
@@ -1011,15 +1052,14 @@ end
 -- string.gsub
 local function utf8gsub(str, regex, repl, limit)
     limit = limit or -1
-    local ret = ''
+    local ret = ""
     local prevEnd = 1
     local it = utf8gmatch(str, regex, true)
     local found = {it()}
     local n = 0
     while #found > 0 and limit ~= n do
         local args = {[0] = utf8sub(str, found[1], found[2]), unpack(found, 3)}
-        ret = ret .. utf8sub(str, prevEnd, found[1] - 1)
-            .. replace(repl, args)
+        ret = ret .. utf8sub(str, prevEnd, found[1] - 1) .. replace(repl, args)
         prevEnd = found[2] + 1
         n = n + 1
         found = {it()}
@@ -1032,17 +1072,17 @@ end
 local addonName = "ebiremovedialog"
 local addonNameLower = string.lower(addonName)
 --作者名
-local author = 'ebisuke'
+local author = "ebisuke"
 
 --アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
-_G['ADDONS'] = _G['ADDONS'] or {}
-_G['ADDONS'][author] = _G['ADDONS'][author] or {}
-_G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
-local g = _G['ADDONS'][author][addonName]
-local acutil = require('acutil')
+_G["ADDONS"] = _G["ADDONS"] or {}
+_G["ADDONS"][author] = _G["ADDONS"][author] or {}
+_G["ADDONS"][author][addonName] = _G["ADDONS"][author][addonName] or {}
+local g = _G["ADDONS"][author][addonName]
+local acutil = require("acutil")
 g.version = 0
 g.settings = g.settings or {x = 300, y = 300, volume = 100, mute = false}
-g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
+g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "アドオン名（大文字）"
 g.debug = false
@@ -1052,7 +1092,7 @@ g.usearts = false
 g.latesttext = ""
 --ライブラリ読み込み
 CHAT_SYSTEM("[ERD]loaded")
-local acutil = require('acutil')
+local acutil = require("acutil")
 local function EBI_try_catch(what)
     local status, result = pcall(what.try)
     if not status then
@@ -1064,29 +1104,25 @@ local function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
 
-
 local function DBGOUT(msg)
-    
-    EBI_try_catch{
+    EBI_try_catch {
         try = function()
             if (g.debug == true) then
                 CHAT_SYSTEM(msg)
-                
+
                 print(msg)
                 local fd = io.open(g.logpath, "a")
                 fd:write(msg .. "\n")
                 fd:flush()
                 fd:close()
-            
             end
         end,
         catch = function(error)
         end
     }
-
 end
 local function ERROUT(msg)
-    EBI_try_catch{
+    EBI_try_catch {
         try = function()
             CHAT_SYSTEM(msg)
             print(msg)
@@ -1094,7 +1130,6 @@ local function ERROUT(msg)
         catch = function(error)
         end
     }
-
 end
 
 function EBIREMOVEDIALOG_DIALOG_TEXTVIEW(frame, text, titleName, voiceName)
@@ -1105,51 +1140,49 @@ function EBIREMOVEDIALOG_DIALOG_TEXTVIEW(frame, text, titleName, voiceName)
         ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(true,'" .. text .. "')", 0.01)
         g.watchingdialog = true
     end
-
 end
 function EBIREMOVEDIALOG_INV_ICON_USE(invItem)
-    EBI_try_catch{
+    EBI_try_catch {
         try = function()
-            local itemCls = GetClassByType('Item', invItem.type)
-            if itemCls and itemCls.GroupName == 'HiddenAbility' and g.settings.artsbook then
-                DBGOUT('hidden')
+            local itemCls = GetClassByType("Item", invItem.type)
+            if itemCls and itemCls.GroupName == "HiddenAbility" and g.settings.artsbook then
+                DBGOUT("hidden")
                 if nil == invItem then
-                    return;
+                    return
                 end
-                
+
                 if true == invItem.isLockState then
-                    ui.SysMsg(ClMsg("MaterialItemIsLock"));
-                    return;
+                    ui.SysMsg(ClMsg("MaterialItemIsLock"))
+                    return
                 end
-                
+
                 if true == RUN_CLIENT_SCP(invItem) then
-                    return;
+                    return
                 end
-                
-                local stat = info.GetStat(session.GetMyHandle());
+
+                local stat = info.GetStat(session.GetMyHandle())
                 if stat.HP <= 0 then
-                    return;
+                    return
                 end
-                
-                local itemtype = invItem.type;
-                local curTime = item.GetCoolDown(itemtype);
+
+                local itemtype = invItem.type
+                local curTime = item.GetCoolDown(itemtype)
                 if curTime ~= 0 then
-                    imcSound.PlaySoundEvent("skill_cooltime");
-                    return;
+                    imcSound.PlaySoundEvent("skill_cooltime")
+                    return
                 end
-                
-                local mapClassName = session.GetMapName();
+
+                local mapClassName = session.GetMapName()
                 if mapClassName == "c_Klaipe" or mapClassName == "c_orsha" or mapClassName == "c_fedimian" then
-                    else
-                    ui.SysMsg(ClMsg('AllowedInTown1'));
+                else
+                    ui.SysMsg(ClMsg("AllowedInTown1"))
                     return
                 end
                 g.usearts = true
                 g.watchingdialog = true
-                
+
                 ReserveScript("EBIREMOVEDIALOG_DIALOG_DO_SINGLE(true)", 0.02)
-                item.UseByGUID(invItem:GetIESID());
-            
+                item.UseByGUID(invItem:GetIESID())
             else
                 EBIREMOVEDIALOG_INV_ICON_USE_OLD(invItem)
             end
@@ -1160,23 +1193,23 @@ function EBIREMOVEDIALOG_INV_ICON_USE(invItem)
     }
 end
 function EBIREMOVEDIALOG_ON_INIT(addon, frame)
-    EBI_try_catch{
+    EBI_try_catch {
         try = function()
             frame = ui.GetFrame(g.framename)
             g.addon = addon
             g.frame = frame
-            
-            addon:RegisterMsg('GAME_START', 'EBIREMOVEDIALOG_GAME_START');
+
+            addon:RegisterMsg("GAME_START", "EBIREMOVEDIALOG_GAME_START")
             --addon:RegisterMsg('DIALOG_CLOSE', 'EBIREMOVEDIALOG_DIALOG_RESTOREENABLE');
             --addon:RegisterMsg('DIALOG_CHANGE_OK', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
             --addon:RegisterMsg('DIALOG_CHANGE_NEXT', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
             --addon:RegisterMsg('DIALOG_SKIP', 'EBIREMOVEDIALOG_DIALOG_CHANGE_OK_NEXT');
-            addon:RegisterMsg('FPS_UPDATE', 'EBIREMOVEDIALOG_FPS_UPDATE');
-            
-            addon:RegisterMsg('DIALOG_ADD_SELECT', 'EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE');
+            addon:RegisterMsg("FPS_UPDATE", "EBIREMOVEDIALOG_FPS_UPDATE")
+
+            addon:RegisterMsg("DIALOG_ADD_SELECT", "EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE")
             g.latesttest = ""
             g.watchingdialog = false
-            g.artsbook = false;
+            g.artsbook = false
             if EBIREMOVEDIALOG_INV_ICON_USE_OLD == nil and INV_ICON_USE ~= EBIREMOVEDIALOG_INV_ICON_USE then
                 EBIREMOVEDIALOG_INV_ICON_USE_OLD = INV_ICON_USE
                 INV_ICON_USE = EBIREMOVEDIALOG_INV_ICON_USE
@@ -1185,7 +1218,6 @@ function EBIREMOVEDIALOG_ON_INIT(addon, frame)
                 EBIREMOVEDIALOG_DIALOG_TEXTVIEW_OLD = DIALOG_SHOW_DIALOG_TEXT
                 DIALOG_SHOW_DIALOG_TEXT = EBIREMOVEDIALOG_DIALOG_TEXTVIEW
             end
-        
         end,
         catch = function(error)
             ERROUT(error)
@@ -1193,7 +1225,6 @@ function EBIREMOVEDIALOG_ON_INIT(addon, frame)
     }
 end
 function EBIREMOVEDIALOG_GAME_START()
-    
     EBIREMOVEDIALOG_LOAD_SETTINGS()
     EBIREMOVEDIALOGCONFIG_INIT()
     EBIREMOVEDIALOG_APPLY()
@@ -1201,49 +1232,45 @@ end
 function EBIREMOVEDIALOG_FPS_UPDATE()
     -- 強制的に直す
     if g.settings.preventshowchallengemodeframe then
-        if (IsInChallengeMode() and ui.GetFrame('challenge_mode'):IsVisible() == 0) then
-            ui.GetFrame('challenge_mode'):ShowWindow(1)
-        elseif (not IsInChallengeMode() and ui.GetFrame('challenge_mode'):IsVisible() == 1) then
-            ui.GetFrame('challenge_mode'):ShowWindow(0)
+        if (IsInChallengeMode() and ui.GetFrame("challenge_mode"):IsVisible() == 0) then
+            ui.GetFrame("challenge_mode"):ShowWindow(1)
+        elseif (not IsInChallengeMode() and ui.GetFrame("challenge_mode"):IsVisible() == 1) then
+            ui.GetFrame("challenge_mode"):ShowWindow(0)
         end
     end
 end
 function EBIREMOVEDIALOG_DIALOG_DO_SINGLE(ok)
     if g.watchingdialog == true then
-        
         ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(" .. tostring(ok) .. ")", 0.01)
     end
 end
 function EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE(frame, ctrl, argstr, argnum)
-    
     if (IsInChallengeMode() or g.usearts) and g.watchingdialog == true then
         DBGOUT("multiple")
         ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(" .. tostring(0) .. ")", 0.01)
     end
 end
 
-
 function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
     if g.watchingdialog and (IsInChallengeMode() or g.usearts) then
-        
         local go = false
         if IsInChallengeMode() then
-            local uiframe = ui.GetFrame('dialog')
-            local text = uiframe:GetChildRecursively('textlist')
+            local uiframe = ui.GetFrame("dialog")
+            local text = uiframe:GetChildRecursively("textlist")
             local rawtext = g.latesttext
             local prefix = "{s20}{b}{#1f100b}"
             if g.settings.challengemodenextstep then
-                if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
+                if rawtext == ClMsg("AcceptNextLevelChallengeMode") then
                     go = true
                 end
             end
             if g.settings.challengemodecomplete then
-                if rawtext == ClMsg('CompleteChallengeMode') then
+                if rawtext == ClMsg("CompleteChallengeMode") then
                     go = true
                 end
             end
             if g.settings.challengemodeabort then
-                if rawtext == ClMsg('AcceptStopLevelChallengeMode') then
+                if rawtext == ClMsg("AcceptStopLevelChallengeMode") then
                     go = true
                 end
             end
@@ -1252,26 +1279,19 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
         end
         if go then
             DBGOUT("Multiplut")
-            session.SetSelectDlgList();
-            ui.OpenFrame('dialogselect');
-            ReserveScript([[
+            session.SetSelectDlgList()
+            ui.OpenFrame("dialogselect")
+            ReserveScript(
+                [[
                 local x=mouse.GetX();
                 local y=mouse.GetY();
-                ReserveScript('control.DialogSelect(]]
-                
-                
-                
-                
-                
-                
-                .. (select + 1) .. [[)',0.01);
+                ReserveScript('control.DialogSelect(]] ..
+                    (select + 1) ..
+                        [[)',0.01);
                 ReserveScript(string.format('mouse.SetPos(%d,%d)',x,y),0.02)
-                ]]
-                
-                
-                
-                
-                , 0.03);
+                ]],
+                0.03
+            )
         else
             DBGOUT("failed")
         end
@@ -1281,55 +1301,48 @@ function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(select)
 end
 function EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_SINGLE(ok)
     if g.watchingdialog then
-        
         if IsInChallengeMode() then
             local go = false
-            local uiframe = ui.GetFrame('dialog')
-            local text = uiframe:GetChildRecursively('textlist')
+            local uiframe = ui.GetFrame("dialog")
+            local text = uiframe:GetChildRecursively("textlist")
             local rawtext = g.latesttext
             if g.settings.challengemodenextstep then
-                if rawtext == ClMsg('AcceptNextLevelChallengeMode') then
+                if rawtext == ClMsg("AcceptNextLevelChallengeMode") then
                     go = true
                 end
             end
             if g.settings.challengemodecomplete then
-                if rawtext == ClMsg('CompleteChallengeMode') then
+                if rawtext == ClMsg("CompleteChallengeMode") then
                     go = true
                 end
             end
             if g.settings.challengemodeabort then
-                if rawtext == ClMsg('AcceptStopLevelChallengeMode') then
+                if rawtext == ClMsg("AcceptStopLevelChallengeMode") then
                     go = true
                 end
             end
-            
+
             if ok then
                 if go then
                     --control.DialogOk();
-                    ReserveScript('EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)', 0.01)
+                    ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)", 0.01)
                 end
-            
             else
                 if go then
                     DBGOUT("Cancel")
-                    control.DialogCancel();
+                    control.DialogCancel()
                 end
             end
-        
         elseif g.usearts then
-            
             if ok then
                 DBGOUT("OK")
                 -- control.DialogOk();
-                ReserveScript('EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)', 0.01)
+                ReserveScript("EBIREMOVEDIALOG_SETENABLE_SELECTDIALOG_MULTIPLE(0)", 0.01)
             else
                 DBGOUT("Cancel")
-                control.DialogCancel();
+                control.DialogCancel()
             end
-        
         end
-    
-    
     end
 end
 function EBIREMOVEDIALOG_SAVE_SETTINGS()
@@ -1342,20 +1355,18 @@ function EBIREMOVEDIALOG_LOAD_SETTINGS()
     local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
     if err then
         --設定ファイル読み込み失敗時処理
-        ERROUT(string.format('[%s] cannot load setting files', addonName))
+        ERROUT(string.format("[%s] cannot load setting files", addonName))
         g.settings = {}
     else
         --設定ファイル読み込み成功時処理
         g.settings = t
         if (not g.settings.version) then
             g.settings.version = 0
-        
         end
     end
     EBIREMOVEDIALOGCONFIG_GENERATEDEFAULT(g.settings)
     EBIREMOVEDIALOG_UPGRADE_SETTINGS()
     EBIREMOVEDIALOG_SAVE_SETTINGS()
-
 end
 
 function EBIREMOVEDIALOG_UPGRADE_SETTINGS()
@@ -1363,586 +1374,788 @@ function EBIREMOVEDIALOG_UPGRADE_SETTINGS()
     return upgraded
 end
 function EBIREMOVEDIALOG_APPLY()
-    EBI_try_catch{
+    EBI_try_catch {
         try = function()
-            
             if g.settings.cardremove then
-                assert(pcall(function()
-                        -- 카드 슬롯 정보창 열기
-                        function EQUIP_CARDSLOT_INFO_OPEN(slotIndex)
-                            
-                            
-                            local frame = ui.GetFrame('equip_cardslot_info');
-                            
-                            if frame:IsVisible() == 1 then
-                                frame:ShowWindow(0);
+                assert(
+                    pcall(
+                        function()
+                            -- 카드 슬롯 정보창 열기
+                            function EQUIP_CARDSLOT_INFO_OPEN(slotIndex)
+                                local frame = ui.GetFrame("equip_cardslot_info")
+
+                                if frame:IsVisible() == 1 then
+                                    frame:ShowWindow(0)
+                                end
+
+                                local cardID, cardLv, cardExp = GETMYCARD_INFO(slotIndex)
+                                if cardID == 0 then
+                                    return
+                                end
+
+                                local prop = geItemTable.GetProp(cardID)
+                                if prop ~= nil then
+                                    cardLv = prop:GetLevel(cardExp)
+                                end
+
+                                -- 카드 슬롯 제거하기 위함
+                                frame:SetUserValue("REMOVE_CARD_SLOTINDEX", slotIndex)
+                                EQUIP_CARDSLOT_BTN_REMOVE_WITHOUT_EFFECT(frame, nil)
                             end
-                            
-                            local cardID, cardLv, cardExp = GETMYCARD_INFO(slotIndex);
-                            if cardID == 0 then
-                                return;
-                            end
-                            
-                            local prop = geItemTable.GetProp(cardID);
-                            if prop ~= nil then
-                                cardLv = prop:GetLevel(cardExp);
-                            end
-                            
-                            -- 카드 슬롯 제거하기 위함
-                            frame:SetUserValue("REMOVE_CARD_SLOTINDEX", slotIndex);
-                            EQUIP_CARDSLOT_BTN_REMOVE_WITHOUT_EFFECT(frame, nil)
                         end
-                end
-            ))
+                    )
+                )
             end
             if g.settings.cardequip then
-                assert(pcall(function()
-                    function CARD_SLOT_EQUIP(slot, item, groupNameStr)
-                        local obj = GetIES(item:GetObject());
-                        if obj.GroupName == "Card" then
-                            local slotIndex = slot:GetSlotIndex();
-                            if groupNameStr == 'ATK' then
-                                slotIndex = slotIndex + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
-                            elseif groupNameStr == 'DEF' then
-                                slotIndex = slotIndex + (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
-                            elseif groupNameStr == 'UTIL' then
-                                slotIndex = slotIndex + (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
-                            elseif groupNameStr == 'STAT' then
-                                slotIndex = slotIndex + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
-                            elseif groupNameStr == 'LEG' then
-                                slotIndex = 4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE
-                            -- leg 카드는 slotindex = 12, 13번째 슬롯
+                assert(
+                    pcall(
+                        function()
+                            function CARD_SLOT_EQUIP(slot, item, groupNameStr)
+                                local obj = GetIES(item:GetObject())
+                                if obj.GroupName == "Card" then
+                                    local slotIndex = slot:GetSlotIndex()
+                                    if groupNameStr == "ATK" then
+                                        slotIndex = slotIndex + (0 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                                    elseif groupNameStr == "DEF" then
+                                        slotIndex = slotIndex + (1 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                                    elseif groupNameStr == "UTIL" then
+                                        slotIndex = slotIndex + (2 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                                    elseif groupNameStr == "STAT" then
+                                        slotIndex = slotIndex + (3 * MONSTER_CARD_SLOT_COUNT_PER_TYPE)
+                                    elseif groupNameStr == "LEG" then
+                                        slotIndex = 4 * MONSTER_CARD_SLOT_COUNT_PER_TYPE
+                                    -- leg 카드는 slotindex = 12, 13번째 슬롯
+                                    end
+
+                                    local cardInfo = equipcard.GetCardInfo(slotIndex + 1)
+                                    if cardInfo ~= nil then
+                                        ui.SysMsg(ClMsg("AlreadyEquippedThatCardSlot"))
+                                        return
+                                    end
+
+                                    if groupNameStr == "LEG" then
+                                        local pcEtc = GetMyEtcObject()
+                                        if pcEtc.IS_LEGEND_CARD_OPEN ~= 1 then
+                                            ui.SysMsg(ClMsg("LegendCard_Slot_NotOpen"))
+                                            return
+                                        end
+                                    end
+
+                                    if item.isLockState == true then
+                                        ui.SysMsg(ClMsg("MaterialItemIsLock"))
+                                        return
+                                    end
+
+                                    local itemGuid = item:GetIESID()
+                                    local invFrame = ui.GetFrame("inventory")
+                                    invFrame:SetUserValue("EQUIP_CARD_GUID", itemGuid)
+                                    invFrame:SetUserValue("EQUIP_CARD_SLOTINDEX", slotIndex)
+                                    local textmsg =
+                                        string.format("[ %s ]{nl}%s", obj.Name, ScpArgMsg("AreYouSureEquipCard"))
+                                    REQUEST_EQUIP_CARD_TX()
+                                    return 1
+                                end
+                                return 0
                             end
-                            
-                            local cardInfo = equipcard.GetCardInfo(slotIndex + 1);
-                            if cardInfo ~= nil then
-                                ui.SysMsg(ClMsg("AlreadyEquippedThatCardSlot"));
-                                return;
-                            end
-                            
-                            if groupNameStr == 'LEG' then
-                                local pcEtc = GetMyEtcObject();
-                                if pcEtc.IS_LEGEND_CARD_OPEN ~= 1 then
-                                    ui.SysMsg(ClMsg("LegendCard_Slot_NotOpen"))
+                        end
+                    )
+                )
+            end
+            if g.settings.bookreading then
+                assert(
+                    pcall(
+                        function()
+                            function BEFORE_APPLIED_NON_EQUIP_ITEM_OPEN(invItem)
+                                if invItem == nil then
+                                    return
+                                end
+
+                                local invFrame = ui.GetFrame("inventory")
+                                local itemobj = GetIES(invItem:GetObject())
+                                if itemobj == nil then
+                                    return
+                                end
+
+                                if SYSMENU_INVENTORY_WEIGHT_NOTICE == nil then
+                                    --older one
+                                    invFrame:SetUserValue("INVITEM_GUID", invItem:GetIESID())
+                                else
+                                    --newer
+                                    invFrame:SetUserValue("REQ_USE_ITEM_GUID", invItem:GetIESID())
+                                end
+
+                                if itemobj.Script == "SCR_SUMMON_MONSTER_FROM_CARDBOOK" then
+                                    REQUEST_SUMMON_BOSS_TX()
+                                    return
+                                elseif itemobj.Script == "SCR_QUEST_CLEAR_LEGEND_CARD_LIFT" then
+                                    local textmsg =
+                                        string.format(
+                                        "[ %s ]{nl}%s",
+                                        itemobj.Name,
+                                        ScpArgMsg("Use_Item_LegendCard_Slot_Open2")
+                                    )
+                                    ui.MsgBox_NonNested(textmsg, itemobj.Name, "REQUEST_SUMMON_BOSS_TX", "None")
                                     return
                                 end
                             end
-                            
-                            if item.isLockState == true then
-                                ui.SysMsg(ClMsg("MaterialItemIsLock"));
-                                return
-                            end
-                            
-                            local itemGuid = item:GetIESID();
-                            local invFrame = ui.GetFrame("inventory");
-                            invFrame:SetUserValue("EQUIP_CARD_GUID", itemGuid);
-                            invFrame:SetUserValue("EQUIP_CARD_SLOTINDEX", slotIndex);
-                            local textmsg = string.format("[ %s ]{nl}%s", obj.Name, ScpArgMsg("AreYouSureEquipCard"));
-                            REQUEST_EQUIP_CARD_TX()
-                            return 1;
-                        end;
-                        return 0;
-                    end
-                end
-            ))
-            end
-            if g.settings.bookreading then
-                assert(pcall(function()
-                    function BEFORE_APPLIED_NON_EQUIP_ITEM_OPEN(invItem)
-                        if invItem == nil then
-                            return;
                         end
-                        
-                        local invFrame = ui.GetFrame("inventory");
-                        local itemobj = GetIES(invItem:GetObject());
-                        if itemobj == nil then
-                            return;
-                        end
-                        
-                        if SYSMENU_INVENTORY_WEIGHT_NOTICE == nil then
-                            --older one
-                            invFrame:SetUserValue("INVITEM_GUID", invItem:GetIESID());
-                        else
-                            --newer
-                            invFrame:SetUserValue("REQ_USE_ITEM_GUID", invItem:GetIESID());
-                        end
-                        
-                        if itemobj.Script == 'SCR_SUMMON_MONSTER_FROM_CARDBOOK' then
-                            REQUEST_SUMMON_BOSS_TX()
-                            return;
-                        elseif itemobj.Script == 'SCR_QUEST_CLEAR_LEGEND_CARD_LIFT' then
-                            local textmsg = string.format("[ %s ]{nl}%s", itemobj.Name, ScpArgMsg("Use_Item_LegendCard_Slot_Open2"));
-                            ui.MsgBox_NonNested(textmsg, itemobj.Name, "REQUEST_SUMMON_BOSS_TX", "None");
-                            return;
-                        end
-                    end
-                end))
+                    )
+                )
             end
             if g.settings.timelimited then
-                assert(pcall(function()
-                        -- RWFTLI
-                        local json = require "json_imc"
-                        
-                        local max_slot_per_tab = account_warehouse.get_max_slot_per_tab()
-                        local current_tab_index = 0
-                        local custom_title_name = {}
-                        local new_add_item = {}
-                        local new_stack_add_item = {}
-                        local ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD = ON_ACCOUNT_WAREHOUSE_ITEM_LIST
-                        
-                        function EBI_try_catch(what)
-                            local status, result = pcall(what.try)
-                            if not status then
-                                what.catch(result)
+                assert(
+                    pcall(
+                        function()
+                            -- RWFTLI
+                            local json = require "json_imc"
+
+                            local max_slot_per_tab = account_warehouse.get_max_slot_per_tab()
+                            local current_tab_index = 0
+                            local custom_title_name = {}
+                            local new_add_item = {}
+                            local new_stack_add_item = {}
+                            local ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD = ON_ACCOUNT_WAREHOUSE_ITEM_LIST
+
+                            function EBI_try_catch(what)
+                                local status, result = pcall(what.try)
+                                if not status then
+                                    what.catch(result)
+                                end
+                                return result
                             end
-                            return result
-                        end
-                        local function get_valid_index()
-                            local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
-                            local guidList = itemList:GetGuidList();
-                            local sortedGuidList = itemList:GetSortedGuidList();
-                            local sortedCnt = sortedGuidList:Count();
-                            
-                            local start_index = (current_tab_index * max_slot_per_tab)
-                            local last_index = (start_index + max_slot_per_tab) - 1
-                            
-                            local __set = {}
-                            for i = 0, sortedCnt - 1 do
-                                local guid = sortedGuidList:Get(i)
-                                local invItem = itemList:GetItemByGuid(guid)
-                                local obj = GetIES(invItem:GetObject());
-                                if obj.ClassName ~= MONEY_NAME then
-                                    if start_index <= invItem.invIndex and invItem.invIndex <= last_index and __set[invItem.invIndex] == nil then
-                                        __set[invItem.invIndex] = 1
+                            local function get_valid_index()
+                                local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE)
+                                local guidList = itemList:GetGuidList()
+                                local sortedGuidList = itemList:GetSortedGuidList()
+                                local sortedCnt = sortedGuidList:Count()
+
+                                local start_index = (current_tab_index * max_slot_per_tab)
+                                local last_index = (start_index + max_slot_per_tab) - 1
+
+                                local __set = {}
+                                for i = 0, sortedCnt - 1 do
+                                    local guid = sortedGuidList:Get(i)
+                                    local invItem = itemList:GetItemByGuid(guid)
+                                    local obj = GetIES(invItem:GetObject())
+                                    if obj.ClassName ~= MONEY_NAME then
+                                        if
+                                            start_index <= invItem.invIndex and invItem.invIndex <= last_index and
+                                                __set[invItem.invIndex] == nil
+                                         then
+                                            __set[invItem.invIndex] = 1
+                                        end
                                     end
                                 end
+
+                                local index = start_index
+                                for k, v in pairs(__set) do
+                                    if __set[index] ~= 1 then
+                                        break
+                                    else
+                                        index = index + 1
+                                    end
+                                end
+
+                                return index
                             end
-                            
-                            local index = start_index
-                            for k, v in pairs(__set) do
-                                if __set[index] ~= 1 then
-                                    break
+
+                            local function get_tab_index(item_inv_index)
+                                if item_inv_index < 0 then
+                                    item_inv_index = 0
+                                end
+                                local index = math.floor(item_inv_index / max_slot_per_tab)
+                                return index
+                            end
+
+                            local function is_new_item(id)
+                                for k, v in pairs(new_add_item) do
+                                    if v == id then
+                                        return true
+                                    end
+                                end
+                                return false
+                            end
+
+                            local function is_stack_new_item(class_id)
+                                for k, v in pairs(new_stack_add_item) do
+                                    if v == class_id then
+                                        return true
+                                    end
+                                end
+                                return false
+                            end
+                            function ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame, msg, argStr, argNum, tab_index)
+                                ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD(frame, msg, argStr, argNum, tab_index)
+                                if tab_index == nil then
+                                    tab_index = current_tab_index
+                                end
+
+                                current_tab_index = tab_index
+                            end
+                            local function _CHECK_ACCOUNT_WAREHOUSE_SLOT_COUNT_TO_PUT(insertItem)
+                                local index = get_valid_index()
+                                local account = session.barrack.GetMyAccount()
+                                local slotCount = account:GetAccountWarehouseSlotCount()
+                                local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE)
+                                local itemCnt = 0
+                                local guidList = itemList:GetGuidList()
+                                local cnt = guidList:Count()
+                                for i = 0, cnt - 1 do
+                                    local guid = guidList:Get(i)
+                                    local invItem = itemList:GetItemByGuid(guid)
+                                    local obj = GetIES(invItem:GetObject())
+                                    if obj.ClassName ~= MONEY_NAME and invItem.invIndex < max_slot_per_tab then
+                                        itemCnt = itemCnt + 1
+                                    end
+                                end
+
+                                if slotCount <= itemCnt and index < max_slot_per_tab then
+                                    ui.SysMsg(ClMsg("CannotPutBecauseMasSlot"))
+                                    return false
+                                end
+
+                                if slotCount <= index and index < max_slot_per_tab then
+                                    ui.SysMsg(ClMsg("CannotPutBecauseMasSlot"))
+                                    return false
+                                end
+                                return true
+                            end
+
+                            function PUT_ACCOUNT_ITEM_TO_WAREHOUSE_BY_INVITEM(frame, invItem, slot, fromFrame)
+                                local obj = GetIES(invItem:GetObject())
+                                if _CHECK_ACCOUNT_WAREHOUSE_SLOT_COUNT_TO_PUT(obj) == false then
+                                    return
+                                end
+
+                                if CHECK_EMPTYSLOT(frame, obj) == 1 then
+                                    return
+                                end
+
+                                if true == invItem.isLockState then
+                                    ui.SysMsg(ClMsg("MaterialItemIsLock"))
+                                    return
+                                end
+
+                                local itemCls = GetClassByType("Item", invItem.type)
+                                if itemCls.ItemType == "Quest" then
+                                    ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"))
+                                    return
+                                end
+
+                                local enableTeamTrade = TryGetProp(itemCls, "TeamTrade")
+                                if enableTeamTrade ~= nil and enableTeamTrade == "NO" then
+                                    ui.SysMsg(ClMsg("ItemIsNotTradable"))
+                                    return
+                                end
+
+                                if fromFrame:GetName() == "inventory" then
+                                    local maxCnt = invItem.count
+                                    if TryGetProp(obj, "BelongingCount") ~= nil then
+                                        maxCnt = invItem.count - obj.BelongingCount
+                                        if maxCnt <= 0 then
+                                            maxCnt = 0
+                                        end
+                                    end
+
+                                    if invItem.count > 1 then
+                                        INPUT_NUMBER_BOX(
+                                            frame,
+                                            ScpArgMsg("InputCount"),
+                                            "EXEC_PUT_ITEM_TO_ACCOUNT_WAREHOUSE",
+                                            maxCnt,
+                                            1,
+                                            maxCnt,
+                                            nil,
+                                            tostring(invItem:GetIESID())
+                                        )
+                                    else
+                                        --if geItemTable.IsStack(obj.ClassID) == 1 then
+                                        --    new_stack_add_item[#new_stack_add_item + 1] = obj.ClassID
+                                        --end
+                                        if maxCnt <= 0 then
+                                            ui.SysMsg(ClMsg("ItemIsNotTradable"))
+                                            return
+                                        end
+
+                                        local slotset = GET_CHILD_RECURSIVELY(frame, "slotset")
+                                        local goal_index = get_valid_index()
+                                        if invItem.hasLifeTime == true then
+                                            local yesscp =
+                                                string.format(
+                                                'item.PutItemToWarehouse(%d, "%s", "%s", %d, %d)',
+                                                IT_ACCOUNT_WAREHOUSE,
+                                                invItem:GetIESID(),
+                                                tostring(invItem.count),
+                                                frame:GetUserIValue("HANDLE"),
+                                                goal_index
+                                            )
+                                            --ui.MsgBox(ScpArgMsg('PutLifeTimeItemInWareHouse{NAME}', 'NAME', itemCls.Name), yesscp, 'None');
+                                            ReserveScript(yesscp, 0.00)
+                                            return
+                                        end
+
+                                        -- 여기서 아이템 입고 요청
+                                        item.PutItemToWarehouse(
+                                            IT_ACCOUNT_WAREHOUSE,
+                                            invItem:GetIESID(),
+                                            tostring(invItem.count),
+                                            frame:GetUserIValue("HANDLE"),
+                                            goal_index
+                                        )
+                                        new_add_item[#new_add_item + 1] = invItem:GetIESID()
+                                    end
                                 else
-                                    index = index + 1
-                                end
-                            end
-                            
-                            return index
-                        end
-                        
-                        
-                        local function get_tab_index(item_inv_index)
-                            if item_inv_index < 0 then
-                                item_inv_index = 0
-                            end
-                            local index = math.floor(item_inv_index / max_slot_per_tab)
-                            return index
-                        end
-                        
-                        local function is_new_item(id)
-                            for k, v in pairs(new_add_item) do
-                                if v == id then
-                                    return true
-                                end
-                            end
-                            return false
-                        end
-                        
-                        local function is_stack_new_item(class_id)
-                            for k, v in pairs(new_stack_add_item) do
-                                if v == class_id then
-                                    return true
-                                end
-                            end
-                            return false
-                        end
-                        function ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame, msg, argStr, argNum, tab_index)
-                            ON_ACCOUNT_WAREHOUSE_ITEM_LIST_OLD(frame, msg, argStr, argNum, tab_index)
-                            if tab_index == nil then
-                                tab_index = current_tab_index
-                            end
-                            
-                            current_tab_index = tab_index
-                        end
-                        local function _CHECK_ACCOUNT_WAREHOUSE_SLOT_COUNT_TO_PUT(insertItem)
-                            local index = get_valid_index()
-                            local account = session.barrack.GetMyAccount();
-                            local slotCount = account:GetAccountWarehouseSlotCount();
-                            local itemList = session.GetEtcItemList(IT_ACCOUNT_WAREHOUSE);
-                            local itemCnt = 0;
-                            local guidList = itemList:GetGuidList();
-                            local cnt = guidList:Count();
-                            for i = 0, cnt - 1 do
-                                local guid = guidList:Get(i);
-                                local invItem = itemList:GetItemByGuid(guid);
-                                local obj = GetIES(invItem:GetObject());
-                                if obj.ClassName ~= MONEY_NAME and invItem.invIndex < max_slot_per_tab then
-                                    itemCnt = itemCnt + 1;
-                                end
-                            end
-                            
-                            if slotCount <= itemCnt and index < max_slot_per_tab then
-                                ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
-                                return false;
-                            end
-                            
-                            if slotCount <= index and index < max_slot_per_tab then
-                                ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
-                                return false;
-                            end
-                            return true;
-                        end
-                        
-                        
-                        function PUT_ACCOUNT_ITEM_TO_WAREHOUSE_BY_INVITEM(frame, invItem, slot, fromFrame)
-                            local obj = GetIES(invItem:GetObject())
-                            if _CHECK_ACCOUNT_WAREHOUSE_SLOT_COUNT_TO_PUT(obj) == false then
-                                return;
-                            end
-                            
-                            if CHECK_EMPTYSLOT(frame, obj) == 1 then
-                                return
-                            end
-                            
-                            if true == invItem.isLockState then
-                                ui.SysMsg(ClMsg("MaterialItemIsLock"));
-                                return;
-                            end
-                            
-                            local itemCls = GetClassByType("Item", invItem.type);
-                            if itemCls.ItemType == 'Quest' then
-                                ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"));
-                                return;
-                            end
-                            
-                            local enableTeamTrade = TryGetProp(itemCls, "TeamTrade");
-                            if enableTeamTrade ~= nil and enableTeamTrade == "NO" then
-                                ui.SysMsg(ClMsg("ItemIsNotTradable"));
-                                return;
-                            end
-                            
-                            if fromFrame:GetName() == "inventory" then
-                                local maxCnt = invItem.count;
-                                if TryGetProp(obj, "BelongingCount") ~= nil then
-                                    maxCnt = invItem.count - obj.BelongingCount;
-                                    if maxCnt <= 0 then
-                                        maxCnt = 0;
+                                    if slot ~= nil then
+                                        AUTO_CAST(slot)
+                                        local iconSlot = liftIcon:GetParent()
+                                        AUTO_CAST(iconSlot)
+                                        item.SwapSlotIndex(
+                                            IT_ACCOUNT_WAREHOUSE,
+                                            slot:GetSlotIndex(),
+                                            iconSlot:GetSlotIndex()
+                                        )
+                                        ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame)
                                     end
                                 end
-                                
-                                if invItem.count > 1 then
-                                    INPUT_NUMBER_BOX(frame, ScpArgMsg("InputCount"), "EXEC_PUT_ITEM_TO_ACCOUNT_WAREHOUSE", maxCnt, 1, maxCnt, nil, tostring(invItem:GetIESID()));
-                                else
-                                    if maxCnt <= 0 then
-                                        ui.SysMsg(ClMsg("ItemIsNotTradable"));
-                                        return;
-                                    end
-                                    
-                                    local slotset = GET_CHILD_RECURSIVELY(frame, 'slotset');
-                                    local goal_index = get_valid_index()
-                                    if invItem.hasLifeTime == true then
-                                        local yesscp = string.format('item.PutItemToWarehouse(%d, "%s", "%s", %d, %d)', IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), tostring(invItem.count), frame:GetUserIValue('HANDLE'), goal_index);
-                                        --ui.MsgBox(ScpArgMsg('PutLifeTimeItemInWareHouse{NAME}', 'NAME', itemCls.Name), yesscp, 'None');
-                                        ReserveScript(yesscp, 0.00)
-                                        return;
-                                    end
-                                    
-                                    -- 여기서 아이템 입고 요청
-                                    item.PutItemToWarehouse(IT_ACCOUNT_WAREHOUSE, invItem:GetIESID(), tostring(invItem.count), frame:GetUserIValue("HANDLE"), goal_index)
-                                    new_add_item[#new_add_item + 1] = invItem:GetIESID()
-                                
-                                --if geItemTable.IsStack(obj.ClassID) == 1 then
-                                --    new_stack_add_item[#new_stack_add_item + 1] = obj.ClassID
-                                --end
+                            end
+
+                            function WAREHOUSE_INV_RBTN(itemObj, slot)
+                                local frame = ui.GetFrame("warehouse")
+                                local icon = slot:GetIcon()
+                                local iconInfo = icon:GetInfo()
+                                local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID())
+
+                                local obj = GetIES(invItem:GetObject())
+                                if CHECK_EMPTYSLOT(frame, obj) == 1 then
+                                    return
                                 end
-                            else
-                                if slot ~= nil then
-                                    AUTO_CAST(slot);
-                                    local iconSlot = liftIcon:GetParent();
-                                    AUTO_CAST(iconSlot);
-                                    item.SwapSlotIndex(IT_ACCOUNT_WAREHOUSE, slot:GetSlotIndex(), iconSlot:GetSlotIndex());
-                                    ON_ACCOUNT_WAREHOUSE_ITEM_LIST(frame);
+
+                                if true == invItem.isLockState then
+                                    ui.SysMsg(ClMsg("MaterialItemIsLock"))
+                                    return
                                 end
-                            end
-                        end
-                        
-                        function WAREHOUSE_INV_RBTN(itemObj, slot)
-                            
-                            local frame = ui.GetFrame("warehouse");
-                            local icon = slot:GetIcon();
-                            local iconInfo = icon:GetInfo();
-                            local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
-                            
-                            local obj = GetIES(invItem:GetObject());
-                            if CHECK_EMPTYSLOT(frame, obj) == 1 then
-                                return
-                            end
-                            
-                            if true == invItem.isLockState then
-                                ui.SysMsg(ClMsg("MaterialItemIsLock"));
-                                return;
-                            end
-                            
-                            local itemCls = GetClassByType("Item", invItem.type);
-                            if itemCls.ItemType == 'Quest' then
-                                ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"));
-                                return;
-                            end
-                            
-                            if tonumber(itemCls.LifeTime) > 0 and obj.ItemLifeTimeOver > 0 then
-                                ui.MsgBox(ScpArgMsg("WrongDropItem"));
-                                return;
-                            end
-                            
-                            if itemCls.MarketCategory == 'Housing_Furniture' or
-                                itemCls.MarketCategory == 'Housing_Laboratory' or
-                                itemCls.MarketCategory == 'Housing_Contract' then
-                                ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"));
-                                return;
-                            end
-                            
-                            AUTO_CAST(slot);
-                            local fromFrame = slot:GetTopParentFrame();
-                            
-                            if fromFrame:GetName() == "inventory" then
-                                if invItem.count > 1 then
-                                    INPUT_NUMBER_BOX(frame, ScpArgMsg("InputCount"), "EXEC_PUT_ITEM_TO_WAREHOUSE", invItem.count, 1, invItem.count, nil, tostring(invItem:GetIESID()));
-                                else
-                                    if invItem.hasLifeTime == true then
-                                        local yesscp = string.format('item.PutItemToWarehouse(%d, "%s", %d, %d)', IT_WAREHOUSE, invItem:GetIESID(), invItem.count, frame:GetUserIValue("HANDLE"));
-                                        --ui.MsgBox(ScpArgMsg('PutLifeTimeItemInWareHouse{NAME}', 'NAME', itemCls.Name), yesscp, 'None');
-                                        ReserveScript(yesscp, 0.00)
-                                        return;
+
+                                local itemCls = GetClassByType("Item", invItem.type)
+                                if itemCls.ItemType == "Quest" then
+                                    ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"))
+                                    return
+                                end
+
+                                if tonumber(itemCls.LifeTime) > 0 and obj.ItemLifeTimeOver > 0 then
+                                    ui.MsgBox(ScpArgMsg("WrongDropItem"))
+                                    return
+                                end
+
+                                if
+                                    itemCls.MarketCategory == "Housing_Furniture" or
+                                        itemCls.MarketCategory == "Housing_Laboratory" or
+                                        itemCls.MarketCategory == "Housing_Contract"
+                                 then
+                                    ui.MsgBox(ScpArgMsg("IT_ISNT_REINFORCEABLE_ITEM"))
+                                    return
+                                end
+
+                                AUTO_CAST(slot)
+                                local fromFrame = slot:GetTopParentFrame()
+
+                                if fromFrame:GetName() == "inventory" then
+                                    if invItem.count > 1 then
+                                        INPUT_NUMBER_BOX(
+                                            frame,
+                                            ScpArgMsg("InputCount"),
+                                            "EXEC_PUT_ITEM_TO_WAREHOUSE",
+                                            invItem.count,
+                                            1,
+                                            invItem.count,
+                                            nil,
+                                            tostring(invItem:GetIESID())
+                                        )
+                                    else
+                                        if invItem.hasLifeTime == true then
+                                            local yesscp =
+                                                string.format(
+                                                'item.PutItemToWarehouse(%d, "%s", %d, %d)',
+                                                IT_WAREHOUSE,
+                                                invItem:GetIESID(),
+                                                invItem.count,
+                                                frame:GetUserIValue("HANDLE")
+                                            )
+                                            --ui.MsgBox(ScpArgMsg('PutLifeTimeItemInWareHouse{NAME}', 'NAME', itemCls.Name), yesscp, 'None');
+                                            ReserveScript(yesscp, 0.00)
+                                            return
+                                        end
+
+                                        item.PutItemToWarehouse(
+                                            IT_WAREHOUSE,
+                                            invItem:GetIESID(),
+                                            tostring(invItem.count),
+                                            frame:GetUserIValue("HANDLE")
+                                        )
                                     end
-                                    
-                                    item.PutItemToWarehouse(IT_WAREHOUSE, invItem:GetIESID(), tostring(invItem.count), frame:GetUserIValue("HANDLE"));
                                 end
                             end
                         end
-                
-                end))
+                    )
+                )
             end
             if g.settings.goldroupedialog then
-                assert(pcall(function()
-                    function ERD_ITEMREVERTRANDOM_SEND_ANSWER(parent, ctrl, argStr, argNum)
-                        ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD(parent, ctrl, argStr, argNum)
-                        local frame = ui.GetFrame("itemrevertrandom")
-                        if frame == nil then 
-                            return
-                        end
-                        local do_revertrandom = GET_CHILD_RECURSIVELY(frame, "do_revertrandom")
-                        do_revertrandom:ShowWindow(1)
-                        local send_ok = GET_CHILD_RECURSIVELY(frame, "send_ok")
-                        send_ok:ShowWindow(0)
-                        local slot = GET_CHILD_RECURSIVELY(frame, "slot");
-                        local invItem = GET_SLOT_ITEM(slot);
+                assert(
+                    pcall(
+                        function()
+                            function ERD_ITEMREVERTRANDOM_SEND_ANSWER(parent, ctrl, argStr, argNum)
+                                ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD(parent, ctrl, argStr, argNum)
+                                local frame = ui.GetFrame("itemrevertrandom")
+                                if frame == nil then
+                                    return
+                                end
+                                local do_revertrandom = GET_CHILD_RECURSIVELY(frame, "do_revertrandom")
+                                do_revertrandom:ShowWindow(1)
+                                local send_ok = GET_CHILD_RECURSIVELY(frame, "send_ok")
+                                send_ok:ShowWindow(0)
+                                local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                                local invItem = GET_SLOT_ITEM(slot)
 
-                        local icon = slot:GetIcon()
-                        if icon == nil then
-                            return ""
-                        end
-                    
-                        local iconInfo = icon:GetInfo();
-                        if iconInfo == nil then
-                            return ""
-                        end
-                    end
-                    if ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD==nil or ITEMREVERTRANDOM_SEND_ANSWER~= ERD_ITEMREVERTRANDOM_SEND_ANSWER then
-                        if ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD==nil then
-                            ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD=ITEMREVERTRANDOM_SEND_ANSWER
-                        end
-                        ITEMREVERTRANDOM_SEND_ANSWER=ERD_ITEMREVERTRANDOM_SEND_ANSWER
-                    end
-                    
-                    
-                    function ITEM_OPTION_SELECT_BEFORE(frame)
-                        local frame = ui.GetFrame("itemrevertrandom");
-                        local slot = GET_CHILD_RECURSIVELY(frame, "slot")
-                        local icon = slot:GetIcon()
-                        if icon == nil then
-                            return ""
-                        end
-                    
-                        local iconInfo = icon:GetInfo();
-                        if iconInfo == nil then
-                            return ""
-                        end
-                    
-                        local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
-                        if invItem == nil then
-                            return ""
-                        end
-                    
-                        local obj = GetIES(invItem:GetObject());
-                        if obj == nil then
-                            return ""
-                        end
-                    
-                        ITEMREVERTRANDOM_SEND_ANSWER(nil,nil,"No")
-                    end
-                    function ITEM_OPTION_SELECT_AFTER(frame)
+                                local icon = slot:GetIcon()
+                                if icon == nil then
+                                    return ""
+                                end
 
-                        local frame = ui.GetFrame("itemrevertrandom");
-                        local slot = GET_CHILD_RECURSIVELY(frame, "slot")
-                        local icon = slot:GetIcon()
-                        if icon == nil then
-                            return ""
-                        end
-                    
-                        local iconInfo = icon:GetInfo();
-                        if iconInfo == nil then
-                            return ""
-                        end
-                    
-                        local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
-                        if invItem == nil then
-                            return ""
-                        end
-                    
-                        local obj = GetIES(invItem:GetObject());
-                        if obj == nil then
-                            return ""
-                        end
-                        ITEMREVERTRANDOM_SEND_ANSWER(nil,nil,"Yes")
-                    end
-
-                    function ITEM_REVERT_RANDOM_EXEC(frame)
-                        frame = frame:GetTopParentFrame();
-                        
-                        local slot = GET_CHILD_RECURSIVELY(frame, "slot");
-                        local invItem = GET_SLOT_ITEM(slot);
-                        if invItem == nil then		
-                            return;
-                        end
-                        local icon = slot:GetIcon()
-                        if icon == nil then
-                            return ""
-                        end
-                        local iconInfo = icon:GetInfo();
-                        if iconInfo == nil then
-                            return ""
-                        end
-                        ITEM_REVERT_RANDOM_REG_TARGETITEM(frame, iconInfo:GetIESID());
-                        local text_havematerial = GET_CHILD_RECURSIVELY(frame, "text_havematerial")
-                        local materialCnt = text_havematerial:GetTextByKey("count")
-                        if materialCnt == '0' then
-                            ui.SysMsg(ClMsg("LackOfRevertRandomMaterial"));
-                            return
-                        end
-                        
-                        if invItem.isLockState == true then
-                            ui.SysMsg(ClMsg("MaterialItemIsLock"));
-                            return;
-                        end
-
-                        local clmsg = ScpArgMsg("DoRevertRandomReset")
-                        _ITEM_REVERT_RANDOM_EXEC()
-                    end
-                  
-                end
-                
-                ))
-            end
-            if g.settings.dimension then
-                assert(pcall(function()
-                        
-                        function BEFORE_APPLIED_YESSCP_OPEN(invItem)
-                            if invItem == nil then
-                                return;
-                            end
-                            
-                            local invFrame = ui.GetFrame("inventory");
-                            local itemobj = GetIES(invItem:GetObject());
-                            if itemobj == nil then
-                                return;
-                            end
-                            invFrame:SetUserValue("REQ_USE_ITEM_GUID", invItem:GetIESID());
-                            if invItem.type == 494233 then
-                                REQUEST_SUMMON_BOSS_TX()
-                            else
-                                local strLang = TryGetProp(itemobj, 'StringArg')
-                                if strLang ~= 'None' then
-                                    local textmsg = string.format("[ %s ]{nl}%s", itemobj.Name, ScpArgMsg(strLang));
-                                    ui.MsgBox_NonNested(textmsg, itemobj.Name, 'REQUEST_SUMMON_BOSS_TX', "None");
+                                local iconInfo = icon:GetInfo()
+                                if iconInfo == nil then
+                                    return ""
                                 end
                             end
-                            
-                            return;
+                            if
+                                ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD == nil or
+                                    ITEMREVERTRANDOM_SEND_ANSWER ~= ERD_ITEMREVERTRANDOM_SEND_ANSWER
+                             then
+                                if ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD == nil then
+                                    ITEMREVERTRANDOM_SEND_ANSWER_ERDOLD = ITEMREVERTRANDOM_SEND_ANSWER
+                                end
+                                ITEMREVERTRANDOM_SEND_ANSWER = ERD_ITEMREVERTRANDOM_SEND_ANSWER
+                            end
+
+                            function ITEM_OPTION_SELECT_BEFORE(frame)
+                                local frame = ui.GetFrame("itemrevertrandom")
+                                local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                                local icon = slot:GetIcon()
+                                if icon == nil then
+                                    return ""
+                                end
+
+                                local iconInfo = icon:GetInfo()
+                                if iconInfo == nil then
+                                    return ""
+                                end
+
+                                local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID())
+                                if invItem == nil then
+                                    return ""
+                                end
+
+                                local obj = GetIES(invItem:GetObject())
+                                if obj == nil then
+                                    return ""
+                                end
+
+                                ITEMREVERTRANDOM_SEND_ANSWER(nil, nil, "No")
+                            end
+                            function ITEM_OPTION_SELECT_AFTER(frame)
+                                local frame = ui.GetFrame("itemrevertrandom")
+                                local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                                local icon = slot:GetIcon()
+                                if icon == nil then
+                                    return ""
+                                end
+
+                                local iconInfo = icon:GetInfo()
+                                if iconInfo == nil then
+                                    return ""
+                                end
+
+                                local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID())
+                                if invItem == nil then
+                                    return ""
+                                end
+
+                                local obj = GetIES(invItem:GetObject())
+                                if obj == nil then
+                                    return ""
+                                end
+                                ITEMREVERTRANDOM_SEND_ANSWER(nil, nil, "Yes")
+                            end
+
+                            function ITEM_REVERT_RANDOM_EXEC(frame)
+                                frame = frame:GetTopParentFrame()
+
+                                local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                                local invItem = GET_SLOT_ITEM(slot)
+                                if invItem == nil then
+                                    return
+                                end
+                                local icon = slot:GetIcon()
+                                if icon == nil then
+                                    return ""
+                                end
+                                local iconInfo = icon:GetInfo()
+                                if iconInfo == nil then
+                                    return ""
+                                end
+                                ITEM_REVERT_RANDOM_REG_TARGETITEM(frame, iconInfo:GetIESID())
+                                local text_havematerial = GET_CHILD_RECURSIVELY(frame, "text_havematerial")
+                                local materialCnt = text_havematerial:GetTextByKey("count")
+                                if materialCnt == "0" then
+                                    ui.SysMsg(ClMsg("LackOfRevertRandomMaterial"))
+                                    return
+                                end
+
+                                if invItem.isLockState == true then
+                                    ui.SysMsg(ClMsg("MaterialItemIsLock"))
+                                    return
+                                end
+
+                                local clmsg = ScpArgMsg("DoRevertRandomReset")
+                                _ITEM_REVERT_RANDOM_EXEC()
+                            end
                         end
-                
-                end))
-            
+                    )
+                )
+            end
+            if g.settings.normalroupedialog then
+                assert(
+                    pcall(
+                        function()
+                            function ITEM_UNREVERT_RANDOM_EXEC(frame)
+                                frame = frame:GetTopParentFrame()
+                                local slot = GET_CHILD_RECURSIVELY(frame, "slot")
+                                local invItem = GET_SLOT_ITEM(slot)
+
+                                if invItem == nil then
+                                    return
+                                end
+
+                                local text_havematerial = GET_CHILD_RECURSIVELY(frame, "text_havematerial")
+                                local materialCnt = text_havematerial:GetTextByKey("count")
+                                if materialCnt == "0" then
+                                    ui.SysMsg(ClMsg("LackOfUnrevertRandomMaterial"))
+                                    return
+                                end
+
+                                if invItem.isLockState == true then
+                                    ui.SysMsg(ClMsg("MaterialItemIsLock"))
+                                    return
+                                end
+
+                                local clmsg = ScpArgMsg("DoUnrevertRandomReset")
+                                _ITEM_UNREVERT_RANDOM_EXEC()
+                            end
+                            function _SUCCESS_UNREVERT_RANDOM_OPTION()
+                                ui.SetHoldUI(false);
+                                local frame = ui.GetFrame("itemunrevertrandom");
+                                if frame:IsVisible() == 0 then
+                                    return;
+                                end
+                            
+                                local slot = GET_CHILD_RECURSIVELY(frame, "slot");
+                                local invItem = GET_SLOT_ITEM(slot);
+                                if invItem == nil then
+                                    return;
+                                end
+                            
+                                local RESET_SUCCESS_EFFECT_NAME = frame:GetUserConfig('RESET_SUCCESS_EFFECT');
+                                local EFFECT_SCALE = tonumber(frame:GetUserConfig('EFFECT_SCALE'));
+                            
+                                local pic_bg = GET_CHILD_RECURSIVELY(frame, 'pic_bg');
+                                if pic_bg == nil then
+                                    return;
+                                end
+                                pic_bg:StopUIEffect('RESET_SUCCESS_EFFECT', true, 0.5);
+                            
+                                local sendOK = GET_CHILD_RECURSIVELY(frame, "send_ok")
+                                sendOK:ShowWindow(0)
+                                local do_unrevertrandom = GET_CHILD_RECURSIVELY(frame, "do_unrevertrandom")
+	                            do_unrevertrandom:ShowWindow(1)
+                                local invItemGUID = invItem:GetIESID()
+                                local resetInvItem = session.GetInvItemByGuid(invItemGUID)
+                                if resetInvItem == nil then
+                                    resetInvItem = session.GetEquipItemByGuid(invItemGUID)
+                                end
+                                local obj = GetIES(resetInvItem:GetObject());
+                            
+                                local refreshScp = obj.RefreshScp
+                                if refreshScp ~= "None" then
+                                    refreshScp = _G[refreshScp];
+                                    refreshScp(obj);
+                                end
+                                
+                                local gBox = GET_CHILD_RECURSIVELY(frame, "bodyGbox2_1");
+                                local ypos = 0;
+                                for i = 1 , MAX_RANDOM_OPTION_COUNT do
+                                    local propGroupName = "RandomOptionGroup_"..i;
+                                    local propName = "RandomOption_"..i;
+                                    local propValue = "RandomOptionValue_"..i;
+                                    local clientMessage = 'None'
+                                    
+                                    if obj[propGroupName] == 'ATK' then
+                                        clientMessage = 'ItemRandomOptionGroupATK'
+                                    elseif obj[propGroupName] == 'DEF' then
+                                        clientMessage = 'ItemRandomOptionGroupDEF'
+                                    elseif obj[propGroupName] == 'UTIL_WEAPON' then
+                                        clientMessage = 'ItemRandomOptionGroupUTIL'
+                                    elseif obj[propGroupName] == 'UTIL_ARMOR' then
+                                        clientMessage = 'ItemRandomOptionGroupUTIL'			
+                                    elseif obj[propGroupName] == 'UTIL_SHILED' then
+                                        clientMessage = 'ItemRandomOptionGroupUTIL'
+                                    elseif obj[propGroupName] == 'STAT' then
+                                        clientMessage = 'ItemRandomOptionGroupSTAT'
+                                    end
+                            
+                                    if obj[propValue] ~= 0 and obj[propName] ~= "None" then
+                                        local opName = string.format("%s %s", ClMsg(clientMessage), ScpArgMsg(obj[propName]));
+                                        local strInfo = ABILITY_DESC_NO_PLUS(opName, obj[propValue], 0);
+                                        local itemClsCtrl = gBox:CreateOrGetControlSet('eachproperty_in_itemrandomreset', 'PROPERTY_CSET_'..i,ui.TOP,ui.LEFT, 0, 0, 0, 0);
+                                        itemClsCtrl = AUTO_CAST(itemClsCtrl)
+                                        local pos_y = itemClsCtrl:GetUserConfig("POS_Y")
+                                        itemClsCtrl:Move(0, i * pos_y)
+                                        local propertyList = GET_CHILD_RECURSIVELY(itemClsCtrl, "property_name", "ui::CRichText");
+                                        propertyList:SetText(strInfo);
+                                        ypos = i * pos_y + propertyList:GetHeight() + 5;
+                                    end
+                                end
+                            
+                                local bodyGbox1 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox1');
+                                bodyGbox1:ShowWindow(0)
+                                local bodyGbox2 = GET_CHILD_RECURSIVELY(frame, 'bodyGbox2');
+                                bodyGbox2:ShowWindow(1)
+                            
+                                UPDATE_REMAIN_MYSTIC_GLASS_COUNT(frame)
+                            end
+                        end
+                    )
+                )
+            end
+            if g.settings.dimension then
+                assert(
+                    pcall(
+                        function()
+                            function BEFORE_APPLIED_YESSCP_OPEN(invItem)
+                                if invItem == nil then
+                                    return
+                                end
+
+                                local invFrame = ui.GetFrame("inventory")
+                                local itemobj = GetIES(invItem:GetObject())
+                                if itemobj == nil then
+                                    return
+                                end
+                                invFrame:SetUserValue("REQ_USE_ITEM_GUID", invItem:GetIESID())
+                                if invItem.type == 494233 then
+                                    REQUEST_SUMMON_BOSS_TX()
+                                else
+                                    local strLang = TryGetProp(itemobj, "StringArg")
+                                    if strLang ~= "None" then
+                                        local textmsg = string.format("[ %s ]{nl}%s", itemobj.Name, ScpArgMsg(strLang))
+                                        ui.MsgBox_NonNested(textmsg, itemobj.Name, "REQUEST_SUMMON_BOSS_TX", "None")
+                                    end
+                                end
+
+                                return
+                            end
+                        end
+                    )
+                )
             end
             if g.settings.idticket then
-                assert(pcall(function()
-                    function BEFORE_APPLIED_INDUNRESET_OPEN(invItem)
-                        local frame = ui.GetFrame("token");
-                        if invItem.isLockState then
-                            frame:ShowWindow(0)
-                            return;
+                assert(
+                    pcall(
+                        function()
+                            function BEFORE_APPLIED_INDUNRESET_OPEN(invItem)
+                                local frame = ui.GetFrame("token")
+                                if invItem.isLockState then
+                                    frame:ShowWindow(0)
+                                    return
+                                end
+
+                                local obj = GetIES(invItem:GetObject())
+
+                                if obj.ItemLifeTimeOver > 0 then
+                                    ui.SysMsg(ScpArgMsg("LessThanItemLifeTime"))
+                                    return
+                                end
+
+                                if 0 == frame:IsVisible() then
+                                    frame:ShowWindow(1)
+                                end
+
+                                local token_middle = GET_CHILD(frame, "token_middle", "ui::CPicture")
+                                token_middle:SetImage("indunFreeEnter_middle")
+
+                                local gBox = frame:GetChild("gBox")
+                                gBox:RemoveAllChild()
+
+                                local ctrlSet =
+                                    gBox:CreateControlSet(
+                                    "tokenDetail",
+                                    "CTRLSET_INDUNFREE",
+                                    ui.CENTER_HORZ,
+                                    ui.TOP,
+                                    0,
+                                    0,
+                                    0,
+                                    0
+                                )
+                                local prop = ctrlSet:GetChild("prop")
+
+                                if
+                                    obj.ClassName == "Premium_indunReset_1add" or
+                                        obj.ClassName == "Premium_indunReset_1add_14d" or
+                                        obj.ClassName == "indunReset_1add_14d_NoStack" or
+                                        obj.ClassName == "Event_1704_Premium_indunReset_1add" or
+                                        obj.ClassName == "indunReset_1add_14d_NoStack_Team"
+                                 then
+                                    prop:SetTextByKey("value", ClMsg("Indun1AddText"))
+                                else
+                                    prop:SetTextByKey("value", ClMsg("IndunRestText"))
+                                end
+
+                                local value = GET_CHILD_RECURSIVELY(ctrlSet, "value")
+                                value:ShowWindow(0)
+
+                                GBOX_AUTO_ALIGN(gBox, 0, 2, 0, true, false)
+                                local itemobj = GetIES(invItem:GetObject())
+                                local endTxt = frame:GetChild("endTime")
+                                endTxt:ShowWindow(0)
+
+                                local strTxt = frame:GetChild("richtext_1")
+                                strTxt:SetTextByKey("value", GetClassString("Item", itemobj.ClassName, "Name"))
+
+                                local bg2 = frame:GetChild("bg2")
+                                local indunStr = bg2:GetChild("indunStr")
+                                indunStr:SetTextByKey(
+                                    "value",
+                                    GetClassString("Item", itemobj.ClassName, "Name") .. ScpArgMsg("Premium_itemEun")
+                                )
+                                indunStr:SetTextByKey("value2", ScpArgMsg("Premium_character"))
+                                indunStr:ShowWindow(1)
+
+                                local endTime2 = bg2:GetChild("endTime2")
+                                endTime2:ShowWindow(0)
+
+                                local strTxt = bg2:GetChild("str")
+                                strTxt:SetTextByKey("value", GetClassString("Item", itemobj.ClassName, "Name"))
+
+                                local forToken = bg2:GetChild("forToken")
+                                forToken:ShowWindow(1)
+
+                                frame:SetUserValue("itemIES", invItem:GetIESID())
+                                frame:SetUserValue("ClassName", itemobj.ClassName)
+                                bg2:Resize(bg2:GetWidth(), 440)
+                                frame:Resize(frame:GetWidth(), 500)
+                                REQ_TOKEN_ITEM(frame)
+                            end
                         end
-                        
-                        local obj = GetIES(invItem:GetObject());
-                        
-                        if obj.ItemLifeTimeOver > 0 then
-                            ui.SysMsg(ScpArgMsg('LessThanItemLifeTime'));
-                            return;
-                        end
-                        
-                        if 0 == frame:IsVisible() then
-                            frame:ShowWindow(1)
-                        end
-                        
-                        local token_middle = GET_CHILD(frame, "token_middle", "ui::CPicture");
-                        token_middle:SetImage("indunFreeEnter_middle");
-                        
-                        local gBox = frame:GetChild("gBox");
-                        gBox:RemoveAllChild();
-                        
-                        local ctrlSet = gBox:CreateControlSet("tokenDetail", "CTRLSET_INDUNFREE", ui.CENTER_HORZ, ui.TOP, 0, 0, 0, 0);
-                        local prop = ctrlSet:GetChild("prop");
-                        
-                        if obj.ClassName == 'Premium_indunReset_1add' or obj.ClassName == 'Premium_indunReset_1add_14d' or obj.ClassName == 'indunReset_1add_14d_NoStack' or obj.ClassName == 'Event_1704_Premium_indunReset_1add' or obj.ClassName == 'indunReset_1add_14d_NoStack_Team' then
-                            prop:SetTextByKey("value", ClMsg('Indun1AddText'));
-                        else
-                            prop:SetTextByKey("value", ClMsg('IndunRestText'));
-                        end
-                        
-                        local value = GET_CHILD_RECURSIVELY(ctrlSet, "value");
-                        value:ShowWindow(0);
-                        
-                        
-                        GBOX_AUTO_ALIGN(gBox, 0, 2, 0, true, false);
-                        local itemobj = GetIES(invItem:GetObject());
-                        local endTxt = frame:GetChild("endTime");
-                        endTxt:ShowWindow(0);
-                        
-                        local strTxt = frame:GetChild("richtext_1");
-                        strTxt:SetTextByKey("value", GetClassString('Item', itemobj.ClassName, 'Name'));
-                        
-                        local bg2 = frame:GetChild("bg2");
-                        local indunStr = bg2:GetChild("indunStr");
-                        indunStr:SetTextByKey("value", GetClassString('Item', itemobj.ClassName, 'Name') .. ScpArgMsg("Premium_itemEun"));
-                        indunStr:SetTextByKey("value2", ScpArgMsg("Premium_character"));
-                        indunStr:ShowWindow(1);
-                        
-                        local endTime2 = bg2:GetChild("endTime2");
-                        endTime2:ShowWindow(0);
-                        
-                        local strTxt = bg2:GetChild("str");
-                        strTxt:SetTextByKey("value", GetClassString('Item', itemobj.ClassName, 'Name'));
-                        
-                        local forToken = bg2:GetChild("forToken");
-                        forToken:ShowWindow(1);
-                        
-                        frame:SetUserValue("itemIES", invItem:GetIESID());
-                        frame:SetUserValue("ClassName", itemobj.ClassName);
-                        bg2:Resize(bg2:GetWidth(), 440);
-                        frame:Resize(frame:GetWidth(), 500);
-                        REQ_TOKEN_ITEM(frame)
-                    end
-                end))
-            
+                    )
+                )
             end
         end,
         catch = function(error)

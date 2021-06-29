@@ -20,14 +20,14 @@ FORCE:
 
 clean: 
 	@echo clean
-	rm -r $(OBJDIR) | true
-	rm -r $(BINDIR) | true
+	rm -rf $(OBJDIR) | true
+	rm -rf $(BINDIR) | true
 $(BINDIR)/$(IPFNAME_WITHOUT_EMOJI):generateipf
 	$(generateipf)
 generateipf: 
 	@echo generateipf
-	rm -r $(OBJDIR) | true
-	rm -r $(BINDIR) | true
+	rm -rf $(OBJDIR) | true
+	rm -rf $(BINDIR) | true
 	mkdir $(OBJDIR) | true
 	mkdir $(BINDIR) | true
 	cp -r src/* obj/

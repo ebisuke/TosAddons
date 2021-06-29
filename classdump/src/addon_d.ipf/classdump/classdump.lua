@@ -1107,7 +1107,24 @@ local function ERROUT(msg)
 
 end
 
+if TryGetProp_OLD_CD == nil and TryGetProp_OLD_CD~=TryGetProp then
 
+    CHAT_SYSTEM("[CD]trygetprop REPLACED")
+    TryGetProp_OLD_CD=TryGetProp
+    TryGetProp=function (tbl,name,default)
+        if tbl==nil then
+            return default
+        end
+        if type(tbl)=='userdata' then
+            return TryGetProp_OLD_CD(tbl,name,default)
+        end
+        if tbl[name] == nil then
+            return default
+        end
+        return tbl[name]
+    end
+    
+end
 function CLASSDUMP_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
@@ -1119,8 +1136,6 @@ function CLASSDUMP_ON_INIT(addon, frame)
             addon:RegisterMsg('FPS_UPDATE', 'CLASSDUMP_FPS_UPDATE');
             addon:RegisterMsg('GAME_START_3SEC', 'CLASSDUMP_3SEC');
             
-            addon:RegisterMsg("MARKET_ITEM_LIST", "MARKETDBGENERATOR_MARKET_ITEM_LIST");
-        
         
         end,
         catch = function(error)
@@ -1145,6 +1160,14 @@ function CLASSDUMP_3SEC()
     end
 end
 function CLASSDUMP_DUMP()
+    local withconst={
+        Monster="monster_const"
+    }
+    local alteredName={
+        statbase_monster="Stat_Monster",
+        statbase_monster_race="Stat_Monster_Race",
+        statbase_monster_type="Stat_Monster_Type",
+    }
     local classlistlist={
         'Item',
         'Recipe',
@@ -1171,11 +1194,21 @@ function CLASSDUMP_DUMP()
          'Housing_Furniture',
          'Account_Ability',
          'Guild_Ability',
-         'recycle_shop'
+         'recycle_shop',
+         'statbase_monster_type',
+         'statbase_monster_race',
+         'statbase_monster',
+         
     }
+
     for _,classlistname in ipairs(classlistlist) do
         local ls={}
-        local list, cnt = GetClassList(classlistname);
+        local tosclasslistname=classlistname
+                
+        if alteredName[classlistname] then
+            tosclasslistname=alteredName[classlistname] 
+        end
+        local list, cnt = GetClassList(tosclasslistname);
         if list then
 
             local ies=g.iespath..'/ies.ipf/'..classlistname..".ies"
@@ -1183,6 +1216,26 @@ function CLASSDUMP_DUMP()
                 CHAT_SYSTEM('[CD]'..classlistname..' not found')
             
             else
+            
+                local additionals={}
+                if withconst[tosclasslistname] then
+                    local ies=g.iespath..'/ies.ipf/'..withconst[tosclasslistname]..".ies"
+                    local f=io.open(ies,"r")
+                    local line=f:read("*l")
+                    local spr=StringSplit(line, ",");
+                    local line2=f:read("*l")
+                    local spr2=StringSplit(line2, ",");
+
+                 
+                    -- repackaging
+                    for key,elem in ipairs(spr2) do
+                        
+                        additionals[spr[key]]=string.gsub(elem,"\"","")
+
+                    end
+                
+                    f:close()
+                end
                 local f=io.open(ies,"r")
                 local line=f:read("*l")
                 local spr=StringSplit(line, ",");
@@ -1195,9 +1248,50 @@ function CLASSDUMP_DUMP()
                     for _,elem in ipairs(spr) do
                         pack[elem]=cls[elem]    
                     end
+                    pack["Lv"]=TryGetProp(cls,"Level",nil)
+                     --adds additionals
+                     for key,value in pairs(additionals) do
+                        if key ~= "ClassID" then
+                            if _G[value] then
+                                
+                                local result,retval= pcall(_G[value],pack)
+                                if result then
+                                    
+                                    pack[key]=retval
+                                else
+                                    local val=TryGetProp(pack,key,value)
+                                    --pack[key]=val
+                                end
+                            else
+                                local val=TryGetProp(pack,key,value)
+                                --pack[key]=val
+                            end
+                        end
+                    end
+                     --adds additionals
+                     for key,value in pairs(additionals) do
+                        if key ~= "ClassID" then
+                            if _G[value] then
+                                
+                                local result,retval= pcall(_G[value],pack)
+                                if result then
+                                    
+                                    pack[key]=retval
+                                else
+                                    local val=TryGetProp(pack,key,value)
+                                    --pack[key]=val
+                                end
+                            else
+                                local val=TryGetProp(pack,key,value)
+                                --pack[key]=val
+                            end
+                        end
+                    end
                     ls[#ls+1] = pack
                 end
-                acutil.saveJSON(g.basepath..'/'..classlistname..'.json',ls)
+                
+                acutil.saveJSON(g.basepath..'/'..tosclasslistname..'.json',ls)
+                f:close()
                 local ls={}
                 local f=io.open(ies,"r")
                 local line=f:read("*l")
@@ -1209,15 +1303,240 @@ function CLASSDUMP_DUMP()
                     local cls = GetClassByIndexFromList(list,i);
                     -- repackaging
                     for _,elem in ipairs(spr) do
+                        if type(cls[elem]) == "string" then
                         pack[elem]=dictionary.ReplaceDicIDInCompStr(cls[elem])
+                        else
+                            pack[elem]=cls[elem]
+                        end
                     end
-                    
+                    pack["Lv"]=TryGetProp(cls,"Level",nil)
+                     --adds additionals
+                    for key,value in pairs(additionals) do
+                        if key ~= "ClassID" then
+                            if _G[value] then
+                                
+                                local result,retval= pcall(_G[value],pack)
+                                if result then
+                                    
+                                    pack[key]=retval
+                                else
+                                    local val=TryGetProp(cls,key,value)
+                                    if val==nil then
+                                        val=value
+                                    end
+                                    pack[key]=val
+                                end
+                            else
+                                local val=TryGetProp(cls,key,value)
+                                if val==nil then
+                                    val=value
+                                end
+                                pack[key]=val
+                            end
+                        end
+                    end
+                     --adds additionals
+                     for key,value in pairs(additionals) do
+                        if key ~= "ClassID" then
+                            if _G[value] then
+                                
+                                local result,retval= pcall(_G[value],pack)
+                                if result then
+                                    
+                                    pack[key]=retval
+                                else
+                                    local val=TryGetProp(cls,key,value)
+                                    if val==nil then
+                                        val=value
+                                    end
+                                    pack[key]=val
+                                end
+                            else
+                                local val=TryGetProp(cls,key,value)
+                                if val==nil then
+                                    val=value
+                                end
+                                pack[key]=val
+                            end
+                        end
+                    end
                     ls[#ls+1] = pack
                 end
-                acutil.saveJSON(g.basepath..'/_dicid_'..classlistname..'.json',ls)
+                acutil.saveJSON(g.basepath..'/_dicid_'..tosclasslistname..'.json',ls)
+                f:close()
             end
         end
     end
+    -- local classlistname="Monster"
+    -- local ls={}
+    -- local tosclasslistname=classlistname
+            
+    -- if alteredName[classlistname] then
+    --     tosclasslistname=alteredName[classlistname] 
+    -- end
+    -- local list, cnt = GetClassList(tosclasslistname);
+    -- if list then
+
+    --     local ies=g.iespath..'/ies.ipf/'..classlistname..".ies"
+    --     if not file_exists(ies) then
+    --         CHAT_SYSTEM('[CD]'..classlistname..' not found')
+        
+    --     else
+        
+    --         local additionals={}
+    --         if withconst[tosclasslistname] then
+    --             local ies=g.iespath..'/ies.ipf/'..withconst[tosclasslistname]..".ies"
+    --             local f=io.open(ies,"r")
+    --             local line=f:read("*l")
+    --             local spr=StringSplit(line, ",");
+    --             local line2=f:read("*l")
+    --             local spr2=StringSplit(line2, ",");
+
+                
+    --             -- repackaging
+    --             for key,elem in ipairs(spr2) do
+                    
+    --                 additionals[spr[key]]=string.gsub(elem,"\"","")
+
+    --             end
+            
+    --             f:close()
+    --         end
+    --         local f=io.open(ies,"r")
+    --         local line=f:read("*l")
+    --         local spr=StringSplit(line, ",");
+
+
+    --         for i = 0, cnt - 1 do
+    --             local pack={}
+    --             local cls = GetClassByIndexFromList(list,i);
+    --             local newobj = CreateIES(classlistname, cls.ClassName);
+    --             -- repackaging
+    --             for _,elem in ipairs(spr) do
+    --                 pack[elem]=TryGetProp(cls,elem,nil)    
+    --             end
+    --             pack["Lv"]=TryGetProp(cls,"Level",nil)
+    --                 --adds additionals
+    --             for key,value in pairs(additionals) do
+    --                 if key ~= "ClassID" then
+    --                     if _G[value] then
+                            
+    --                         local result,retval= pcall(_G[value],newobj)
+    --                         if result then
+                                
+    --                             pack[key]=retval
+    --                         else
+    --                             local val=TryGetProp(newobj,key,value)
+    --                             pack[key]=val
+    --                         end
+    --                     else
+    --                         local val=TryGetProp(newobj,key,value)
+    --                         pack[key]=val
+    --                     end
+    --                 end
+    --             end
+    --                 --adds additionals
+    --             for key,value in pairs(additionals) do
+    --                 if key ~= "ClassID" then
+    --                     if _G[value] then
+                            
+    --                         local result,retval= pcall(_G[value],pack)
+    --                         if result then
+                                
+    --                             pack[key]=retval
+    --                         else
+    --                             local val=TryGetProp(newobj,key,value)
+    --                             pack[key]=val
+    --                         end
+    --                     else
+    --                         local val=TryGetProp(newobj,key,value)
+    --                         pack[key]=val
+    --                     end
+    --                 end
+    --             end
+    --             ls[#ls+1] = pack
+    --             DestroyIES(newobj)
+    --         end
+            
+    --         acutil.saveJSON(g.basepath..'/'..tosclasslistname..'_Altered.json',ls)
+    --         f:close()
+    --         local ls={}
+    --         local f=io.open(ies,"r")
+    --         local line=f:read("*l")
+    --         local spr=StringSplit(line, ",");
+
+
+    --         for i = 0, cnt - 1 do
+    --             local pack={}
+    --             local cls = GetClassByIndexFromList(list,i);
+    --             local newobj = CreateIES(classlistname, cls.ClassName);
+    --             -- repackaging
+    --             for _,elem in ipairs(spr) do
+    --                 if type(cls[elem]) == "string" then
+    --                 pack[elem]=dictionary.ReplaceDicIDInCompStr(cls[elem])
+    --                 else
+    --                     pack[elem]=cls[elem]
+    --                 end
+    --             end
+    --             pack["Lv"]=TryGetProp(cls,"Level",nil)
+    --                 --adds additionals
+    --             for key,value in pairs(additionals) do
+    --                 if key ~= "ClassID" then
+    --                     if _G[value] then
+                            
+    --                         local result,retval= pcall(_G[value],newobj)
+    --                         if result then
+                                
+    --                             pack[key]=retval
+    --                         else
+    --                             local val=TryGetProp(newobj,key,value)
+    --                             if val==nil then
+    --                                 val=value
+    --                             end
+    --                             pack[key]=val
+    --                         end
+    --                     else
+    --                         local val=TryGetProp(newobj,key,value)
+    --                         if val==nil then
+    --                             val=value
+    --                         end
+    --                         pack[key]=val
+    --                     end
+    --                 end
+    --             end
+    --             --adds additionals
+    --             for key,value in pairs(additionals) do
+    --                 if key ~= "ClassID" then
+    --                     if _G[value] then
+                            
+    --                         local result,retval= pcall(_G[value],newobj)
+    --                         if result then
+                                
+    --                             pack[key]=retval
+    --                         else
+    --                             local val=TryGetProp(newobj,key,value)
+    --                             if val==nil then
+    --                                 val=value
+    --                             end
+    --                             pack[key]=val
+    --                         end
+    --                     else
+    --                         local val=TryGetProp(newobj,key,value)
+    --                         if val==nil then
+    --                             val=value
+    --                         end
+    --                         pack[key]=val
+    --                     end
+    --                 end
+    --             end
+    --             DestroyIES(newobj)
+    --             ls[#ls+1] = pack
+    --         end
+    --         acutil.saveJSON(g.basepath..'/_dicid_'..tosclasslistname..'_Altered.json',ls)
+    --         f:close()
+    --     end
+    -- end
+
    
     local joblist,jobcnt= GetClassList("Job");
     for i = 0, jobcnt - 1 do
