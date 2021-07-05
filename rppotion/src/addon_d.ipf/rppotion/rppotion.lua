@@ -487,7 +487,7 @@ function RPPOTION_USE(invItem)
                 return true
             end
             session.ResetItemList()
-            session.AddItemID(invItem:GetIESID(), math.min(math.ceil(max_rp - cur_rp / rp_per), invItem.count))
+            session.AddItemID(invItem:GetIESID(), math.min(math.ceil((max_rp - cur_rp) / rp_per), invItem.count))
             local result_list = session.GetItemIDList()
 
             item.DialogTransaction("RELIC_CHARGE_RP", result_list)
