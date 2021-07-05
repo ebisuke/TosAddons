@@ -785,5 +785,18 @@
             "skill",
             "gesture"
         ]
+    }, {
+        "name": "RP Potion",
+        "file": "rppotion",
+        "extension": "ipf",
+        "fileVersion": "v0.0.1",
+        "releaseTag": "rppotion-v0.0.1",
+        "unicode": "📖",
+        "description": "エクトナイトを右クリック及びショートカットキーで使用可能にします",
+        "tags": [
+            "item",
+            "relic",
+            "rp"
+        ]
     }
 ]
