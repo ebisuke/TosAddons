@@ -3,6 +3,7 @@ local addonName = 'ITEMBUFFMACHINE'
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
+local contributor = 'Kiicchan'
 
 --アドオン内で使用する領域を作成。以下、ファイル内のスコープではグローバル変数gでアクセス可
 _G['ADDONS'] = _G['ADDONS'] or {}
@@ -133,13 +134,19 @@ function ITEMBUFFMACHINE_ITEMBUFFOPEN_INIT()
             local btn = frame:CreateOrGetControl('button', 'ibmbuff', 20, 70, 100, 30)
             btn:SetText('{ol}Auto Buff')
             btn:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON')
+            btn:SetEventScriptArgNumber(ui.LBUTTONUP, 1);
+
+            local btn = frame:CreateOrGetControl('button', 'ibmbuffweapon', 140, 70, 100, 30)
+            btn:SetText('{ol}Weapon Only')
+            btn:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON')
+            btn:SetEventScriptArgNumber(ui.LBUTTONUP, 0);
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-function ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON()
+function ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON(frame, control, argStr, isAll)
     EBI_try_catch {
         try = function()
             local equiplist = session.GetEquipItemList()
@@ -153,7 +160,7 @@ function ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON()
                 local tempobj = equipItem:GetObject()
                 if tempobj ~= nil then
                     local obj = GetIES(tempobj)
-                    if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj) == 1) then
+                    if (item.IsNoneItem(obj.ClassID) == 0 and ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(obj, isAll) == 1) then
                         local checkFunc = _G['ITEMBUFF_NEEDITEM_' .. frame:GetUserValue('SKILLNAME')]
                         local name, cnt = checkFunc(pc, obj)
                         totalcnt = totalcnt + cnt
@@ -165,7 +172,7 @@ function ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON()
                 ui.SysMsg('適用できる装備がありません')
                 return
             else
-                ui.MsgBox('全装備にメンテナンスを適用しますか？{nl}{#FFFF00}{ol}費用:' .. tostring(price), string.format('ITEMBUFFMACHINE_ITEMBUFF_DO_SELECT()'), 'None')
+                ui.MsgBox('全装備にメンテナンスを適用しますか？{nl}{#FFFF00}{ol}費用:' .. tostring(price), string.format('ITEMBUFFMACHINE_ITEMBUFF_DO_SELECT(%d)', isAll), 'None')
             end
         end,
         catch = function(error)
@@ -207,7 +214,7 @@ function ITEMBUFFMACHINE_ITEMBUFF_CHECK_Enchanter_EnchantArmor(item)
     end
     return 0
 end
-function ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(item)
+function ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(item, isAll)
     if item.GroupName == 'Weapon' then
         return 1
     end
@@ -216,7 +223,7 @@ function ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp(item)
         return 1
     end
 
-    if item.GroupName == 'Armor' then
+    if item.GroupName == 'Armor' and isAll == 1 then
         if item.ClassType == 'Shield' or item.ClassType == 'Shirt' or item.ClassType == 'Pants' or item.ClassType == 'Gloves' or item.ClassType == 'Boots' then
             return 1
         end
@@ -266,7 +273,7 @@ function ITEMBUFFMACHINE_ENCHANTARMOR_SELECT(groupName, index)
     }
 
 end
-function ITEMBUFFMACHINE_ITEMBUFF_DO_SELECT()
+function ITEMBUFFMACHINE_ITEMBUFF_DO_SELECT(isAll)
     g.items={}
     local equiplist = session.GetEquipItemList()
     for i = 0, equiplist:Count() - 1 do
@@ -279,7 +286,7 @@ function ITEMBUFFMACHINE_ITEMBUFF_DO_SELECT()
                 local fn=ITEMBUFFMACHINE_ITEMBUFF_CHECK_Squire_EquipmentTouchUp
 
                 
-                if (item.IsNoneItem(obj.ClassID) == 0 and fn(obj) == 1) then
+                if (item.IsNoneItem(obj.ClassID) == 0 and fn(obj, isAll) == 1) then
                    g.items[#g.items+1] = equipItem:GetIESID()
                 end
             end
