@@ -136,7 +136,7 @@ function ITEMBUFFMACHINE_ITEMBUFFOPEN_INIT()
             btn:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON')
             btn:SetEventScriptArgNumber(ui.LBUTTONUP, 1);
 
-            local btn = frame:CreateOrGetControl('button', 'ibmbuffweapon', 140, 70, 100, 30)
+            local btn = frame:CreateOrGetControl('button', 'ibmbuffweapon', 130, 70, 100, 30)
             btn:SetText('{ol}Weapon Only')
             btn:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_ITEMBUFF_ONBUTTON')
             btn:SetEventScriptArgNumber(ui.LBUTTONUP, 0);
