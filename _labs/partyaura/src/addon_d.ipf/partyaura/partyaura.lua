@@ -139,13 +139,16 @@ function PARTYAURA_ON_TIMER()
                             for i = 0 , count - 1 do
                                 local partyMemberInfo = list:Element(i);                            
                                 local aid = partyMemberInfo:GetAID();
-                                --if(paid==aid)then
+                                if(paid~=aid)then
                                     --aura
-                                    actor:DetachCopiedModel();
-                                    actor:ChangeEquipNode(EmAttach.eLHand, "Dummy_L_HAND");
-                                    actor:CopyAttachedModel(EmAttach.eRHand, "Dummy_L_HAND");
-                                    SCR_CREATE_FAIRY(actor:GetHandleVal(), "Raid_boss_Misrus");
-                                --end
+                                    --actor:DetachCopiedModel();
+                                    --actor:ChangeEquipNode(EmAttach.eLHand, "Dummy_L_HAND");
+                                    --actor:CopyAttachedModel(EmAttach.eRHand, "Dummy_L_HAND");
+                                    --SCR_CREATE_FAIRY(actor:GetHandleVal(), "Raid_boss_Misrus");
+                                    actor:SetAuraInfo('GuildMemberAura')
+                                else
+                                    actor:SetAuraInfo('')
+                                end
                             end
                         end
                     end

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skinset name="Base">
+    <imagelist category="mahjong_images">
+		<image name="mg_man1" file="\skin\man1.png" imgrect="0 0 53 73"/>
+		<image name="mg_man2" file="\skin\man2.png" imgrect="0 0 53 73"/>
+		<image name="mg_man3" file="\skin\man3.png" imgrect="0 0 53 73"/>
+		<image name="mg_man4" file="\skin\man4.png" imgrect="0 0 53 73"/>
+		<image name="mg_man5" file="\skin\man5.png" imgrect="0 0 53 73"/>
+		<image name="mg_man6" file="\skin\man6.png" imgrect="0 0 53 73"/>
+		<image name="mg_man7" file="\skin\man7.png" imgrect="0 0 53 73"/>
+		<image name="mg_man8" file="\skin\man8.png" imgrect="0 0 53 73"/>
+		<image name="mg_man9" file="\skin\man9.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin1" file="\skin\pin1.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin2" file="\skin\pin2.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin3" file="\skin\pin3.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin4" file="\skin\pin4.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin5" file="\skin\pin5.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin6" file="\skin\pin6.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin7" file="\skin\pin7.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin8" file="\skin\pin8.png" imgrect="0 0 53 73"/>
+		<image name="mg_pin9" file="\skin\pin9.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou1" file="\skin\sou1.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou2" file="\skin\sou2.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou3" file="\skin\sou3.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou4" file="\skin\sou4.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou5" file="\skin\sou5.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou6" file="\skin\sou6.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou7" file="\skin\sou7.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou8" file="\skin\sou8.png" imgrect="0 0 53 73"/>
+		<image name="mg_sou9" file="\skin\sou9.png" imgrect="0 0 53 73"/>
+	
+		<image name="mg_haku" file="\skin\haku.png" imgrect="0 0 53 73"/>
+		<image name="mg_hatu" file="\skin\hatu.png" imgrect="0 0 53 73"/>
+		<image name="mg_chun" file="\skin\chun.png" imgrect="0 0 53 73"/>
+	
+		<image name="mg_ton" file="\skin\ton.png" imgrect="0 0 53 73"/>
+		<image name="mg_nan" file="\skin\nan.png" imgrect="0 0 53 73"/>
+		<image name="mg_sha" file="\skin\sha.png" imgrect="0 0 53 73"/>
+		<image name="mg_pei" file="\skin\pei.png" imgrect="0 0 53 73"/>
+
+		<image name="mg_R_man5" file="\skin\R_man5.png" imgrect="0 0 53 73"/>
+		<image name="mg_R_sou5" file="\skin\R_sou5.png" imgrect="0 0 53 73"/>
+		<image name="mg_R_pin5" file="\skin\R_pin5.png" imgrect="0 0 53 73"/>
+	
+		<image name="mg_B100" file="\skin\B100.png" imgrect="0 0 199 21"/>
+		<image name="mg_B500" file="\skin\B500.png" imgrect="0 0 199 21"/>
+		<image name="mg_B1000" file="\skin\B1000.png" imgrect="0 0 199 21"/>
+		<image name="mg_B5000" file="\skin\B5000.png" imgrect="0 0 199 21"/>
+		<image name="mg_B100" file="\skin\B10000.png" imgrect="0 0 199 21"/>
+
+	
+	</imagelist>
+
+</skinset>

@@ -30,112 +30,29 @@ g.prop = nil
 g.go = false
 g.propvalue = 0
 g.useadrasive = false
-g.nousehighadrasive = false
-g.stones = {
-    645768,
-    645732,
-    490061,
-    495123,
-    490013,
-    490127
-}
-g.adrasive = {
-    647023,
-    647040,
-    494116
-}
+g.usehighadrasive = false
+
 local MARKET_OPTION_GROUP_PROP_LIST = {
-    STAT = {
-        'STR',
-        'DEX',
-        'INT',
-        'CON',
-        'MNA'
+
+    DEF = {
+        'ADD_DEF',        --物理防御力
+        'ADD_MDEF',       --魔法防御力
+        'ResAdd_Damage',  --追加ダメージ抵抗
+        'CRTDR',          --クリティカル抵抗
+        'ADD_DR',         --回避
+        'MHP',            --MaxHP
+        'MSP',            --MaxSP
+        'RHP',            --HP回復力
+        'RSP',            --SP回復力
     },
-    UTIL = {
-        'BLK',
-        'BLK_BREAK',
-        'ADD_HR',
-        'ADD_DR',
-        'CRTHR',
-        'MHP',
-        'MSP',
-        'MSTA',
-        'RHP',
-        'RSP',
-        'LootingChance'
-    },
-    MARKET_DEF = {
-        'ADD_DEF',
-        'ADD_MDEF',
-        'AriesDEF',
-        'SlashDEF',
-        'StrikeDEF',
-        'RES_FIRE',
-        'RES_ICE',
-        'RES_POISON',
-        'RES_LIGHTNING',
-        'RES_EARTH',
-        'RES_SOUL',
-        'RES_HOLY',
-        'RES_DARK',
-        'CRTDR',
-        'Cloth_Def',
-        'Leather_Def',
-        'Iron_Def',
-        'MiddleSize_Def',
-        'ResAdd_Damage'
-    },
-    MARKET_ATK = {
-        'PATK',
-        'ADD_MATK',
-        'CRTATK',
-        'CRTMATK',
-        'ADD_CLOTH',
-        'ADD_LEATHER',
-        'ADD_IRON',
-        'ADD_SMALLSIZE',
-        'ADD_MIDDLESIZE',
-        'ADD_LARGESIZE',
-        'ADD_GHOST',
-        'ADD_FORESTER',
-        'ADD_WIDLING',
-        'ADD_VELIAS',
-        'ADD_PARAMUNE',
-        'ADD_KLAIDA',
-        'ADD_FIRE',
-        'ADD_ICE',
-        'ADD_POISON',
-        'ADD_LIGHTNING',
-        'ADD_EARTH',
-        'ADD_SOUL',
-        'ADD_HOLY',
-        'ADD_DARK',
-        'Add_Damage_Atk',
-        'ADD_BOSS_ATK'
-    },
-    ETC = {
-        'SR',
-        'MSPD',
-        'SDR'
-    },
-    MARKET_ENCHANT = {
-        'RareOption_SR',
-        'RareOption_MSPD',
-        'RareOption_BlockRate',
-        'RareOption_BlockBreakRate',
-        'RareOption_DodgeRate',
-        'RareOption_HitRate',
-        'RareOption_CriticalDodgeRate',
-        'RareOption_CriticalHitRate',
-        'RareOption_PVPReducedRate',
-        'RareOption_MeleeReducedRate',
-        'RareOption_MagicReducedRate',
-        'RareOption_CriticalDamage_Rate',
-        'RareOption_PVPDamageRate',
-        'RareOption_BossDamageRate',
-        'RareOption_SubWeaponDamageRate',
-        'RareOption_MainWeaponDamageRate'
+    WEAPON = {
+        'CRTHR',          --クリティカル発生
+        'PATK',           --物理攻撃力
+        'ADD_MATK',       --魔法攻撃力
+        'CRTATK',         --物理クリティカル攻撃力
+        'CRTMATK',        --魔法クリティカル攻撃力
+        'Add_Damage_Atk', --追加ダメージ
+        'ADD_HR',         --命中
     }
 }
 --ライブラリ読み込み
@@ -246,7 +163,8 @@ function AWAKENROLLER_ON_INIT(addon, frame)
             acutil.setupHook(AWAKENROLLER_ITEMDUNGEN_UI_CLOSE, 'ITEMDUNGEN_UI_CLOSE')
             acutil.setupHook(AWAKENROLLER_ITEMDUNGEON_DROP_ITEM, 'ITEMDUNGEON_DROP_ITEM')
             acutil.setupHook(AWAKENROLLER_ITEMDUNGEON_CLEAR_TARGET, 'ITEMDUNGEON_CLEAR_TARGET')
-
+            acutil.setupHook(AWAKENROLLER_ITEMDUNGEON_INV_RBTN, 'ITEMDUNGEON_INV_RBTN')
+       
             frame:ShowWindow(0)
 
             AWAKENROLLER_LOAD_SETTINGS()
@@ -256,11 +174,18 @@ function AWAKENROLLER_ON_INIT(addon, frame)
         end
     }
 end
-
+function AWAKENROLLER_IS_WEAPON(invItem)
+    local cls = GetClassByType("Item",invItem.type);
+    if cls.GroupName=='Weapon' or cls.GroupName=='SubWeapon' then
+        return true
+    else
+        return false
+    end
+end
 function AWAKENROLLER_OPEN_ITEMDUNGEON_SELLER()
     EBI_try_catch {
         try = function()
-            OPEN_ITEMDUNGEON_SELLER()
+            OPEN_ITEMDUNGEON_SELLER_OLD()
             local frame = ui.GetFrame('itemdungeon')
             frame:RemoveChild('btnactivate')
         end,
@@ -269,7 +194,49 @@ function AWAKENROLLER_OPEN_ITEMDUNGEON_SELLER()
         end
     }
 end
+function AWAKENROLLER_ITEMDUNGEON_INV_RBTN(itemobj, invslot, invguid)
+    ITEMDUNGEON_INV_RBTN_OLD(itemobj, invslot, invguid)
+    local frame = ui.GetFrame("itemdungeon");
+	if frame == nil then
+		return
+	end
 
+	if invslot:IsSelected() == 1 then
+		ITEMDUNGEON_CLEARUI(frame)
+	else
+		local invItem, isEquip = GET_PC_ITEM_BY_GUID(invguid);	
+		if nil == invItem then
+			return;
+		end
+	
+		if nil ~= isEquip then
+			ui.SysMsg(ClMsg("CannotDropItem"));
+			return;
+		end
+
+		if true == invItem.isLockState then
+			ui.SysMsg(ClMsg("MaterialItemIsLock"));
+			return;
+		end
+	
+		local itemObj = GetIES(invItem:GetObject());
+		local targetSlot = GET_CHILD_RECURSIVELY(frame, "targetSlot");
+		if IS_EQUIP(itemObj) == true then
+			-- 장비 등록		
+			if IS_ENABLE_GIVE_HIDDEN_PROP_ITEM(itemObj) == false then
+				
+				return;
+			end
+            local frame = ui.GetFrame('itemdungeon')
+            local btn = frame:GetChild('btnactivate')
+        
+            AUTO_CAST(btn)
+        
+            btn:SetEnable(1)
+            AWAKENROLLER_INITFRAME(invItem)
+		end	
+	end
+end
 function AWAKENROLLER_OPEN_ITEMDUNGEON_BUYER(groupName, sellType, handle)
     EBI_try_catch {
         try = function()
@@ -348,25 +315,43 @@ function AWAKENROLLER_TOGGLEFRAME()
         AWAKENROLLER_INITFRAME(g.invItem)
     end
 end
-function AWAKENROLLER_GETCOUNTFROMINV(list, argnum)
+function AWAKENROLLER_GETABRASIVECOUNTFROMINV(argnum)
     local cnt = 0
     local pc = GetMyPCObject()
     local invItemList = GetInvItemList(pc)
     local curCount = #invItemList
     for _, guid in ipairs(invItemList) do
         local invItem = session.GetInvItemByGuid(guid)
-        local cls = GetClassByType('Item', v)
-        for _, v in ipairs(list) do
+        local cls = GetClassByType('Item',invItem.type)
+       
             local prop = TryGetProp(cls, 'NumberArg1') or 0
-            if invItem.type == v and invItem.isLockState == false and (not argnum or prop >= argnum) then
+            if  cls.StringArg == "AbrasiveStone" and invItem.isLockState == false and (not argnum or prop == argnum) then
                 cnt = cnt + invItem.count
                 break
             end
-        end
+        
     end
     return cnt
 end
+function AWAKENROLLER_GETAWAKENSTONEFROMINV()
+    local cnt = 0
+    local pc = GetMyPCObject()
+    local invItemList = GetInvItemList(pc)
+    local curCount = #invItemList
+    for _, guid in ipairs(invItemList) do
+        local invItem = session.GetInvItemByGuid(guid)
+        local cls = GetClassByType('Item',invItem.type)
+  
+        local prop = TryGetProp(cls, 'NumberArg1') or 0
+        if IS_ITEM_AWAKENING_STONE(cls)and invItem.isLockState == false then
+            cnt = cnt + invItem.count
+            
+        end
 
+    end
+    return cnt
+    
+end
 function AWAKENROLLER_INITFRAME(invItem)
     EBI_try_catch {
         try = function()
@@ -385,13 +370,20 @@ function AWAKENROLLER_INITFRAME(invItem)
             local cmboption = frame:CreateOrGetControl('droplist', 'cmbtype', 30, 50, 300, 20)
             AUTO_CAST(cmboption)
             cmboption:SetSkinName('droplist_normal')
-            cmboption:SetTextTooltip('絞り込むオプションの種類です。一覧にあるオプションが必ずしも出現するとは限りません。')
+            cmboption:SetTextTooltip('絞り込むオプションの種類です')
+            cmboption:ClearItems()
             local idx = 0
-            for k, v in pairs(MARKET_OPTION_GROUP_PROP_LIST) do
-                for kk, vv in ipairs(v) do
-                    cmboption:AddItem(idx, ScpArgMsg(vv))
+            local props
+            if AWAKENROLLER_IS_WEAPON(invItem) then
+                props=MARKET_OPTION_GROUP_PROP_LIST.WEAPON
+            else
+                props=MARKET_OPTION_GROUP_PROP_LIST.DEF
+            end
+            for k, v in pairs(props) do
+              
+                    cmboption:AddItem(idx, ScpArgMsg(v))
                     idx = idx + 1
-                end
+                
             end
             local txtmorethaneq = frame:CreateOrGetControl('richtext', 'txtmorethaneq', 30, 90, 160, 30)
             txtmorethaneq:SetText('{ol}{s14}is more than or equal {s16}(≧)')
@@ -416,22 +408,22 @@ function AWAKENROLLER_INITFRAME(invItem)
             local txtcount = frame:CreateOrGetControl('richtext', 'txtcount', 30, 210, 50, 40)
             txtcount:SetText('{ol}{s24}{#FFFF77}-- Offering Ingredients --')
             local txtstones = frame:CreateOrGetControl('richtext', 'txtstones', 30, 240, 50, 40)
-            txtstones:SetText('{ol}{s20}{img icon_item_awakeningstone 35 35}: ' .. AWAKENROLLER_GETCOUNTFROMINV(g.stones))
+            txtstones:SetText('{ol}{s20}{img icon_item_awakeningstone 35 35}: ' .. AWAKENROLLER_GETAWAKENSTONEFROMINV())
             txtstones:SetTextTooltip('各種覚醒石を含んだ個数です')
             --local txtadrasives = frame:CreateOrGetControl('richtext', 'txtadrasives', 180, 240, 50, 40)
             --txtadrasives:SetText('{ol}{s20}{img icon_item_awakemisc01 35 35}:'..AWAKENROLLER_GETCOUNTFROMINV(g.adrasive))
             local chkuseadrasive = frame:CreateOrGetControl('checkbox', 'chkuseadrasive', 30, 270, 50, 30)
             AUTO_CAST(chkuseadrasive)
-            chkuseadrasive:SetCheck(1)
-            chkuseadrasive:SetText('{ol}Use Adrasive {img icon_item_awakemisc01 35 35}: ' .. AWAKENROLLER_GETCOUNTFROMINV(g.adrasive))
+            chkuseadrasive:SetCheck(0)
+            chkuseadrasive:SetText('{ol}Use LV400 Abrasive {img icon_item_awakemisc01 35 35}: ' .. AWAKENROLLER_GETABRASIVECOUNTFROMINV(400))
             chkuseadrasive:SetEventScript(ui.LBUTTONUP, 'AWAKENROLLER_UPDATENUMATTEMPT')
-            chkuseadrasive:SetTextTooltip('覚醒研磨剤を使用します。')
-            local chknousehighadrasive = frame:CreateOrGetControl('checkbox', 'chknousehighadrasive', 30, 300, 50, 30)
-            AUTO_CAST(chknousehighadrasive)
-            chknousehighadrasive:SetCheck(1)
-            chknousehighadrasive:SetText("{ol}Don't Use Lv430 Adrasive {s12}Lv430{/}{img icon_item_awakemisc01 35 35}: " .. AWAKENROLLER_GETCOUNTFROMINV(g.adrasive, 430))
-            chknousehighadrasive:SetEventScript(ui.LBUTTONUP, 'AWAKENROLLER_UPDATENUMATTEMPT')
-            chknousehighadrasive:SetTextTooltip('Lv430覚醒研磨剤を使用しません。')
+            chkuseadrasive:SetTextTooltip('LV400覚醒研磨剤を使用します。')
+            local chkusehighadrasive = frame:CreateOrGetControl('checkbox', 'chkusehighadrasive', 30, 300, 50, 30)
+            AUTO_CAST(chkusehighadrasive)
+            chkusehighadrasive:SetCheck(1)
+            chkusehighadrasive:SetText("{ol}Use Lv430 Abrasive {s12}Lv430{/}{img icon_item_awakemisc01 35 35}: " .. AWAKENROLLER_GETABRASIVECOUNTFROMINV( 430))
+            chkusehighadrasive:SetEventScript(ui.LBUTTONUP, 'AWAKENROLLER_UPDATENUMATTEMPT')
+            chkusehighadrasive:SetTextTooltip('Lv430覚醒研磨剤を使用します')
             local txtattempt = frame:CreateOrGetControl('richtext', 'txtattempt', 30, 360, 50, 30)
             txtattempt:SetText('{ol}Max Attempts:')
 
@@ -461,24 +453,36 @@ function AWAKENROLLER_INITFRAME(invItem)
     }
 end
 
-function AWAKENROLLER_UPDATENUMATTEMPT()
+function AWAKENROLLER_UPDATENUMATTEMPT(aa,ctrl)
     local frame = ui.GetFrame(g.framename)
     local chkuseadrasive = frame:GetChild('chkuseadrasive')
     AUTO_CAST(chkuseadrasive)
-    local chknousehighadrasive = frame:GetChild('chknousehighadrasive')
-    AUTO_CAST(chknousehighadrasive)
+    local chkusehighadrasive = frame:GetChild('chkusehighadrasive')
+    AUTO_CAST(chkusehighadrasive)
     local useadrasive = chkuseadrasive:IsChecked()
-    local nousehighadrasive = chknousehighadrasive:IsChecked()
+    local usehighadrasive = chkusehighadrasive:IsChecked()
     local adrasive = 0
     local mx
+    if useadrasive==1 and usehighadrasive==1 and ctrl then
+        chkuseadrasive:SetCheck(0)
+        chkusehighadrasive:SetCheck(0)
+        AUTO_CAST(ctrl)
+        ctrl:SetCheck(1)
+        useadrasive = chkuseadrasive:IsChecked()
+        usehighadrasive = chkusehighadrasive:IsChecked()
+    end
+
     if useadrasive == 1 then
-        adrasive = AWAKENROLLER_GETCOUNTFROMINV(g.adrasive)
-        if nousehighadrasive == 1 then
-            adrasive = adrasive - AWAKENROLLER_GETCOUNTFROMINV(g.adrasive, 430)
-        end
-        mx = math.min(AWAKENROLLER_GETCOUNTFROMINV(g.stones), adrasive)
+       
+    
+        adrasive = AWAKENROLLER_GETABRASIVECOUNTFROMINV(400)
+        
+        mx = math.min(AWAKENROLLER_GETAWAKENSTONEFROMINV(), adrasive)
+    elseif usehighadrasive == 1 then
+        adrasive = AWAKENROLLER_GETABRASIVECOUNTFROMINV( 430)
+        mx = math.min(AWAKENROLLER_GETAWAKENSTONEFROMINV(), adrasive)
     else
-        mx = AWAKENROLLER_GETCOUNTFROMINV(g.stones)
+        mx = AWAKENROLLER_GETAWAKENSTONEFROMINV()
     end
 
     local numattempts = frame:GetChild('numattempt')
@@ -499,12 +503,15 @@ function AWAKENROLLER_CONFIRM()
             local invItem = g.invItem
             local chkuseadrasive = frame:GetChild('chkuseadrasive')
             AUTO_CAST(chkuseadrasive)
-            local chknousehighadrasive = frame:GetChild('chknousehighadrasive')
-            AUTO_CAST(chknousehighadrasive)
+            local chkusehighadrasive = frame:GetChild('chkusehighadrasive')
+            AUTO_CAST(chkusehighadrasive)
 
             g.useadrasive = chkuseadrasive:IsChecked() == 1
-            g.nousehighadrasive = chknousehighadrasive:IsChecked() == 1
-
+            g.usehighadrasive = chkusehighadrasive:IsChecked() == 1
+            if  not  g.useadrasive and not g.usehighadrasive then
+                ui.SysMsg('Abrasive is required for item awakening.')
+                return
+            end
             local numattempts = frame:GetChild('numattempt')
             AUTO_CAST(numattempts)
             local numofattempts = numattempts:GetNumber()
@@ -515,14 +522,20 @@ function AWAKENROLLER_CONFIRM()
             local idx = 0
             local numvalue = frame:GetChild('numvalue')
             AUTO_CAST(numvalue)
-            for k, v in pairs(MARKET_OPTION_GROUP_PROP_LIST) do
-                for kk, vv in ipairs(v) do
+            local props
+            if AWAKENROLLER_IS_WEAPON(invItem) then
+                props=MARKET_OPTION_GROUP_PROP_LIST.WEAPON
+            else
+                props=MARKET_OPTION_GROUP_PROP_LIST.DEF
+            end
+            for k, v in pairs(props) do
+                
                     if cmboption:GetSelItemIndex() == idx then
-                        prop = vv
-                        g.prop = vv
+                        prop = v
+                        g.prop = v
                     end
                     idx = idx + 1
-                end
+                
             end
             if numofattempts <= 0 then
                 ui.SysMsg('Max Attempts must be higher than 1.')
@@ -589,40 +602,37 @@ function AWAKENROLLER_DO_EXECUTE()
 
                 if iv ~= nil then
                    
-                    if iv.isLockState == false and iv.type~=0 then
+                    if iv.isLockState == false  then
                         local itemobj = GetIES(iv:GetObject())
-                                   
-                        for _, v in ipairs(g.stones) do
-                            if iv.type == v then
-                                
-                                stones[#stones + 1] ={
-                                    iesid = guid,
-                                    has = iv.hasLifeTime,
-                                    time = GET_ITEM_REMAIN_LIFETIME_BY_SEC(itemobj)
-                                }
-                                break
-                            end
+                        
+                        if IS_ITEM_AWAKENING_STONE(itemobj) then
+                            
+                            stones[#stones + 1] ={
+                                iesid = guid,
+                                has = iv.hasLifeTime,
+                                time = GET_ITEM_REMAIN_LIFETIME_BY_SEC(itemobj)
+                            }
+                            
                         end
-                        if g.useadrasive then
-                            for _, v in ipairs(g.adrasive) do
+                    
+                        if g.useadrasive or g.usehighadrasive then
+                            if  itemobj.StringArg == "AbrasiveStone"  then
+                                DBGOUT('hoge5:'..i..'/'..ccnt-1)
+                                local cls = GetClassByType('Item', v)
                                 
-                                if iv.type == v then
-                                    DBGOUT('hoge5:'..i..'/'..ccnt-1)
-                                    local cls = GetClassByType('Item', v)
-                                  
-                                    local prop = TryGetProp(cls, 'NumberArg1') or 0
-                                    DBGOUT('hoge6:'..i..'/'..ccnt-1)
-                                    if prop < 430 or not g.nousehighadrasive then
-                                        adrasives[#adrasives + 1] = {
-                                            iesid = guid,
-                                            has = iv.hasLifeTime,
-                                            time = GET_ITEM_REMAIN_LIFETIME_BY_SEC(itemobj)
-                                        }
-                                    end
-                                   
-                                    break
+                                local prop = TryGetProp(itemobj, 'NumberArg1') or 0
+                                DBGOUT('hoge6:'..i..'/'..ccnt-1)
+                                if (prop < 430 and not g.usehighadrasive )or (prop == 430 and g.usehighadrasive)then
+                                    adrasives[#adrasives + 1] = {
+                                        iesid = guid,
+                                        has = iv.hasLifeTime,
+                                        time = GET_ITEM_REMAIN_LIFETIME_BY_SEC(itemobj)
+                                    }
                                 end
+                                
+                                
                             end
+                        
                         end
                     end
                 end
@@ -635,10 +645,10 @@ function AWAKENROLLER_DO_EXECUTE()
                     local ta = 100000000
                     local tb = 100000000
                     if a.has then
-                        ta = a.time
+                        ta = tonumber(a.time)
                     end
                     if b.has then
-                        tb = a.time
+                        tb = tonumber(b.time)
                     end
                     return ta < tb
                 end
@@ -650,10 +660,10 @@ function AWAKENROLLER_DO_EXECUTE()
                     local ta = 100000000
                     local tb = 100000000
                     if a.has then
-                        ta = a.time
+                        ta = tonumber(a.time)
                     end
                     if b.has then
-                        tb = a.time
+                        tb = tonumber(b.time)
                     end
                     return ta < tb
                 end
@@ -665,10 +675,18 @@ function AWAKENROLLER_DO_EXECUTE()
             local stoneguid = '0'
             if stone then
                 stoneguid = stone.iesid
+            else
+                ui.SysMsg('No stones')
+                ui.SetEscapeScp('')
+                return
             end
             local adrasiveguid = '0'
             if adrasive then
                 adrasiveguid = adrasive.iesid
+            else
+                ui.SysMsg('No abrasives')
+                ui.SetEscapeScp('')
+                return
             end
             local aframe = ui.GetFrame('itemdungeon')
             local handle = aframe:GetUserIValue('HANDLE')
@@ -705,10 +723,10 @@ function AWAKENROLLER_SUCCESS()
                     ui.SysMsg('Complete')
                     g.attempts = -1
                 else
-                    ui.SysMsg('Remain Attempt:' .. g.attempts)
+                    ui.SysMsg('Remain Attempt:' .. tostring(g.attempts-1))
                     g.attempts = g.attempts - 1
                     -- いくらでも早くできるが、まぁ
-                    ReserveScript('AWAKENROLLER_DO_EXECUTE()', 0.75)
+                    ReserveScript('AWAKENROLLER_DO_EXECUTE()', 0.9)
                 end
             end
         end,

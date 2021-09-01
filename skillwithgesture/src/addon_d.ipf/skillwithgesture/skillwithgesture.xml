@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+
+<uiframe name="skillwithgesture" x="0" y="0" width="500" height="500" create="open">
+    <frame layout_gravity="left top" scale_align="left top"/>
+    <option closebutton="false" hideable="false" useimageitem="true"/>
+    <skin frameskin="None"/> 
+    <layer layerlevel="30"/>
+    <draw drawtitlebar="false" drawframe="false"/>
+    <input hittest="false" hittestframe="false" movable="false"/>
+	<controls>
+		<timer name="addontimer" rect="0 0 10 10"/>
+
+	</controls>
+</uiframe>

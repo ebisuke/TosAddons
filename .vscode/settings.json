@@ -8,6 +8,9 @@
     "LuaCoderAssist.format.lineWidth": 180,
     "Lua.diagnostics.disable": [
         113,
-        611
-    ]
+        611,
+        611,
+        "empty-block"
+    ],
+    "lua.targetVersion": "5.3"
 }

@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <skinset name="Base">
-    <imagelist category="anotheroneofstatbars_imgs">
-		<image name="spray_large_s" file="\skin\large_s.tga" imgrect="0 0 20 20"/>
-		<image name="spray_small_s" file="\skin\small_s.tga" imgrect="0 0 10 10"/>
-		<image name="spray_large_bs" file="\skin\large_bs.tga" imgrect="0 0 20 20"/>
-		<image name="spray_small_bs" file="\skin\small_bs.tga" imgrect="0 0 10 10"/>
-		<image name="spray_vsmall_bar" file="\skin\vsmall_bar.tga" imgrect="0 0 10 10"/>
-		<image name="spray_small_bar" file="\skin\small_bar.tga" imgrect="0 0 10 10"/>
-		<image name="spray_large_bar" file="\skin\large_bar.tga" imgrect="0 0 10 10"/>
-		<image name="spray_dia" file="\skin\brush_dia.tga" imgrect="0 0 40 40"/>
-		<image name="spray_triangle" file="\skin\brush_triangle.tga" imgrect="0 0 40 40"/>
-		
+	<imagelist category="aos_imgs">
+	
 	</imagelist>
+	<skinlist category="frames">
+		<skin name="aos_center_dia_skin" texture="\skin\aos_centerdia.tga">
+            <img name="slot" imgrect="0 0 1 1"/>
+			<img name="mouseon" imgrect="0 0 1 1"/>
+			<img name="cooltime" imgrect="0 0 82 82"/>
+			<img name="selected" imgrect="0 0 1 1"/>
+        </skin>
+	</skinlist>
 </skinset>

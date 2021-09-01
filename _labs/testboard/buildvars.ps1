@@ -1,3 +1,3 @@
 $addonname="testboard"
 
-$version="v1.0.0"
+$version="v0.0.1"

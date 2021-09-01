@@ -1,6 +1,7 @@
 */bin/*
 */obj/*
 /.*/*
+_buildenv/
 .idea
 .vs
 pseudoforecast/converter/xml/*
@@ -33,3 +34,5 @@ _labs/testboard/obj/*
 _labs/subquickslot/obj/*
 _labs/subquickslot/bin/*
 _
+anotheroneofenemyinfo/converter/venv/*
+**/.DS_Store

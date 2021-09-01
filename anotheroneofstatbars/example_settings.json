@@ -50,6 +50,21 @@
             "S2154": {
                 "name": "Tiksline"
             },
+            "S4384": {
+                "name": "Sauk"
+            },
+            "S4385": {
+                "name": "Ezera"
+            },
+            "S4386": {
+                "name": "Ezera2"
+            },
+            "S4498": {
+                "name": "Karys"
+            },
+            "S4611": {
+                "name": "Lydeti"
+            },
             "nouse": false
         },
         "skills": {
@@ -149,6 +164,38 @@
                 "needs": 5,
                 "skill": "Varna_Liris"
             },
+            "S100027": {
+                "prefix": "Set_Sauk",
+                "clsid": 100027,
+                "needs": 6,
+                "skill": "Disnai_Sauk"
+            },
+            "S100028": {
+                "prefix": "Set_Ezera",
+                "clsid": 100028,
+                "needs": 6,
+                "skill": "Disnai_Ezera"
+            },
+            "S100064": {
+                "prefix": "Set_Karys",
+                "clsid": 100064,
+                "needs": 6,
+                "skill": "Disnai_Karys"
+            },
+            "S100065": {
+                "prefix": "Set_Svirti",
+                "clsid": 100065,
+                "needs": 6,
+                "skill": "Disnai_Svirti"
+            },
+            "S100066": {
+                "prefix": "Set_Lydeti",
+                "clsid": 100066,
+                "needs": 6,
+                "skill": "Disnai_Lydeti"
+            },
+
+
             "nouse": true
         }
     }

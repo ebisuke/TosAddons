@@ -14,7 +14,7 @@ DEVELOPERCONSOLE_INTELLI_STR = ""
 DEVELOPERCONSOLE_INTELLI_ITERATOR = nil
 DEVELOPERCONSOLE_INTELLI_ITERATOR_KEY = nil
 DEVELOPERCONSOLE_INTELLI_SELECT = 0
-DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=false
+DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST = false
 local lstr = loadstring or load
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -101,30 +101,37 @@ end
 
 
 function DEVELOPERCONSOLE_ON_INIT(addon, frame)
-    acutil.slashCommand("/dev", DEVELOPERCONSOLE_TOGGLE_FRAME);
-    acutil.slashCommand("/console", DEVELOPERCONSOLE_TOGGLE_FRAME);
-    acutil.slashCommand("/devconsole", DEVELOPERCONSOLE_TOGGLE_FRAME);
-    acutil.slashCommand("/developerconsole", DEVELOPERCONSOLE_TOGGLE_FRAME);
-    
-    acutil.setupHook(DEVELOPERCONSOLE_PRINT_TEXT, "print");
-    acutil.addSysIcon('developerconsole', 'sysmenu_sys', 'developerconsole', 'DEVELOPERCONSOLE_TOGGLE_FRAME')
-    if not DEVELOPERCONSOLE_SETTINGSLOADED then
-        DEVELOPERCONSOLE_SETTINGS = {
-            history = {}
-        }
-        local t, err = acutil.loadJSON(DEVELOPERCONSOLE_SETTINGSLOCATION, DEVELOPERCONSOLE_SETTINGS)
-        if err then
-            --設定ファイル読み込み失敗時処理
-            CHAT_SYSTEM(string.format('[%s] cannot load setting files', "developerconsole"))
-        else
-            --設定ファイル読み込み成功時処理
-            DEVELOPERCONSOLE_SETTINGS = t
+    EBI_try_catch{
+        try = function()
+            acutil.slashCommand("/dev", DEVELOPERCONSOLE_TOGGLE_FRAME);
+            acutil.slashCommand("/console", DEVELOPERCONSOLE_TOGGLE_FRAME);
+            acutil.slashCommand("/devconsole", DEVELOPERCONSOLE_TOGGLE_FRAME);
+            acutil.slashCommand("/developerconsole", DEVELOPERCONSOLE_TOGGLE_FRAME);
+            
+            acutil.setupHook(DEVELOPERCONSOLE_PRINT_TEXT, "print");
+            acutil.addSysIcon('developerconsole', 'sysmenu_sys', 'developerconsole', 'DEVELOPERCONSOLE_TOGGLE_FRAME')
+            if not DEVELOPERCONSOLE_SETTINGSLOADED then
+                DEVELOPERCONSOLE_SETTINGS = {
+                    history = {}
+                }
+                local t, err = acutil.loadJSON(DEVELOPERCONSOLE_SETTINGSLOCATION, DEVELOPERCONSOLE_SETTINGS)
+                if err then
+                    --設定ファイル読み込み失敗時処理
+                    CHAT_SYSTEM(string.format('[%s] cannot load setting files', "developerconsole"))
+                else
+                    --設定ファイル読み込み成功時処理
+                    DEVELOPERCONSOLE_SETTINGS = t
+                end
+                DEVELOPERCONSOLE_SETTINGSLOADED = true
+            end
+            DEVELOPERCONSOLE_LOG = {}
+            DEVELOPERCONSOLE_INIT()
+            CLEAR_CONSOLE();
+        end,
+        catch = function(error)
+            ERROUT(error)
         end
-        DEVELOPERCONSOLE_SETTINGSLOADED = true
-    end
-    DEVELOPERCONSOLE_LOG = {}
-    DEVELOPERCONSOLE_INIT()
-    CLEAR_CONSOLE();
+    }
 end
 function DEVELOPERCONSOLE_SAVE_SETTINGS()
     
@@ -171,7 +178,7 @@ function DEVELOPERCONSOLE_INIT()
             local execute = frame:GetChild("execute");
             execute:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_ENTER_KEY")
             execute:SetFontName("white_16_ol")
-
+            
             local btnopt = frame:CreateOrGetControl("button", "btnopt", 0, 0, 0, 0)
             btnopt:SetEventScript(ui.LBUTTONUP, "DEVELOPERCONSOLE_CONTEXT")
             btnopt:SetText("...")
@@ -215,7 +222,7 @@ function DEVELOPERCONSOLE_DEBUG_RELOAD()
             end
         end
         ebi = "E:\\\\ToSProject\\\\TosAddons\\\\developerconsoleex\\\\src\\\\addon_d.ipf\\\\developerconsoleinspector\\\\developerconsoleinspector.lua"
-   
+        
         local f = assert(lstr('dofile("' .. ebi .. '")'));
         local status, error = pcall(f);
         if not status then
@@ -258,7 +265,7 @@ function DEVELOPERCONSOLE_RESIZE()
             frame:Invalidate()
         end,
         catch = function(error)
-            --ERROUT(error)
+        --ERROUT(error)
         end
     }
 end
@@ -327,10 +334,10 @@ function DEVELOPERCONSOLE_ON_RESIZE()
     DEVELOPERCONSOLE_SAVE_OFFSET()
 end
 function DEVELOPERCONSOLE_TOGGLEINSPECTOR()
-    if(keyboard.IsKeyPressed("LSHIFT")==1)then
-        local frame=   ui.GetFrame('developerconsoleinspector')
-        frame:Resize(500,800) 
-        frame:SetOffset(0,0)
+    if (keyboard.IsKeyPressed("LSHIFT") == 1) then
+        local frame = ui.GetFrame('developerconsoleinspector')
+        frame:Resize(500, 800)
+        frame:SetOffset(0, 0)
     end
     ui.ToggleFrame('developerconsoleinspector')
 end
@@ -376,19 +383,19 @@ function DEVELOPERCONSOLE_CONTEXT_SUB_TAG()
             
             local context = ui.CreateContextMenu("Context_Sub", "", 0, 0, 300, 100)
             local myPartyInfo = session.party.GetPartyInfo();
-            local partyID="_"
-            local name="_"
-            if(myPartyInfo~=nil)then
-                partyID = myPartyInfo.info:GetPartyID();	
-                name=myPartyInfo.info.name
+            local partyID = "_"
+            local name = "_"
+            if (myPartyInfo ~= nil) then
+                partyID = myPartyInfo.info:GetPartyID();
+                name = myPartyInfo.info.name
             end
             local list = {
-                {n="Image",v= "\'{img _ 20 20}{/}\'"},
-                {n="Current Location",v = "DEVELOPERCONSOLE_CONTECT_ADDLINKPOS"},
-                {n="Current Party Link",v= "\'{a SLP "..tostring(partyID).."}{#0000FF}{img link_party 24 24}"..name.."{/}{/}{/}\'"},
+                {n = "Image", v = "\'{img _ 20 20}{/}\'"},
+                {n = "Current Location", v = "DEVELOPERCONSOLE_CONTECT_ADDLINKPOS"},
+                {n = "Current Party Link", v = "\'{a SLP " .. tostring(partyID) .. "}{#0000FF}{img link_party 24 24}" .. name .. "{/}{/}{/}\'"},
             }
             for _, v in ipairs(list) do
-
+                
                 ui.AddContextMenuItem(context, v.n, "DEVELOPERCONSOLE_CONTEXT_SUB_TAG_EXEC(\"" .. tostring(v.v) .. "\")")
             end
             context:Resize(300, context:GetHeight())
@@ -406,7 +413,7 @@ function DEVELOPERCONSOLE_CONTEXT_SUB_TAG_EXEC(v)
             v = v:gsub("%{", "｛"):gsub("%}", "｝")
             local f = lstr("return " .. v .. "");
             local status, vv = pcall(f);
-          
+            
             if status then
                 if type(vv) == 'function' then
                     DEVELOPERCONSOLE_CONTEXT_ADDEDIT(vv())
@@ -414,7 +421,7 @@ function DEVELOPERCONSOLE_CONTEXT_SUB_TAG_EXEC(v)
                     DEVELOPERCONSOLE_CONTEXT_ADDEDIT(vv)
                 end
             else
-                print("ERR"..tostring(vv))
+                print("ERR" .. tostring(vv))
             end
         end,
         catch = function(error)
@@ -424,11 +431,11 @@ function DEVELOPERCONSOLE_CONTEXT_SUB_TAG_EXEC(v)
     }
 end
 function DEVELOPERCONSOLE_CONTECT_ADDLINKPOS()
-
+    
     local mapName = session.GetMapName()
-    local actorPos = world.GetActorPos(session.GetMyHandle());	
+    local actorPos = world.GetActorPos(session.GetMyHandle());
     local mapprop = geMapTable.GetMapProp(mapName);
-    local pos = mapprop:WorldPosToMinimapPos(actorPos.x, actorPos.z, m_mapWidth, m_mapHeight);	
+    local pos = mapprop:WorldPosToMinimapPos(actorPos.x, actorPos.z, m_mapWidth, m_mapHeight);
     local worldPos = mapprop:MinimapPosToWorldPos(pos.x, pos.y, m_mapWidth, m_mapHeight);
     local text = MAKE_LINK_MAP_TEXT(mapName, worldPos.x, worldPos.y);
     return text
@@ -441,7 +448,7 @@ function DEVELOPERCONSOLE_CONTEXT_ADDEDIT(text)
             local input = frame:GetChild("input");
             AUTO_CAST(input)
             text = text:gsub("%{", "｛"):gsub("%}", "｝")
-            text=dictionary.ReplaceDicIDInCompStr(text)
+            text = dictionary.ReplaceDicIDInCompStr(text)
             input:SetText(input:GetCursurLeftText() .. text .. input:GetCursurRightText())
             input:Invalidate()
         end,
@@ -550,8 +557,8 @@ function DEVELOPERCONSOLE_ADDTEXT(text)
         tolua.cast(textlog, "ui::CTextView");
         textlog:AddText(text, "white_16_ol");
         DEVELOPERCONSOLE_LOG[#DEVELOPERCONSOLE_LOG + 1] = text
-        if(#DEVELOPERCONSOLE_LOG>1000)then
-            table.remove(DEVELOPERCONSOLE_LOG,1)
+        if (#DEVELOPERCONSOLE_LOG > 1000) then
+            table.remove(DEVELOPERCONSOLE_LOG, 1)
         end
     end
 end
@@ -687,12 +694,12 @@ function DEVELOPERCONSOLE_INTELLISENSE(choosefirst)
                 DEVELOPERCONSOLE_INTELLI_STR = string.match(input:GetCursurLeftText():lower(), "[%w_]-$") or ""
                 DEVELOPERCONSOLE_INTELLI_COUNT = 0
                 DEVELOPERCONSOLE_INTELLI_SELECT = 0
-                if(choosefirst==1)then
-                    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=true
-                elseif(choosefirst==0) then
-                    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=false
+                if (choosefirst == 1) then
+                    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST = true
+                elseif (choosefirst == 0) then
+                    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST = false
                 end
-           
+            
             end
             
             --signature
@@ -777,7 +784,7 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
                     else
                         input:SetText(s .. sel .. r)
                         ReserveScript('DEVELOPERCONSOLE_INTELLI_CLOSE()', 0.01)
-                   
+                    
                     end
                 end
             else
@@ -793,7 +800,7 @@ function DEVELOPERCONSOLE_DETERMINE_INTELLI(continue)
     }
 end
 function DEVELOPERCONSOLE_INTELLI_CLOSE()
-    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST=false
+    DEVELOPERCONSOLE_INTELLI_CHOOSEFIRST = false
     ui.CloseFrame("developerconsoleintellisense")
 end
 function DEVELOPERCONSOLE_GET_FN_SIGNATURE(func)
@@ -927,15 +934,15 @@ function DEVELOPERCONSOLE_UPDATE(frame)
                 if 1 == keyboard.IsKeyDown("ENTER") then
                     DEVELOPERCONSOLE_DETERMINE_INTELLI()
                 end
-                if 1 == keyboard.IsKeyDown("TAB")  then
-                    if(list:GetSelItemIndex()<0)then
+                if 1 == keyboard.IsKeyDown("TAB") then
+                    if (list:GetSelItemIndex() < 0) then
                         list:DeSelectItemAll()
                         list:SelectItem(0)
                     end
                     DEVELOPERCONSOLE_DETERMINE_INTELLI(1)
                 
                 end
-                if  1 == keyboard.IsKeyDown("PERIOD") then
+                if 1 == keyboard.IsKeyDown("PERIOD") then
                     DEVELOPERCONSOLE_DETERMINE_INTELLI(1)
                 
                 end

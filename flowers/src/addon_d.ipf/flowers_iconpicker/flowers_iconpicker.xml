@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="flowers_iconpicker" width="600" height="500">
+	<frame fullheight="false" fasthide="true" layout_gravity="center center" margin="0 -30 0 0" draw="true"/>
+	<skin frameskin="test_frame_low"/>
+	<draw drawtitlebar="false"/>
+	<input moveable="true" hittestframe="true" moveintitlebar="false"/>
+	<option visible="false" hideable="true" closebutton="false" moveable="true" alwaysVisible="false" exceptionUpdateUiMode="true"/>
+	<sound opensound="skill_window_open" closesound="skill_window_close"/>
+	<animation frameOpenAnim="chat_balloon_start" frameCloseAnim="chat_balloon_end" margin="-100 -100 0 0"/>
+	<layer layerlevel="92"/>
+	<script OpenScp="FLOWERS_ICONPICKER_ON_OPEN" CloseScp="FLOWERS_ICONPICKER_ON_CLOSE"/>
+	<controls>
+		<groupbox name="title_bg" rect="0 0 600 130" margin="0 0 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" scrollbar="false" skin="test_frame_top"/>
+		<richtext name="title" parent="title_bg" rect="0 0 200 30" margin="0 20 0 0" layout_gravity="center top" caption="{@st42}{s20}Flowers! Icon Picker" fontname="brown_16_b" spacey="0"/>
+		<button name="close" rect="0 0 44 44" margin="0 20 28 0" layout_gravity="right top" LBtnUpArgNum="" LBtnUpScp="ui.CloseFrame(&apos;flowers_iconpicker&apos;)" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" image="testclose_button" oversound="button_over"/>
+		<timer name="addontimer" rect="0 0 10 10"/>
+    </controls>
+</uiframe>

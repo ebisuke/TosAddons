@@ -416,6 +416,10 @@ function SMALLUI_SMALLIFY_MINIMAP()
     frame:GetChild("open_map"):SetMargin(140, 0, 0, 5)
     frame:GetChild("ZOOM_INFO"):ShowWindow(0)
 
+    local frame = ui.GetFrame("minimap")
+    local mini_pos = frame:GetChild("my")
+    AUTO_CAST(mini_pos)
+    mini_pos:SetOffset(frame:GetWidth() / 2 - mini_pos:GetImageWidth() / 2, frame:GetHeight() / 2 - mini_pos:GetImageHeight() / 2);
     if(obde)then
         DBGOUT("OBDE Supported")
         obde.CalculateMinimapAxis  = function(self, parent, actor)
@@ -548,10 +552,7 @@ function SMALLUI_ON_TIMER()
                 g:SetMargin(m.left, m.top, 300, m.bottom)
             end
         end
-        local frame = ui.GetFrame("minimap")
-        local mini_pos = frame:GetChild("my")
-        AUTO_CAST(mini_pos)
-        mini_pos:SetOffset(frame:GetWidth() / 2 - mini_pos:GetImageWidth() / 2, frame:GetHeight() / 2 - mini_pos:GetImageHeight() / 2);
+
     end
 end
 function SMALLUI_EVERY()

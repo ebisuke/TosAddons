@@ -67,11 +67,31 @@ ANOTHERONEOFSTATBARS_CONFIG_DEFS = {
                 type = "number",
                 default = 400,
             },
+           
             {
                 name = "maxsp",
                 vname = "Limit of SP",
                 type = "number",
                 default =10000,
+            }, 
+            {
+                name = "minlenrp",
+                vname = "Min length of RP",
+                type = "number",
+                default = 100,
+            },
+            {
+                name = "maxlenrp",
+                vname = "Max length of RP",
+                type = "number",
+                default = 100,
+            },
+           
+            {
+                name = "maxrp",
+                vname = "Limit of RP",
+                type = "number",
+                default =1000,
             },
             {
                 name = "minlenstamina",

@@ -1,0 +1,3 @@
+$addonname="postboxitemfixer"
+
+$version="v0.0.2"

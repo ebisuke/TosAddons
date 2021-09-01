@@ -19,7 +19,12 @@ To configure, please enter `/suic` in chat window.
 ### 各種通知ボタン表示
 * NEWSを除き、画面右端に小さく表示されます
 
+# 既知の不具合
+* ジョイスティック時にOverHeatが表示されない
+
 # リリースノート
+## v0.2.1
+* small questlist のチェックを外したときにマップ表示が右に寄るのを修正
 ## v0.2.0
 * ジョイスティックに対応
 * 一部のボタンに対応
