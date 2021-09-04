@@ -868,8 +868,7 @@ function YAI_ON_OPEN_ACCOUNTWAREHOUSE()
            
             gbox:Resize(w, h-30)
             gbox2:Resize(w - 32, h - 2-35)
-       
-            
+           
             --search gbox
             --[[
                 <groupbox name="searchSkin" parent="searchGbox" rect="0 0 350 30" margin="5 0 0 5" layout_gravity="right bottom" draw="true" hittestbox="true" resizebyparent="false" scrollbar="false" skin="test_edit_skin"/>
@@ -989,7 +988,7 @@ function YAI_UPDATE()
             frame:SetUserValue("INVENTORY_CUR_SCROLL_POS", curpos);
             
             for typeNo = 1, #g_invenTypeStrList do
-                if invenTypeStr == nil or invenTypeStr == g_invenTypeStrList[typeNo] or typeNo == 1 then
+                if (invenTypeStr == nil or invenTypeStr == g_invenTypeStrList[typeNo] or typeNo == 1) then
                     local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox')
                     local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl')
                     
@@ -1002,28 +1001,28 @@ function YAI_UPDATE()
                     tree:SetFontName(groupfontname);
                     tree:SetTabWidth(tabwidth);
                     
-                    local slotSetNameListCnt = ui.inventory.GetInvenSlotSetNameCount();
-                    for i = 1, slotSetNameListCnt do
-                        local slotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
-                        ui.inventory.RemoveInvenSlotSetName(slotSetName);
-                    end
+                    --local slotSetNameListCnt = ui.inventory.GetInvenSlotSetNameCount();
+                    --for i = 1, slotSetNameListCnt do
+                    --    local slotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
+                    --    ui.inventory.RemoveInvenSlotSetName(slotSetName);
+                    --end
                     
-                    local groupNameListCnt = ui.inventory.GetInvenGroupNameCount();
-                    for i = 1, groupNameListCnt do
-                        local groupName = ui.inventory.GetInvenGroupNameByIndex(i - 1);
-                        ui.inventory.RemoveInvenGroupName(groupName);
-                    end
+                    -- local groupNameListCnt = ui.inventory.GetInvenGroupNameCount();
+                    -- for i = 1, groupNameListCnt do
+                    --     local groupName = ui.inventory.GetInvenGroupNameByIndex(i - 1);
+                    --     ui.inventory.RemoveInvenGroupName(groupName);
+                    -- end
                     
-                    local customFunc = nil;
-                    local scriptName = invframe:GetUserValue("CUSTOM_ICON_SCP");
-                    local scriptArg = nil;
-                    if scriptName ~= nil then
-                        customFunc = _G[scriptName];
-                        local getArgFunc = _G[invframe:GetUserValue("CUSTOM_ICON_ARG_SCP")];
-                        if getArgFunc ~= nil then
-                            scriptArg = getArgFunc();
-                        end
-                    end
+                    -- local customFunc = nil;
+                    -- local scriptName = invframe:GetUserValue("CUSTOM_ICON_SCP");
+                    -- local scriptArg = nil;
+                    -- if scriptName ~= nil then
+                    --     customFunc = _G[scriptName];
+                    --     local getArgFunc = _G[invframe:GetUserValue("CUSTOM_ICON_ARG_SCP")];
+                    --     if getArgFunc ~= nil then
+                    --         scriptArg = getArgFunc();
+                    --     end
+                    -- end
                 end
             end
             
@@ -1197,6 +1196,8 @@ function YAI_UPDATE()
                 
                 --end
                 end
+
+            
             end
             for typeNo = 1, #g_invenTypeStrList do
                 local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
@@ -1204,6 +1205,7 @@ function YAI_UPDATE()
                 
                 AUTO_CAST(tree)
                 tree:Resize(g.w - 48, tree:GetHeight())
+                
             end
             --スロット残数を表示
             YAI_UPDATE_STATUS()
