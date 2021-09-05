@@ -1,5 +1,5 @@
 VERSION=0.4.0
-NAME=yaacountinventory
+NAME=yaaccountinventory
 
 
 include ../_makefile/common.mk
