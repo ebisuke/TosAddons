@@ -51,7 +51,7 @@
         ]
     },
     {
-        "name": "Continuous Reinforce",
+        "name": "Continuous Reinforce(Obsolete)",
         "file": "continuousreinforce",
         "extension": "ipf",
         "fileVersion": "v0.1.0",
@@ -233,7 +233,7 @@
         ]
     },
     {
-        "name": "Remove Warning For Book",
+        "name": "Remove Warning For Book(Obsolete)",
         "file": "removewarningforbook",
         "extension": "ipf",
         "fileVersion": "v0.0.2",
@@ -351,7 +351,7 @@
         ]
     },
     {
-        "name": "FindPortalShop",
+        "name": "FindPortalShop(Obsolete)",
         "file": "findportalshop",
         "extension": "ipf",
         "fileVersion": "v0.0.3",
@@ -511,7 +511,7 @@
         ]
     },
     {
-        "name": "AncientMonsterSimpleOpen ",
+        "name": "AncientMonsterSimpleOpen(Obsolete)",
         "file": "ancientmonstersimpleopen",
         "extension": "ipf",
         "fileVersion": "v0.0.1",
@@ -540,7 +540,7 @@
         ]
     },
     {
-        "name": "BypassDialogAssisterDungeon",
+        "name": "BypassDialogAssisterDungeon(Obsolete)",
         "file": "bypassdialogassisterdungeon",
         "extension": "ipf",
         "fileVersion": "v0.0.1",
@@ -673,8 +673,8 @@
         "name": "Kitchen Buff Overwriter",
         "file": "kitchenbuffoverwriter",
         "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "kitchenbuffoverwriter-v0.0.1",
+        "fileVersion": "v0.0.2",
+        "releaseTag": "kitchenbuffoverwriter-v0.0.2",
         "unicode": "📖",
         "description": "キッチンで料理を食べるときに、既存のバフを自動で解除します。",
         "tags": [
