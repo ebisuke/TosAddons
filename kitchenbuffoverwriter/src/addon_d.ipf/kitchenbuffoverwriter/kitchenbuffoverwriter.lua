@@ -94,26 +94,27 @@ function KITCHENBUFFOVERWRITER_EAT_FOODTABLE(parent,ctrl)
         [6]=4136
     }
     local type = parent:GetUserIValue("FOOD_TYPE");
+    local frame = parent:GetTopParentFrame();
+    local sellType = frame:GetUserIValue("SELLTYPE");
 
-	local frame = parent:GetTopParentFrame();
 	local handle = frame:GetUserIValue("HANDLE");
-
+	local index = parent:GetUserIValue("INDEX");
     local buffid=bufftable[type]
     local meshi = info.GetBuff(session.GetMyHandle(), buffid)
     if meshi then
         -- remove buff
         packet.ReqRemoveBuff(buffid);
         -- delayed eat
-        ReserveScript(string.format("KITCHENBUFFOVERWRITER_EAT_FOODTABLE_DELAYED(%d,%d)",handle,type),0.1)
+        ReserveScript(string.format("KITCHENBUFFOVERWRITER_EAT_FOODTABLE_DELAYED(%d,%d,%d)",index,handle,sellType),0.5)
     else
         -- eat immediately
         EAT_FOODTABLE_OLD(parent,ctrl)
     end
-    DISABLE_BUTTON_DOUBLECLICK_WITH_CHILD(frame:GetName(),parent:GetName(),ctrl:GetName(),4)
+    DISABLE_BUTTON_DOUBLECLICK_WITH_CHILD(frame:GetName(),parent:GetName(),ctrl:GetName(),8)
 end
 
 
-function KITCHENBUFFOVERWRITER_EAT_FOODTABLE_DELAYED(handle,clsid)
-    control.CustomCommand("EAT_FOODTABLE", handle, clsid);
-   
+function KITCHENBUFFOVERWRITER_EAT_FOODTABLE_DELAYED(index,handle,sellType)
+    --control.CustomCommand("EAT_FOODTABLE", handle, clsid);
+    session.autoSeller.Buy(handle, index, 1, sellType);
 end
