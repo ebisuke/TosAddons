@@ -573,8 +573,8 @@
         "name": "Another One Of Statbars",
         "file": "anotheroneofstatbars",
         "extension": "ipf",
-        "fileVersion": "v0.2.2",
-        "releaseTag": "anotheroneofstatbars-v0.2.2",
+        "fileVersion": "v0.2.4",
+        "releaseTag": "anotheroneofstatbars-v0.2.4",
         "unicode": "📖",
         "description": "趣味に走りまくったステータスバーを表示します。 ",
         "tags": [

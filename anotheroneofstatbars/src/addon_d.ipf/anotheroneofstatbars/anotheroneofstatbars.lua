@@ -685,8 +685,14 @@ function AOS_ON_TIMER(frame)
             g.curspw, g.remspw = AOS_CALC_POINT_ANIMATED(g.curspw, g.remspw, stat.SP, stat.maxSP, g.settings.minlensp, g.settings.maxlensp, maxmaxsp, speed)
             g.curstaw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curstaw, stat.Stamina, stat.MaxStamina, g.settings.minlenstamina, g.settings.maxlenstamina, maxmaxsta, speedslow)
             g.curdurw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.curdurw, g.durmin, g.durmax, g.settings.minlendur, g.settings.maxlendur, maxmaxdur, speedslow)
-            if HEADSUPDISPLAY_OPTION.relic_equip == 1 then
-                
+            local equip = 1
+            local relic_item = session.GetEquipItemBySpot(item.GetEquipSpotNum('RELIC'))
+            local relic_obj = GetIES(relic_item:GetObject())
+            if IS_NO_EQUIPITEM(relic_obj) == 1 then
+                equip = 0
+            end
+            if equip==1 then
+                local pc=GetMyPCObject()
                 local cur_rp, max_rp = shared_item_relic.get_rp(pc)
                 g.currpw = AOS_CALC_POINT_SIMPLE_ANIMATED(g.currpw, cur_rp, max_rp, g.settings.minlenrp, g.settings.maxlenrp, maxmaxdur, speed)
             end
