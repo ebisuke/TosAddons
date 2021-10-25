@@ -2,7 +2,8 @@
     "Lua.diagnostics.globals": [
         "hookedFunctionStr",
         "g_invenTypeStrList",
-        "ReserveScript"
+        "ReserveScript",
+        "ReqEnterSoloIndun"
     ],
     "git.ignoreLimitWarning": true,
     "LuaCoderAssist.format.lineWidth": 180,

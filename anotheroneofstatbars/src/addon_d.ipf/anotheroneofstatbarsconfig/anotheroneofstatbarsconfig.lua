@@ -12,7 +12,7 @@ local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 
 --ライブラリ読み込み
-CHAT_SYSTEM("[SUC]loaded")
+CHAT_SYSTEM("[AOSC]loaded")
 local acutil = require('acutil')
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -171,7 +171,7 @@ function ANOTHERONEOFSTATBARSCONFIG_ON_INIT(addon, frame)
     EBI_try_catch{
         try = function()
             frame = ui.GetFrame("anotheroneofstatbarsconfig")
-            g.addon = addon
+            g.caddon = addon
             g.cframe = frame
             acutil.slashCommand("/aosc", ANOTHERONEOFSTATBARSCONFIG_PROCESS_COMMAND);
             

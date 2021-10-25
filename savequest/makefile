@@ -1,5 +1,5 @@
-VERSION=0.2.0R11
-NAME=workpanel
+VERSION=1.2.9R3
+NAME=savequest
 
 
 include ../_makefile/common.mk

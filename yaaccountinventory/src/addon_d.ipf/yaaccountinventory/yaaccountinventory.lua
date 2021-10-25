@@ -200,7 +200,7 @@ function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
                 
                 g.loaded = true
             end
-            
+
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_LIST", "YAI_ON_MSG");
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_ADD", "YAI_ON_MSG");
             addon:RegisterMsg("ACCOUNT_WAREHOUSE_ITEM_REMOVE", "YAI_ON_MSG");

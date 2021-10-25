@@ -24,7 +24,7 @@ local function CalcPosToSToGlobal(x, y)
     local frame = ui.GetFrame('worldmap2_mainmap')
     local ow = frame:GetWidth()
     local oh = frame:GetHeight()
-    return x * (ow/sw), y * (oh/sh)
+    return x * (sw/ow), y * (sh/oh)
 
 end
 g.personalsettingsFileLoc = ''

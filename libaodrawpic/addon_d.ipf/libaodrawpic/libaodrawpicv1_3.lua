@@ -92,7 +92,7 @@ local function cat(tbla,tblb)
     end
     return cpy
 end
-function g.inject(pic)
+g.inject=function(pic)
     pic._drewElementCount=pic._drewElementCount or 0
     if pic._OldRemoveAllChild==nil and pic._OldRemoveAllChild~=pic.RemoveAllChild then
         pic._OldRemoveAllChild=pic.RemoveAllChild
@@ -295,7 +295,7 @@ end
 
 function LIBAODRAWPIC_ON_INIT(addon, frame)
 end
-LIBAODRAWPICV1_2=g
+LIBAODRAWPICV1_3=g
 
 function LIBAODRAWPIC_TEST()
 
