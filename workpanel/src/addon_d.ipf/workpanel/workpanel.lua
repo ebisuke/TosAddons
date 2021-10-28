@@ -15,7 +15,7 @@ g.settings = {x = 300, y = 300, isopen = false}
 g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "workpanel"
-g.debug = true
+g.debug = false
 g.suppressshop = true
 --ライブラリ読み込み
 CHAT_SYSTEM("[WP]loaded")
@@ -81,7 +81,7 @@ function WORKPANEL_ON_INIT(addon, frame)
             g.frame:SetOffset(0, 0)
             --addon:RegisterMsg('GAME_START_3SEC', 'WORKPANEL_INITFRAME')
             --acutil.setupHook(WORKPANEL_REQ_PVP_MINE_SHOP_OPEN,"REQ_PVP_MINE_SHOP_OPEN")
-
+            
             addon:RegisterMsg("GAME_START_3SEC", "WORKPANEL_3SEC")
             --addon:RegisterMsg("DO_SOLODUNGEON_RANKINGPAGE_OPEN", "WORKPANEL_INITFRAME");
             --soloDungeonClient.ReqSoloDungeonRankingPage()
@@ -96,7 +96,7 @@ function WORKPANEL_ON_INIT(addon, frame)
 end
 
 function WORKPANEL_SAVE_SETTINGS()
-    --CAMPCHEF_SAVETOSTRUCTURE()
+
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 end
 function WORKPANEL_LOAD_SETTINGS()
@@ -365,7 +365,7 @@ function WORKPANEL_INITFRAME()
 end
 function WORKPANEL_GETINDUNENTERCOUNT(clsid)
     local indunCls = GetClassByType("Indun", clsid)
-
+    
     local etc = GetMyEtcObject()
     return GET_CURRENT_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType")) ..
         "/" .. GET_INDUN_MAX_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))
@@ -389,48 +389,31 @@ function WORKPANEL_GETCURRENTINDUNENTERCOUNT(clsid)
 
     return GET_CURRENT_ENTERANCE_COUNT(TryGetProp(indunCls, "PlayPerResetType"))
 end
+
 function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
     local recipeCls = GetClass("ItemTradeShop", recipeName)
-
-    if(recipeName=="PVP_ITEM_41")then
-        if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" then
-            local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
-            local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
     
-            if sCount then
-                return WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName )-sCount
-            end
-        end
     
-        if recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" then
-            local aObj = GetMyAccountObj()
-            local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
-    
-            if sCount then
-                return WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName )-sCount
-            end
-        end
-             
 
-    else
-        if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" then
-            local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
-            local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
 
-            if sCount then
-                return sCount
-            end
-        end
+    if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" and recipeName ~= "PVP_ITEM_41" then
+        local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
+        local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
 
-        if recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" then
-            local aObj = GetMyAccountObj()
-            local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
-
-            if sCount then
-                return sCount
-            end
+        if sCount then
+            return sCount
         end
     end
+
+    if recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" then
+        local aObj = GetMyAccountObj()
+        local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
+
+        if sCount then
+            return sCount
+        end
+    end
+    
     return nil
 end
 
@@ -490,6 +473,15 @@ function WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(recipeName)
     end
 
     return nil
+end
+function WORKPANEL_GET_RECIPE_OVERBUY_TRADE_COUNT(recipeName)
+    local count = WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName) -(WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName) or 0)
+    local overbuy = WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(recipeName) or 0
+    if overbuy <= -1 then
+        overbuy = 0
+    end
+    --DBGOUT("CURRENT:"..count.."MAX:"..WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName).."OVER:"..overbuy)
+    return math.max(0,count-WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName))
 end
 function WORKPANEL_BUYITEM_HARDCHALLENGE_WEEKLY()
     WORKPANEL_BUYANDUSE("PVP_MINE_42", 647)
@@ -600,7 +592,7 @@ function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring)
                         local aObj = GetMyAccountObj()
                         local sCount = TryGetProp(aObj, recipeCls.OverBuyProperty)
 
-                        if sCount < WORKPANEL_GET_RECIPE_OVERBUY_TRADE_COUNT(recipeName) then
+                        if sCount <WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName)+ WORKPANEL_GET_RECIPE_OVERBUY_TRADE_COUNT(recipeName) then
                             fail = false
                             break
                         end
@@ -608,7 +600,7 @@ function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring)
                         local aObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
                         local sCount = TryGetProp(aObj, recipeCls.OverBuyProperty)
 
-                        if sCount < WORKPANEL_GET_RECIPE_OVERBUY_TRADE_COUNT(recipeName) then
+                        if sCount < WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName)+WORKPANEL_GET_RECIPE_OVERBUY_TRADE_COUNT(recipeName) then
                             fail = false
                             break
                         end
@@ -802,6 +794,7 @@ function WORKPANEL_ENTER_RELIC(rep)
                     Mythic_thorn1 = "Mythic_thorn2_Auto",
                     Mythic_castle = "Mythic_castle_Auto"
                 }
+                
                 local cls = GetClass("Indun", auto[mapCls.ClassName])
                 ReqRaidAutoUIOpen(cls.ClassID)
             end
@@ -822,6 +815,7 @@ function WORKPANEL_ENTER_RELIC_HARD(rep)
                 Mythic_thorn1 = "Mythic_thorn2_Auto_Hard",
                 Mythic_castle = "Mythic_castle_Auto_Hard"
             }
+            
             local cls = GetClass("Indun", auto[mapCls.ClassName])
             ReqRaidAutoUIOpen(cls.ClassID)
         end,

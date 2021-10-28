@@ -798,5 +798,18 @@
             "relic",
             "rp"
         ]
+    }, {
+        "name": "rotenzone",
+        "file": "rotenzone",
+        "extension": "ipf",
+        "fileVersion": "v0.0.1",
+        "releaseTag": "rotenzone-v0.0.1",
+        "unicode": "📖",
+        "description": "露天を建てられない領域を参考として表示します",
+        "tags": [
+            "ui",
+            "autoseller",
+            "shop"
+        ]
     }
 ]

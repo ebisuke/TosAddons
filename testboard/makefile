@@ -1,5 +1,5 @@
-VERSION=0.2.0R12
-NAME=workpanel
+VERSION=0.0.1
+NAME=testboardß
 
 
 include ../_makefile/common.mk
