@@ -1,4 +1,4 @@
-VERSION=0.2.0R12
+VERSION=0.2.0R13
 NAME=workpanel
 
 
