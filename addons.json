@@ -51,44 +51,6 @@
         ]
     },
     {
-        "name": "Continuous Reinforce(Obsolete)",
-        "file": "continuousreinforce",
-        "extension": "ipf",
-        "fileVersion": "v0.1.0",
-        "releaseTag": "continuousreinforce-v0.1.0",
-        "unicode": "📖",
-        "description": "連続で金床強化できるようにするアドオンです",
-        "tags": [
-            "reinforce"
-        ]
-    },
-    {
-        "name": "PostboxGetItem Fixer",
-        "file": "postboxgetitemfixer",
-        "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "postboxgetitemfixer-v0.0.1",
-        "unicode": "📖",
-        "description": "メッセージボックスでアイテムを受け取る際のキャラ順を正しくします。アドオンを有効にするには一度なんらかのキャラでゲーム開始する必要があります。これはToS起動毎に行う必要があります。",
-        "tags": [
-            "barrack",
-            "postbox"
-        ]
-    },
-    {
-        "name": "Enhanced TargetLock",
-        "file": "enhancedtargetlock",
-        "extension": "ipf",
-        "fileVersion": "v0.2.0",
-        "releaseTag": "enhancedtargetlock-v0.2.0",
-        "unicode": "📖",
-        "description": "ボスへのタゲがそれてしまい、再ターゲットが困難な時に支援するアドオンです。",
-        "tags": [
-            "target",
-            "boss"
-        ]
-    },
-    {
         "name": "JumpCanceller",
         "file": "jumpcanceller",
         "extension": "ipf",
@@ -233,18 +195,6 @@
         ]
     },
     {
-        "name": "Remove Warning For Book(Obsolete)",
-        "file": "removewarningforbook",
-        "extension": "ipf",
-        "fileVersion": "v0.0.2",
-        "releaseTag": "rwfb-v0.0.2",
-        "unicode": "📖",
-        "description": "カードブックを読むときの警告を削除します",
-        "tags": [
-            "cardbook"
-        ]
-    },
-    {
         "name": "Another One of Inventory",
         "file": "anotheroneofinventory",
         "extension": "ipf",
@@ -351,19 +301,6 @@
         ]
     },
     {
-        "name": "FindPortalShop(Obsolete)",
-        "file": "findportalshop",
-        "extension": "ipf",
-        "fileVersion": "v0.0.3",
-        "releaseTag": "findportalshop-v0.0.3",
-        "unicode": "📖",
-        "description": "近くにあるポータルショップの一覧を表示します。",
-        "tags": [
-            "portal",
-            "shop"
-        ]
-    },
-    {
         "name": "Buff Notifier",
         "file": "buffnotifier",
         "extension": "ipf",
@@ -402,20 +339,6 @@
             "money",
             "silver",
             "storage"
-        ]
-    },
-    {
-        "name": "Merkabah Fix",
-        "file": "merkabahfix",
-        "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "merkabahfix-v0.0.1",
-        "unicode": "📖",
-        "description": "コンパニオン休眠状態でメルカバ等に乗れなくなる問題を修正します",
-        "tags": [
-            "companion",
-            "merkabah",
-            "bug"
         ]
     },
     {
@@ -511,21 +434,6 @@
         ]
     },
     {
-        "name": "AncientMonsterSimpleOpen(Obsolete)",
-        "file": "ancientmonstersimpleopen",
-        "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "ancientmonstersimpleopen-v0.0.1",
-        "unicode": "📖",
-        "description": "アシスターカードブックを自動で開きます",
-        "tags": [
-            "assister",
-            "ui",
-            "cardbook",
-            "ancientmonster"
-        ]
-    },
-    {
         "name": "Outrage Gauge",
         "file": "outragegauge",
         "extension": "ipf",
@@ -537,21 +445,6 @@
             "skill",
             "ui",
             "outrage"
-        ]
-    },
-    {
-        "name": "BypassDialogAssisterDungeon(Obsolete)",
-        "file": "bypassdialogassisterdungeon",
-        "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "bypassdialogassisterdungeon-v0.0.1",
-        "unicode": "📖",
-        "description": "アシスターダンジョンのダイアログを自動でスキップします",
-        "tags": [
-            "ui",
-            "skip",
-            "dialog",
-            "assister"
         ]
     },
     {
@@ -730,8 +623,8 @@
         "name": "Workpanel",
         "file": "workpanel",
         "extension": "ipf",
-        "fileVersion": "v0.1.5",
-        "releaseTag": "workpanel-v0.1.5",
+        "fileVersion": "v0.2.0",
+        "releaseTag": "workpanel-v0.2.0",
         "unicode": "📖",
         "description": "各種レイド・チャレンジに入るためのパネルを表示します",
         "tags": [
@@ -784,19 +677,6 @@
         "tags": [
             "skill",
             "gesture"
-        ]
-    }, {
-        "name": "RP Potion",
-        "file": "rppotion",
-        "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "rppotion-v0.0.1",
-        "unicode": "📖",
-        "description": "エクトナイトを右クリック及びショートカットキーで使用可能にします",
-        "tags": [
-            "item",
-            "relic",
-            "rp"
         ]
     }, {
         "name": "rotenzone",

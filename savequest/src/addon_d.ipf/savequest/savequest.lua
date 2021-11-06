@@ -1,7 +1,7 @@
 _G["SAVEQUEST"]=_G["SAVEQUEST"] or {}
 local SaveQuest = _G["SAVEQUEST"]["SAVEQUEST"] or {}
 SaveQuest.FRAME_SHORTCUT_USERVALUE_LAYERLEVEL = "SAVEQUEST_LAYERLEVEL"
-saqu = saqu or nil
+saqu=_G["SAVEQUEST"]["SAQU"] 
 -- constructor.
 function SaveQuest.new(self)
   -- initialize members.
@@ -384,7 +384,7 @@ function SaveQuest.new(self)
     if (self:IsPartySharedQuest(tostring(questID))) then
       self:CreateSharePartyIcon(frame);
     end
-    self:SaveShortCutPos(frameName,0,0)
+    self:SaveShortCutPos(frameName,0,locked)
     return frame;
   end
 
