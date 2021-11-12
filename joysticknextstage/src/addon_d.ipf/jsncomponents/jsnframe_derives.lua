@@ -1,4 +1,4 @@
---jsnframe.lua
+--jsnframe_derives.lua
 --アドオン名（大文字）
 local addonName = "joysticknextstage"
 local addonNameLower = string.lower(addonName)
@@ -13,13 +13,11 @@ local acutil = require('acutil')
 g.classes=g.classes or {}
 g.classes.JSNInventoryFrame=function(frame)
     local self={
-        initialize=function (self)
-            
-        end
+
     }
 
 
-    local object=setmetatable(self,{__index=g.classes.JSNFrame(frame)})
+    local object=g.inherit(self,g.classes.JSNFrame(frame))
 
     return object
 end

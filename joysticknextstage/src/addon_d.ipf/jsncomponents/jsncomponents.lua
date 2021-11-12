@@ -15,7 +15,7 @@ local acutil = require('acutil')
 
 
 --ライブラリ読み込み
-CHAT_SYSTEM("[JNSComponents]loaded")
+CHAT_SYSTEM("[JSNComponents]loaded")
 local acutil = require('acutil')
 local function EBI_try_catch(what)
     local status, result = pcall(what.try)
