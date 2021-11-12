@@ -1,6 +1,6 @@
 --jsnmanager.lua
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -23,8 +23,9 @@ g.classes.JSNManager=function ()
         isInitialized=function (self)
             return self.cursor ~= nil
         end,
-        init=function (self)
+        initImpl=function (self)
             self.cursor=g.classes.JSNCursor():init()
+
         end,
         release=function (self)
             if(self.cursor~=nil)then

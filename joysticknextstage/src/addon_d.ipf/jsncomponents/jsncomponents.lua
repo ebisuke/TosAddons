@@ -1,6 +1,6 @@
 --jsncomponents
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'

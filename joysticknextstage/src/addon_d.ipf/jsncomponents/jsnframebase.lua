@@ -1,6 +1,6 @@
 --jsnframebase.lua
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -15,6 +15,10 @@ g.classes.JSNFrameBase=function(jsnmanager)
     local self={
         _jsnWrapperFrame=nil,
         getJSNWrapperFrame=function (self)
+            return self._jsnWrapperFrame
+        end,
+        getNativeFrame=function (self)
+            --duck typing
             return self._jsnWrapperFrame
         end,
 

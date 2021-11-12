@@ -1,6 +1,7 @@
 --joysticknextstage
 --アドオン名（大文字）
 local addonName = "joysticknextstage"
+local addonJSNCommonLibName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -9,7 +10,11 @@ local author = 'ebisuke'
 _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
+_G['ADDONS'] = _G['ADDONS'] or {}
+_G['ADDONS'][author] = _G['ADDONS'][author] or {}
+_G['ADDONS'][author][addonJSNCommonLibName] = _G['ADDONS'][author][addonJSNCommonLibName] or {}
 local g = _G['ADDONS'][author][addonName]
+local jsn = _G['ADDONS'][author][addonNameLower]
 local acutil = require('acutil')
 g.version = 0
 g.settings = {x = 300, y = 300}
@@ -96,10 +101,9 @@ end
 function JOYSTICKNEXTSTAGE_3SEC()
     EBI_try_catch{
         try = function()
-            local frame = ui.GetFrame(g.framename)
+            local frm=jsn.classes.JSNInventoryFrame(g.jsnmanager):init()
 
-            g.jsnmanager.release()
-            g.jsnmanager.init()
+
         end,
         catch = function(error)
             ERROUT(error)
@@ -113,11 +117,11 @@ function JOYSTICKNEXTSTAGE_ON_TIMER()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            if(g.jsnmanager.isInitialized())then
-                g.jsnmanager.processJoystickKey()
-                g.jsnmanager.processFrames()
-                g.jsnmanager.processTick()
-            end
+            -- if(g.jsnmanager:isInitialized())then
+            --     g.jsnmanager:processJoystickKey()
+            --     g.jsnmanager:processFrames()
+            --     g.jsnmanager:processTick()
+            -- end
         end,
         catch = function(error)
             ERROUT(error)

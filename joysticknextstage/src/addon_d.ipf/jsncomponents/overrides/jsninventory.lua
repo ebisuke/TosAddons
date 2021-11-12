@@ -1,6 +1,6 @@
 --jsninventory.lua
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -16,55 +16,40 @@ g.classes=g.classes or {}
 g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe)
 
     local self={
-
         initImpl=function(self)
-            self:init()
-
-            local gbox=self:getJSNWrapperGroupBox()
-            local slotset=gbox:CreateOrGetControl('slotset','inventory',0,0,0,0)
-            AUTO_CAST(slotset)
-            slotset:SetSkinName('inventory_slot')
-            self:relayout()
         end,
-        relayout=function (self)
-            local gbox=self:getJSNWrapperGroupBox()
-            local slotset=gbox:GetChild('inventory')
-            slotset:SetGravity(ui.LEFT,ui.TOP)
-            slotset:SetOffset(0,0)
-            slotset:Resize(self:getRect().w,self:getRect().h)
-        end,
-        onResize=function(self)
-            
+        refreshImpl=function(self)
+            session.BuildInvItemSortedList();
+            local sortedList = session.GetInvItemSortedList();
+            local invItemCount = sortedList:size();
+            --sortedList:at(i);
+            local slotset=self:getSlotSetInterface()
+            local itergen=function(inv)
+                local i=-1
+                return function()
+                    i=i+1
+                    if i<=invItemCount then
+                        return inv:at(i-1)
+                    end
+                end
+            end
+            slotset:assign(itergen(sortedList),function(v,slot)
+                INV_ICON_SETINFO(slot:GetTopParentFrame(),slot,v)
+            end)
         end,
     }
 
-    local object=g.inherit(self,g.classes.JSNComponent(jsnmanager,jsnframe))
-    
+    local object=g.inherit(self,g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe))
     return object
 end
 
 g.classes.JSNInventoryFrame=function(jsnmanager)
 
     local self={
-
+        _inventoryComponent=nil,
         initImpl=function(self)
-            self:init()
-
-            local gbox=self:getJSNWrapperGroupBox()
-            local slotset=gbox:CreateOrGetControl('slotset','inventory',0,0,0,0)
-            AUTO_CAST(slotset)
-            slotset:SetSkinName('inventory_slot')
-            self:relayout()
-        end,
-        relayout=function (self)
-            local gbox=self:getJSNWrapperGroupBox()
-            local slotset=gbox:GetChild('inventory')
-            slotset:SetGravity(ui.LEFT,ui.TOP)
-            slotset:SetOffset(0,0)
-            slotset:Resize(self:getRect().w,self:getRect().h)
-        end,
-        onResize=function(self)
-            
+            self._inventoryComponent=g.classes.JSNInventoryComponent(jsnmanager,self):init()
+            self._inventoryComponent:setRect(0,0,300,300)
         end,
     }
 

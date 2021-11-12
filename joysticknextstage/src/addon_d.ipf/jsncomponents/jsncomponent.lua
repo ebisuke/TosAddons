@@ -1,6 +1,6 @@
 --jsncomponent.lua
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -22,6 +22,10 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         _gravityHorz=gravityhorz,
         _gravityVert=gravityvert,
         _interfaces={},
+        _margin={left=0,right=0,top=0,bottom=0},
+        getJSNFrame=function(self)
+            return self._jsnFrame
+        end,
         getJSNWrapperControl=function(self)
             return self._jsnWrapperGroupbox
         end,
@@ -40,6 +44,11 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         getGravityVert=function(self)
             return self._gravityVert
         end,
+        setMargin=function(self,l,t,r,b)
+            self._margin={left=l,top=t,right=r,bottom=b}
+            self._jsnWrapperGroupbox:SetMargin(l,t,r,b)
+            self:onResize()
+        end,
         setGravityHorz=function(self,gravityhorz)
             self._gravityHorz=gravityhorz
             self._jsnWrapperGroupbox:SetGravity(gravityhorz,self._gravityVert)
@@ -50,23 +59,45 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             self._jsnWrapperGroupbox:SetGravity(self._gravityHorz,gravityvert)
             self:onResize()
         end,
-        getJSNFrame=function(self)
-            return self._jsnframe
-        end,
         getInterfaces=function(self)
             return self._interfaces
         end,
         addInterface=function(self,interface)
             self._interfaces[#self._interfaces]=interface
+
+            return interface
         end,
         onResize=function(self)
+            self:onResizeImpl()
+            -- 伝搬
+            for i,v in ipairs(self._interfaces) do
+                v:onResize()
+            end
+            
+          
+        end,
+        onResizeImpl=function(self)
+            -- please override
+        end,
+        refresh=function(self)
+            self:refreshImpl()
+        end,
+        refreshImpl=function(self)
+            -- please override
+        end,
+        relayout=function(self)
+            self:relayoutImpl()
+        end,
+        relayoutImpl=function(self)
             -- please override
         end,
         initImpl=function(self)
-            self._jsnWrapperGroupbox=self._jsnFrame:CreateOrGetControl("groupbox","jsngbox_"..self:getID(),self._rect.x,self._rect.y,self._rect.w,self._rect.h)
-            AUTO_CAST(self._jsnWrapperGroupbox)
-            self._jsnWrapperGroupbox:EnableHittestGroupBox(false)
-            self._jsnWrapperGroupbox:SetGravity(self._gravityHorz,self._gravityVert)
+            self._jsnWrapperGroupbox=self:getJSNFrame():getNativeFrame():
+            CreateOrGetControl("groupbox","jsngbox_"..self:getID(),self._rect.x,self._rect.y,self._rect.w,self._rect.h)
+            AUTO_CAST(self:getJSNWrapperControl())
+            self:getJSNWrapperControl():EnableHittestGroupBox(false)
+            self:getJSNWrapperControl():SetGravity(self._gravityHorz,self._gravityVert)
+            self:refresh();
         end,
     }
 

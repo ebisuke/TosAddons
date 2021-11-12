@@ -1,6 +1,6 @@
 --jsnobject.lua
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -35,9 +35,11 @@ end
 g.inherit=function(obj,...)
     local chain={...}
     local object=obj
-    for super in pairs(chain) do
+    object._hierarchy= object._hierarchy or {}
+
+    for _,super in pairs(chain) do
+
         object=setmetatable(object,{__index=super})
-        object._hierarchy=   object._hierarchy or {}
         object._hierarchy[#object._hierarchy+1]={
             super=super
         }
@@ -63,7 +65,7 @@ g.classes.JSNObject=function()
      
                 v.super.initImpl(self)
             end
-
+            self:initImpl()
             return self
         end,
         release=function(self)
@@ -72,6 +74,7 @@ g.classes.JSNObject=function()
             --don't inherit this function
             local called={}
             local reversed=ReverseTable(self._hierarchy)
+            self:releaseImpl(self)
             for i,v in ipairs(reversed) do
                      v.super.releaseImpl(self)
                
@@ -117,11 +120,15 @@ g.classes.JSNHandlerEveryTick=function()
     return object
 
 end
-g.classes.JSNFocusable=function()
+g.classes.JSNFocusable=function(disableFocus)
 
     local self={
         _focused=false,
+        _disableFocus=disableFocus,
         focus=function (self)
+            if(not self._disableFocus)then
+                return
+            end
             self._focused=true
             if(self:isInstanceOf(g.classes.JSNContainer))then
                 for i,v in ipairs(self:getChildren())do
@@ -133,15 +140,18 @@ g.classes.JSNFocusable=function()
             end
             self:onFocused()
         end,
+        setDisableFocus=function (self,disableFocus)
+            self._disableFocus=disableFocus
+        end,
         onFocused=function (self)
             --please override
         end,
         unfocus=function (self)
             self._focused=false
+            self:onUnfocused()
         end,
         onUnfocused=function (self)
             --please override
-            self:onUnfocused()
         end,
     }
     local object=g.inherit(self,g.classes.JSNObject())
@@ -194,7 +204,7 @@ end
 g.classes.JSNManagerLinker=function(jsnmanager)
 
     local self={
-        _jsnmanager=nil,
+        _jsnmanager=jsnmanager,
         getJSNManager=function (self)
             return self._jsnmanager
         end,

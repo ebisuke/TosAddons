@@ -1,6 +1,6 @@
 --jsnframe_derives.lua
 --アドオン名（大文字）
-local addonName = "joysticknextstage"
+local addonName = "jsn_commonlib"
 local addonNameLower = string.lower(addonName)
 --作者名
 local author = 'ebisuke'
@@ -11,13 +11,3 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.classes=g.classes or {}
-g.classes.JSNInventoryFrame=function(frame)
-    local self={
-
-    }
-
-
-    local object=g.inherit(self,g.classes.JSNFrame(frame))
-
-    return object
-end
