@@ -11,20 +11,22 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.classes=g.classes or {}
-g.classes.JSNFrame=function(frame)
+g.classes.JSNFrame=function(nativeframe)
     local self={
-        _originalFrame=frame,
-        getOriginalFrame=function(self)
-            return self._originalFrame
+        _originalNativeFrame=nativeframe,
+        getOriginalNativeFrame=function(self)
+            return self._originalNativeFrame
         end,
-
+        initImpl=function(self)
+            self.getJSNWrapperFrame():SetOffset(self:getOriginalNativeFrame():GetX(),self:getOriginalNativeFrame():GetY())
+            self.getJSNWrapperFrame():Resize(self:getOriginalNativeFrame():GetWidth(),self:getOriginalNativeFrame():GetHeight())
+        end,
     }
 
 
-    local object=setmetatable(self,{__index=g.classes.JSNFrameBase()})
+    local object=g.inherit(g.inherit(self,g.classes.JSNFrameBase()),g.classes.JSNFocusable())
 
 
-    object.getJSNSideFrame():SetOffset(object:getOriginalFrame():GetX(),object:getOriginalFrame():GetY())
-    object.getJSNSideFrame():Resize(object:getOriginalFrame():GetWidth(),object:getOriginalFrame():GetHeight())
+    
     return object
 end

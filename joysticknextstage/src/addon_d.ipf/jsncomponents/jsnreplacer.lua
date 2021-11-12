@@ -1,4 +1,4 @@
---jsninterface.lua
+--jsnreplacer.lua
 --アドオン名（大文字）
 local addonName = "joysticknextstage"
 local addonNameLower = string.lower(addonName)
@@ -14,20 +14,20 @@ local acutil = require('acutil')
 
 
 g.classes=g.classes or {}
-g.classes.JSNReplacer=function(originalFrameName,newJSNFrameConstructor)
+g.classes.JSNReplacer=function(originalNativeFrameName,newJSNFrameConstructor)
 
     local self={
-        _originalFrameName=originalFrameName,
+        _originalNativeFrameName=originalNativeFrameName,
         _newJSNFrameConstructor=newJSNFrameConstructor,
         isCreatedOriginalFrame=function(self)
-            return ui.GetFrame(self._originalFrameName)~=nil
+            return ui.GetFrame(self._originalNativeFrameName)~=nil
         end,
         createJSNFrame=function(self,nativeFrame)
             local frame=self._newJSNFrameConstructor(nativeFrame)
-            return frame
+            return frame:init()
         end
     }
 
-    local object=setmetatable(self,{})
+    local object=g.inherit(self,g.classes.JSNObject())
     return object
 end

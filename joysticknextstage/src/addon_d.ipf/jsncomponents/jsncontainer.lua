@@ -57,6 +57,6 @@ g.classes.JSNContainer=function()
         end,
     }
 
-    local object=setmetatable(self,{__index=g.classes.JSNObject()})
+    local object=g.inherit(self,g.classes.JSNObject())
     return object
 end

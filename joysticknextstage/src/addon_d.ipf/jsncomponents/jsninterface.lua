@@ -14,7 +14,7 @@ local acutil = require('acutil')
 
 
 g.classes=g.classes or {}
-g.classes.JSNInterface=function(parent)
+g.classes.JSNInterface=function()
 
     local self={
         _nativeObjects={},
@@ -46,6 +46,6 @@ g.classes.JSNInterface=function(parent)
         
     }
 
-    local object=setmetatable(self,{__index=g.classes.JSNObject()})
+    local object=g.inherit(self,g.classes.JSNObject())
     return object
 end

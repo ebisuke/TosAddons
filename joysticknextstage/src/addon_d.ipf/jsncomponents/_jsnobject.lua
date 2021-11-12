@@ -24,55 +24,79 @@ g.instanceOf=function(subject,super)
     end	
 
 end
-g.inherit=function(obj,super)
-    setmetatable(obj,{__index=super})
+local function ReverseTable(t)
+    local reversedTable = {}
+    local itemCount = #t
+    for k, v in ipairs(t) do
+        reversedTable[itemCount + 1 - k] = v
+    end
+    return reversedTable
+end
+g.inherit=function(obj,...)
+    local chain={...}
+    local object=obj
+    for super in pairs(chain) do
+        object=setmetatable(object,{__index=super})
+        object._hierarchy=   object._hierarchy or {}
+        object._hierarchy[#object._hierarchy+1]={
+            super=super
+        }
+    end
+
+    return object
 end
 g.classes=g.classes or {}
-g.classes.JSNObject=function(rect)
+g.classes.JSNObject=function()
 
     local self={
-        _id=""..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999),
-        _rect={
-            x=0,
-            y=0,
-            w=0,
-            h=0,
-        },
-        _name="",
+      
+        _id=""..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999),
+        init=function(self)
+            --don't be confused with the initialize function of the class
+            --don't call in the constructor
+            --don't inherit this function
+            self._hierarchy[#self._hierarchy+1]={
+                super=self
+            }
+        
+            for i,v in ipairs(self._hierarchy) do
+     
+                v.super.initImpl(self)
+            end
+
+            return self
+        end,
+        release=function(self)
+            --don't be confused with the initialize function of the class
+            --don't call in the constructor
+            --don't inherit this function
+            local called={}
+            local reversed=ReverseTable(self._hierarchy)
+            for i,v in ipairs(reversed) do
+                     v.super.releaseImpl(self)
+               
+            end
+
+            return self
+        end,
+        initImpl=function(self)
+            --override me
+        end,
+        releaseImpl=function(self)
+            --override me
+        end,
+        
         getID=function(self)
             return self._id
-        end,
-        setName=function(self,name)
-            self._name=name
-        end,
-        getName=function(self)
-            return self._name
-        end,
-        setRect=function(self,x,y,w,h)
-            self._rect.x=x
-            self._rect.y=y
-            self._rect.w=w
-            self._rect.h=h
-        end,
-        getRect=function(self)
-            return self._rect
         end,
         isInstanceOf=function (self,super)
             g.instanceOf(self,super)
         end,
     }
-    self:setRect(rect.x,rect.y,rect.w,rect.h);
 
     return self
 end
-g.classes.JSNDisposable=function()
-    local self={
-        dispose=function(self)
-            --please override
-        end
-    }
-    return self
-end
+
 g.classes.JSNHandlerEveryTick=function()
 
     local self={
@@ -80,16 +104,52 @@ g.classes.JSNHandlerEveryTick=function()
         onEveryTick=function (self)
             --please override
         end,
-        dispose=function(self)
+        initImpl=function (self)
+            g.jsnmanager.registerTickListener(self)   
+        end,
+        releaseImpl=function(self)
             g.jsnmanager.unregisterTickListener(self)
         end
     }
-    local object=g.inherit(self,g.classes.JSNDisposable())
-    g.jsnmanager.registerTickListener(object)
-    return self
+    local object=g.inherit(self,g.classes.JSNObject())
+
+
+    return object
 
 end
+g.classes.JSNFocusable=function()
 
+    local self={
+        _focused=false,
+        focus=function (self)
+            self._focused=true
+            if(self:isInstanceOf(g.classes.JSNContainer))then
+                for i,v in ipairs(self:getChildren())do
+                    if(v~=self and v:isInstanceOf(g.classes.JSNFocusable))then
+                        --remove siblings focus
+                        v:unfocus()
+                    end
+                end
+            end
+            self:onFocused()
+        end,
+        onFocused=function (self)
+            --please override
+        end,
+        unfocus=function (self)
+            self._focused=false
+        end,
+        onUnfocused=function (self)
+            --please override
+            self:onUnfocused()
+        end,
+    }
+    local object=g.inherit(self,g.classes.JSNObject())
+
+
+    return object
+
+end
 g.classes.JSNKey={
     NONE=0,
     JOY_UP=JOY_UP,
@@ -123,11 +183,23 @@ g.classes.JSNHandlerKey=function()
         onKeyRepeat=function (self,key)
             --please override
         end,
-        dispose=function(self)
+        releaseImpl=function(self)
             g.jsnmanager.unregisterKeyListener(self)
         end
     }
-    local object=setmetatable(self,{__index=g.classes.JSNDisposable()})
-    g.jsnmanager.registerKeyListener(object)
-    return self
+    local object=g.inherit(self,g.classes.JSNObject())
+
+    return object
+end
+g.classes.JSNManagerLinker=function(jsnmanager)
+
+    local self={
+        _jsnmanager=nil,
+        getJSNManager=function (self)
+            return self._jsnmanager
+        end,
+    }
+    local object=g.inherit(self,g.classes.JSNObject())
+
+    return object
 end

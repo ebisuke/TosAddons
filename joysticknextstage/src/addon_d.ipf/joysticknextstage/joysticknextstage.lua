@@ -78,14 +78,28 @@ function JOYSTICKNEXTSTAGE_ON_INIT(addon, frame)
             g.addon = addon
             g.frame = frame
            
-            addon:RegisterMsg('FPS_UPDATE', 'JOYSTICNEXTSTAGE_FPS_UPDATE');
+            addon:RegisterMsg('FPS_UPDATE', 'JOYSTICKNEXTSTAGE_FPS_UPDATE');
+            addon:RegisterMsg('GAME_START_3SEC', 'JOYSTICKNEXTSTAGE_3SEC');
           
             local timer = frame:GetChild('addontimer')
             AUTO_CAST(timer)
             timer:SetUpdateScript('JOYSTICKNEXTSTAGE_ON_TIMER')
             timer:Start(0.00)
             timer:EnableHideUpdate(1)
-  
+            
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function JOYSTICKNEXTSTAGE_3SEC()
+    EBI_try_catch{
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+
+            g.jsnmanager.release()
+            g.jsnmanager.init()
         end,
         catch = function(error)
             ERROUT(error)
@@ -99,9 +113,11 @@ function JOYSTICKNEXTSTAGE_ON_TIMER()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            g.jsnmanager.processJoystickKey()
-            g.jsnmanager.processFrames()
-           
+            if(g.jsnmanager.isInitialized())then
+                g.jsnmanager.processJoystickKey()
+                g.jsnmanager.processFrames()
+                g.jsnmanager.processTick()
+            end
         end,
         catch = function(error)
             ERROUT(error)

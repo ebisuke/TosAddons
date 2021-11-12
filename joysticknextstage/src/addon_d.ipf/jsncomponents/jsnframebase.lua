@@ -11,31 +11,33 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 g.classes=g.classes or {}
-g.classes.JSNFrameBase=function(frame)
+g.classes.JSNFrameBase=function(jsnmanager)
     local self={
-        _jsnSideFrame=nil,
-        getJSNSideFrame=function (self)
-            return self._jsnSideFrame
+        _jsnWrapperFrame=nil,
+        getJSNWrapperFrame=function (self)
+            return self._jsnWrapperFrame
         end,
-        initialize=function (self)
-            --please override
-        end,
-        finalize=function (self)
-            if self._jsnSideFrame~=nil then
-                ui.DestroyFrame(self._jsnSideFrame:GetName())
-                self._jsnSideFrame=nil
+
+        releaseImpl=function (self)
+            if self._jsnWrapperFrame~=nil then
+                ui.DestroyFrame(self._jsnWrapperFrame:GetName())
+                self._jsnWrapperFrame=nil
             end
         end,
         setRect=function (self,x,y,w,h)
             self:getJSNSideFrame():SetOffset(x,y)
             self:getJSNSideFrame():Resize(w,h)
         end,
+        initImpl=function (self)
+            self._jsnWrapperFrame=ui.CreateNewFrame('jsncomponents','jsnsideframe-'..self:getID())
+        end,
+ 
+    
     }
 
-    local object=setmetatable(self,{__index=g.classes.JSNContainer()})
+    local object=g.inherit(self,g.classes.JSNContainer(),g.classes.JSNManagerLinker(jsnmanager))
 
-    object._jsnSideFrame=ui.CreateNewFrame('jsncomponent','jsnsideframe-'..object:getID())
-
+ 
     return object
 
 end
