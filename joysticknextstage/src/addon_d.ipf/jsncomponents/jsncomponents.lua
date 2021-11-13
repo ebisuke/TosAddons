@@ -12,6 +12,7 @@ _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 
+g.debug=true
 
 
 --ライブラリ読み込み

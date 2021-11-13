@@ -21,31 +21,30 @@ g.classes.JSNCustomFrame=function(jsnmanager,templateFrameName)
         initImpl=function(self)
             local frame=ui.CreateNewFrame(self:getTemplateFrameName(),"jsncustom_"..self:getID())
             frame:ShowWindow(1)
-            self._nativeFrame=frame
+            self:setNativeFrame(frame)
+            --print("INIT:"..self:getNativeFrame():GetName())
         end,
         onKeyDownImpl=function(self,key)
-            print("iml")
-            if key==g.classes.JSNKey.CLOSE then
-                print('close')
-                self:release()
-            end
+
+            
         end,
         releaseImpl=function(self)
-            if(self._nativeFrame)then
-                self._nativeFrame:ShowWindow(0)
-                ui.DestroyFrame(self._nativeFrame:GetName())
-                self._nativeFrame=nil
+            if(self:getNativeFrame())then
+                --print("RELEASE"..self:getNativeFrame():GetName())
+                self:getNativeFrame():ShowWindow(0)
+                ui.DestroyFrame(self:getNativeFrame():GetName())
+                self:setNativeFrame(nil)
             end
         end,
         setTitle=function(self,title)
             local frame=self:getNativeFrame()
-            local titleText=frame:GetChild("title")
+            local titleText=frame:GetChildRecursively("title")
             titleText:SetText("{@st42}{s20}"..title)
         end,
     }
 
 
-    local object=g.inherit(self,g.classes.JSNFrameBase(jsnmanager),g.classes.JSNFocusable(jsnmanager))
+    local object=g.inherit(self,g.classes.JSNFrameBase(jsnmanager))
 
 
     

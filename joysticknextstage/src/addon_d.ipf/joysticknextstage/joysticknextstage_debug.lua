@@ -46,12 +46,16 @@ function JOYSTICKNEXTSTAGE_DEBUG_RELOAD()
 
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsncursor.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsncustomframe.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsngenericfunc.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsnframe_derives.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsninventory.lua")
 
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsncommonslotset.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\frames\\jsncontextmenu.lua")
+
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\interfaces\\jsnislot.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\interfaces\\jsnislotset.lua")
+
     jsn.jsnmanager=jsn.classes.JSNManager()
     local f,err =pcall(jsn.jsnmanager.init,jsn.jsnmanager)
     if(not f)then

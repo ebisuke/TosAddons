@@ -21,21 +21,17 @@ g.classes.JSNManager=function ()
         keyRepeatDelay=13,
         keyListeners={},
         tickListeners={},
-        cursor=nil,
+        _controlRestrictionCounter=0,
         activeFrame=nil,
         isInitialized=function (self)
             return self.cursor ~= nil
         end,
         initImpl=function (self)
             self:release()
-            self.cursor=g.classes.JSNCursor(self):init()
-
+          
         end,
         releaseImpl=function (self)
-            if(self.cursor~=nil)then
-                self.cursor:release()
-                self.cursor=nil
-            end
+          
         end,
         addFrame=function (self,frame)
             table.insert(self.jsnframes,frame)
@@ -124,6 +120,7 @@ g.classes.JSNManager=function ()
             end
         end,
         processTick=function(self)
+
             for i,v in pairs(self.tickListeners) do
                 v:onEveryTick()
             end
@@ -138,31 +135,32 @@ g.classes.JSNManager=function ()
             end
         end,
         registerKeyListener=function (self,obj)
+
+           
             self.keyListeners[obj:getID()]=obj
         end,
         unregisterKeyListener=function (self,obj)
-            print('unreg')
+
             self.keyListeners[obj:getID()]=nil
         end,    
         registerTickListener=function (self,obj)
+            
             self.tickListeners[obj:getID()]=obj
         end,
         unregisterTickListener=function (self,obj)
             self.tickListeners[obj:getID()]=nil
         end,
-        focused=function (self,jsnfocusable)
-            -- don't call directly. instead, call JSNFocusable:focus()
-            local obj=jsnfocusable;
-            if obj:instanceOf(g.classes.JSNComponent()) then
-                --set cursor to component
-                self.cursor:setAnchor(obj)
-            elseif obj:instanceOf(g.classes.JSNFrameBase()) then
-                --set cursor to frame
-                self.cursor:setAnchor(obj)
-            else
-                --invalid object
-                error("invalid object to focus")
+        incrementControlRestrictionCounter=function (self)
+            if(self._controlRestrictionCounter==0)then
+                control.EnableControl(0,0)
             end
+            self._controlRestrictionCounter=self._controlRestrictionCounter+1
+        end,
+        decrementControlRestrictionCounter=function (self)
+            if(self._controlRestrictionCounter==1)then
+                control.EnableControl(1,1)
+            end
+            self._controlRestrictionCounter=self._controlRestrictionCounter-1
         end,
     }
 

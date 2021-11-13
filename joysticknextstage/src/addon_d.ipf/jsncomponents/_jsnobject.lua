@@ -32,10 +32,10 @@ local function ReverseTable(t)
     end
     return reversedTable
 end
-g. CombineTable=function(t1,t2)
+g.CombineTable=function(t1,t2)
     local t = t1
     for key, value in pairs(t2) do
-        if(t[key] == nil)then
+        if(t[key] == nil and value)then
             t[key] = value
         end
     end
@@ -53,39 +53,50 @@ g.inherit=function(obj,...)
     local combinedmeta={}
     local hierarchy={}
     local behindclasses={}
+
+
+
     for _,super in pairs(chain) do
         if(not  behindclasses[super._className])then
             behindclasses[super._className]=super
-          
-        end
-        combinedmeta=g.CombineTable(combinedmeta,super)
-        hierarchy[#hierarchy+1]={super=super}
-        if(super._hierarchy) then
-            for _,v in ipairs(super._hierarchy) do
-                if(not  behindclasses[v.super._className])then
-                    behindclasses[v.super._className]=v.super
-                end
-                combinedmeta=g.CombineTable(combinedmeta,v.super)
-                hierarchy[#hierarchy+1]={super=v.super}
-            end
         end
         
+            combinedmeta=g.CombineTable(combinedmeta,super)
+            hierarchy[#hierarchy+1]={super=super}
+            if(super._hierarchy) then
+                for _,v in ipairs(super._hierarchy) do
+                    if(not  behindclasses[v.super._className])then
+                        behindclasses[v.super._className]=v.super
+                    end
+                    
+                    combinedmeta=g.CombineTable(combinedmeta,v.super)
+                    hierarchy[#hierarchy+1]={
+                        super=v.super
+                    }
+                   
+                end
+            end
+        
     end
+
     --remove duplication
     local hash = {}
     local res = {}
-    table.insert(hierarchy,1,{super=object})
+    
+  
     for _,v in ipairs(hierarchy) do
         if (not hash[v.super._className]) then
             res[#res+1] = v -- you could print here instead of saving to result table if you wanted
             hash[v.super._className] = true
         end
     end
-    behindclasses[object._className]=object
-    hierarchy=res
-    object=g.CombineTable(object,combinedmeta)
-    object._hierarchy=hierarchy
     
+    hierarchy=ReverseTable(res)
+    table.insert(hierarchy,{super=object})
+    object=g.CombineTable(object,combinedmeta)
+
+    behindclasses[object._className]=object
+    object._hierarchy=hierarchy
     object._supers=behindclasses
     return object
 end
@@ -93,7 +104,7 @@ g.classes=g.classes or {}
 g.classes.JSNObject=function()
 
     local self={
-      
+
         _className="JSNObject",
         _id=nil,
         _hierarchy={},
@@ -102,13 +113,17 @@ g.classes.JSNObject=function()
             --don't call in the constructor
             --don't inherit this function
             self._id=""..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999)
-
-            for i,v in ipairs(ReverseTable(self._hierarchy)) do
-
+    
+            for i,v in ipairs(self._hierarchy) do
+                --print(">"..v.super._className)
                 v.super.initImpl(self)
             end
+
+            for i,v in ipairs(self._hierarchy) do
+                --print(">"..v.super._className)
+                v.super.lazyInitImpl(self)
+            end
  
-    
     
             return self
         end,
@@ -117,17 +132,24 @@ g.classes.JSNObject=function()
             --don't call in the constructor
             --don't inherit this function
             local called={}
-            local reversed=(self._hierarchy)
-            self:releaseImpl()
+            local reversed=ReverseTable(self._hierarchy)
+            
             for i,v in ipairs(reversed) do
+                print(v.super._className.."RELA")
                 v.super.releaseImpl(self)
-               
             end
 
             return self
         end,
         initImpl=function(self)
             --override me
+           
+             
+        end,
+        lazyInitImpl=function(self)
+            --override me
+           
+             
         end,
         releaseImpl=function(self)
             --override me
@@ -136,6 +158,7 @@ g.classes.JSNObject=function()
         getID=function(self)
             return self._id
         end,
+
         instanceOf=function (self,super)
             if(type(super)=="function")then
                 error "instanceOf must be needed object.not constructor."
@@ -154,61 +177,150 @@ g.classes.JSNObject=function()
     self._hierarchy[#self._hierarchy+1]={super=self}
     return self
 end
+g.classes.JSNPlayerControlDisabler=function(jsnmanager)
 
+    local self={
+        _className="JSNPlayerControlDisabler",
+        initImpl=function(self)
+            self._jsnmanager=jsnmanager
+            self._jsnmanager:incrementControlRestrictionCounter()
+        end,
+        releaseImpl=function(self)
+            self._jsnmanager:decrementControlRestrictionCounter()
+        end,
+    }
+    local object=g.inherit(self, g.classes.JSNManagerLinker(jsnmanager))
+    return object
+end
 
-g.classes.JSNFocusable=function(jsnmanager,disableFocus)
+g.classes.JSNFocusable=function(jsnmanager,linkedjsnobject)
 
     local self={
         _className="JSNFocusable",
-        _focused=false,
-        _disableFocus=disableFocus,
-        focus=function (self)
-            if(self._disableFocus)then
-                return
+        _focused=nil,
+        _linkedJSNObject=linkedjsnobject,
+        _cursor=nil,
+        _modal=nil,
+        initImpl=function(self)
+            if(self._linkedJSNObject==nil) then
+                error("JSNFocusable link must not nil")
             end
-          
-            if(self:instanceOf(g.classes.JSNParentChildRelation()))then
-                for i,v in ipairs(self:getChildren())do
-                    if(v~=self and v:instanceOf(g.classes.JSNFocusable()))then
+            if(not (self._linkedJSNObject:instanceOf(g.classes.JSNFrameBase()) or self._linkedJSNObject:instanceOf(g.classes.JSNComponent()))) then
+                error("JSNFocusable must be linked to a JSNFrameBase or JSNComponent")
+            end
+
+            local frame=self._linkedJSNObject
+            if self._linkedJSNObject:instanceOf(g.classes.JSNComponent()) then
+                frame=self._linkedJSNObject:getJSNFrame()
+            end
+           
+            self._cursor=g.classes.JSNCursor(jsnmanager,frame):init()
+        end,
+        _setModalParameter=function(self,param)
+            if(param==nil)then
+                error("JSNFocusable _setModalParameter must not nil")
+            end
+            self._modal=param
+        
+        end,
+        callModal=function(self,modalfocusable,whenunfocusedfunc)
+            self:unfocus()
+            modalfocusable:_setModalParameter({
+                whenunfocusedfunc=whenunfocusedfunc,
+                caller=self,
+            })
+            return modalfocusable
+        end,
+        releaseImpl=function(self)
+            
+            self:unfocus()
+            if(self._cursor)then
+                self._cursor:release()
+                self._cursor=nil
+            end
+
+            if(self._modal)then
+    
+                self._modal.caller:focus()
+                if(self._modal.whenunfocusedfunc)then
+                    self._modal.whenunfocusedfunc(self._modal,self)
+                end
+                self._modal=nil
+            end
+        end,
+        focus=function (self)
+   
+           
+            if(self:getParent() and self:getParent():instanceOf(g.classes.JSNParentChildRelation()))then
+                for i,v in ipairs(self:getParent():getChildren())do
+                    if(v:getID()~=self:getID() and v:instanceOf(g.classes.JSNFocusable()))then
                         --remove siblings focus
                         v:unfocus()
                     end
                 end
             end
-            self._focused=true
-            self:getJSNManager():focused(self)
-            self:onFocused()
+
+           
+            if(not self._focused)then
+                self._focused=true
+                self:onFocused()
+            end
+        
+          
+            
+            --focus parents
+            if(self:instanceOf(g.classes.JSNParentChildRelation()))then
+                local parent=self:getParent()
+                if(parent==self)then
+                    error("parent must not be self")
+                end
+                
+                if(parent and parent:instanceOf(g.classes.JSNFocusable()))then
+                    parent:focus()
+                end
+                   
+            end
+
         end,
-        setDisableFocus=function (self,disableFocus)
-            self._disableFocus=disableFocus
+        hasFocus=function(self)
+            return self._focused
         end,
+     
         onFocused=function (self)
+
             self:onFocusedImpl()
         end,
         onFocusedImpl=function (self)
             --please override
         end,
         unfocus=function (self)
-            self._focused=false
-            self:onUnfocused()
+            if(self._focused)then
+                self._focused=nil
+                self:onUnfocused()
+            end
         end,
         onUnfocused=function (self)
             --please override
             self:onUnfocusedImpl()
+            
+          
         end,
         onUnfocusedImpl=function (self)
             --please override
         end,
         getCursorObject=function (self)
-            return self:getJSNManager().cursor
+            return self._cursor
         end,
         setCursorRect=function (self,x,y,w,h)
 
             self:getCursorObject():setCursorRect(x,y,w,h)
             self:getCursorObject():setAnchor(self)
         end,
+        getLinkedJSNObject=function (self)
+            return self._linkedJSNObject
+        end,
     }
-    local object=g.inherit(self,g.classes.JSNManagerLinker(jsnmanager))
+    local object=g.inherit(self, g.classes.JSNManagerLinker(jsnmanager))
 
 
     return object
@@ -309,15 +421,23 @@ g.jsnKeyInterpretation={
 }
 -- owner-follower relationship
 -- owner can't know about followers usually.(don't use function of start with "_" directly)
-g.classes.JSNOwnerRelation=function (owner)
+-- weak parameter is effect to hasLeastOneFollower function.
+g.classes.JSNOwnerRelation=function (owner,weak)
     local self={
+        _className="JSNOwnerRelation",
         _owner=owner,
         _followers={},
+        _weak=weak or false,
         getOwner=function (self)
             return self._owner
         end,
         hasLeastOneFollower=function (self)
-            return #self._followers>0
+            for k,v in pairs(self._followers) do
+                if not v._weak then
+                    return true
+                end
+            end
+            return false
         end,
         _addFollower=function (self,follower)
             self._followers[#self._followers+1]=follower
@@ -353,9 +473,13 @@ end
 -- parent can know about children.
 g.classes.JSNParentChildRelation=function (parent)
     local self={
+        _className="JSNParentChildRelation",
         _parent=parent,
         _children={},
         initImpl=function (self)
+            if(self==self:getParent())then
+                error("parent can't be itself")
+            end
             if(self:getParent()~=nil)then
                 self:getParent():addChild(self)
             end
@@ -366,6 +490,9 @@ g.classes.JSNParentChildRelation=function (parent)
             end
         end,
         setParent=function (self,parent)
+            if(self==parent)then
+                error("parent can't be itself")
+            end
             if(self:getParent()~=nil)then
                 self:getParent():removeChild(self)
             end
@@ -381,6 +508,9 @@ g.classes.JSNParentChildRelation=function (parent)
             return self._children
         end,
         addChild=function (self,child)
+            if(self==child)then
+                error("child can't be itself")
+            end
             table.insert(self._children,child)
             self:onAddChild(child)
         end,
@@ -463,6 +593,7 @@ g.classes.JSNKeyHandler=function(jsnmanager)
             if(self:instanceOf(g.classes.JSNParentChildRelation()))then
                 --親がいたら直接的には受けない
                 if self:getParent() then
+     
                     return false
                 end
             end
@@ -499,6 +630,9 @@ g.classes.JSNEveryTickHandler=function(jsnmanager)
     local self={
         _className="JSNEveryTickHandler",
         onEveryTick=function (self)
+            self:onEveryTickImpl()
+        end,
+        onEveryTickImpl=function (self)
             --please override
         end,
         initImpl=function (self)

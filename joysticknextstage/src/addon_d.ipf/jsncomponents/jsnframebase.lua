@@ -15,12 +15,21 @@ g.classes.JSNFrameBase=function(jsnmanager)
     local self={
         _className="JSNFrameBase",
         _nativeFrame=nil,
-   
+        setNativeFrame=function(self,nativeFrame)
+            self._nativeFrame=nativeFrame
+          
+        end,
+        setGravity=function(self,horz,vert)
+            self:getNativeFrame():SetGravity(horz,vert)
+        end,
         getNativeFrame=function (self)
             return self._nativeFrame
         end,
         setRect=function (self,x,y,w,h)
             self:getNativeFrame():SetOffset(x,y)
+            self:getNativeFrame():Resize(w,h)
+        end,
+        resize=function (self,w,h)
             self:getNativeFrame():Resize(w,h)
         end,
         getHeight=function(self)
@@ -29,14 +38,23 @@ g.classes.JSNFrameBase=function(jsnmanager)
         getWidth=function(self)
             return self:getNativeFrame():GetWidth()
         end,
-       
-        releaseImpl=function(self)
-
+        getX=function(self)
+            return self:getNativeFrame():GetX()
         end,
+        getY=function(self)
+            return self:getNativeFrame():GetY()
+        end,
+        getGlobalX=function(self)
+            return self:getNativeFrame():GetGlobalX()
+        end,
+        getGlobalY=function(self)
+            return self:getNativeFrame():GetGlobalY()
+        end,
+       
 
     }
 
-    local object=g.inherit(self,g.classes.JSNHandlerKey(jsnmanager), g.classes.JSNParentChildRelation(),g.classes.JSNManagerLinker(jsnmanager))
+    local object=g.inherit(self,g.classes.JSNKeyHandler(jsnmanager), g.classes.JSNParentChildRelation(),g.classes.JSNManagerLinker(jsnmanager))
 
  
     return object

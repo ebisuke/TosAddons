@@ -18,7 +18,7 @@ g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe)
     local self={
         _className="JSNInventoryComponent",
         initImpl=function(self)
-            self:focus()
+
         end,
         refreshImpl=function(self)
           
@@ -44,7 +44,7 @@ g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe)
         end,
     }
 
-    local object=g.inherit(self, g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe),g.classes.JSNFocusable(jsnmanager))
+    local object=g.inherit(self, g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe),g.classes.JSNFocusable(jsnmanager,self))
     return object
 end
 
@@ -58,19 +58,31 @@ g.classes.JSNInventoryFrame=function(jsnmanager)
             self._inventoryComponent:fitToFrame(30,100,30,100)
             self._inventoryComponent:setColumnCount(math.floor(self._inventoryComponent:getRect().w/64))
             self._inventoryComponent:refresh()
-            self:addChild(self._inventoryComponent)
+            self:setTitle("Inventory")
+           
+        end,
+        lazyInitImpl=   function(self)
+            self:focus()
+
+            --self._inventoryComponent:focus()
         end,
         onFocusedImpl=function(self)
             self._inventoryComponent:focus()
-            self._inventoryComponent:setCursorRect(0,0,128,128)
         end,
         onKeyDownImpl=function(self,key)
-            self._supers["JSNCustomFrame"].onKeyDownImpl(self,key)
-            self._inventoryComponent:onKeyDown(key)
+            if(key==g.classes.JSNKey.CLOSE )then
+                self:release()
+                imcSound.PlaySoundEvent(g.sounds.CANCEL)
+                return
+            end
         end,
     }
 
-    local object=g.inherit(self,g.classes.JSNCustomFrame(jsnmanager,"jsnframe"),g.classes.JSNFocusable(jsnmanager))
+    local object=g.inherit(self,
+    g.classes.JSNCustomFrame(jsnmanager,"jsnframe"),
+    g.classes.JSNPlayerControlDisabler(jsnmanager),
+     g.classes.JSNOwnerRelation(), 
+     g.classes.JSNFocusable(jsnmanager,self))
     
     return object
 end

@@ -24,13 +24,26 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         _gravityVert=gravityvert or ui.TOP,
         _interfaces={},
         _margin={left=0,right=0,top=0,bottom=0},
+
+
         getJSNFrame=function(self)
             return self._jsnFrame
         end,
         getWrapperNativeControl=function(self)
             return self._wrapperGroupbox
         end,
-
+        getX=function(self)
+            return self._rect.x
+        end,
+        getY=function(self)
+            return self._rect.y
+        end,
+        getWidth=function(self)
+            return self._rect.w
+        end,
+        getHeight=function(self)
+            return self._rect.h
+        end,
         getRect=function(self)
             return self._rect
         end,
@@ -55,6 +68,25 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         end,
         getGravityVert=function(self)
             return self._gravityVert
+        end,
+        ensureScroll=function(self,y,margin)
+            -- Y座標がエリアの中に入るようにする
+            local gbox=self:getWrapperNativeControl()
+          
+            if(math.max(0,y-margin)<gbox:GetScrollCurPos()) then
+                gbox:SetScrollPos(math.max(y-margin,0))
+
+                gbox:InvalidateScrollBar()
+            end
+            if(math.min(gbox:GetScrollBarMaxPos()+gbox:GetHeight(),y+margin)>(gbox:GetScrollCurPos()+gbox:GetHeight())) then
+                gbox:SetScrollPos(math.min(y+margin-gbox:GetHeight(),gbox:GetScrollBarMaxPos()))
+                gbox:InvalidateScrollBar()
+
+            end
+            
+        end,
+        getScrollY=function(self)
+            return self:getWrapperNativeControl():GetScrollCurPos()
         end,
         setMargin=function(self,l,t,r,b)
             self._margin={left=l,top=t,right=r,bottom=b}
@@ -85,8 +117,6 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             for i,v in ipairs(self._interfaces) do
                 v:onResize()
             end
-            
-          
         end,
         onResizeImpl=function(self)
             -- please override
@@ -114,7 +144,9 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         end,
     }
 
-    local object=g.inherit(self,g.classes.JSNManagerLinker(jsnmanager),g.classes.JSNParentChildRelation(jsnframe))
+    local object=g.inherit(self,
+    g.classes.JSNManagerLinker(jsnmanager),
+    g.classes.JSNParentChildRelation(jsnframe))
    
     return object
 end

@@ -94,8 +94,24 @@ g.classes.JSNISlotset=function(nativeParentControl)
                 end
             end
         end,
+        getNativeSlotByIndex=function(self,index)
+            return self:getNativeSlotSet():GetSlotByIndex(index)
+        end,
         getSlotByIndex=function(self,index)
             return g.classes.JSNISlotInSlotSet(self,index):init()
+        end,
+        getItemByIndex= function(self,index)
+            local slot=self:getNativeSlotByIndex(index)
+            local icon = slot:GetIcon();
+            if icon == nil then
+                return nil
+            end
+            local iconInfo=icon:GetInfo()
+            if iconInfo:GetIESID() == 0 then
+                return nil
+            end
+
+            return GET_PC_ITEM_BY_GUID(iconInfo:GetIESID())
         end,
         getSlotByColRow=function (self,col,row)
             return g.classes.JSNISlotInSlotSet(self,col+row*self:getColumnCount()):init()

@@ -118,13 +118,10 @@ function JOYSTICKNEXTSTAGE_ON_TIMER()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            if(jsn.jsnmanager and jsn.jsnmanager:isInitialized())then
+            if(jsn.jsnmanager)then
                 jsn.jsnmanager:processJoystickKey()
                 jsn.jsnmanager:processFrames()
                 jsn.jsnmanager:processTick()
-            end
-            if(joystick.GetDownJoyStickBtn())then
-            DBGOUT(tostring(joystick.GetDownJoyStickBtn()))
             end
         end,
         catch = function(error)

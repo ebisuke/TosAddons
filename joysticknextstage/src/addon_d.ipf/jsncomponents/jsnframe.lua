@@ -19,7 +19,7 @@ g.classes.JSNFrame=function(jsnmanager,nativeOriginalFrame)
             return self._originalNativeFrame
         end,
         initImpl=function(self)
-            self._nativeFrame=ui.CreateNewFrame('jsncomponents','jsnsideframe-'..self:getID())
+            self:setNativeFrame(ui.CreateNewFrame('jsncomponents','jsnsideframe-'..self:getID()))
             self.getOriginalNativeFrame():SetOffset(self:getOriginalNativeFrame():GetX(),self:getOriginalNativeFrame():GetY())
             self.getOriginalNativeFrame():Resize(self:getOriginalNativeFrame():GetWidth(),self:getOriginalNativeFrame():GetHeight())
         end,
@@ -32,7 +32,7 @@ g.classes.JSNFrame=function(jsnmanager,nativeOriginalFrame)
     }
 
 
-    local object=g.inherit(self,g.classes.JSNFrameBase(jsnmanager),g.classes.JSNFocusable(jsnmanager))
+    local object=g.inherit(self,g.classes.JSNFrameBase(jsnmanager))
 
 
     

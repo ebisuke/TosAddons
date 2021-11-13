@@ -34,13 +34,13 @@ g.classes.JSNISlotInSlotSet=function(jsniSlotSet,index)
         _jsniSlotSet=jsniSlotSet,
         _index=index,
         getNativeSlot=function(self)
-            if(self._jsniSlotSet:GetSlotByIndex(self._index)==nil)then
+            if(self._jsniSlotSet:getNativeSlotByIndex(self._index)==nil)then
                 return nil
             end
-            return g.classes.JSNNativeExtender(self._jsniSlotSet:GetSlotByIndex(self._index)):init()
+            return g.classes.JSNNativeExtender(self._jsniSlotSet:getNativeSlotByIndex(self._index)):init()
         end,
         isValid=function(self)
-            if(self._jsniSlotSet:GetSlotByIndex(self._index)==nil)then
+            if(self._jsniSlotSet:getNativeSlotByIndex(self._index)==nil)then
                 return false
             end
             return true
@@ -49,7 +49,7 @@ g.classes.JSNISlotInSlotSet=function(jsniSlotSet,index)
         end
     }
 
-    local object=g.inherit(self,g.classes.JSNSlotBase(jsniSlotSet:getNativeSlotSet()))
+    local object=g.inherit(self,g.classes.JSNISlotBase(jsniSlotSet:getNativeSlotSet()))
     
     return object
 end
