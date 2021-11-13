@@ -14,14 +14,14 @@ _G['ADDONS'] = _G['ADDONS'] or {}
 _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonJSNCommonLibName] = _G['ADDONS'][author][addonJSNCommonLibName] or {}
 local g = _G['ADDONS'][author][addonName]
-local jsn = _G['ADDONS'][author][addonNameLower]
+local jsn = _G['ADDONS'][author][addonJSNCommonLibName]
 local acutil = require('acutil')
 g.version = 0
 g.settings = {x = 300, y = 300}
 g.settingsFileLoc = string.format('../addons/%s/settings.json', addonNameLower)
 g.personalsettingsFileLoc = ""
 g.framename = "joysticknextstage"
-g.debug = false
+g.debug = true
 
 
 --ライブラリ読み込み
@@ -91,7 +91,7 @@ function JOYSTICKNEXTSTAGE_ON_INIT(addon, frame)
             timer:SetUpdateScript('JOYSTICKNEXTSTAGE_ON_TIMER')
             timer:Start(0.00)
             timer:EnableHideUpdate(1)
-            
+            jsn.jsnmanager=jsn.classes.JSNManager():init()
         end,
         catch = function(error)
             ERROUT(error)
@@ -101,8 +101,9 @@ end
 function JOYSTICKNEXTSTAGE_3SEC()
     EBI_try_catch{
         try = function()
-            local frm=jsn.classes.JSNInventoryFrame(g.jsnmanager):init()
-
+            
+            local frm=jsn.classes.JSNInventoryFrame(jsn.jsnmanager):init()
+            frm:focus()
 
         end,
         catch = function(error)
@@ -117,11 +118,14 @@ function JOYSTICKNEXTSTAGE_ON_TIMER()
     EBI_try_catch{
         try = function()
             local frame = ui.GetFrame(g.framename)
-            -- if(g.jsnmanager:isInitialized())then
-            --     g.jsnmanager:processJoystickKey()
-            --     g.jsnmanager:processFrames()
-            --     g.jsnmanager:processTick()
-            -- end
+            if(jsn.jsnmanager and jsn.jsnmanager:isInitialized())then
+                jsn.jsnmanager:processJoystickKey()
+                jsn.jsnmanager:processFrames()
+                jsn.jsnmanager:processTick()
+            end
+            if(joystick.GetDownJoyStickBtn())then
+            DBGOUT(tostring(joystick.GetDownJoyStickBtn()))
+            end
         end,
         catch = function(error)
             ERROUT(error)

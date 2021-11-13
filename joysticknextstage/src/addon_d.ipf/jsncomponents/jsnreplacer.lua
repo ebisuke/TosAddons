@@ -17,6 +17,7 @@ g.classes=g.classes or {}
 g.classes.JSNReplacer=function(originalNativeFrameName,newJSNFrameConstructor)
 
     local self={
+        _className="JSNReplacer",
         _originalNativeFrameName=originalNativeFrameName,
         _newJSNFrameConstructor=newJSNFrameConstructor,
         isCreatedOriginalFrame=function(self)

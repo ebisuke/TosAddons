@@ -13,21 +13,25 @@ local acutil = require('acutil')
 g.classes=g.classes or {}
 g.classes.JSNManager=function ()
     local self = {
+        _className="JSNManager",
         jsnframes={},
         registeredReplacer={},
         pressedKeys={},
-        keyRepeatInterval=4,
-        keyRepeatDelay=15,
+        keyRepeatInterval=3,
+        keyRepeatDelay=13,
         keyListeners={},
         tickListeners={},
+        cursor=nil,
+        activeFrame=nil,
         isInitialized=function (self)
             return self.cursor ~= nil
         end,
         initImpl=function (self)
-            self.cursor=g.classes.JSNCursor():init()
+            self:release()
+            self.cursor=g.classes.JSNCursor(self):init()
 
         end,
-        release=function (self)
+        releaseImpl=function (self)
             if(self.cursor~=nil)then
                 self.cursor:release()
                 self.cursor=nil
@@ -63,16 +67,59 @@ g.classes.JSNManager=function ()
             end
         end,
         processJoystickKey=function(self)
-            for i,v in pairs(g.classes.JSNKey) do
-                if joystick.IsKeyPressed(v) == 1 then
-                    self.pressedKeys[v] = (self.pressedKeys[v] or 0) + 1
-                    if self.pressedKeys[v] == self.keyRepeatDelay then
-                        self.pressedKeys[v] = 0
-                        self.processKey(v)
+         
+            for k,v in pairs(g.classes.JSNKey) do
+                
+                local rawkeys=g.jsnKeyInterpretation[v]
+                if(rawkeys)then
+                    local pass=true
+                    local count=0
+                   
+                    for kk,vv in pairs(rawkeys) do
+                  
+                        local expect=vv
+                        if expect then
+                            expect=1
+                        else
+                            expect=0
+                        end
+                        if (joystick.IsKeyPressed(kk) ~= expect) then
+                            pass=false
+                            
+                        else
+                            count=count+1
+                        end
+                        
                     end
-                else
-                    self.pressedKeys[v]=nil
+                    if(pass) and count>0 then
+                        self.pressedKeys[k] = (self.pressedKeys[k] or -1) + 1
+                        if self.pressedKeys[k] ==0 or self.pressedKeys[k] >= self.keyRepeatDelay then
+                            local repeatValue=self.pressedKeys[k] - self.keyRepeatDelay
+                            if(self.pressedKeys[k] ==0 or repeatValue%self.keyRepeatInterval==0)then
+                                
+                                if(self.pressedKeys[k] ==0)then
+                                 
+                                    for _,vvv in pairs(self.keyListeners) do
+                                        if(vvv:canHandleKeyDirectly())then
+                                            vvv:onKeyDown(v)
+                                        end
+                                    end
+                                end
+                                for _,vvv in pairs(self.keyListeners) do
+                                    if(vvv:canHandleKeyDirectly())then
+                                        vvv:onKeyRepeat(v)
+                                    end
+                                end
+                                
+                            end
+                            
+                        end
+     
+                    else
+                        self.pressedKeys[k]=nil
+                    end
                 end
+               
             
             end
         end,
@@ -91,31 +138,34 @@ g.classes.JSNManager=function ()
             end
         end,
         registerKeyListener=function (self,obj)
-            self.keyListeners[#self.keyListeners+1]=obj
+            self.keyListeners[obj:getID()]=obj
         end,
         unregisterKeyListener=function (self,obj)
-            for i,v in pairs(self.keyListeners) do
-                if v == obj then
-                    table.remove(self.keyListeners,i)
-                    break
-                end
-            end
+            print('unreg')
+            self.keyListeners[obj:getID()]=nil
         end,    
         registerTickListener=function (self,obj)
-            self.tickListeners[#self.tickListeners+1]=obj
+            self.tickListeners[obj:getID()]=obj
         end,
         unregisterTickListener=function (self,obj)
-            for i,v in pairs(self.tickListeners) do
-                if v == obj then
-                    table.remove(self.tickListeners,i)
-                    break
-                end
+            self.tickListeners[obj:getID()]=nil
+        end,
+        focused=function (self,jsnfocusable)
+            -- don't call directly. instead, call JSNFocusable:focus()
+            local obj=jsnfocusable;
+            if obj:instanceOf(g.classes.JSNComponent()) then
+                --set cursor to component
+                self.cursor:setAnchor(obj)
+            elseif obj:instanceOf(g.classes.JSNFrameBase()) then
+                --set cursor to frame
+                self.cursor:setAnchor(obj)
+            else
+                --invalid object
+                error("invalid object to focus")
             end
-        end,   
+        end,
     }
 
     local object=g.inherit(self,g.classes.JSNObject())
     return object
 end
-
-g.jsnmanager=g.classes.JSNManager():init()

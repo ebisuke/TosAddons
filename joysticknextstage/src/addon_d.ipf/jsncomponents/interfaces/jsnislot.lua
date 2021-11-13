@@ -15,6 +15,7 @@ g.classes=g.classes or {}
 g.classes.JSNISlotBase=function(nativeParentControl)
 
     local self={
+        _className="JSNISlotBase",
         _slot=nil,
         _slotSize={w=64,h=64},
         initImpl=function(self)
@@ -29,6 +30,7 @@ end
 g.classes.JSNISlotInSlotSet=function(jsniSlotSet,index)
 
     local self={
+        _className="JSNISlotInSlotSet",
         _jsniSlotSet=jsniSlotSet,
         _index=index,
         getNativeSlot=function(self)
@@ -47,13 +49,14 @@ g.classes.JSNISlotInSlotSet=function(jsniSlotSet,index)
         end
     }
 
-    local object=g.inherit(self,g.classes.JSNSlotBase(jsniSlotSet:getNativeSlotSet()),g.classes.JSNFocusable())
+    local object=g.inherit(self,g.classes.JSNSlotBase(jsniSlotSet:getNativeSlotSet()))
     
     return object
 end
 --standalone
 g.classes.JSNIStandaloneSlot=function(nativeParentControl)
     local self={
+        _className="JSNIStandaloneSlot",
         _nativeSlot=nil,
         initImpl=function(self)
             self._nativeSlot=self:createorGetNativeControl('slot','slot')

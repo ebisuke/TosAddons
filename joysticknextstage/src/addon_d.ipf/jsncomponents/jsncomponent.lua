@@ -16,27 +16,39 @@ g.classes=g.classes or {}
 g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityvert)
 
     local self={
+        _className="JSNComponent",
         _jsnFrame=jsnframe,
-        _jsnWrapperGroupbox=nil,
-        _rect={x=x,y=y,w=w,h=h},
-        _gravityHorz=gravityhorz,
-        _gravityVert=gravityvert,
+        _wrapperGroupbox=nil,
+        _rect={x=x or 0,y=y or 0,w=w or 0,h=h or 0},
+        _gravityHorz=gravityhorz or ui.LEFT,
+        _gravityVert=gravityvert or ui.TOP,
         _interfaces={},
         _margin={left=0,right=0,top=0,bottom=0},
         getJSNFrame=function(self)
             return self._jsnFrame
         end,
-        getJSNWrapperControl=function(self)
-            return self._jsnWrapperGroupbox
+        getWrapperNativeControl=function(self)
+            return self._wrapperGroupbox
         end,
+
         getRect=function(self)
             return self._rect
         end,
         setRect=function(self,x,y,w,h)
             self._rect={x=x,y=y,w=w,h=h}
-            self._jsnWrapperGroupbox:SetOffset(x,y)
-            self._jsnWrapperGroupbox:Resize(w,h)
+            self:getWrapperNativeControl():SetOffset(x,y)
+            self:getWrapperNativeControl():Resize(w,h)
             self:onResize()
+        end,
+        fitToFrame=function (self,left,up,right,down)
+            left=left or 0
+            up=up or 0
+            right=right or 0
+            down=down or 0
+            self:setGravityHorz(ui.LEFT)
+            self:setGravityVert(ui.TOP)
+            self:setRect(left,up,self:getJSNFrame():getWidth()-left-right,self:getJSNFrame():getHeight()-up-down)
+
         end,
         getGravityHorz=function(self)
             return self._gravityHorz
@@ -46,17 +58,17 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         end,
         setMargin=function(self,l,t,r,b)
             self._margin={left=l,top=t,right=r,bottom=b}
-            self._jsnWrapperGroupbox:SetMargin(l,t,r,b)
+            self:getWrapperNativeControl():SetMargin(l,t,r,b)
             self:onResize()
         end,
         setGravityHorz=function(self,gravityhorz)
             self._gravityHorz=gravityhorz
-            self._jsnWrapperGroupbox:SetGravity(gravityhorz,self._gravityVert)
+            self:getWrapperNativeControl():SetGravity(gravityhorz,self._gravityVert)
             self:onResize()
         end,
         setGravityVert=function(self,gravityvert)
             self._gravityVert=gravityvert
-            self._jsnWrapperGroupbox:SetGravity(self._gravityHorz,gravityvert)
+            self._wrapperGroupbox:SetGravity(self._gravityHorz,gravityvert)
             self:onResize()
         end,
         getInterfaces=function(self)
@@ -92,16 +104,17 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             -- please override
         end,
         initImpl=function(self)
-            self._jsnWrapperGroupbox=self:getJSNFrame():getNativeFrame():
-            CreateOrGetControl("groupbox","jsngbox_"..self:getID(),self._rect.x,self._rect.y,self._rect.w,self._rect.h)
-            AUTO_CAST(self:getJSNWrapperControl())
-            self:getJSNWrapperControl():EnableHittestGroupBox(false)
-            self:getJSNWrapperControl():SetGravity(self._gravityHorz,self._gravityVert)
-            self:refresh();
+            self._wrapperGroupbox=
+            self:getJSNFrame():getNativeFrame():CreateOrGetControl("groupbox","jsngbox_"..self:getID(),
+            self._rect.x,self._rect.y,self._rect.w,self._rect.h)
+            AUTO_CAST(self:getWrapperNativeControl())
+            self:getWrapperNativeControl():EnableHittestGroupBox(false)
+            self:getWrapperNativeControl():SetGravity(self._gravityHorz,self._gravityVert)
+          
         end,
     }
 
-    local object=g.inherit(self,g.classes.JSNObject(),g.classes.JSNHandlerKey(),g.classes.JSNFocusable(),g.classes.JSNManagerLinker(jsnmanager))
+    local object=g.inherit(self,g.classes.JSNManagerLinker(jsnmanager),g.classes.JSNParentChildRelation(jsnframe))
    
     return object
 end

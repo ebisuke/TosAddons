@@ -15,6 +15,7 @@ g.classes=g.classes or {}
 g.classes.JSNISlotset=function(nativeParentControl)
 
     local self={
+        _className="JSNISlotset",
         _nativeSlotSet=nil,
         _slotSize={w=64,h=64},
         _columnCount=5,
@@ -26,6 +27,18 @@ g.classes.JSNISlotset=function(nativeParentControl)
 
            self:recreate();
         end,
+        getSlotWidth=function(self)
+            return self._slotSize.w
+        end,
+        getSlotHeight=function(self)
+            return self._slotSize.h
+        end,
+        getSlotSpcX=function(self)
+            return self._nativeSlotSet:GetSpcX()
+        end,
+        getSlotSpcY=function(self)
+            return self._nativeSlotSet:GetSpcY()
+        end,
         initImpl=function(self)
             self:recreate()
         end,
@@ -33,13 +46,14 @@ g.classes.JSNISlotset=function(nativeParentControl)
             local s=self:createorGetNativeControl("slotset","slotset");
             self._nativeSlotSet=s
             s:RemoveAllChild()
+            s:ClearIconAll()
             s:EnableDrag(0)
             s:EnablePop(0)
             s:EnableSelection(0)
             s:SetSkinName("invenslot2");
             s:SetSpc(1,1)
             s:SetSlotSize(self._slotSize.w,self._slotSize.h)
-            s:SetColRow(0,0)
+            s:SetColRow(self:getColumnCount(),1)
             s:CreateSlots()
         end,
         clearAll=function(self)
@@ -52,19 +66,29 @@ g.classes.JSNISlotset=function(nativeParentControl)
         getColumnCount=function(self)
             return self._columnCount
         end,
-        
+        getSlotCount=function(self)
+            return self:getNativeSlotSet():GetSlotCount()
+        end,
         assign=function (self,iterable,processor)
+            self:recreate()
             local s=self:getNativeSlotSet()
 
-            local tbl
-            for k,v in pairs(iterable) do
+            local tbl={}
+            for v in iterable do
                 tbl[#tbl+1] = v
             end
-            s:SetColRow(self._columnColunt,math.floor(#tbl/self._columnCount))
+           
+            s:RemoveAllChild()
+            s:ClearIconAll()
+            
+            s:SetColRow(self._columnCount,math.ceil(#tbl/self._columnCount))
             s:CreateSlots()
             for i,v in ipairs(tbl) do
-                
-                local slot=g.classes.JSNNativeExtender(s:GetSlotByIndex(i-1))
+
+                if(s:GetSlotByIndex(i-1)==nil) then
+                    break
+                end
+                local slot=g.classes.JSNNativeExtender(s:GetSlotByIndex(i-1)):init()
                 if processor then
                     processor(v,slot)
                 end

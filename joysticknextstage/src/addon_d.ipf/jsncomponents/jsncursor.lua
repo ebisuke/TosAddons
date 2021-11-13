@@ -22,52 +22,91 @@ end
 
 
 g.classes=g.classes or {}
-g.classes.JSNCursor=function()
+g.classes.JSNCursor=function(jsnmanager)
     local self={
-        _rect=nil,
+        _className="JSNCursor",
+        _cursorRect=nil,
+        _anchorObject=nil,
         initImpl=function (self)
-            --please override
-            local frame=self:getJSNSideFrame()
+            self._supers["JSNCustomFrame"].initImpl(self)
+            local frame=self:getNativeFrame()
             frame:SetSkinName("None")
             frame:ShowWindow(1)
             local ctrl=frame:CreateOrGetControl("slot", "jsn_dummyslot", 0, 0, 32, 32)
             AUTO_CAST(ctrl)
             ctrl:EnableHitTest(0)
             ctrl:SetSkinName("invenslot_magic")
-            self:setRect(0,0,32,32)
             ctrl:SetBlink(0.0, 0.5, "0xFFFFFFFF",1);
         end,
 
         onEveryTick=function (self)
-            --please override
-            local frame=self:getJSNSideFrame()
-            if(self._rect==nil) then
+            local frame=self:getNativeFrame()
+           
+            if(self._cursorRect==nil ) then
                 frame:ShowWindow(0)
             else
-                frame:SetLayerLevel(100)
-                self:setRect(x-frame:GetWidth()/2,y-frame:GetHeight()/2,frame:GetWidth(),frame:GetHeight())
+                
+                local rect=self._cursorRect
+                local offset={x=0,y=0}
+                if(self._anchorObject~=nil) then
+                    local obj=self._anchorObject
+                    
+                    if obj:instanceOf(g.classes.JSNComponent()) then
+                        local rect=obj:getRect()
+                        local dframe=obj:getJSNFrame():getNativeFrame()
+                        if(not dframe or dframe:IsVisible()==0) then
+                            frame:ShowWindow(0)
+                            self:clear()
+                            return
+                        end
+                        local x,y,w,h=rect.x+dframe:GetX(),rect.y+dframe:GetY()
+                        offset={x=x,y=y}
+        
+                    elseif obj:instanceOf(g.classes.JSNFrameBase()) then
+                        --not show cursor to  frame
+                        local dframe=obj:getNativeFrame()
+                        if(not dframe or dframe:IsVisible()==0) then
+                            frame:ShowWindow(0)
+                            self:clear()
+                            return
+                        end
+                        local x,y,w,h=rect.x+dframe:GetX(),rect.y+dframe:GetY()
+                        offset={x=x,y=y}
+                    else
+                        self:clear()
+                        error("Focused to invalid object. ["..(obj._className).."]")
+                    end
+                end
+            
+                frame:SetLayerLevel(200)
+                frame:SetOffset(offset.x+rect.x,offset.y+rect.y)
+                frame:Resize(rect.w,rect.h)
                 local ctrl=frame:GetChild( "jsn_dummyslot")
                 AUTO_CAST(ctrl)
                 ctrl:Resize(frame:GetWidth(),frame:GetHeight())
+                frame:ShowWindow(1)
+                
             end
         end,
-        setSize=function (self,w,h)
-            local frame=self:getJSNSideFrame()
-            frame:Resize(w,h)
+
+        setCursorRect=function (self,x,y,w,h)
+            self._cursorRect={x=x,y=y,w=w,h=h}
+            print("RECT"..x.." "..y.." "..w.." "..h)
         end,
-        reset=function ()
-            self._rect=nil
+
+        setAnchor=function (self,obj)
+            self._anchorObject=obj
         end,
-        setRect=function (self,x,y,w,h)
-            self._rect={x=x,y=y,w=w,h=h}
-            
-        end,
-        setRectByControl=function (self,nativeControl)
-            self:setRect(nativeControl:GetX(),nativeControl:GetY(),nativeControl:GetWidth(),nativeControl:GetHeight())
+        clear=function (self)
+            self._cursorRect=nil
+            self._anchorObject=nil
         end
     }
 
-    local object=g.inherit(self,g.classes.JSNHandlerEveryTick(),g.classes.JSNHandlerKey(),g.classes.JSNFrameBase())
+    local object=g.inherit(self,
+    g.classes.JSNEveryTickHandler(jsnmanager),
+    g.classes.JSNManagerLinker(jsnmanager), 
+    g.classes.JSNCustomFrame(jsnmanager,"jsncomponents"))
   
     return object
 
