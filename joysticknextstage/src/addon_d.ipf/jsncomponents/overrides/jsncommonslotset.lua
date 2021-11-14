@@ -11,20 +11,54 @@ _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
-local function GenerateMenuByItem(invItem)
-    local menus={}
-    if(not invItem.isLockState) then
-        menus[#menus+1] = {
-            text="Use Item",
-            onClick=function()
-                INV_ICON_USE(invItem)
-            end
-        }
+local acutil = require('acutil')
+local function EBI_try_catch(what)
+    local status, result = pcall(what.try)
+    if not status then
+        what.catch(result)
     end
-    return menus
+    return result
 end
+local function EBI_IsNoneOrNil(val)
+    return val == nil or val == "None" or val == "nil"
+end
+
+
+local function DBGOUT(msg)
+    
+    EBI_try_catch{
+        try = function()
+            if (g.debug == true) then
+                CHAT_SYSTEM(msg)
+                
+                print(msg)
+                local fd = io.open(g.logpath, "a")
+                fd:write(msg .. "\n")
+                fd:flush()
+                fd:close()
+            
+            end
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+local function ERROUT(msg)
+    EBI_try_catch{
+        try = function()
+            CHAT_SYSTEM(msg)
+            print(msg)
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+
+
 g.classes=g.classes or {}
-g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe)
+g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhandler)
 
     local self={
         _className="JSNCommonSlotSetComponent",
@@ -44,8 +78,17 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe)
         onResizeImpl=function(self)
             self:relayout()
         end,
+        autoSelectColumnCount=function(self)
+          
+            self:setColumnCount(math.max(1,math.floor(self:getWidth()/
+            (self:getSlotSetInterface():getSlotWidth()+self:getSlotSetInterface():getSlotSpcX())
+        )))
+        end,
         setColumnCount=function(self,columnCount)
             self._slotsetInterface:setColumnCount(columnCount)
+        end,
+        getCursorSlot=function(self)
+            return self._slotsetInterface:getSlotByIndex(self._cursorIndex)
         end,
         getCursorIndex=function(self)
             return self._cursorIndex
@@ -71,25 +114,33 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe)
                 h=(self._slotsetInterface:getSlotHeight()+self._slotsetInterface:getSlotSpcY())}
                 return rect;
         end,
+        
         onKeyDownImpl=function(self,key)
+            if g.classes.JSNKey.MAIN==key and self:getCursorSlot() then
+                if(self:invokeEvent(
+                    g.classes.JSNGenericEventHandlerType.eventUserRequestedDetermine,
+                    self:getCursorSlot(),self:getCursorIndex()
+                ))then
+          
+                    return true
+                end
+               
+            end
             if(key==g.classes.JSNKey.OPTION)then
-                local rect=self:calculateCursorPos()
-                local x,y=rect.x+self:getX(),rect.y+self:getY()
-                --local x,y=rect.x,rect.y
-                local dialog=self:callModal(
-                    g.classes.JSNContextMenuFrame(
-                        self:getJSNManager(),
-                        self:getJSNFrame(),
-                        x+20,
-                        y+20-self:getScrollY(),
-                        200,
-                        rect.h,
-                        GenerateMenuByItem(self:getSlotSetInterface():getItemByIndex(self:getCursorIndex()))):init(),
-                    function ()
-                        self:refresh()
-                    end)
-                
-                imcSound.PlaySoundEvent(g.sounds.POPUP)
+                if(self:invokeEvent(
+                    g.classes.JSNGenericEventHandlerType.eventUserRequestedMenu,
+                    self:getCursorSlot(),self:getCursorIndex()
+                ))then
+   
+                    return true
+                end
+            end
+            if(key==g.classes.JSNKey.CANCEL)then
+                if(self:invokeEvent(
+                    g.classes.JSNGenericEventHandlerType.eventUserRequestedCancel))then
+   
+                    return true
+                end
             end
         end,
         onKeyRepeatImpl=function(self,key)
@@ -97,27 +148,34 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe)
                 self:setCursorIndex(self:getCursorIndex()-1)
                 self:updateCursorPos()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
+                return true
             end
             if(key==g.classes.JSNKey.RIGHT)then
                 self:setCursorIndex(self:getCursorIndex()+1)
                 self:updateCursorPos()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
+                return true
             end
             if(key==g.classes.JSNKey.UP)then
                 self:setCursorIndex(self:getCursorIndex()-self._slotsetInterface:getColumnCount())
                 self:updateCursorPos()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
+                return true
             end
             if(key==g.classes.JSNKey.DOWN)then
                 self:setCursorIndex(self:getCursorIndex()+self._slotsetInterface:getColumnCount())
                 self:updateCursorPos()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
+                return true
             end
-            
+           
         end,
     }
 
-    local object=g.inherit(self,g.classes.JSNKeyHandler(jsnmanager), g.classes.JSNComponent(jsnmanager,jsnframe))
+    local object=g.inherit(self,
+    g.classes.JSNKeyHandler(jsnmanager), 
+    g.classes.JSNGenericEventHandler(jsnmanager,eventhandler),
+    g.classes.JSNComponent(jsnmanager,jsnframe,parent))
     
     return object
 end

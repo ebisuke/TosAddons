@@ -30,32 +30,37 @@ function JOYSTICKNEXTSTAGE_DEBUG_RELOAD()
             print(err)
         end
     end
-    
+    jsn.singleton={}
     local prefix="\\\\theseventhbody_toadstool.mochisuke.jp\\E\\TosProject\\TosAddons\\joysticknextstage\\src"
     dofile_roughly(prefix.."\\addon_d.ipf\\joysticknextstage\\joysticknextstage_debug.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\joysticknextstage\\joysticknextstage.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsndarkscreen\\jsndarkscreen.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsncomponent.lua")
     
-    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\_jsnobject.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsnobject.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsnframe.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsnframebase.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsninterface.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsnmanager.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsnreplacer.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsncomponents.lua")
-
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsncursor.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsncustomframe.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsngenericfunc.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsnglobalkeylistener.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\jsngenericeventhandler.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsnframe_derives.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsninventory.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsnoverride.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsnshop.lua")
 
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\overrides\\jsncommonslotset.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\frames\\jsncontextmenu.lua")
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\frames\\jsnomniscreen.lua")
 
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\interfaces\\jsnislot.lua")
     dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\interfaces\\jsnislotset.lua")
-
+    dofile_roughly(prefix.."\\addon_d.ipf\\jsncomponents\\omnitabs\\jsnotinventory.lua")
     jsn.jsnmanager=jsn.classes.JSNManager()
     local f,err =pcall(jsn.jsnmanager.init,jsn.jsnmanager)
     if(not f)then

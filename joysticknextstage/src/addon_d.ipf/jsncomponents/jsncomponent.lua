@@ -12,22 +12,27 @@ local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
 
 
+
 g.classes=g.classes or {}
-g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityvert)
+
+g.classes.JSNComponent=function(jsnmanager,jsnframe,parent)
 
     local self={
         _className="JSNComponent",
         _jsnFrame=jsnframe,
         _wrapperGroupbox=nil,
-        _rect={x=x or 0,y=y or 0,w=w or 0,h=h or 0},
-        _gravityHorz=gravityhorz or ui.LEFT,
-        _gravityVert=gravityvert or ui.TOP,
+        _rect={x= 0,y=0,w=0,h=0},
+        _gravityHorz=ui.LEFT,
+        _gravityVert=ui.TOP,
         _interfaces={},
         _margin={left=0,right=0,top=0,bottom=0},
-
-
+        
         getJSNFrame=function(self)
             return self._jsnFrame
+        end,
+        getNativeFrame=function(self)
+            --duck typing
+            return self._wrapperGroupbox
         end,
         getWrapperNativeControl=function(self)
             return self._wrapperGroupbox
@@ -38,11 +43,36 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         getY=function(self)
             return self._rect.y
         end,
+        getGlobalX=function(self)
+            return self:getWrapperNativeControl():GetGlobalX()
+        end,
+        getGlobalY=function(self)
+            return self:getWrapperNativeControl():GetGlobalY()
+        end,
         getWidth=function(self)
             return self._rect.w
         end,
         getHeight=function(self)
             return self._rect.h
+        end,
+        setX=function(self,x)
+            self._rect.x=x
+            self:getWrapperNativeControl():SetX(x)
+        end,
+        setY=function(self,y)
+            self._rect.y=y
+            self:getWrapperNativeControl():SetY(y)
+        end,
+        setWidth=function(self,w)
+            self._rect.w=w
+            self:getWrapperNativeControl():Resize(w,self._rect.h)
+        end,
+        setHeight=function(self,h)
+            self._rect.h=h
+            self:getWrapperNativeControl():Resize(self._rect.w,h)
+        end,
+        setOffset=function(self,x,y)
+            self:setRect(x,y,self._rect.w,self._rect.h)
         end,
         getRect=function(self)
             return self._rect
@@ -53,6 +83,13 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             self:getWrapperNativeControl():Resize(w,h)
             self:onResize()
         end,
+        setLayerLevel=function(self,layer)
+            error("Layerlevel can't be set in JSNComponent")
+        end,
+        getLayerLevel=function(self)
+            --returns frame's layerlevel
+            return self:getJSNFrame():getLayerLevel()
+        end,
         fitToFrame=function (self,left,up,right,down)
             left=left or 0
             up=up or 0
@@ -61,6 +98,16 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             self:setGravityHorz(ui.LEFT)
             self:setGravityVert(ui.TOP)
             self:setRect(left,up,self:getJSNFrame():getWidth()-left-right,self:getJSNFrame():getHeight()-up-down)
+
+        end,
+        fitToParent=function (self,left,up,right,down)
+            left=left or 0
+            up=up or 0
+            right=right or 0
+            down=down or 0
+            self:setGravityHorz(ui.LEFT)
+            self:setGravityVert(ui.TOP)
+            self:setRect(left,up,self:getParent():getWidth()-left-right,self:getParent():getHeight()-up-down)
 
         end,
         getGravityHorz=function(self)
@@ -103,6 +150,12 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             self._wrapperGroupbox:SetGravity(self._gravityHorz,gravityvert)
             self:onResize()
         end,
+        setGravity=function(self,gravityhorz,gravityvert)
+            self._gravityHorz=gravityhorz
+            self._gravityVert=gravityvert
+            self:getWrapperNativeControl():SetGravity(gravityhorz,gravityvert)
+            self:onResize()
+        end,
         getInterfaces=function(self)
             return self._interfaces
         end,
@@ -110,6 +163,17 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
             self._interfaces[#self._interfaces]=interface
 
             return interface
+        end,
+        setVisible=function(self,visible)
+            if(visible)then
+                self:getWrapperNativeControl():ShowWindow(1)
+            else
+                self:getWrapperNativeControl():ShowWindow(0)
+            end
+        
+        end,
+        isVisible=function(self)
+            return self:getWrapperNativeControl():IsVisible()~=0
         end,
         onResize=function(self)
             self:onResizeImpl()
@@ -135,18 +199,27 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,x,y,w,h,gravityhorz,gravityv
         end,
         initImpl=function(self)
             self._wrapperGroupbox=
-            self:getJSNFrame():getNativeFrame():CreateOrGetControl("groupbox","jsngbox_"..self:getID(),
+            self:getParent():getNativeFrame():CreateOrGetControl("groupbox","jsngbox_"..self:getID(),
             self._rect.x,self._rect.y,self._rect.w,self._rect.h)
             AUTO_CAST(self:getWrapperNativeControl())
             self:getWrapperNativeControl():EnableHittestGroupBox(false)
             self:getWrapperNativeControl():SetGravity(self._gravityHorz,self._gravityVert)
           
         end,
+      
+        
+        show=function(self)
+            self:getWrapperNativeControl():ShowWindow(1)
+        end,
+        hide=function(self)
+            self:getWrapperNativeControl():ShowWindow(0)
+        end,
     }
 
     local object=g.inherit(self,
     g.classes.JSNManagerLinker(jsnmanager),
-    g.classes.JSNParentChildRelation(jsnframe))
+    g.classes.JSNParentChildRelation(parent or jsnframe),
+    g.classes.JSNOwnerRelation())
    
     return object
 end

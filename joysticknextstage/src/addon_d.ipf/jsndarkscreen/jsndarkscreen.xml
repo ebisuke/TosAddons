@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by imc (imc) -->
+<uiframe name="jsndarkscreen" x="0" y="0" width="1920" height="1080">
+	<frame stretch="true" fullwidth="true" fullheight="true" fasthide="false" layout_gravity="center center" margin="0 0 0 0" scale_align="center center" tooltipoverlap="true"/>
+	<skin frameskin="property_screenbg"/>
+	<input hittest="true"/>
+	<layer layerlevel="100"/>
+	<option hideable="false" closebutton="false"/>
+	<draw drawtitlebar="false"/>
+	
+	<controls>
+		<groupbox name="gb" rect="0 0 1600 900" margin="0 100 0 0" layout_gravity="center top" draw="false" hittestbox="false" resizebyparent="false" scrollbar="false" skin=""/>
+		<picture name="title_left_pic" rect="0 0 188 35" margin="-200 100 0 0" layout_gravity="center top" image="frame_classguide_l"/>
+		<picture name="title_right_pic" rect="0 0 188 35" margin="200 100 0 0" layout_gravity="center top" image="frame_classguide_r"/>
+		<richtext name="title" rect="0 0 200 60" margin="0 100 0 0" layout_gravity="center top" textalign="center center" format="{@sti7}{s28}" param1="value" param1_def="" fixwidth="true" resizebytext="true" font="white_20_ol"/>
+		<button name="close_btn" rect="0 0 40 40" margin="0 30 30 0" layout_gravity="right top" clicksound="button_click_2" LBtnUpScp="JSNDARKSCREEN_CLOSE" image="testclose_button"/>
+	</controls>
+</uiframe>

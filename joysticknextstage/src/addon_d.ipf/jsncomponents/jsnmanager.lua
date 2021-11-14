@@ -10,7 +10,52 @@ _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
+local function EBI_try_catch(what)
+    local status, result = pcall(what.try)
+    if not status then
+        what.catch(result)
+    end
+    return result
+end
+local function EBI_IsNoneOrNil(val)
+    return val == nil or val == "None" or val == "nil"
+end
+
+
+local function DBGOUT(msg)
+    
+    EBI_try_catch{
+        try = function()
+            if (g.debug == true) then
+                CHAT_SYSTEM(msg)
+                
+                print(msg)
+                local fd = io.open(g.logpath, "a")
+                fd:write(msg .. "\n")
+                fd:flush()
+                fd:close()
+            
+            end
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+local function ERROUT(msg)
+    EBI_try_catch{
+        try = function()
+            CHAT_SYSTEM(msg)
+            print(msg)
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+
 g.classes=g.classes or {}
+g.singleton=g.singleton or {}
 g.classes.JSNManager=function ()
     local self = {
         _className="JSNManager",
@@ -23,42 +68,49 @@ g.classes.JSNManager=function ()
         tickListeners={},
         _controlRestrictionCounter=0,
         activeFrame=nil,
-        isInitialized=function (self)
-            return self.cursor ~= nil
-        end,
+        _overrides={},
+        _globalKeyListener=nil,
         initImpl=function (self)
-            self:release()
-          
+            self._globalKeyListener=g.classes.JSNGlobalKeyListener(self):init()
+            self:_registerReplacers()
         end,
         releaseImpl=function (self)
-          
+            self._globalKeyListener:release()
         end,
-        addFrame=function (self,frame)
-            table.insert(self.jsnframes,frame)
-            return frame
-        end,
+  
         processFrames=function (self)
             for i,v in pairs(self.registeredReplacer) do
-                if ui.GetFrame(v.originalFrameName) ~= nil and ui.GetFrame:IsVisible()==1 then
+                local name=v:getOriginalNativeFrameName()
+                if  name~=nil and 
+                     ui.GetFrame(name) ~= nil and 
+                     ui.GetFrame(name):IsVisible()==1 then
                     local already=false;
                     for j,k in pairs(self.jsnframes) do
-                        if k.originalFrameName == v.originalFrameName then
+                        if j == name then
                             already=true
                             break
                         end
                     end
-                    if(not already) then
-                        self.jsnframes[#self.jsnframes+1] = v:createJSNFrame(ui.GetFrame(v.originalFrameName))
+                    if(not already )and (not self.jsnframes[ name]) then
+                        local f,err=pcall(v.createOverrider,v,ui.GetFrame(name))
+                        if(f) then
+                            self.jsnframes[name]=err
+                        else
+                            self.jsnframes[name] =g.classes.JSNObject()
+                            ERROUT("JSNManager:processFrames:createOverrider:"..err)
+                        end
+                       
+                                           
                     end
                 end
             end
     
             for i,v in pairs(self.jsnframes) do
-                if v:getOriginalFrame() ~= nil and v:getOriginalFrame():IsVisible()==0 then
-                else
+                if  v:isReleased() then
+                
                     --close frame
-                    v:release()
-                    table.remove(self.jsnframes,i)
+
+                    self.jsnframes[i]=nil
                 end
             end
         end,
@@ -97,13 +149,17 @@ g.classes.JSNManager=function ()
                                  
                                     for _,vvv in pairs(self.keyListeners) do
                                         if(vvv:canHandleKeyDirectly())then
-                                            vvv:onKeyDown(v)
+                                            if vvv:onKeyDown(v) then
+                                                break
+                                            end
                                         end
                                     end
                                 end
                                 for _,vvv in pairs(self.keyListeners) do
                                     if(vvv:canHandleKeyDirectly())then
-                                        vvv:onKeyRepeat(v)
+                                        if vvv:onKeyRepeat(v) then
+                                            break
+                                        end
                                     end
                                 end
                                 
@@ -125,13 +181,20 @@ g.classes.JSNManager=function ()
                 v:onEveryTick()
             end
         end,
-        registerReplacers=function (self)
+        _registerReplacers=function (self)
             local list={
-               g.classes.JSNReplacer("inventory",g.classes.JSNInventoryFrame)
+               g.classes.JSNReplacer(self,"shop",g.classes.JSNShopOverrider):init()
             }
     
             for i,v in ipairs(list) do
-                self.registeredReplacer[self.registeredReplacer:getOriginalFrame()]=v
+                if(not v:instanceOf(g.classes.JSNReplacer()))then
+                    error("JSNManager:_registerReplacers:registing replacer is not  replacer:"..v._className)
+                end
+                if(not v._overriderConstructor():instanceOf(g.classes.JSNOverriderBase()))then
+                    error("JSNManager:_registerReplacers:registing jsnobject is not  overrider:"..v._overriderConstructor()._className)
+                end
+                
+                self.registeredReplacer[v:getOriginalNativeFrameName()]=v
             end
         end,
         registerKeyListener=function (self,obj)
@@ -150,9 +213,21 @@ g.classes.JSNManager=function ()
         unregisterTickListener=function (self,obj)
             self.tickListeners[obj:getID()]=nil
         end,
+        temporallyEnableControlRestriction=function (self)
+            if(self._controlRestrictionCounter>0)then
+                control.EnableControl(1,1)
+            end
+            return {
+                release=function ()
+                    if(self._controlRestrictionCounter>0)then
+                        control.EnableControl(0,1)
+                    end
+                end
+            }
+        end,
         incrementControlRestrictionCounter=function (self)
             if(self._controlRestrictionCounter==0)then
-                control.EnableControl(0,0)
+                control.EnableControl(0,1)
             end
             self._controlRestrictionCounter=self._controlRestrictionCounter+1
         end,
@@ -163,7 +238,9 @@ g.classes.JSNManager=function ()
             self._controlRestrictionCounter=self._controlRestrictionCounter-1
         end,
     }
-
-    local object=g.inherit(self,g.classes.JSNObject())
+    if(g.singleton[self._className]~=nil)then
+        return g.singleton[self._className]
+    end
+    local object=g.inherit(self,g.classes.JSNSingleton())
     return object
 end

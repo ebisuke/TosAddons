@@ -14,21 +14,27 @@ local acutil = require('acutil')
 
 
 g.classes=g.classes or {}
-g.classes.JSNReplacer=function(originalNativeFrameName,newJSNFrameConstructor)
+g.classes.JSNReplacer=function(jsnmanager,originalNativeFrameName,overriderConstructor)
 
     local self={
         _className="JSNReplacer",
         _originalNativeFrameName=originalNativeFrameName,
-        _newJSNFrameConstructor=newJSNFrameConstructor,
+        _overriderConstructor=overriderConstructor,
         isCreatedOriginalFrame=function(self)
             return ui.GetFrame(self._originalNativeFrameName)~=nil
         end,
-        createJSNFrame=function(self,nativeFrame)
-            local frame=self._newJSNFrameConstructor(nativeFrame)
+        getOriginalNativeFrameName=function(self)
+            return self._originalNativeFrameName
+        end,
+        getOriginalNativeFrame=function(self)
+            return ui.GetFrame(self._originalNativeFrameName)
+        end,
+        createOverrider=function(self,nativeFrame)
+            local frame=self._overriderConstructor(jsnmanager,nativeFrame)
             return frame:init()
         end
     }
 
-    local object=g.inherit(self,g.classes.JSNObject())
+    local object=g.inherit(self,g.classes.JSNManagerLinker(jsnmanager))
     return object
 end

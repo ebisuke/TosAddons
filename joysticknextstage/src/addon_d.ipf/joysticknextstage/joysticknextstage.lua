@@ -91,6 +91,7 @@ function JOYSTICKNEXTSTAGE_ON_INIT(addon, frame)
             timer:SetUpdateScript('JOYSTICKNEXTSTAGE_ON_TIMER')
             timer:Start(0.00)
             timer:EnableHideUpdate(1)
+            jsn.fn.CleanupSingletons()
             jsn.jsnmanager=jsn.classes.JSNManager():init()
         end,
         catch = function(error)
@@ -102,9 +103,7 @@ function JOYSTICKNEXTSTAGE_3SEC()
     EBI_try_catch{
         try = function()
             
-            local frm=jsn.classes.JSNInventoryFrame(jsn.jsnmanager):init()
-            frm:focus()
-
+           
         end,
         catch = function(error)
             ERROUT(error)

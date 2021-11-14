@@ -10,7 +10,49 @@ _G['ADDONS'][author] = _G['ADDONS'][author] or {}
 _G['ADDONS'][author][addonName] = _G['ADDONS'][author][addonName] or {}
 local g = _G['ADDONS'][author][addonName]
 local acutil = require('acutil')
+local function EBI_try_catch(what)
+    local status, result = pcall(what.try)
+    if not status then
+        what.catch(result)
+    end
+    return result
+end
+local function EBI_IsNoneOrNil(val)
+    return val == nil or val == "None" or val == "nil"
+end
 
+
+local function DBGOUT(msg)
+    
+    EBI_try_catch{
+        try = function()
+            if (g.debug == true) then
+                CHAT_SYSTEM(msg)
+                
+                print(msg)
+                local fd = io.open(g.logpath, "a")
+                fd:write(msg .. "\n")
+                fd:flush()
+                fd:close()
+            
+            end
+        end,
+        catch = function(error)
+        end
+    }
+
+end
+local function ERROUT(msg)
+    EBI_try_catch{
+        try = function()
+            CHAT_SYSTEM(msg)
+            print(msg)
+        end,
+        catch = function(error)
+        end
+    }
+
+end
 g.instanceOf=function(subject,super)
 
     super = tostring(super)
@@ -101,6 +143,7 @@ g.inherit=function(obj,...)
     return object
 end
 g.classes=g.classes or {}
+g.singleton=g.singleton or {}
 g.classes.JSNObject=function()
 
     local self={
@@ -108,24 +151,85 @@ g.classes.JSNObject=function()
         _className="JSNObject",
         _id=nil,
         _hierarchy={},
+        _released=false,
         init=function(self)
             --don't be confused with the initialize function of the class
             --don't call in the constructor
             --don't inherit this function
             self._id=""..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999)
-    
+        
+            local fail=false
             for i,v in ipairs(self._hierarchy) do
-                --print(">"..v.super._className)
+                EBI_try_catch({
+                    try = function()
+                --DBGOUT("init>"..v.super._className)
                 v.super.initImpl(self)
+                end,
+                catch = function(error)
+                    ERROUT("JSNObject.init()"..error)
+                    fail=true
+                end
+            })
             end
-
+                
+            
+        
+        
+        
             for i,v in ipairs(self._hierarchy) do
-                --print(">"..v.super._className)
-                v.super.lazyInitImpl(self)
-            end
+                --DBGOUT("lazyinit>"..v.super._className)
+                EBI_try_catch({
+                    try = function()
+                        v.super.lazyInitImpl(self)
+                    end,
+                    catch = function(error)
+                        ERROUT("JSNObject.init()"..error)
+                        fail=true
+                    end
+                })
+            end 
+         
  
-    
+            if fail then
+                self._fail=true
+            end
             return self
+        end,
+        isReleased=function(self)
+            return self._released
+        end,
+        -- hook method
+        -- pre hook function's return is indicated to be ignored.true is ignored, false is not ignored.
+        -- post hook function's return is modified to be the return of the original hook function.
+        hook=function(self,name,prefunc,postfunc)
+
+            if(not self[name])then
+                error("no such method:"..name)
+            end
+            if(self["_originalFunc_"..name])then
+                print("jsnobject.lua:"..self._className.. "> hook method:"..name.." is already hooked.")
+            end
+            --replace the original method
+            self["_originalFunc_"..name]=self[name]
+            self[name]=function(self,...)
+          
+                if(prefunc)then
+                    local tbl={prefunc(self,...)}
+                    if tbl and tbl[1] then
+                        table.remove(tbl,1)
+                        return unpack(tbl)
+                    end
+                end
+                local result={self["_originalFunc_"..name](self,...)}
+                if(postfunc)then
+                    local tbl={postfunc(self,result,...)}
+                    if tbl then
+                        return unpack(tbl)
+                    end
+                end
+                return unpack(result)
+            end
+         
         end,
         release=function(self)
 
@@ -135,10 +239,9 @@ g.classes.JSNObject=function()
             local reversed=ReverseTable(self._hierarchy)
             
             for i,v in ipairs(reversed) do
-                print(v.super._className.."RELA")
                 v.super.releaseImpl(self)
             end
-
+            self._released=true
             return self
         end,
         initImpl=function(self)
@@ -158,7 +261,7 @@ g.classes.JSNObject=function()
         getID=function(self)
             return self._id
         end,
-
+        
         instanceOf=function (self,super)
             if(type(super)=="function")then
                 error "instanceOf must be needed object.not constructor."
@@ -173,20 +276,88 @@ g.classes.JSNObject=function()
             
         end,
   
+        --conventional method
+        findClassInAncestorAndFollower=function(self,class)
+            if(self:instanceOf(class))then
+                return self
+            end
+            if(self:instanceOf(g.classes.JSNParentChildRelation()) and self:getParent())then
+                return self:getParent():findClassInAncestorAndFollower(class)
+            end
+            if(self:instanceOf(g.classes.JSNOwnerRelation()))then
+                for _,v in pairs(self:_getFollowers())do
+                    local res=v:findClassInAncestorAndFollower(class)
+                    if(res)then
+                        return res
+                    end
+                end
+            end
+            return nil
+        end,
+        --conventional method
+        releaseAllRelationship=function(self)
+            if(self:instanceOf(g.classes.JSNParentChildRelation()) and self:getParent())then
+                return self:getParent():releaseAllRelationship()
+            end
+            if(self:instanceOf(g.classes.JSNOwnerRelation()))then
+                for _,v in pairs(self:_getFollowers())do
+                    v:releaseAllRelationship()
+                end
+            end
+            self:release()
+        end,
+        --conventional method
+        findTopFrame=function(self)
+            if(self:instanceOf(g.classes.JSNFrameBase()))then
+                return self
+            end
+            if(self:instanceOf(g.classes.JSNParentChildRelation()) and self:getParent())then
+                return self:getParent():findTopFrame()
+            end
+            return nil
+        end,
     }
     self._hierarchy[#self._hierarchy+1]={super=self}
     return self
+end
+g.classes.JSNSingleton=function()
+    local self={
+        _className="JSNSingleton",
+        initImpl=function(self)
+            --override me
+            if(g.singleton[self._className])then
+                error("singleton class "..self._className.." is already initialized.")
+            end
+            g.singleton[self._className]=self
+        end,
+        releaseImpl=function(self)
+            --override me
+            DBGOUT(self._className.." is released.")
+            g.singleton[self._className]=nil
+        end,
+        getInstance=function(self)
+            if(g.singleton[self._className]~=nil)then
+                return g.singleton[self._className]
+          
+            end
+            return nil
+        end,
+    }
+
+    local obj= g.inherit(self,g.classes.JSNObject())
+
+    return obj
 end
 g.classes.JSNPlayerControlDisabler=function(jsnmanager)
 
     local self={
         _className="JSNPlayerControlDisabler",
         initImpl=function(self)
-            self._jsnmanager=jsnmanager
-            self._jsnmanager:incrementControlRestrictionCounter()
+           
+            self:getJSNManager():incrementControlRestrictionCounter()
         end,
         releaseImpl=function(self)
-            self._jsnmanager:decrementControlRestrictionCounter()
+            self:getJSNManager():decrementControlRestrictionCounter()
         end,
     }
     local object=g.inherit(self, g.classes.JSNManagerLinker(jsnmanager))
@@ -250,11 +421,12 @@ g.classes.JSNFocusable=function(jsnmanager,linkedjsnobject)
         end,
         focus=function (self)
    
-           
+            DBGOUT(self._className..' focus')
             if(self:getParent() and self:getParent():instanceOf(g.classes.JSNParentChildRelation()))then
                 for i,v in ipairs(self:getParent():getChildren())do
                     if(v:getID()~=self:getID() and v:instanceOf(g.classes.JSNFocusable()))then
                         --remove siblings focus
+                        DBGOUT(self._className)
                         v:unfocus()
                     end
                 end
@@ -262,6 +434,7 @@ g.classes.JSNFocusable=function(jsnmanager,linkedjsnobject)
 
            
             if(not self._focused)then
+                DBGOUT(self:getID().." is focused.")
                 self._focused=true
                 self:onFocused()
             end
@@ -367,6 +540,8 @@ g.classes.JSNKey={
     SYSMENU  =0x00001000,
     CLOSE    =0x00002000,
     MODIFIER =0x00004000,
+    OMNISCREEN  =0x00010000,
+    DEBUG   =0x80000000,
 }
 g.jsnKeyInterpretation={
     [g.classes.JSNKey.UP]={
@@ -418,7 +593,16 @@ g.jsnKeyInterpretation={
     [g.classes.JSNKey.MODIFIER]={
         [g.classes.JSNRawKey.JOY_TARGET_CHANGE]=true,
     },
+    [g.classes.JSNKey.OMNISCREEN]={
+        [g.classes.JSNRawKey.JOY_BTN_7]=true,
+        [g.classes.JSNRawKey.JOY_TARGET_CHANGE]=true,
+    },
+    [g.classes.JSNKey.DEBUG]={
+        [g.classes.JSNRawKey.JOY_BTN_4]=true,
+        [g.classes.JSNRawKey.JOY_TARGET_CHANGE]=true,
+    },
 }
+
 -- owner-follower relationship
 -- owner can't know about followers usually.(don't use function of start with "_" directly)
 -- weak parameter is effect to hasLeastOneFollower function.
@@ -450,18 +634,21 @@ g.classes.JSNOwnerRelation=function (owner,weak)
                 end
             end
         end,
+        _getFollowers=function (self)
+            return self._followers
+        end,
         initImpl=function (self)
-            if(owner)then
-                if (owner:instanceOf(g.classes.JSNOwnerRelation())==false)then
+            if(self:getOwner())then
+                if (self:getOwner():instanceOf(g.classes.JSNOwnerRelation())==false)then
                     error("owner must be instance of JSNOwnerRelation")
                 end
-                owner:_addFollower(self)
+                self:getOwner():_addFollower(self)
             end
             
         end,
         releaseImpl=function (self)
-            if(owner)then
-                owner:_removeFollower(self)
+            if(self:getOwner())then
+                self:getOwner():_removeFollower(self)
             end
         end
     }
@@ -557,23 +744,39 @@ g.classes.JSNKeyHandler=function(jsnmanager)
         onKeyDown=function (self,key)
             --dont call directly
             --dont override
-            
+            if(self:instanceOf(g.classes.JSNFocusable())and not self:hasFocus())then
+                DBGOUT("JSNKeyHandler:onKeyDown:no focus")
+                return
+            end
+            if(self:instanceOf(g.classes.JSNOwnerRelation()) and self:hasLeastOneFollower())then
+                return
+            end
             self:onKeyDownImpl(key)
             if self:instanceOf(g.classes.JSNParentChildRelation()) then
                 --伝搬
                 for i,v in ipairs(self:getChildren()) do
-                    v:onKeyDown(key)
+                    if(not v:instanceOf(g.classes.JSNOwnerRelation())or not v:hasLeastOneFollower() )then
+                        v:onKeyDown(key)
+                    end
                 end
             end
         end,
         onKeyRepeat=function (self,key)
             --dont call directly
             --dont override
+            if(self:instanceOf(g.classes.JSNFocusable())and not self:hasFocus())then
+                return
+            end
+            if(self:instanceOf(g.classes.JSNOwnerRelation()) and self:hasLeastOneFollower())then
+                return
+            end
             self:onKeyRepeatImpl(key)
             if self:instanceOf(g.classes.JSNParentChildRelation()) then
                 --伝搬
                 for i,v in ipairs(self:getChildren()) do
+                   
                     v:onKeyRepeat(key)
+                    
                 end
             end
         end,
@@ -587,6 +790,7 @@ g.classes.JSNKeyHandler=function(jsnmanager)
             if(self:instanceOf(g.classes.JSNOwnerRelation()))then
                 --子が一人でもいたら受けない
                 if self:hasLeastOneFollower() then
+                    DBGOUT("JSNKeyHandler:canHandleKeyDirectly:hasLeastOneFollower")
                     return false
                 end
             end
