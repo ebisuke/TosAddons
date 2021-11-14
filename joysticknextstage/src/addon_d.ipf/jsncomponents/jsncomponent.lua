@@ -71,6 +71,11 @@ g.classes.JSNComponent=function(jsnmanager,jsnframe,parent)
             self._rect.h=h
             self:getWrapperNativeControl():Resize(self._rect.w,h)
         end,
+        resize=function(self,w,h)
+            self._rect.w=w
+            self._rect.h=h
+            self:getWrapperNativeControl():Resize(w,h)
+        end,
         setOffset=function(self,x,y)
             self:setRect(x,y,self._rect.w,self._rect.h)
         end,

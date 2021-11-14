@@ -97,7 +97,14 @@ g.fn={
             token:release()
         end)
     end,
-     GenerateMenuByItem=function(invItem,sender,slot)
+    ShowToolTip=function(typename,tipname,x,y)
+        local frame=ui.GetFrame("inventory")
+    end,
+    HideToolTip=function ()
+        local tooltipFrame = ui.GetFrame("item_tooltip");
+        ui.CloseFrame("item_tooltip");
+    end,
+    GenerateMenuByItem=function(invItem,sender,slot)
         local menus={}
         local cls=GetClassByType("Item",invItem.type)
         local iesid=invItem:GetIESID()

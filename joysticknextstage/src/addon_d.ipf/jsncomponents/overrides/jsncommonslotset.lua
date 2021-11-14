@@ -87,6 +87,9 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
         setColumnCount=function(self,columnCount)
             self._slotsetInterface:setColumnCount(columnCount)
         end,
+        setSlotSize=function(self,slotWidth,slotHeight)
+            self._slotsetInterface:setSlotSize(slotWidth,slotHeight)
+        end,
         getCursorSlot=function(self)
             return self._slotsetInterface:getSlotByIndex(self._cursorIndex)
         end,
@@ -95,6 +98,10 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
         end,
         setCursorIndex=function(self,index)
             self._cursorIndex=math.max(0,math.min(index,self._slotsetInterface:getSlotCount()-1))
+        end,
+        findEmptySlot=function(self)
+            local slot=self._slotsetInterface:findEmptySlot()
+            return slot
         end,
         updateCursorPos=function (self)
  
@@ -174,6 +181,7 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
 
     local object=g.inherit(self,
     g.classes.JSNKeyHandler(jsnmanager), 
+    g.classes.JSNFocusable(jsnmanager,jsnframe,parent,eventhandler),
     g.classes.JSNGenericEventHandler(jsnmanager,eventhandler),
     g.classes.JSNComponent(jsnmanager,jsnframe,parent))
     

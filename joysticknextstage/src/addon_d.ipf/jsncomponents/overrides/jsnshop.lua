@@ -64,6 +64,7 @@ g.classes.JSNShopComponent=function (jsnmanager,jsnframe,parent)
         _submenuHandler=submenuHandler,
         initImpl=function(self)
             self:setSlotSize(256,64)
+            self:refresh()
         end,
         getCursorItem=function(self)
             --conventional func
@@ -107,9 +108,19 @@ g.classes.JSNShopComponent=function (jsnmanager,jsnframe,parent)
                 end
             end
       
-            slotset:assign(itergen(),function(v,slot)
-                local priceText	= string.format(" {img icon_item_silver 20 20} {@st66b}%s", GET_SHOPITEM_PRICE_TXT(shopItem));
-                
+            slotset:assign(itergen(),function(shopItem,slot)
+               
+                local cls=GetClassByType("Item",shopItem.type)
+                local priceText	= string.format(" {img icon_item_silver 30 30} {ol}{s25}%s", GET_COMMAED_STRING(cls.SellPrice));
+                local img=slot:CreateOrGetControl("picture","img",0,0,64,64)
+                slot:SetUserValue("ITEM_CLSID", shopItem.type)
+                CreateIcon(slot)
+                AUTO_CAST(img)
+                img:SetEnableStretch(1)
+                img:SetImage(cls.Icon)
+                local text=slot:CreateOrGetControl("richtext","price",0,0,20,64)
+                text:SetText(priceText)
+                text:SetGravity(ui.RIGHT,ui.UP)
             end)
         end,
         eventUserRequestedDetermine=function(self,slot,slotindex)
@@ -161,7 +172,7 @@ g.classes.JSNShopComponent=function (jsnmanager,jsnframe,parent)
         -- end,
     }
 
-    local object=g.inherit(self, g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe,parent,selectHandler),g.classes.JSNFocusable(jsnmanager,self))
+    local object=g.inherit(self, g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe,parent),g.classes.JSNFocusable(jsnmanager,self))
     return object
 end
 
@@ -171,10 +182,34 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
         _shopSlotSet=nil,
         _inventorySlotSet=nil,
         _actionChooser=nil,
+        _buySlotSet=nil,
+        _sellSlotSet=nil,
         initImpl=function (self)
             if(self:getOriginalNativeFrame():GetLayerLevel() >= self:getLayerLevel())then
                 self:setLayerLevel(self:getOriginalNativeFrame():GetLayerLevel()+1)
             end
+            local eventHandler={
+                eventUserRequestedCancel=function(_self)
+                    _self:unfocus()
+                    self:generateMainMenu()
+                    return true
+                end,
+                eventUserRequestedClose=function(_self)
+                    _self:unfocus()
+                    self:generateMainMenu()
+                    return true
+                end,
+                eventUserRequestedDetermine=function(_self,slot,slotindex)
+                    local guid=slot:getNativeSlot():GetUserValue("ITEM_GUID")
+                    local clsid=slot:getNativeSlot():GetUserValue("ITEM_CLSID")
+                    if(guid) then
+
+                    else
+                    end
+                    imcSound.PlaySoundEvent("button_inven_click_item");
+                    return false
+                end,
+            }
             self._inventorySlotSet=g.classes.JSNInventoryComponent(
                 jsnmanager,
                 self,
@@ -183,54 +218,72 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
                     local Itemclass = GetClassByType("Item", invItem.type);
                     local itemProp = geItemTable.GetPropByName(Itemclass.ClassName);
                     return itemProp:IsEnableShopTrade()
+                end,
+                function (invItem,slot)
+                    
+                    local cls=GetClassByType("Item",invItem.type)
+                    SET_SLOT_COUNT(slot, invItem.count)
+                    SET_SLOT_STYLESET(slot, cls)
+                    CreateIcon(slot)
+                    slot:SetUserValue("ITEM_GUID", invItem:GetIESID())
+                    slot:SetUserValue("ITEM_CLSID", invItem.type)
+                    local priceText	= string.format(" {img icon_item_silver 30 30} {s25}{ol}%s", GET_COMMAED_STRING(cls.SellPrice));
+                    local img=slot:CreateOrGetControl("picture","img",0,0,64,64)
+                    AUTO_CAST(img)
+                    img:SetImage(cls.Icon)
+                    img:SetEnableStretch(1)
+                    local text=slot:CreateOrGetControl("richtext","price",0,0,20,64)
+                    text:SetText(priceText)
+                    text:SetGravity(ui.RIGHT,ui.UP)
                 end
             ):init()
+            self._inventorySlotSet:setEventHandler(eventHandler)
+            self._inventorySlotSet:setSlotSize(128,64)
             self._inventorySlotSet:fitToFrame(0,200,0,30)
-            self._inventorySlotSet:setWidth(self:getWidth()/2-60,self:getHeight()-330)
-            self._inventorySlotSet:setGravity(ui.RIGHT,ui.TOP)
-            self._inventorySlotSet:setOffset(40,200)
+            self._inventorySlotSet:setWidth(self:getWidth()/2-80,self:getHeight()-430)
+            self._inventorySlotSet:setGravity(ui.LEFT,ui.TOP)
+            self._inventorySlotSet:setOffset(self:getWidth()/2+120,200)
             self._inventorySlotSet:autoSelectColumnCount()
-            self._inventorySlotSet:hook(
-                "onKeyDownImpl",
-                function(_self,key)
-                    if(key==g.classes.JSNKey.CANCEL)then
-                        _self:unfocus()
-                        self:generateMainMenu()
-                        return true,true
-                    else
-                        --ignore other keys
-                        return true,false
-                    end
-                end
-            )
+
             self._inventorySlotSet:refresh()
             self._shopSlotSet=g.classes.JSNShopComponent(
                 jsnmanager,
                 self,
                 self
             ):init()
+            self._shopSlotSet:setEventHandler(eventHandler)
             self._shopSlotSet:fitToFrame(0,200,0,30)
-            self._shopSlotSet:setWidth(self:getWidth()/2-60,self:getHeight()-230)
+            self._shopSlotSet:setWidth(self:getWidth()/2-80,self:getHeight()-430)
             self._shopSlotSet:setOffset(40,200)
             self._shopSlotSet:setGravity(ui.LEFT,ui.TOP)
             self._shopSlotSet:autoSelectColumnCount()
-            self._shopSlotSet:hook(
-                "onKeyDownImpl",
-                function(_self,key)
-                    if(key==g.classes.JSNKey.CANCEL)then
-                        _self:unfocus()
-                        self:generateMainMenu()
-                        return true,true
-                    else
-                        --ignore other keys
-                        return true,false
-                    end
-                end
-            )
+
             self._shopSlotSet:refresh()
+
+
+            self._buySlotSet=g.classes.JSNCommonSlotSetComponent(
+                jsnmanager,
+                self,
+                self):init();
+            self._buySlotSet:resize(self:getWidth()/2-60,128)
+            self._buySlotSet:setOffset(40,self:getHeight()-200)
+            self._buySlotSet:autoSelectColumnCount()
+
+            self._sellSlotSet=g.classes.JSNCommonSlotSetComponent(
+                jsnmanager,
+                self,
+                self):init();
+            self._sellSlotSet:resize(self:getWidth()/2-60,128)
+            self._sellSlotSet:setOffset(self:getWidth()/2+120,200)
+            self._sellSlotSet:autoSelectColumnCount()
+    
+
             self:generateMainMenu()
             
           
+        end,
+        addSellItem=function (self,item)
+            self._sellSlotSet:addItem(item)
         end,
         generateMainMenu=function(self)
             if(self._actionChooser)then
@@ -247,31 +300,36 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
                     {
                         text="Buy",
                         onClick=function()
-                            
+                            self._shopSlotSet:focus()
+                            return true
                         end
                     },
                     {
                         text="Sell",
                         onClick=function()
-                            
+                            self._inventorySlotSet:focus()
+                            return true
                         end
                     },
+                    
                     {
                         text="{b}Settle",
-                        onClick=function()
-                            
+                        onClick=function(component)
+                            component:invokeEvent(g.classes.JSNGenericEventHandlerType.eventUserRequestedClose)
+                            imcSound.PlaySoundEvent("market_sell");
+                            return true
                         end
                     },
                     {
                         text="Cancel",
-                        onClick=function(self)
-                            self:invokeEvent(g.classes.JSNGenericEventHandlerType.eventUserRequestedClose)
+                        onClick=function(component)
+                            component:invokeEvent(g.classes.JSNGenericEventHandlerType.eventUserRequestedClose)
                         end
                     },
                 },{
-                    eventUserRequestedClose=function(self)
+                    eventUserRequestedClose=function(component)
                         DBGOUT("eventUserRequestedClose")
-                        self:getParent():getOwner():release()
+                        component:getParent():getOwner():release()
                         return true
                     end,
                 }

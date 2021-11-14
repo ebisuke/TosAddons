@@ -99,7 +99,7 @@ g.classes.JSNContextMenuComponent=function(jsnmanager,jsnframe,menus,eventHandle
                 if(self:invokeEvent(g.classes.JSNGenericEventHandlerType.eventUserRequestedDetermine))then
                     self:getParent():release()
                    
-                    imcSound.PlaySoundEvent(g.sounds.DETERMINE)
+                    --imcSound.PlaySoundEvent(g.sounds.DETERMINE)
                     return true
                 end
             end

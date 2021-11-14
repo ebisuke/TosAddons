@@ -63,6 +63,16 @@ g.classes.JSNISlotset=function(nativeParentControl)
         setColumnCount=function(self,col)
             self._columnCount=col
         end,
+        findEmptySlot=function(self)
+            local slotCount=self._nativeSlotSet:GetSlotCount()
+            for i=0,slotCount-1 do
+                local slot=self._nativeSlotSet:GetSlotByIndex(i)
+                if slot:GetIcon()==nil then
+                    return slot
+                end
+            end
+            return nil
+        end,
         getColumnCount=function(self)
             return self._columnCount
         end,
@@ -82,6 +92,7 @@ g.classes.JSNISlotset=function(nativeParentControl)
             s:ClearIconAll()
             
             s:SetColRow(self._columnCount,math.ceil(#tbl/self._columnCount))
+            s:SetSlotSize(self._slotSize.w,self._slotSize.h)
             s:CreateSlots()
             for i,v in ipairs(tbl) do
 
@@ -92,6 +103,7 @@ g.classes.JSNISlotset=function(nativeParentControl)
                 if processor then
                     processor(v,slot)
                 end
+                slot:EnablePop(0)
             end
         end,
         getNativeSlotByIndex=function(self,index)

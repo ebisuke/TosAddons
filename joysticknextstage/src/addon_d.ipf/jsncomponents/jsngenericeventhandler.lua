@@ -29,6 +29,9 @@ g.classes.JSNGenericEventHandler=function(jsnmanager,eventHandler)
         initImpl=function(self)
             
         end,
+        setEventHandler=function(self,eventHandler)
+            self._eventHandler=eventHandler
+        end,
         _getEventHandler=function(self)
             return self._eventHandler 
         end,
