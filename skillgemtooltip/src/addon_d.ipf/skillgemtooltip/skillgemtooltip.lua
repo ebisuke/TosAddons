@@ -55,6 +55,23 @@ local function ERROUT(msg)
     }
 end
 
+local function CloneControls(src,dest)
+    local d=dest:CreateOrGetControl(
+        src:GetClassName(),
+        src:GetName(),
+        src:GetX(),
+        src:GetY(),
+        src:GetWidth(),
+        src:GetHeight())
+    AUTO_CAST(d)
+    d:CloneFrom(src)
+    for i=0,src:GetChildCount()-1 do
+        local s=src:GetChildByIndex(i)
+        CloneControls(s,d)
+    end
+    
+end
+
 --マップ読み込み時処理（1度だけ）
 function SKILLGEMTOOLTIP_ON_INIT(addon, frame)
     EBI_try_catch {
@@ -67,13 +84,10 @@ function SKILLGEMTOOLTIP_ON_INIT(addon, frame)
         end
     }
 end
-function SKILLGEMTOOLTIP_UPDATE_ITEM_TOOLTIP(tooltipframe, strarg, numarg1, numarg2, userdata, tooltipobj, noTradeCnt)	
-    if(keyboard.IsKeyPressed("LALT")==1 or joystick.IsKeyPressed("JOY_TARGET_CHANGE")==1)then
-        return UPDATE_ITEM_TOOLTIP_OLD(tooltipframe, strarg, numarg1, numarg2, userdata, tooltipobj, noTradeCnt)
 
-    else
-        return
-    end
+
+function SKILLGEMTOOLTIP_UPDATE_ITEM_TOOLTIP(tooltipframe, strarg, numarg1, numarg2, userdata, tooltipobj, noTradeCnt)	
+   
 	tolua.cast(tooltipframe, "ui::CTooltipFrame");
 	local itemObj, isReadObj = nil;	
 	if tooltipobj ~= nil then
@@ -94,11 +108,71 @@ function SKILLGEMTOOLTIP_UPDATE_ITEM_TOOLTIP(tooltipframe, strarg, numarg1, numa
     local itemcls = GetClassByType('Item', itemObj.ClassID)
     if itemcls ~= nil then
         if TryGetProp(itemcls, 'StringArg', 'None') == 'SkillGem' then
-            local text=tooltipframe:CreateOrGetControl("richtext", "mark_skillgem", 0, 0, 100, 20);
-            text:SetText("{ol}Skill Gem Tooltip")
-            text:SetGravity(ui.LEFT,ui.BOTTOM)
-            return UPDATE_SKILL_DUMMY_TOOLTIP(tooltipframe, strarg, numarg1, numarg2, userdata, tooltipobj, noTradeCnt)	
+            return EBI_try_catch {
+                try = function()
+    
+                    return SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(tooltipframe,  TryGetProp(itemcls, 'SkillName', 'None') , numarg1, numarg2, userdata, tooltipobj, noTradeCnt,itemObj)	
+                end,
+                catch = function(error)
+                    ERROUT(error)
+                end
+            }
         end
     end
     return UPDATE_ITEM_TOOLTIP_OLD(tooltipframe, strarg, numarg1, numarg2, userdata, tooltipobj, noTradeCnt)
+end
+
+function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numarg2, userData, obj,noTrade,itemObj)
+	local skl = session.GetSkillByName(strarg);
+	local sklObj;
+	local sklLv = 1;
+	if skl == nil or skl:GetObject() == nil then
+		sklObj = GetClass('Skill', strarg);
+		sklLv = 1;
+	else
+		sklObj = GetIES(skl:GetObject());
+		sklLv = sklObj.Level;
+	end
+	
+	local buffCls = GetClassByType('Buff', numarg1);
+	--ocal spendItemName, spendItemCount, captionTimeScp, captionList, captionRatioScpList = GetBuffSellerInfoByBuffName(buffCls.ClassName);
+
+    
+ 
+    
+	--DESTROY_CHILD_BYNAME(frame:GetChild('skill_desc'), 'SKILL_CAPTION_');
+    local originalWidth =390
+    local originalSkillWidth =440
+
+    --frame:Resize(frame:GetWidth()+ui.GetTooltipFrame("skill"):GetWidth(),frame:GetHeight())
+    UPDATE_ITEM_TOOLTIP_OLD(frame,strarg,itemObj,numarg2,userData,obj,noTrade)
+    frame:RemoveChild("skill_desc")
+    local d=frame:GetChild("skill_desc")
+    if(d == nil) then
+         d=CloneControls(ui.GetTooltipFrame("skill"):GetChildRecursively("skill_desc"),frame)
+    end
+    local a=frame:GetChild("ability_desc")
+    if(a == nil) then
+         a=CloneControls(ui.GetTooltipFrame("skill"):GetChildRecursively("ability_desc"),frame)
+    end
+    local ip=frame:GetChild("icon")
+    if(ip == nil) then
+        ip=CloneControls(ui.GetTooltipFrame("skill"):GetChildRecursively("icon"),frame)
+    end
+    
+	local skill_desc = GET_CHILD(frame, "skill_desc");
+    skill_desc:SetGravity(ui.RIGHT,ui.TOP)
+    local height=frame:GetHeight()
+	UPDATE_SKILL_TOOLTIP(frame,strarg,sklObj.ClassID,numarg2,userData,obj)
+    	
+    local text=skill_desc:CreateOrGetControl("richtext", "mark_skillgem", 0, 0, 100, 20);
+    text:SetText("{ol}Skill Gem Tooltip")
+    text:SetOffset(20,20)
+    text:SetGravity(ui.LEFT,ui.TOP)
+   
+	skill_desc:Resize(ui.GetTooltipFrame("skill"):GetWidth(), skill_desc:GetHeight());
+    skill_desc:SetOffset(0,0)
+    
+	frame:Resize(originalWidth+originalSkillWidth,math.max(height,skill_desc:GetHeight()));	
+ 
 end
