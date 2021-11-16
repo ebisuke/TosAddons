@@ -166,6 +166,9 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
     
 	local skill_desc = GET_CHILD(frame, "skill_desc");
     skill_desc:SetGravity(ui.RIGHT,ui.TOP)
+      
+	local ability_desc = GET_CHILD(frame, "ability_desc");
+    ability_desc:SetGravity(ui.RIGHT,ui.TOP)
     local height=frame:GetHeight()
     local sklGuid="0"
     if(skl) then
@@ -180,8 +183,10 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
    
 	skill_desc:Resize(ui.GetTooltipFrame("skill"):GetWidth(), skill_desc:GetHeight());
     skill_desc:SetOffset(0,0)
-    
-	frame:Resize(originalWidth+originalSkillWidth,math.max(height,skill_desc:GetHeight()));	
+    ability_desc:SetGravity(ui.RIGHT,ui.TOP)
+    ability_desc:Resize(ui.GetTooltipFrame("skill"):GetWidth(), ability_desc:GetHeight());
+    ability_desc:SetOffset(0,skill_desc:GetHeight())
+	frame:Resize(originalWidth+originalSkillWidth,math.max(height,skill_desc:GetHeight()+ability_desc:GetHeight()));	
 
     -- 
     if remembered_level then
