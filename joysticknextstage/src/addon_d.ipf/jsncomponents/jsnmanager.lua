@@ -83,7 +83,8 @@ g.classes.JSNManager=function ()
                 local name=v:getOriginalNativeFrameName()
                 if  name~=nil and 
                      ui.GetFrame(name) ~= nil and 
-                     ui.GetFrame(name):IsVisible()==1 then
+                     ui.GetFrame(name):IsVisible()==1 and
+                     ui.GetFrame(name):GetUserIValue("JSN_DONT_OVERRIDE")~=1 then
                     local already=false;
                     for j,k in pairs(self.jsnframes) do
                         if j == name then
@@ -94,7 +95,10 @@ g.classes.JSNManager=function ()
                     if(not already )and (not self.jsnframes[ name]) then
                         local f,err=pcall(v.createOverrider,v,ui.GetFrame(name))
                         if(f) then
-                            self.jsnframes[name]=err
+                            if(not err:isFailed())then
+                                self.jsnframes[name]=err
+                            else
+                            end
                         else
                             self.jsnframes[name] =g.classes.JSNObject()
                             ERROUT("JSNManager:processFrames:createOverrider:"..err)
@@ -145,9 +149,12 @@ g.classes.JSNManager=function ()
                             local repeatValue=self.pressedKeys[k] - self.keyRepeatDelay
                             if(self.pressedKeys[k] ==0 or repeatValue%self.keyRepeatInterval==0)then
                                 
-                                if(self.pressedKeys[k] ==0)then
+                                if(self.pressedKeys[k] == 0)then
                                  
                                     for _,vvv in pairs(self.keyListeners) do
+                                        if vvv:onPreKeyDown(v) then
+                                            break
+                                        end
                                         if(vvv:canHandleKeyDirectly())then
                                             if vvv:onKeyDown(v) then
                                                 break
@@ -156,6 +163,9 @@ g.classes.JSNManager=function ()
                                     end
                                 end
                                 for _,vvv in pairs(self.keyListeners) do
+                                    if vvv:onPreKeyRepeat(v) then
+                                        break
+                                    end
                                     if(vvv:canHandleKeyDirectly())then
                                         if vvv:onKeyRepeat(v) then
                                             break
@@ -183,7 +193,8 @@ g.classes.JSNManager=function ()
         end,
         _registerReplacers=function (self)
             local list={
-               g.classes.JSNReplacer(self,"shop",g.classes.JSNShopOverrider):init()
+               g.classes.JSNReplacer(self,"shop",g.classes.JSNShopOverrider):init(),
+               g.classes.JSNReplacer(self,"inputstring",g.classes.JSNInputboxOverrider):init()
             }
     
             for i,v in ipairs(list) do

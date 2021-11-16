@@ -76,10 +76,7 @@ g.classes.JSNCustomFrame=function(jsnmanager,templateFrameName,title)
         
             --print("INIT:"..self:getNativeFrame():GetName())
         end,
-        onKeyDownImpl=function(self,key)
 
-            
-        end,
         applyFade=function(self)
             self:applyFadeImpl(self:getNativeFrame())
         end,

@@ -136,7 +136,7 @@ g.classes.JSNCursor = function(jsnmanager, linkedjsnframe)
                     
                 end
                 local link = self:getLinkedJSNFrame()
-                frame:SetLayerLevel(link:getNativeFrame():GetLayerLevel() + 1)
+               
                 frame:SetOffset(offset.x + crect.x, offset.y + crect.y)
 
                 frame:Resize(crect.w, crect.h)
@@ -148,10 +148,20 @@ g.classes.JSNCursor = function(jsnmanager, linkedjsnframe)
             end
         end,
         setCursorRect = function(self, x, y, w, h)
+            local frame = self:getNativeFrame()
+            local link = self:getLinkedJSNFrame()
+            if(link:getNativeFrame())then
+                frame:SetLayerLevel(link:getNativeFrame():GetLayerLevel() + 1)
+            end
             self._cursorRect = {x = x, y = y, w = w, h = h}
         end,
         setAnchor = function(self, obj)
             self._anchorObject = obj
+            local frame = self:getNativeFrame()
+            local link = self:getLinkedJSNFrame()
+            if(link:getNativeFrame())then
+                frame:SetLayerLevel(link:getNativeFrame():GetLayerLevel() + 1)
+            end
         end,
         clear = function(self)
             self._cursorRect = nil

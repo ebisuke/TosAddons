@@ -159,11 +159,15 @@ g.classes.JSNObject=function()
             self._id=""..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999).."-"..IMCRandom(1,99999999)
         
             local fail=false
+            local breaking=false
             for i,v in ipairs(self._hierarchy) do
                 EBI_try_catch({
                     try = function()
-                --DBGOUT("init>"..v.super._className)
-                v.super.initImpl(self)
+                    --DBGOUT("init>"..v.super._className)
+                    if(v.super.preInitImpl(self)~=nil)then
+                        fail=true
+                        return nil
+                    end
                 end,
                 catch = function(error)
                     ERROUT("JSNObject.init()"..error)
@@ -171,7 +175,29 @@ g.classes.JSNObject=function()
                 end
             })
             end
-                
+            if(breaking)then
+                self._fail=true
+                return self
+            end
+            
+            for i,v in ipairs(self._hierarchy) do
+                EBI_try_catch({
+                    try = function()
+                    --DBGOUT("init>"..v.super._className)
+                    if(v.super.initImpl(self)~=nil)then
+                        return nil
+                    end
+                end,
+                catch = function(error)
+                    ERROUT("JSNObject.init()"..error)
+                    fail=true
+                end
+            })
+            end
+            if(breaking)then
+                self._fail=true
+                return self
+            end
             
         
         
@@ -188,12 +214,18 @@ g.classes.JSNObject=function()
                     end
                 })
             end 
-         
+            if(breaking)then
+                self._fail=true
+                return self
+            end
  
             if fail then
                 self._fail=true
             end
             return self
+        end,
+        isFailed=function(self)
+            return self._fail
         end,
         isReleased=function(self)
             return self._released
@@ -243,6 +275,11 @@ g.classes.JSNObject=function()
             end
             self._released=true
             return self
+        end,
+        preInitImpl=function(self)
+            --override me
+           
+             
         end,
         initImpl=function(self)
             --override me
@@ -380,12 +417,12 @@ g.classes.JSNFocusable=function(jsnmanager,linkedjsnobject)
                 error("JSNFocusable must be linked to a JSNFrameBase or JSNComponent")
             end
 
-            local frame=self._linkedJSNObject
+            local jsnframe=self._linkedJSNObject
             if self._linkedJSNObject:instanceOf(g.classes.JSNComponent()) then
-                frame=self._linkedJSNObject:getJSNFrame()
+                jsnframe=self._linkedJSNObject:getJSNFrame()
             end
            
-            self._cursor=g.classes.JSNCursor(jsnmanager,frame):init()
+            self._cursor=g.classes.JSNCursor(jsnmanager,jsnframe):init()
         end,
         _setModalParameter=function(self,param)
             if(param==nil)then
@@ -487,6 +524,17 @@ g.classes.JSNFocusable=function(jsnmanager,linkedjsnobject)
         setCursorRect=function (self,x,y,w,h)
 
             self:getCursorObject():setCursorRect(x,y,w,h)
+            self:getCursorObject():setAnchor(self)
+        end,
+        setCursorToObject=function (self,nativeobject)
+
+            self:getCursorObject():setCursorRect(
+                nativeobject:GetX(),
+                nativeobject:GetY(),
+                nativeobject:GetWidth(),
+                nativeobject:GetHeight()    
+
+            )
             self:getCursorObject():setAnchor(self)
         end,
         getLinkedJSNObject=function (self)
@@ -740,7 +788,18 @@ g.classes.JSNKeyHandler=function(jsnmanager)
         releaseImpl=function (self)
             self:getJSNManager():unregisterKeyListener(self)
         end,
+        onPreKeyDown=function (self,key)
+            self:onPreKeyDownImpl(key)
+        end,
+        onPreKeyRepeat=function (self,key)
+            self:onPreKeyRepeatImpl(key)
+        end,
+        onPreKeyDownImpl=function (self,key)
  
+        end,
+        onPreKeyRepeatImpl=function (self,key)
+           
+        end,
         onKeyDown=function (self,key)
             --dont call directly
             --dont override
@@ -751,14 +810,18 @@ g.classes.JSNKeyHandler=function(jsnmanager)
             if(self:instanceOf(g.classes.JSNOwnerRelation()) and self:hasLeastOneFollower())then
                 return
             end
-            self:onKeyDownImpl(key)
+            if(self:onKeyDownImpl(key))then
+                return true
+            end
             if self:instanceOf(g.classes.JSNParentChildRelation()) then
                 --伝搬
+                local result=false
                 for i,v in ipairs(self:getChildren()) do
                     if(not v:instanceOf(g.classes.JSNOwnerRelation())or not v:hasLeastOneFollower() )then
-                        v:onKeyDown(key)
+                        result=v:onKeyDown(key) or result
                     end
                 end
+                return result
             end
         end,
         onKeyRepeat=function (self,key)
@@ -770,14 +833,18 @@ g.classes.JSNKeyHandler=function(jsnmanager)
             if(self:instanceOf(g.classes.JSNOwnerRelation()) and self:hasLeastOneFollower())then
                 return
             end
-            self:onKeyRepeatImpl(key)
+            if(self:onKeyRepeatImpl(key))then
+                return true
+            end
             if self:instanceOf(g.classes.JSNParentChildRelation()) then
                 --伝搬
+                local result=false
                 for i,v in ipairs(self:getChildren()) do
                    
-                    v:onKeyRepeat(key)
+                    result= v:onKeyRepeat(key) or result
                     
                 end
+                return result
             end
         end,
         onKeyDownImpl=function (self,key)

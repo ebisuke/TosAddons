@@ -57,11 +57,10 @@ local function ERROUT(msg)
 end
 g.classes=g.classes or {}
 
-g.classes.JSNShopComponent=function (jsnmanager,jsnframe,parent)
+g.classes.JSNShopComponent=function (jsnmanager,jsnframe,parent,slotPostGenerateHandler)
     local self={
         _className="JSNInventoryComponent",
-        _selectHandler=selectHandler,
-        _submenuHandler=submenuHandler,
+        _slotPostGenerateHandler=slotPostGenerateHandler,
         initImpl=function(self)
             self:setSlotSize(256,64)
             self:refresh()
@@ -111,68 +110,33 @@ g.classes.JSNShopComponent=function (jsnmanager,jsnframe,parent)
             slotset:assign(itergen(),function(shopItem,slot)
                
                 local cls=GetClassByType("Item",shopItem.type)
-                local priceText	= string.format(" {img icon_item_silver 30 30} {ol}{s25}%s", GET_COMMAED_STRING(cls.SellPrice));
+                local priceText	= string.format(" {img icon_item_silver 20 20} {ol}{s20}%s", GET_COMMAED_STRING(shopItem.price));
                 local img=slot:CreateOrGetControl("picture","img",0,0,64,64)
                 slot:SetUserValue("ITEM_CLSID", shopItem.type)
+                slot:SetUserValue("SHOP_CLSID", shopItem.classID)
                 CreateIcon(slot)
                 AUTO_CAST(img)
                 img:SetEnableStretch(1)
                 img:SetImage(cls.Icon)
-                local text=slot:CreateOrGetControl("richtext","price",0,0,20,64)
+                
+                local text=slot:CreateOrGetControl("richtext","price",0,0,64,32)
                 text:SetText(priceText)
                 text:SetGravity(ui.RIGHT,ui.UP)
+                if(self._slotPostGenerateHandler)then
+                    self._slotPostGenerateHandler(shopItem,slot)
+                end
+                
             end)
         end,
         eventUserRequestedDetermine=function(self,slot,slotindex)
           
         end,
-        -- onKeyDownImpl=function(self,key)
-        --     local handler
-          
-        --     if self:getSubmenuHandler() then
-        --         handler=self:getSubmenuHandler()
-        --     end
-        --     if g.classes.JSNKey.MAIN==key and self:getSelectHandler() then
-        --         DBGOUT("JSNInventoryComponent onKeyDownImpl")
-        --         if(self:getSelectHandler()(self:getCursorItem(),self,self:getCursorSlot()))then
-        --             g.fn.ReserveFunction(0.01,function()
-        --                 self:releaseAllRelationship()
-        --             end)
-                 
-                    
-        --         end
-        --         return true
-        --     end
-        --     if(key==g.classes.JSNKey.OPTION and handler)then
-        --         local rect=self:calculateCursorPos()
-        --         local x,y=rect.x+self:getX(),rect.y+self:getY()
-     
-        --         --local x,y=rect.x,rect.y
-        --         local dialog=self:callModal(
-        --             g.classes.JSNContextMenuFrame(
-        --                 self:getJSNManager(),
-        --                 self:getParent(),
-        --                 x+20,
-        --                 y+20-self:getScrollY(),
-        --                 200,
-        --                 rect.h,
-        --                 handler(
-        --                     self:getCursorItem(),
-        --                     self,
-        --                     self:getCursorSlot())):init(),
-        --             function ()
-        --                 g.fn.ReserveFunction(0.1,function ()
-        --                     self:refresh()
-        --                 end)
-        --             end)
-                
-        --         imcSound.PlaySoundEvent(g.sounds.POPUP)
-        --         return true
-        --     end
-        -- end,
+        
     }
 
-    local object=g.inherit(self, g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe,parent),g.classes.JSNFocusable(jsnmanager,self))
+    local object=g.inherit(self, g.classes.JSNCommonSlotSetComponent(jsnmanager,jsnframe,parent),
+        g.classes.JSNOwnerRelation(),
+    g.classes.JSNFocusable(jsnmanager,self))
     return object
 end
 
@@ -184,11 +148,14 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
         _actionChooser=nil,
         _buySlotSet=nil,
         _sellSlotSet=nil,
+        _buyItems={},
+        _sellItems={},
         initImpl=function (self)
             if(self:getOriginalNativeFrame():GetLayerLevel() >= self:getLayerLevel())then
                 self:setLayerLevel(self:getOriginalNativeFrame():GetLayerLevel()+1)
             end
-            local eventHandler={
+            
+            local selleventHandler={
                 eventUserRequestedCancel=function(_self)
                     _self:unfocus()
                     self:generateMainMenu()
@@ -199,17 +166,48 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
                     self:generateMainMenu()
                     return true
                 end,
+                eventUserRequestedMenu=function(_self,slot,slotindex)
+                    local guid=slot:getNativeSlot():GetUserValue("ITEM_GUID")
+                    
+                    if(guid) then
+                        local invItem=GET_PC_ITEM_BY_GUID(guid)
+                        g.fn.InputNumberBox(self,"How many would you link to?",1,invItem.count,
+                        function(count)
+                            self:addSellItem(invItem,count)
+                            imcSound.PlaySoundEvent("button_inven_click_item");
+                            
+                        end)
+                        self:refresh()
+                    end
+
+                    return false
+                end,
                 eventUserRequestedDetermine=function(_self,slot,slotindex)
                     local guid=slot:getNativeSlot():GetUserValue("ITEM_GUID")
-                    local clsid=slot:getNativeSlot():GetUserValue("ITEM_CLSID")
+                    
                     if(guid) then
-
+                        local invItem=GET_PC_ITEM_BY_GUID(guid)
+                        self:addSellItem(guid,1)
+                        imcSound.PlaySoundEvent("button_inven_click_item");
+                        self:refresh()
                     else
                     end
-                    imcSound.PlaySoundEvent("button_inven_click_item");
+                   
+          
+                    return false
+                end,
+                eventUserRequestedSubAction=function(_self,slot,slotindex)
+                    
+                    local guid=slot:getNativeSlot():GetUserValue("ITEM_GUID")
+                 
+                    imcSound.PlaySoundEvent("inven_unequip");
+                    self:removeSellItem(guid)
+                    self:refresh()
                     return false
                 end,
             }
+            ui.EnableSlotMultiSelect(1);
+
             self._inventorySlotSet=g.classes.JSNInventoryComponent(
                 jsnmanager,
                 self,
@@ -227,63 +225,202 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
                     CreateIcon(slot)
                     slot:SetUserValue("ITEM_GUID", invItem:GetIESID())
                     slot:SetUserValue("ITEM_CLSID", invItem.type)
-                    local priceText	= string.format(" {img icon_item_silver 30 30} {s25}{ol}%s", GET_COMMAED_STRING(cls.SellPrice));
+                    if(self._sellItems[invItem:GetIESID()]) then
+                        DBGOUT("set sell item")
+                        slot:Select(1)
+                       
+                     
+                    else
+                        slot:Select(0)
+                       
+                    end
+                    local priceText	= string.format(" {img icon_item_silver 24 24} {s25}{ol}%s", GET_COMMAED_STRING(cls.SellPrice));
                     local img=slot:CreateOrGetControl("picture","img",0,0,64,64)
                     AUTO_CAST(img)
                     img:SetImage(cls.Icon)
                     img:SetEnableStretch(1)
-                    local text=slot:CreateOrGetControl("richtext","price",0,0,20,64)
+                    local text=slot:CreateOrGetControl("richtext","price",0,0,64,32)
                     text:SetText(priceText)
                     text:SetGravity(ui.RIGHT,ui.UP)
+
+                    local text=slot:CreateOrGetControl("richtext","count",0,32,64,32)
+                    AUTO_CAST(text)
+                    if(self._sellItems[invItem:GetIESID()]) then
+                        text:SetText("{ol}{s25}"..self._sellItems[invItem:GetIESID()].count.."/"..invItem.count)
+                    else
+                        text:SetText("{ol}{s25}"..invItem.count)
+                    end
+                    text:SetGravity(ui.RIGHT,ui.DOWN)
+            
+                    
                 end
             ):init()
-            self._inventorySlotSet:setEventHandler(eventHandler)
+            self._inventorySlotSet:setEventHandler(selleventHandler)
             self._inventorySlotSet:setSlotSize(128,64)
             self._inventorySlotSet:fitToFrame(0,200,0,30)
             self._inventorySlotSet:setWidth(self:getWidth()/2-80,self:getHeight()-430)
             self._inventorySlotSet:setGravity(ui.LEFT,ui.TOP)
             self._inventorySlotSet:setOffset(self:getWidth()/2+120,200)
             self._inventorySlotSet:autoSelectColumnCount()
+            self._inventorySlotSet:setEnableSelection(true)
 
             self._inventorySlotSet:refresh()
+            
+            ui.EnableSlotMultiSelect(1);
+            local buyeventHandler={
+                eventUserRequestedCancel=function(_self)
+                    _self:unfocus()
+                    self:generateMainMenu()
+                    return true
+                end,
+                eventUserRequestedClose=function(_self)
+                    _self:unfocus()
+                    self:generateMainMenu()
+                    return true
+                end,
+                eventUserRequestedMenu=function(_self,slot,slotindex)
+                    local clsid=slot:getNativeSlot():GetUserIValue("SHOP_CLSID")
+                    if(clsid) then
+           
+                        g.fn.InputNumberBox(self,"How many would you like to buy?",1,1,self:calculateBuyableCount(clsid),
+                        function(parent,count)
+                            self:addBuyItem(clsid,count)
+                            imcSound.PlaySoundEvent("button_inven_click_item");
+                            
+                        end)
+                        
+                    end
+                    self:refresh()
+                    return false
+                end,
+                eventUserRequestedDetermine=function(_self,slot,slotindex)
+                    
+                    local clsid=slot:getNativeSlot():GetUserIValue("SHOP_CLSID")
+                 
+                    imcSound.PlaySoundEvent("button_inven_click_item");
+                    self:addBuyItem(clsid,1)
+                    self:refresh()
+                    return false
+                end,
+                eventUserRequestedSubAction=function(_self,slot,slotindex)
+                    
+                    local clsid=slot:getNativeSlot():GetUserIValue("SHOP_CLSID")
+                 
+                    imcSound.PlaySoundEvent("inven_unequip");
+                    self:removeBuyItem(clsid)
+                    self:refresh()
+                    return false
+                end,
+            }
             self._shopSlotSet=g.classes.JSNShopComponent(
                 jsnmanager,
                 self,
-                self
+                self,
+                function(shopItem,slot)
+                    local clsid=shopItem.classID
+                    if(self._buyItems[clsid]) then
+                        DBGOUT("set buy item")
+                        slot:Select(1)
+
+                    else
+                        slot:Select(0)
+                       
+                    end
+                    local text=slot:CreateOrGetControl("richtext","count",0,32,64,32)
+                    AUTO_CAST(text)
+                    if(self._buyItems[clsid]) then
+                        text:SetText("{ol}{s25}"..self._buyItems[clsid].count)
+                    else
+                        text:SetText("{ol}{s25}")
+                    end
+                    text:SetGravity(ui.RIGHT,ui.DOWN)
+
+                end
             ):init()
-            self._shopSlotSet:setEventHandler(eventHandler)
+            self._shopSlotSet:setEventHandler(buyeventHandler)
+            self._shopSlotSet:setSlotSize(128,64)
             self._shopSlotSet:fitToFrame(0,200,0,30)
             self._shopSlotSet:setWidth(self:getWidth()/2-80,self:getHeight()-430)
-            self._shopSlotSet:setOffset(40,200)
             self._shopSlotSet:setGravity(ui.LEFT,ui.TOP)
+            self._shopSlotSet:setOffset(20,200)
             self._shopSlotSet:autoSelectColumnCount()
-
             self._shopSlotSet:refresh()
-
-
-            self._buySlotSet=g.classes.JSNCommonSlotSetComponent(
-                jsnmanager,
-                self,
-                self):init();
-            self._buySlotSet:resize(self:getWidth()/2-60,128)
-            self._buySlotSet:setOffset(40,self:getHeight()-200)
-            self._buySlotSet:autoSelectColumnCount()
-
-            self._sellSlotSet=g.classes.JSNCommonSlotSetComponent(
-                jsnmanager,
-                self,
-                self):init();
-            self._sellSlotSet:resize(self:getWidth()/2-60,128)
-            self._sellSlotSet:setOffset(self:getWidth()/2+120,200)
-            self._sellSlotSet:autoSelectColumnCount()
-    
-
+            self._shopSlotSet:setEnableSelection(true)
             self:generateMainMenu()
             
-          
+            self:refresh()
         end,
-        addSellItem=function (self,item)
-            self._sellSlotSet:addItem(item)
+        addSellItem=function (self,guid,count)
+            if(self._sellItems[guid]) then
+                self._sellItems[guid].count=self._sellItems[guid].count+count
+            else
+                DBGOUT("add sell item"..guid)
+                self._sellItems[guid]={
+                    item=guid,
+                    count=count,
+                }
+            end
+            DBGOUT(string.format("addSellItem:%s,%d",guid,count))
+            self:refresh()
+        end,
+        addBuyItem=function(self,shopclsid,count)
+            if(self._buyItems[shopclsid])then
+                self._buyItems[shopclsid].count=self._buyItems[shopclsid].count+count
+            else
+                self._buyItems[shopclsid]={
+                    item=shopclsid,
+                    count=count,
+                }
+            end
+            DBGOUT(string.format("addBuyItem:%d,%d",shopclsid,count))
+            self:refresh()
+        end,
+        removeBuyItem=function(self,shopclsid)
+       
+            self._buyItems[shopclsid]=nil
+            self:refresh()
+        end,
+        removeSellItem=function(self,iesid)
+       
+            self._sellItems[iesid]=nil
+            self:refresh()
+        end,
+        clearSettlement=function (self)
+            self._sellItems={}
+            self._buyItems={}
+            self:refresh()
+        end,
+        calculateBuyableCount=function(self,shopclsid)
+            local balance=self:calculateBalance()
+            local remain=tonumber(GET_TOTAL_MONEY_STR())-balance
+            local item= geShopTable.GetByClassID(shopclsid);
+            local count=0
+            if(item)then
+                count=math.floor(remain/item.price)
+            end
+            return count
+        end,
+        settle=function(self)
+
+            local count=0
+            for _,v in pairs(self._sellItems) do
+                count=count+1
+                item.AddToSellList(v.item,v.count)
+            end
+            if(count>0) then
+                item.SellList()
+            end
+
+            count=0
+            for _,v in pairs(self._buyItems) do
+                count=count+1
+                item.AddToBuyList(v.item,v.count)
+            end
+            if(count>0) then
+                item.BuyList()
+            end
+
+            self:clearSettlement()
         end,
         generateMainMenu=function(self)
             if(self._actionChooser)then
@@ -315,6 +452,13 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
                     {
                         text="{b}Settle",
                         onClick=function(component)
+                            if IsGreaterThanForBigNumber(tostring(-self:calculateBalance()), GET_TOTAL_MONEY_STR()) == 1 then
+                                ui.SysMsg(ClMsg('NotEnoughMoney'));
+                                imcSound.PlaySoundEvent(g.sounds.ERROR);
+                                return false;
+                            end
+                            
+                            self:settle()
                             component:invokeEvent(g.classes.JSNGenericEventHandlerType.eventUserRequestedClose)
                             imcSound.PlaySoundEvent("market_sell");
                             return true
@@ -336,6 +480,75 @@ g.classes.JSNShopOverrider=function (jsnmanager,overridenFrame)
             ):init()
             self._actionChooser:focus()
             return self._actionChooser
+        end,
+        calculateTotalSellPrice=function(self)
+            local total=0
+            for _,v in pairs(self._sellItems) do
+                local itm=GET_PC_ITEM_BY_GUID(v.item)
+                if(itm)then
+                    local cls=GetClassByType("Item",itm.type)
+                    local itemProp = geItemTable.GetPropByName(cls.ClassName);
+                    local price=0
+                    if itemProp ~= nil then
+                        price = geItemTable.GetSellPrice(itemProp);
+      
+                    end
+                    total=total+price*v.count
+                end
+            end
+            return total
+        end,
+        calculateTotalBuyPrice=function(self)
+            local total=0
+            for _,v in pairs(self._buyItems) do
+                local item= geShopTable.GetByClassID(v.item);
+                if(item)then
+                    total=total+item.price*v.count
+                end
+            end
+            return total
+        end,
+        calculateBalance=function(self)
+            return self:calculateTotalSellPrice()-self:calculateTotalBuyPrice()
+        end,
+        refreshImpl=function(self)
+            DBGOUT("refreshImpl")
+            self._shopSlotSet:refresh()
+            self._inventorySlotSet:refresh()
+
+            local balance=self:calculateBalance()
+            local text=self:getNativeFrame():CreateOrGetControl("richtext","balance",0,400,100,100)
+            local arrow=self:getNativeFrame():CreateOrGetControl("picture","arrow",0,600,100,100)
+            local silvers=self:getNativeFrame():CreateOrGetControl("richtext","silvers",0,0,400,30)
+            silvers:SetGravity(ui.RIGHT,ui.TOP)
+            silvers:SetOffset(100,80)
+           
+            silvers:SetText(string.format(" {img icon_item_silver 48 48} {s48}{ol}%s",GET_COMMAED_STRING(GET_TOTAL_MONEY_STR())))
+            AUTO_CAST(arrow)
+            AUTO_CAST(text)
+            text:SetGravity(ui.CENTER_HORZ,ui.TOP)
+            text:SetTextAlign("center","center")
+            arrow:SetGravity(ui.CENTER_HORZ,ui.TOP)
+            arrow:SetEnableStretch(1)
+            if(balance==0)then
+                text:SetText("")
+                arrow:ShowWindow(0)
+            elseif(balance<0)then
+                if IsGreaterThanForBigNumber(tostring(-balance), GET_TOTAL_MONEY_STR()) == 1 then
+                    text:SetText("{ol}{s48}{#444444}"..GET_COMMAED_STRING(-balance))
+                else
+                    text:SetText("{ol}{s48}"..GET_COMMAED_STRING(-balance))
+                end
+                arrow:ShowWindow(1)
+                arrow:SetImage("icon_arrow_left")
+                
+            else
+                
+                text:SetText("{ol}{s48}"..GET_COMMAED_STRING(balance))
+                arrow:ShowWindow(1)
+                arrow:SetImage("icon_arrow_right")
+            end
+
         end,
         releaseImpl=function (self)
 

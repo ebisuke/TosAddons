@@ -56,24 +56,32 @@ local function ERROUT(msg)
 
 end
 g.classes=g.classes or {}
-g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe,parent,inventoryFilter,slotFormatter)
+g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe,parent,inventoryFilter,slotFormatter,tooltipParam)
 
     local self={
         _className="JSNInventoryComponent",
         _inventoryFilter=inventoryFilter,
         _slotFormatter=slotFormatter,
+        _tooltipParam=tooltipParam,
+        _tooltip=nil,
         initImpl=function(self)
-
+            self._tooltip=g.classes.JSNTooltipFrame(jsnmanager,self,0,0):init()
         end,
         getCursorItem=function(self)
             --conventional func
-            
+            if(self:getCursorSlot()==nil)then
+                return nil
+            end
             local slot= self:getCursorSlot():getNativeSlot()
             if slot==nil then
                 DBGOUT("getCursorItem:slot is nil")
                 return nil
             end
             local icon = slot:GetIcon();
+            if(icon==nil)then
+                DBGOUT("getCursorItem:icon is nil")
+                return nil
+            end
             local iconInfo = icon:GetInfo();
             local invItem = GET_PC_ITEM_BY_GUID(iconInfo:GetIESID());
 
@@ -130,11 +138,27 @@ g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe,parent,inventoryFil
                         end
          
                     end
-                    if i<invItemCount then
-                        local invItem= sortedList:at(i)
-                        i=i+1
-                        return invItem
-                    end
+                    
+                    
+                    repeat
+                        if i<invItemCount then
+                            local invItem= sortedList:at(i)
+                            local invCls=GetClassByType('Item',invItem.type)
+                            i=i+1
+                           
+                            local groupName = invCls.GroupName;
+                            DBGOUT(groupName)
+                            if groupName == 'Unused' then
+  
+                            else
+                                return invItem
+                            end
+                        else
+                            break
+                        end
+                        
+                    until(false)
+                
                     
                 end
             end
@@ -142,6 +166,26 @@ g.classes.JSNInventoryComponent=function(jsnmanager,jsnframe,parent,inventoryFil
                 INV_SLOT_UPDATE(ui.GetFrame("inventory"),v,slot)
             end
             slotset:assign(itergen(),slotFormatter)
+            self:onCursorMoved()
+            
+        end,
+        onCursorMovedImpl=function(self,slot)
+            local invItem=self:getCursorItem()
+            if invItem==nil then
+                self._tooltip:clearToolTip()
+                return
+            end
+            local x=self:getGlobalX()
+            if(slot:getX()<(self:getWidth()/2))then
+                x=self:getGlobalX()+self:getX()+self:getWidth()/2
+            else
+                x=self:getGlobalX()
+            end
+            local y=self:getGlobalY()
+     
+            self._tooltip:assignItemByGuid(invItem:GetIESID())
+            self._tooltip:setOffset(x,y)
+
         end,
         onKeyDownImpl=function(self,key)
             if self._supers["JSNCommonSlotSetComponent"].onKeyDownImpl(self,key) then
@@ -168,16 +212,14 @@ g.classes.JSNInventoryFrame=function(jsnmanager,owner,inventoryFilter,x,y,title)
                 self:getJSNManager(),
                 self,
                 self,
-                self._inventoryFilter,
-                self._selectHandler,
-                self._submenuHandler):init()
+                self._inventoryFilter):init()
             self:setRect(x or 100,y or 100,200,160)
             local offset=0
             if(self:getTitle())then
                 local frame=self:getNativeFrame()
                 local text=frame:CreateOrGetControl("richtext", "title", 0, 0, self:getWidth(), 30);
                 text:SetText("{ol}"..self:getTitle());
-                text:SetTextAlign(ui.LEFT, ui.TOP);
+                text:SetTextAlign("left","top");
                 offset=30
             end
             self._inventoryComponent:fitToFrame(4,4+offset,4,4)

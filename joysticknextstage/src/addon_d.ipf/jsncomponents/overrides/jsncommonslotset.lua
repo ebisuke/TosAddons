@@ -71,6 +71,7 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
             self._slotsetInterface=self:addInterface(g.classes.JSNISlotset(self:getWrapperNativeControl()):init())
             self:relayout()
             self:updateCursorPos()
+            self:onCursorMoved()
         end,
         relayoutImpl=function (self)
             self._slotsetInterface:setClippingRect(self:getRect())
@@ -89,6 +90,10 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
         end,
         setSlotSize=function(self,slotWidth,slotHeight)
             self._slotsetInterface:setSlotSize(slotWidth,slotHeight)
+        end,
+        setEnableSelection=function(self,enable)
+            self._slotsetInterface:setEnableSelection(enable)
+            
         end,
         getCursorSlot=function(self)
             return self._slotsetInterface:getSlotByIndex(self._cursorIndex)
@@ -121,17 +126,33 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
                 h=(self._slotsetInterface:getSlotHeight()+self._slotsetInterface:getSlotSpcY())}
                 return rect;
         end,
-        
+        onCursorMoved=function(self)
+           
+            self:onCursorMovedImpl( self:getCursorSlot())
+            
+        end,
+        onCursorMovedImpl=function(self,slot)
+            
+        end,
         onKeyDownImpl=function(self,key)
             if g.classes.JSNKey.MAIN==key and self:getCursorSlot() then
                 if(self:invokeEvent(
                     g.classes.JSNGenericEventHandlerType.eventUserRequestedDetermine,
                     self:getCursorSlot(),self:getCursorIndex()
                 ))then
-          
+                   
                     return true
                 end
                
+            end
+            if(key==g.classes.JSNKey.SUB)then
+                if(self:invokeEvent(
+                    g.classes.JSNGenericEventHandlerType.eventUserRequestedSubAction,
+                    self:getCursorSlot(),self:getCursorIndex()
+                ))then
+   
+                    return true
+                end
             end
             if(key==g.classes.JSNKey.OPTION)then
                 if(self:invokeEvent(
@@ -154,24 +175,28 @@ g.classes.JSNCommonSlotSetComponent=function(jsnmanager,jsnframe,parent,eventhan
             if(key==g.classes.JSNKey.LEFT)then
                 self:setCursorIndex(self:getCursorIndex()-1)
                 self:updateCursorPos()
+                self:onCursorMoved()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
                 return true
             end
             if(key==g.classes.JSNKey.RIGHT)then
                 self:setCursorIndex(self:getCursorIndex()+1)
                 self:updateCursorPos()
+                self:onCursorMoved()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
                 return true
             end
             if(key==g.classes.JSNKey.UP)then
                 self:setCursorIndex(self:getCursorIndex()-self._slotsetInterface:getColumnCount())
                 self:updateCursorPos()
+                self:onCursorMoved()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
                 return true
             end
             if(key==g.classes.JSNKey.DOWN)then
                 self:setCursorIndex(self:getCursorIndex()+self._slotsetInterface:getColumnCount())
                 self:updateCursorPos()
+                self:onCursorMoved()
                 imcSound.PlaySoundEvent(g.sounds.CURSOR_MOVE)
                 return true
             end

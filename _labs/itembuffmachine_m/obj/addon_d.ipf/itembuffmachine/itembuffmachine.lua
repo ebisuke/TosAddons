@@ -139,7 +139,7 @@ function ITEMBUFFMACHINE_ITEMBUFFOPEN_INIT()
             local btn2 = frame:CreateOrGetControl('button', 'ibmbuff2', 130, 70, 100, 30)
             btn2:SetText('{ol}Buff Weapons')
             btn2:SetEventScript(ui.LBUTTONUP, 'ITEMBUFFMACHINE_WEAPBUFF_ONBUTTON')
-            test-syntax-error
+
             -------------------
         end,
         catch = function(error)

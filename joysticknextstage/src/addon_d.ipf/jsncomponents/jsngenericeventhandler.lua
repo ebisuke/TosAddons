@@ -17,10 +17,14 @@ local acutil = require('acutil')
 g.classes=g.classes or {}
 g.classes.JSNGenericEventHandlerType={
     eventUserRequestedDetermine="eventUserRequestedDetermine",
+    
+    eventUserRequestedSubAction="eventUserRequestedSubAction",
     eventUserRequestedMenu="eventUserRequestedMenu",
     eventUserRequestedCancel="eventUserRequestedCancel",
     eventUserRequestedClose="eventUserRequestedClose",
+
     eventRequestGenerateMenu="eventRequestGenerateMenu",
+
 }
 
 g.classes.JSNGenericEventHandler=function(jsnmanager,eventHandler)
@@ -54,29 +58,37 @@ g.classes.JSNGenericEventHandler=function(jsnmanager,eventHandler)
         end,
         onKeyDownImpl=function(self,key)
             if g.classes.JSNKey.MAIN==key then
-                if(self:invokeHandler(
+                if(self:invokeEvent(
                     g.classes.JSNGenericEventHandlerType.eventUserRequestedDetermine))then
           
                     return true
                 end
                
             end
+            if g.classes.JSNKey.SUB==key then
+                if(self:invokeEvent(
+                    g.classes.JSNGenericEventHandlerType.eventUserRequestedSubAction))then
+          
+                    return true
+                end
+               
+            end
             if(key==g.classes.JSNKey.OPTION)then
-                if(self:invokeHandler(
+                if(self:invokeEvent(
                     g.classes.JSNGenericEventHandlerType.eventUserRequestedMenu))then
    
                     return true
                 end
             end
             if(key==g.classes.JSNKey.CANCEL)then
-                if(self:invokeHandler(
+                if(self:invokeEvent(
                     g.classes.JSNGenericEventHandlerType.eventUserRequestedCancel))then
    
                     return true
                 end
             end
             if(key==g.classes.JSNKey.CLOSE)then
-                if(self:invokeHandler(
+                if(self:invokeEvent(
                     g.classes.JSNGenericEventHandlerType.eventUserRequestedClose))then
    
                     return true

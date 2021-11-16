@@ -69,6 +69,15 @@ g.classes.JSNFrameBase=function(jsnmanager,owner)
                 self:setLayerLevel(owner:getLayerLevel()+1)
             end
         end,
+        refresh=function(self)
+            self:refreshImpl()
+        end,
+        refreshImpl=function(self)
+            -- please override
+        end,
+        setOffset=function(self,x,y)
+            self:getNativeFrame():SetOffset(x,y)
+        end,
         setNativeFrame=function(self,nativeFrame)
             self._nativeFrame=nativeFrame
         end,

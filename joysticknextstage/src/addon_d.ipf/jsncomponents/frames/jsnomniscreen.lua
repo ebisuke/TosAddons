@@ -64,12 +64,12 @@ g.classes.JSNOmniScreen=function()
         _tabInventory=nil,
         _activeTab=nil,
         initImpl=function(self)
-             
+            self:focus()
         end,
         lazyInitImpl=function(self)
 
             self._tabInventory=g.classes.JSNOmniTabInventory(jsnmanager,self):init()
-            self:focus()
+           
             self:setActiveTab(self._tabInventory)
             
         end,
@@ -89,12 +89,7 @@ g.classes.JSNOmniScreen=function()
             
             self._tabInventory:release()
         end,
-        onKeyDownImpl=function (self,key)
-            if(key==g.classes.JSNKey.CLOSE) then
-                self:release()
-                return
-            end
-        end,
+       
         applyFadeImpl=function (self,frame)
 
             -- local fadein=frame:GetFadeInManager()
@@ -113,7 +108,13 @@ g.classes.JSNOmniScreen=function()
             -- fadeout:SetScaleX(0.2,0.5)
             -- fadeout:SetScaleY(0.2,0.5)
             -- fadeout:SetMove(0.3)
-        end
+        end,
+        onKeyDownImpl=function(self,key)
+            if(key==g.classes.JSNKey.CLOSE)then
+                self:release()
+                return true
+            end
+        end,
     }
     if(g.singleton[self._className]~=nil)then
         return g.singleton[self._className]
@@ -121,6 +122,7 @@ g.classes.JSNOmniScreen=function()
  
     local obj= g.inherit(self,
     g.classes.JSNCustomFrame(jsnmanager,'jsndarkscreen'),
+    g.classes.JSNGenericEventHandler(jsnmanager),
     g.classes.JSNFocusable(jsnmanager,self),
     g.classes.JSNOwnerRelation(),
     g.classes.JSNPlayerControlDisabler(jsnmanager),

@@ -36,7 +36,7 @@ g.classes.JSNContextMenuComponent=function(jsnmanager,jsnframe,menus,eventHandle
                 local text=gbox:CreateOrGetControl("richtext","menu_"..i,rect.x,rect.y,rect.width,rect.height)
                 AUTO_CAST(text)
                 text:SetText("{ol}{s20}"..v.text)
-                text:SetTextAlign(ui.LEFT,ui.CENTER_VERT)
+                text:SetTextAlign("left","center")
                 totalHeight=totalHeight+rect.h
             end
             self:setRect(0,0,self:getParent():getWidth(),totalHeight)

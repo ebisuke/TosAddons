@@ -34,10 +34,16 @@ g.classes.JSNISlotset=function(nativeParentControl)
             return self._slotSize.h
         end,
         getSlotSpcX=function(self)
-            return self._nativeSlotSet:GetSpcX()
+            if(self._nativeSlotSet)then
+                return self._nativeSlotSet:GetSpcX()
+            end
+            error("Nativeslot is nil.")
         end,
         getSlotSpcY=function(self)
-            return self._nativeSlotSet:GetSpcY()
+            if(self._nativeSlotSet)then
+                return self._nativeSlotSet:GetSpcY()
+            end
+            error("Nativeslot is nil.")
         end,
         initImpl=function(self)
             self:recreate()
@@ -104,6 +110,14 @@ g.classes.JSNISlotset=function(nativeParentControl)
                     processor(v,slot)
                 end
                 slot:EnablePop(0)
+            end
+        end,
+        setEnableSelection=function(self,enable)
+            if(enable) then
+                self._nativeSlotSet:EnableSelection(1)
+                self._nativeSlotSet:SetMaxSelectionCount(999)
+            else
+                self._nativeSlotSet:EnableSelection(0)
             end
         end,
         getNativeSlotByIndex=function(self,index)

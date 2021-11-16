@@ -53,12 +53,13 @@ local function ERROUT(msg)
     }
 
 end
-local reserveFunctionTable={}
+g.callbackFunctionTable={}
 g.sounds={
     CURSOR_MOVE="button_over",
     DETERMINE="button_click_3",
     CANCEL="button_v_click",
-    POPUP="UI_card_move"
+    POPUP="UI_card_move",
+    ERROR='skill_cooltime'
 }
 g.fn={
     CleanupSingletons=function()
@@ -86,8 +87,13 @@ g.fn={
         return x * (sw/ow), y * ( sh/oh)
     end,
     ReserveFunction=function (delay,fn)
-        reserveFunctionTable[tostring(fn)]=fn
-        ReserveScript(string.format("JSN_COMMONLIB_RESERVE_FUNCTION('%s')",tostring(fn)),delay)
+        callbackFunctionTable[tostring(fn)]=fn
+        ReserveScript(string.format("JSN_COMMONLIB_CALLBACK_FUNCTION('%s')",tostring(fn)),delay)
+    end,
+    InputNumberBox=function (owner,title,default,min,max,callback)
+        return g.classes.JSNInputbox(g.jsnmanager,owner,title,default,min,max,callback):init()
+        --callbackFunctionTable[tostring(callback)]=callback
+        --INPUT_NUMBER_BOX(nil, title, "JSN_COMMONLIB_CALLBACK_FUNCTION", default, min, max, nil, tostring(callback), 1);
     end,
     temporallyEnableControlRestriction=function (fn)
         local delay=0.00
@@ -99,6 +105,14 @@ g.fn={
     end,
     ShowToolTip=function(typename,tipname,x,y)
         local frame=ui.GetFrame("inventory")
+    end,
+    MarkAsDontOverride=function (frame,remove)
+        if(remove)then
+            frame:SetUserValue("JSN_DONT_OVERRIDE",nil)
+        else
+            frame:SetUserValue("JSN_DONT_OVERRIDE",1)
+        end
+       
     end,
     HideToolTip=function ()
         local tooltipFrame = ui.GetFrame("item_tooltip");
@@ -150,19 +164,21 @@ g.fn={
                         filter,
                         sender and slot:getGlobalX(),
                         sender and slot:getGlobalY(),
-                        "Choose a anvil",
-                        function(moru,_sender,_slot)
-                            CLIENT_MORU(moru)
-                            MORU_LBTN_CLICK(nil,invItem)
-                            REINFORCE_131014_EXEC()
-                            if(g.classes.JSNOmniScreen():getInstance())then
-                                g.classes.JSNOmniScreen():getInstance():release()
-                            end
-                         
-                            return true
-                        end,
-                        nil
-                    ):init()
+                        "Choose a anvil"
+                    ):init():setEventHandler({
+                        eventUserRequestedDetermine=
+                            function(moru,_sender,_slot)
+                                CLIENT_MORU(moru)
+                                MORU_LBTN_CLICK(nil,invItem)
+                                REINFORCE_131014_EXEC()
+                                if(g.classes.JSNOmniScreen():getInstance())then
+                                    g.classes.JSNOmniScreen():getInstance():release()
+                                end
+                             
+                                return true
+                            end,
+                        e
+                    })
                 end
             }
         end    
@@ -170,9 +186,16 @@ g.fn={
     end
 }
 
-function JSN_COMMONLIB_RESERVE_FUNCTION(id)
-    if(reserveFunctionTable[id])then
-        reserveFunctionTable[id]()
-        reserveFunctionTable[id]=nil
+function JSN_COMMONLIB_CALLBACK_FUNCTION(id,...)
+    if(g.callbackFunctionTable[id])then
+        g.callbackFunctionTable[id](...)
+        g.callbackFunctionTable[id]=nil
+    end
+end
+
+function JSN_COMMONLIB_CTRL_CALLBACK_FUNCTION(frame,ctrl,argstr,argnum)
+    if(g.callbackFunctionTable[argstr])then
+        g.callbackFunctionTable[argstr](frame,ctrl,nil,argnum)
+        g.callbackFunctionTable[argstr]=nil
     end
 end

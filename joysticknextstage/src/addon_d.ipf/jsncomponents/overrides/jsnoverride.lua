@@ -86,10 +86,16 @@ g.classes.JSNBlackScreenOverrider=function (jsnmanager,overridenFrame,title)
             end
             self:focus()
         end,
-       
+        onPreKeyDownImpl=function (self,key)
+            if(key==g.classes.JSNKey.CLOSE) then
+                self:release()
+                return
+            end
+        end,
     }
     local obj=g.inherit(self,
     g.classes.JSNOverriderBase(jsnmanager,overridenFrame),
+    g.classes.JSNKeyHandler(jsnmanager),
     g.classes.JSNCustomFrame(jsnmanager,"jsndarkscreen",title or ""),
     g.classes.JSNFocusable(jsnmanager,self))
     return obj
