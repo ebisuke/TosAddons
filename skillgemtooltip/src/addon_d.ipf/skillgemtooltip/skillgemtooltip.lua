@@ -131,7 +131,6 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
 		sklObj = GetClass('Skill', strarg);
 		sklLv = 1;
 	else
-        objIsDummy = true;
 		sklObj = GetIES(skl:GetObject());
         -- modify IES directory
         remembered_level=sklObj.Level
