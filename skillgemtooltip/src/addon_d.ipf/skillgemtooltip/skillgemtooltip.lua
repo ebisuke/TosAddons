@@ -26,6 +26,10 @@ end
 function EBI_IsNoneOrNil(val)
     return val == nil or val == "None" or val == "nil"
 end
+local function GET_JOB_NAME_BY_SKILLTREE_CLS(skillTreeCls)
+	local tokList = StringSplit(skillTreeCls.ClassName, '_');
+	return tokList[1]..'_'..tokList[2];
+end
 
 local function DBGOUT(msg)
     EBI_try_catch {
@@ -177,8 +181,10 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
 	UPDATE_SKILL_TOOLTIP(frame,strarg,sklObj.ClassID,sklGuid,userData,obj)
     	
     local text=skill_desc:CreateOrGetControl("richtext", "mark_skillgem", 0, 0, 100, 20);
-    text:SetText("{ol}Skill Gem Tooltip")
-    text:SetOffset(20,20)
+    local skilltreecls = GetClassByStrProp("SkillTree", "SkillName", sklObj.ClassName);
+    local jobClsName = GET_JOB_NAME_BY_SKILLTREE_CLS(skilltreecls);
+    text:SetText("{ol}{#999999}Skill Gem Tooltip{/}{nl}{s20}"..GET_JOB_NAME(GetClass("Job",jobClsName), GETMYPCGENDER()))
+    text:SetOffset(20,10)
     text:SetGravity(ui.LEFT,ui.TOP)
    
 	skill_desc:Resize(ui.GetTooltipFrame("skill"):GetWidth(), skill_desc:GetHeight());
