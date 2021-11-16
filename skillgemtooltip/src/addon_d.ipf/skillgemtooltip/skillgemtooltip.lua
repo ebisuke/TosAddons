@@ -126,12 +126,17 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
 	local skl = session.GetSkillByName(strarg);
 	local sklObj;
 	local sklLv = 1;
+    local remembered_level =  nil
 	if skl == nil or skl:GetObject() == nil then
 		sklObj = GetClass('Skill', strarg);
 		sklLv = 1;
 	else
+        objIsDummy = true;
 		sklObj = GetIES(skl:GetObject());
-		sklLv = sklObj.Level;
+        -- modify IES directory
+        remembered_level=sklObj.Level
+		sklLv = sklObj.Level+1;
+        sklObj.Level=sklLv
 	end
 	
 	local buffCls = GetClassByType('Buff', numarg1);
@@ -145,7 +150,7 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
     local originalSkillWidth =440
 
     --frame:Resize(frame:GetWidth()+ui.GetTooltipFrame("skill"):GetWidth(),frame:GetHeight())
-    UPDATE_ITEM_TOOLTIP_OLD(frame,strarg,itemObj,numarg2,userData,obj,noTrade)
+    UPDATE_ITEM_TOOLTIP_OLD(frame,strarg,numarg1,numarg2,userData,obj,noTrade)
     frame:RemoveChild("skill_desc")
     local d=frame:GetChild("skill_desc")
     if(d == nil) then
@@ -163,7 +168,11 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
 	local skill_desc = GET_CHILD(frame, "skill_desc");
     skill_desc:SetGravity(ui.RIGHT,ui.TOP)
     local height=frame:GetHeight()
-	UPDATE_SKILL_TOOLTIP(frame,strarg,sklObj.ClassID,numarg2,userData,obj)
+    local sklGuid="0"
+    if(skl) then
+        sklGuid=skl:GetIESID()
+    end
+	UPDATE_SKILL_TOOLTIP(frame,strarg,sklObj.ClassID,sklGuid,userData,obj)
     	
     local text=skill_desc:CreateOrGetControl("richtext", "mark_skillgem", 0, 0, 100, 20);
     text:SetText("{ol}Skill Gem Tooltip")
@@ -174,5 +183,9 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
     skill_desc:SetOffset(0,0)
     
 	frame:Resize(originalWidth+originalSkillWidth,math.max(height,skill_desc:GetHeight()));	
- 
+
+    -- 
+    if remembered_level then
+        sklObj.Level=remembered_level
+    end
 end
