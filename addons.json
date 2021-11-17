@@ -264,8 +264,8 @@
         "name": "Yet Another Account Inventory",
         "file": "yaaccountinventory",
         "extension": "ipf",
-        "fileVersion": "v0.4.0",
-        "releaseTag": "yaaccountinventory-v0.4.0",
+        "fileVersion": "v0.4.2",
+        "releaseTag": "yaaccountinventory-v0.4.2",
         "unicode": "📖",
         "description": "チーム倉庫を魔改造します",
         "tags": [
@@ -466,8 +466,8 @@
         "name": "Another One Of Statbars",
         "file": "anotheroneofstatbars",
         "extension": "ipf",
-        "fileVersion": "v0.2.4",
-        "releaseTag": "anotheroneofstatbars-v0.2.4",
+        "fileVersion": "v0.2.6",
+        "releaseTag": "anotheroneofstatbars-v0.2.6",
         "unicode": "📖",
         "description": "趣味に走りまくったステータスバーを表示します。 ",
         "tags": [
@@ -588,7 +588,6 @@
         "tags": [
             "ui",
             "assister",
-
             "card"
         ]
     },
@@ -623,8 +622,8 @@
         "name": "Workpanel",
         "file": "workpanel",
         "extension": "ipf",
-        "fileVersion": "v0.2.0",
-        "releaseTag": "workpanel-v0.2.0",
+        "fileVersion": "v0.2.1",
+        "releaseTag": "workpanel-v0.2.1",
         "unicode": "📖",
         "description": "各種レイド・チャレンジに入るためのパネルを表示します",
         "tags": [
@@ -695,8 +694,8 @@
         "name": "Skill Gem Tooltip",
         "file": "skillgemtooltip",
         "extension": "ipf",
-        "fileVersion": "v0.0.4",
-        "releaseTag": "skillgemtooltip-v0.0.4",
+        "fileVersion": "v0.0.5",
+        "releaseTag": "skillgemtooltip-v0.0.5",
         "unicode": "📖",
         "description": "スキルジェムのツールチップ表示にスキルの説明を追加します",
         "tags": [

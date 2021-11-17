@@ -32,6 +32,7 @@ generateipf:
 	mkdir $(OBJDIR) | true
 	mkdir $(BINDIR) | true
 	cp -r src/* obj/
+	rm -rf $(OBJDIR)/*/.* | true
 ifdef PATCH
 	$(IPF) -c $(COMPRESSION_LEVEL) -b $(PATCH) -r $(PATCH) $(BINDIR)/$(IPFNAME_WITHOUT_EMOJI) $(OBJDIR)
 else
