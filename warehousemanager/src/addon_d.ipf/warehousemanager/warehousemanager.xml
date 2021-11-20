@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uiframe name="warehousemanager" x="0" y="0" width="500" height="808" version="2">
+  <frame fasthide="true" layout_gravity="center center"/>
+  <input moveable="true" hittestframe="true" resize="false"/>
+  <draw drawframe="true" drawtitlebarframe="false" drawtitlebar="false"/>
+  <layer layerlevel="94"/>
+  <skin frameskin="test_frame_low"/>
+  <sound opensound="skill_window_open" closesound="skill_window_close"/>
+  <script OpenScp="WAREHOUSEMANAGER_OPEN" CloseScp="WAREHOUSEMANAGER_CLOSE"/>
+  <option closebutton="false" visible="false"/>
+  <controls>
+    <groupbox name="topGbox" rect="0 0 500 60" margin="0 0 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" resizebyresolution="false" scrollbar="false" skin="test_frame_top">
+      <richtext name="title" rect="0 0 200 30" margin="0 18 0 0" layout_gravity="center top"/>
+      <button name="closeButton" rect="0 0 44 44" margin="0 20 28 0" layout_gravity="right top" LBtnUpScp="WAREHOUSEMANAGER_CLOSE" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" oversound="button_over" image="testclose_button"/>
+    </groupbox>
+
+    <picture name="defaultTitleBg" rect="0 0 480 30" margin="10 80 0 0" layout_gravity="left top" image="test_partyquest_slot" stretch="true">
+      <richtext name="defaultTitle" rect="0 0 480 24" margin="10 5 0 0" layout_gravity="left top"/>
+    </picture>
+
+    <groupbox name="defaultGbox" rect="0 0 460 90" margin="20 120 0 0" layout_gravity="left top" scrollbar="false">
+      <checkbox name="deposit" rect="0 0 210 30" margin="0 0 0 0" layout_gravity="left top" LBtnUpScp="WAREHOUSEMANAGER_TOGGLE_DEPOSIT" clicksound="button_click_big" oversound="button_over" resizebytext="false" omitbywidth="true" ellipsistexttooltip="true"/>
+      <checkbox name="withdraw" rect="0 0 210 30" margin="0 30 0 0" layout_gravity="left top" LBtnUpScp="WAREHOUSEMANAGER_TOGGLE_WITHDRAW" clicksound="button_click_big" oversound="button_over" resizebytext="false" omitbywidth="true" ellipsistexttooltip="true"/>
+      <checkbox name="arrangeItems" rect="0 0 210 30" margin="0 60 0 0" layout_gravity="left top" LBtnUpScp="WAREHOUSEMANAGER_TOGGLE_ARRANGE_ITEMS" clicksound="button_click_big" oversound="button_over" resizebytext="false" omitbywidth="true" ellipsistexttooltip="true"/>
+      <edit name="silver" rect="0 0 230 35" margin="230 0 0 0" layout_gravity="left top" typingscp="WAREHOUSEMANAGER_CHANGE_SILVER" skin="test_weight_skin" fontname="white_18_ol" numbermode="true" minnumber="0" OffsetForDraw="0 -1" textalign="right center" drawbackground="true" monetary="true"/>
+      <richtext name="silverTitle" rect="0 0 60 24" margin="240 8 0 0" layout_gravity="left top"/>
+    </groupbox>
+
+    <picture name="commonItemTitleBg" rect="0 0 480 30" margin="10 230 0 0" layout_gravity="left top" image="test_partyquest_slot" stretch="true">
+      <richtext name="commonItemTitle" rect="0 0 480 24" margin="10 5 0 0" layout_gravity="left top"/>
+    </picture>
+
+    <groupbox name="commonItemGbox" rect="0 0 480 294" margin="10 270 0 0" layout_gravity="left top" scrollbar="true" skin="test_frame_midle">
+      <slotset name="commonSlotSet" rect="0 0 0 0" margin="10 10 10 10" size="54 54" spc="1 1" col="8" layout_gravity="left top" DropScp="WAREHOUSEMANAGER_DROP_COMMON_ITEM" PopScp="WAREHOUSEMANAGER_POP_COMMON_ITEM" dropsound="icon_get_down" oversound="button_cursor_over_3" picksound="icon_pick_up" visible="true" draw="true" enabledrop="true" enablepop="true" movepop="false" enabledrag="true" enableselect="false" cursoronresize="false" skin="invenslot2"/>
+    </groupbox>
+
+    <picture name="personalItemTitleBg" rect="0 0 480 30" margin="10 574 0 0" layout_gravity="left top" image="test_partyquest_slot" stretch="true">
+      <richtext name="personalItemTitle" rect="0 0 480 24" margin="10 5 0 0" layout_gravity="left top"/>
+    </picture>
+
+    <groupbox name="personalItemGbox" rect="0 0 480 184" margin="10 614 0 0" layout_gravity="left top" scrollbar="true" skin="test_frame_midle">
+      <slotset name="personalSlotSet" rect="0 0 0 0" margin="10 10 10 10" size="54 54" spc="1 1" col="8" layout_gravity="left top" DropScp="WAREHOUSEMANAGER_DROP_PERSONAL_ITEM" PopScp="WAREHOUSEMANAGER_POP_PERSONAL_ITEM" dropsound="icon_get_down" oversound="button_cursor_over_3" picksound="icon_pick_up" visible="true" draw="true" enabledrop="true" enablepop="true" movepop="false" enabledrag="true" enableselect="false" cursoronresize="false" skin="invenslot2"/>
+    </groupbox>
+  </controls>
+</uiframe>

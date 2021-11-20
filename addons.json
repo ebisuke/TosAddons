@@ -706,6 +706,23 @@
             "tooltip"
         ]
     }
+    , {
+        "name": "Warehouse Manager Reloaded",
+        "file": "warehousemanager",
+        "extension": "ipf",
+        "fileVersion": "v2.0.0",
+        "releaseTag": "warehousemanager-v2.0.0",
+        "unicode": "📖",
+        "description": "倉庫の自動搬入出を行うアドオンです",
+        "tags": [
+            "warehouse",
+            "storage",
+            "item",
+            "auto",
+            "warehousemanager"
+        ]
+    }
+
 
 
 
