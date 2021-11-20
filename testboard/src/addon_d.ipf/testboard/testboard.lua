@@ -181,6 +181,36 @@ function C_SR_EFT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, 
     local radAngle = 0
     effect.PlayGroundEffect(self, eft, scl, x, y, z, lifeTime, key, radAngle, delayTime)
 end
+function EFT_AND_HIT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
+
+    CHAT_SYSTEM(tostring(hitInfo))
+
+end
+function SKILL_USE_SCRIPT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
+
+    CHAT_SYSTEM("USESCP"..tostring(hitInfo))
+
+end
+
+function SCR_COMMON_POST_HIT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
+
+    CHAT_SYSTEM(tostring(self))
+
+end
+
+function SCR_COMMON_POST_KILL(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
+
+    CHAT_SYSTEM(tostring(self))
+
+end
+
+-- done , 해당 함수 내용은 cpp로 이전되었습니다. 변경 사항이 있다면 반드시 프로그램팀에 알려주시기 바랍니다.
+function SCR_GET_TransmitPrana_BuffTime(skill)
+    local value = 60
+
+    CHAT_SYSTEM(tostring(skill))
+    return value
+end
 
 function C_SR_EFT_DEFAULT(
     self,
@@ -429,17 +459,41 @@ function TESTBOARD_ON_TIMER(frame)
         end
     }
 end
+-- done , 해당 함수 내용은 cpp로 이전되었습니다. 변경 사항이 있다면 반드시 프로그램팀에 알려주시기 바랍니다.
+function SCR_GET_Heal_Ratio(skill)   
+    print(tostring(skill))     
+    print(tostring(skill.HitScript))
+    skill.HitScript="SKILL_USE_SCRIPT"
+    local pc = GetSkillOwner(skill);
+    local pcINT = TryGetProp(pc, "INT");
+    if pcINT == nil then
+        pcINT = 1;
+    end
+    
+    local pcMNA = TryGetProp(pc, "MNA");
+    if pcMNA == nil then
+        pcMNA = 1;
+    end
+    
+    local value = (pcINT + pcMNA) * 2;
+    
+    return math.floor(value);
+end
 
 function TESTBOARD_TEST()
     EBI_try_catch {
-        try = function()
-            g.a = 0
-            if g.b then
-                g.b = false
-            else
-                g.b = true
-            end
-            OPEN_PERSONAL_SHOP_REGISTER()
+     try = function()
+         
+             dofile("\\\\theseventhbody.local\\E\\TosProject\\TosAddons\\testboard\\src\\addon_d.ipf\\testboard\\testboard.lua");
+             debug.ToggleCell()
+             --     DAMAGE_METER_UI_OPEN(ui.GetFrame("damage_meter"),nil,"0/1",100000);
+        --     --local cls=GetClassByStrProp("Skill", "ClassName", "Cleric_Heal");
+        --     --local ssss=geSkillTable.Get(cls.ClassName);
+        --     local ssss=GetClass("Skill","Exorcist_Entity");
+        --     --ssss= GetIES(ssss:GetObject())
+        --     print(tostring(ssss.HitScript))
+        --     ssss.HitScript="SKILL_USE_SCRIPT"
+            --OPEN_PERSONAL_SHOP_REGISTER()
             --DAMAGE_METER_UI_OPEN(ui.GetFrame('damage_meter'),nil,'0/PRACTICE',1)
             --geMGame.ReqMGameCmd("WEEKLY_BOSS_RAID_01",2)
             --ui.PropertyCompare(session.GetTargetHandle(), 1, 0);
@@ -586,79 +640,4 @@ function TESTBOARD_SCP()
 end
 function TESTBOARD_RELOAD()
     dofile("\\\\theseventhbody.local\\E\\TosProject\\TosAddons\\testboard\\src\\addon_d.ipf\\testboard\\testboard.lua")
-end
-
-function BUFFSELLER_REG_EXEC(frame)
-	frame = frame:GetTopParentFrame();
-	local groupName = frame:GetUserValue("GroupName");
-	local serverGroupName = frame:GetUserValue("ServerGroupName");
-
-	local gbox = frame:GetChild("gbox");
-	local inputname = gbox:GetChild("inputname");
-	if string.len( inputname:GetText() ) == 0 then
-		ui.MsgBox(ClMsg("InputTitlePlease"));
-		return;
-	end
-	
-	local serverGroupName = frame:GetUserValue("ServerGroupName");
-	if "" == inputname:GetText() then
-		return;
-	end
-	
-	if groupName == "PersonalShop" then
-		if true == session.loginInfo.IsPremiumState(ITEM_TOKEN) then
-			return;
-		end
-	end
-
-	session.autoSeller.ClearGroup(groupName);
-	local selllist = GET_CHILD_RECURSIVELY(frame, 'selllist');
-	local childCount = selllist:GetChildCount();
-	local pc = GetMyPCObject();
-	local sellCount = 0;
-	for i = 0, childCount - 1 do
-		local child = selllist:GetChildByIndex(i);
-		if string.find(child:GetName(), 'CTRLSET_NEW_') ~= nil then
-			local selectCheck = GET_CHILD(child, 'selectCheck');
-			local buffClsName = child:GetUserValue('BUFF_CLASS_NAME');
-			if selectCheck:IsChecked() == 1 then
-				local spendItemName, spendItemCnt = GetBuffSellerInfoByBuffName(buffClsName);
-				local myItemCount = GetInvItemCount(pc, spendItemName);
-				if myItemCount < spendItemCnt then
-					return;
-				end
-
-				local priceinput = GET_CHILD(child, 'priceinput');
-				local buffCls = GetClass('Buff', buffClsName);
-				local info = session.autoSeller.CreateToGroup(groupName);    
-				info.classID = buffCls.ClassID;
-				info.price = tonumber(priceinput:GetText());
-				sellCount = sellCount + 1;
-			end
-		end
-	end
-
-	local pc = GetMyPCObject();
-	local x, y, z = GetPos(pc);
-	if 0 == IsFarFromNPC(pc, x, y, z, 50) then
-		ui.SysMsg(ClMsg("TooNearFromNPC"));	
-		return 0;
-	end
-
-	if serverGroupName == 'Buff' then -- case: pardoner_spell shop		
-		local skl = session.GetSkillByName('Pardoner_SpellShop');
-		if skl == nil then
-			return;
-		end
-
-		if sellCount > GET_BUFF_SELLER_LIMIT_COUNT(GetMyPCObject(), GetIES(skl:GetObject())) then
-			ui.SysMsg(ScpArgMsg('BuffSellCountLimit', 'COUNT', GET_BUFF_SELLER_LIMIT_COUNT()));
-			session.autoSeller.ClearGroup(groupName);
-			return;
-		end
-		
-		session.autoSeller.RequestRegister(groupName, serverGroupName, inputname:GetText(), 'Pardoner_SpellShop');
-	else
-		session.autoSeller.RequestRegister(groupName, serverGroupName, inputname:GetText(), nil);
-	end
 end

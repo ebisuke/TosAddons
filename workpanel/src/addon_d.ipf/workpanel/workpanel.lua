@@ -58,6 +58,18 @@ local function ERROUT(msg)
         end
     }
 end
+local function GetRegion()
+    if config.GetServiceNation() == "GLOBAL" then
+        return "itos/en"
+    elseif config.GetServiceNation() == "JPN" or config.GetServiceNation() == "GLOBAL_JP" then
+        return "jtos/ja"
+    elseif config.GetServiceNation() == "TAIWAN" then
+        return "twtos/zh"
+    elseif config.GetServiceNation() == "KOR" then
+        return "ktos/ko"
+    end
+    return "itos/en"
+end
 -- function WORKPANEL_SOLODUNGEON_RANKINGPAGE_OPEN(frame)
 --     if g.disablevelnicescoreboard then
 --         --pass
@@ -131,10 +143,20 @@ function WORKPANEL_ISINCITY()
     -- end
     -- return true
 end
-function WORKPANEL_TICKET_STR(ticket)
-    local remain = WORKPANEL_GET_RECIPE_TRADE_COUNT(ticket)
-    local max = WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(ticket)
-    local overbuy = WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(ticket)
+function WORKPANEL_TICKET_STR(ticketname)
+    if(GetRegion() ~= "jtos/ja") then
+        -- giltine
+        if(ticketname=='PVP_MINE_51') then
+            ticketname='PVP_MINE_84'
+        end
+        --mythic
+        if(ticketname=='PVP_MINE_46') then
+            ticketname='PVP_MINE_83'
+        end
+    end
+    local remain = WORKPANEL_GET_RECIPE_TRADE_COUNT(ticketname)
+    local max = WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(ticketname)
+    local overbuy = WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(ticketname)
     local used = max - remain
 
     if (used >= max and overbuy and overbuy > 0) then
@@ -175,6 +197,10 @@ function WORKPANEL_INITFRAME()
                 frame:Resize(1650, 40)
                 local aObj = GetMyAccountObj()
                 local pvpmine = TryGetProp(aObj, "MISC_PVP_MINE2", "0")
+                if(pvpmine=='None')then
+                    pvpmine=0
+                end
+                
                 WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, ">>", "WORKPANEL_TOGGLE_PANEL").upper(
                     "richtext",
                     "labelpvpicon",
@@ -428,8 +454,6 @@ end
 function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
     local recipeCls = GetClass("ItemTradeShop", recipeName)
     
-    
-
 
     if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" and recipeName ~= "PVP_ITEM_41" then
         local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
@@ -441,6 +465,12 @@ function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
     end
 
     if recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" then
+        local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
+        local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
+
+        if sCount then
+            return sCount
+        end
         local aObj = GetMyAccountObj()
         local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
 
@@ -461,8 +491,19 @@ function WORKPANEL_IS_EXCEEDED_OVERBUY(ticketname)
     return false
 end
 function WORKPANEL_GET_TICKET_PRICE(ticketname)
+    if(GetClass("ItemTradeShop", "PVP_MINE_84")) then
+        -- giltine
+        if(ticketname=='PVP_MINE_51') then
+            ticketname='PVP_MINE_84'
+        end
+        --mythic
+        if(ticketname=='PVP_MINE_46') then
+            ticketname='PVP_MINE_83'
+        end
+    end
     local recipeCls = GetClass("ItemTradeShop", ticketname)
     local baseprice = recipeCls.Item_1_1_Cnt
+
     if (WORKPANEL_IS_EXCEEDED_OVERBUY(ticketname)) then
         return "{img icon_item_pvpmine_2 20 20}{ol}" ..
             GET_COMMAED_STRING(baseprice * (10000 + recipeCls.OverBuyRatio) / 10000.0) ..
@@ -534,12 +575,14 @@ function WORKPANEL_BUYITEM_WITCH()
     WORKPANEL_BUYANDUSE("PVP_MINE_44", 619)
 end
 function WORKPANEL_BUYITEM_GILTINE()
+
     WORKPANEL_BUYANDUSE("PVP_MINE_51", 635)
 end
 function WORKPANEL_BUYITEM_VASILISSA()
     WORKPANEL_BUYANDUSE("PVP_MINE_53", 656)
 end
 function WORKPANEL_BUYITEM_RELIC()
+   
     WORKPANEL_BUYANDUSE("PVP_MINE_46", WORKPANEL_GET_RELIC_CLSID())
 end
 function WORKPANEL_BUYITEM_VELNICE()
@@ -552,6 +595,16 @@ end
 function WORKPANEL_BUYANDUSE(recipeName, indunclsid, force)
     EBI_try_catch {
         try = function()
+            if(GetClass("ItemTradeShop", "PVP_MINE_84")) then
+                -- giltine
+                if(ticketname=='PVP_MINE_51') then
+                    ticketname='PVP_MINE_84'
+                end
+                --mythic
+                if(ticketname=='PVP_MINE_46') then
+                    ticketname='PVP_MINE_83'
+                end
+            end
             local count = WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName) -(WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName) or 0)
             local overbuy = WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(recipeName) or 0
             if overbuy <= -1 then
