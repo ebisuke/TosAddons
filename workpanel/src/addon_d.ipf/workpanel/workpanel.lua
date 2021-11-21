@@ -454,8 +454,16 @@ end
 function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
     local recipeCls = GetClass("ItemTradeShop", recipeName)
     
+    if  recipeName ~= "PVP_MINE_41" then
+ 
+        local aObj = GetMyAccountObj()
+        local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
 
-    if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" and recipeName ~= "PVP_ITEM_41" then
+        if sCount then
+            return sCount
+        end
+    end
+    if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" then
         local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
         local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
 
@@ -465,12 +473,7 @@ function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
     end
 
     if recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" then
-        local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
-        local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
-
-        if sCount then
-            return sCount
-        end
+ 
         local aObj = GetMyAccountObj()
         local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
 
@@ -640,7 +643,7 @@ function WORKPANEL_BUYANDUSE(recipeName, indunclsid, force)
             item.DialogTransaction("PVP_MINE_SHOP", itemlist, cntText)
 
             local itemCls = GetClass("Item", recipeCls.TargetItem)
-            ReserveScript(string.format("INV_ICON_USE(session.GetInvItemByType(%d));", itemCls.ClassID), 1)
+            ReserveScript(string.format("WORKPANEL_INV_ICON_USE_INTER(session.GetInvItemByType(%d));", itemCls.ClassID), 1)
             ReserveScript("WORKPANEL_INITFRAME()", 2)
         end,
         catch = function(error)
@@ -648,10 +651,17 @@ function WORKPANEL_BUYANDUSE(recipeName, indunclsid, force)
         end
     }
 end
-function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring)
+function WORKPANEL_INV_ICON_USE_INTER(invItem)
+    if invItem==nil then
+        ui.SysMsg("No item.")
+        return
+    end
+    INV_ICON_USE(invItem)
+end
+function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring,rep)
     EBI_try_catch {
         try = function()
-            local recipeCls
+            local recipeClsGuid
             local fail = true
             for _, recipeName in ipairs(recipeNameArray) do
                 recipeCls = GetClass("ItemTradeShop", recipeName)
@@ -707,9 +717,9 @@ function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring)
             item.DialogTransaction("PVP_MINE_SHOP", itemlist, cntText)
 
             local itemCls = GetClass("Item", recipeCls.TargetItem)
-            ReserveScript(string.format("INV_ICON_USE(session.GetInvItemByType(%d));", itemCls.ClassID), 1)
+            ReserveScript(string.format("WORKPANEL_INV_ICON_USE_INTER(session.GetInvItemByType(%d));", itemCls.ClassID), 1)
             ReserveScript("WORKPANEL_INITFRAME()", 2)
-            if retrystring then
+            if retrystring and (not rep) then
                 ReserveScript(retrystring .. "(true)", 3)
             end
         end,
@@ -728,7 +738,7 @@ function WORKPANEL_ENTER_CHALLENGE400(rep)
             GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 644).PlayPerResetType) ==
                 GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 644).PlayPerResetType)
      then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_40"}, "WORKPANEL_ENTER_CHALLENGE400")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_40"}, "WORKPANEL_ENTER_CHALLENGE400",rep)
     else
         ReqChallengeAutoUIOpen(644)
         ReserveScript("ReqMoveToIndun(1,0)", 1.25)
@@ -744,7 +754,7 @@ function WORKPANEL_ENTER_CHALLENGE440Solo(rep)
             GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 645).PlayPerResetType) ==
                 GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 645).PlayPerResetType)
      then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_40"}, "WORKPANEL_ENTER_CHALLENGE440Solo")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_40"}, "WORKPANEL_ENTER_CHALLENGE440Solo",rep)
     else
         ReqChallengeAutoUIOpen(645)
         ReserveScript("ReqMoveToIndun(1,0)", 1.25)
@@ -760,7 +770,7 @@ function WORKPANEL_ENTER_CHALLENGE440Party(rep)
             GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 646).PlayPerResetType) ==
                 GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 646).PlayPerResetType)
      then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_40"}, "WORKPANEL_ENTER_CHALLENGE440Party")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_40"}, "WORKPANEL_ENTER_CHALLENGE440Party",rep)
     else
         ReqChallengeAutoUIOpen(646)
     end
@@ -771,7 +781,7 @@ function WORKPANEL_ENTER_HARDCHALLENGE(rep)
         return
     end
     if not rep and tonumber(GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 647).PlayPerResetType) or 0) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_41", "PVP_MINE_42"}, "WORKPANEL_ENTER_HARDCHALLENGE")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_41", "PVP_MINE_42"}, "WORKPANEL_ENTER_HARDCHALLENGE",rep)
     else
         ReqChallengeAutoUIOpen(647)
     end
@@ -782,7 +792,7 @@ function WORKPANEL_ENTER_MORING(rep)
         return
     end
     if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(608) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_45"}, "WORKPANEL_ENTER_MORING")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_45"}, "WORKPANEL_ENTER_MORING",rep)
     else
         ReqRaidAutoUIOpen(608)
     end
@@ -793,7 +803,7 @@ function WORKPANEL_ENTER_WITCH(rep)
         return
     end
     if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(619) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_44"}, "WORKPANEL_ENTER_WITCH")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_44"}, "WORKPANEL_ENTER_WITCH",rep)
     else
         ReqRaidAutoUIOpen(619)
     end
@@ -804,7 +814,7 @@ function WORKPANEL_ENTER_GILTINE()
         return
     end
     if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(635) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_51"}, "WORKPANEL_ENTER_GILTINE")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_51"}, "WORKPANEL_ENTER_GILTINE",rep)
     else
         ReqRaidAutoUIOpen(635)
     end
@@ -820,7 +830,7 @@ function WORKPANEL_ENTER_VELNICE(rep)
             GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 201).PlayPerResetType) ==
                 GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 201).PlayPerResetType)
      then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_52"}, "WORKPANEL_ENTER_VELNICE")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_52"}, "WORKPANEL_ENTER_VELNICE",rep)
     else
         --ReqEnterSoloIndun(201,0)
         local indun_cls_id = 201
@@ -843,7 +853,7 @@ function WORKPANEL_ENTER_VASILISSA()
         return
     end
     if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(656) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_53"}, "WORKPANEL_ENTER_VASILISSA")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_53"}, "WORKPANEL_ENTER_VASILISSA",rep)
     else
         ReqRaidAutoUIOpen(656)
     end
@@ -881,7 +891,7 @@ function WORKPANEL_ENTER_RELIC(rep)
     EBI_try_catch {
         try = function()
             if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(WORKPANEL_GET_RELIC_CLSID()) == 0 then
-                WORKPANEL_BUY_ITEM({"PVP_MINE_46"}, "WORKPANEL_ENTER_RELIC")
+                WORKPANEL_BUY_ITEM({"PVP_MINE_46"}, "WORKPANEL_ENTER_RELIC",rep)
             else
                 local pattern_info = mythic_dungeon.GetPattern(mythic_dungeon.GetCurrentSeason())
                 local mapCls = GetClassByType("Map", pattern_info.mapID)
@@ -928,7 +938,7 @@ function WORKPANEL_ENTER_HEROIC(rep)
     end
 
     if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(652) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_54"}, "WORKPANEL_ENTER_HEROIC")
+        WORKPANEL_BUY_ITEM({"PVP_MINE_54"}, "WORKPANEL_ENTER_HEROIC",rep)
     else
         ReqTOSHeroEnter(652)
     end
