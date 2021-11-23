@@ -98,7 +98,7 @@ function WORKPANEL_ON_INIT(addon, frame)
             --addon:RegisterMsg("DO_SOLODUNGEON_RANKINGPAGE_OPEN", "WORKPANEL_INITFRAME");
             --soloDungeonClient.ReqSoloDungeonRankingPage()
             g.suppressshop = true
-
+            session.ResetItemList();
             WORKPANEL_LOAD_SETTINGS()
         end,
         catch = function(error)
