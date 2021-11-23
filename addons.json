@@ -720,7 +720,26 @@
             "auto",
             "warehousemanager"
         ]
+    }, {
+        "name": "StatusPointChecker Reloaded",
+        "file": "statuspointchecker",
+        "extension": "ipf",
+        "fileVersion": "v2.0.0",
+        "releaseTag": "statuspointchecker-v2.0.0",
+        "unicode": "📖",
+        "description": "ステータスポイントが取得できるクエストをクリアしたか一覧で表示します",
+        "tags": [
+            "status",
+            "statuspoint",
+            "quest",
+            "ui",
+            "clear",
+            "weight",
+            "zemyna",
+            "statue"
+        ]
     }
+
 
 
 
