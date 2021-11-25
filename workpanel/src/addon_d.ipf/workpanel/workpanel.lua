@@ -100,13 +100,19 @@ function WORKPANEL_ON_INIT(addon, frame)
             g.suppressshop = true
             session.ResetItemList();
             WORKPANEL_LOAD_SETTINGS()
+
+            --addon:RegisterMsg("GAME_START", "WORKPANEL_REFRESH")
         end,
         catch = function(error)
             ERROUT(error)
         end
     }
 end
-
+function WORKPANEL_REFRESH()
+    REQ_PVP_MINE_SHOP_OPEN()
+    ReserveScript("ui.CloseFrame('earthtowershop')", 0.1)
+    ReserveScript("WORKPANEL_INITFRAME()", 0.8)
+end
 function WORKPANEL_SAVE_SETTINGS()
 
     acutil.saveJSON(g.settingsFileLoc, g.settings)
@@ -144,16 +150,8 @@ function WORKPANEL_ISINCITY()
     -- return true
 end
 function WORKPANEL_TICKET_STR(ticketname)
-    if(GetRegion() ~= "jtos/ja") then
-        -- giltine
-        if(ticketname=='PVP_MINE_51') then
-            ticketname='PVP_MINE_84'
-        end
-        --mythic
-        if(ticketname=='PVP_MINE_46') then
-            ticketname='PVP_MINE_83'
-        end
-    end
+
+
     local remain = WORKPANEL_GET_RECIPE_TRADE_COUNT(ticketname)
     local max = WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(ticketname)
     local overbuy = WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(ticketname)
@@ -188,13 +186,21 @@ function WORKPANEL_INITFRAME()
                 error "fail"
             end
             frame:ShowWindow(1)
+            -- -- giltine
+            -- if(recipeName=='PVP_MINE_51') then
+            --     recipeName='PVP_MINE_84'
+            -- end
+            -- --mythic
+            -- if(recipeName=='PVP_MINE_46') then
+            --     recipeName='PVP_MINE_83'
+            -- end
             if isopen == false then
                 frame:Resize(50, 40)
 
                 --frame:SetMargin(0,0,0,0)
                 WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, "<<", "WORKPANEL_TOGGLE_PANEL")
             else
-                frame:Resize(1650, 40)
+                frame:Resize(1700, 40)
                 local aObj = GetMyAccountObj()
                 local pvpmine = TryGetProp(aObj, "MISC_PVP_MINE2", "0")
                 if(pvpmine=='None')then
@@ -309,9 +315,9 @@ function WORKPANEL_INITFRAME()
                     "button",
                     "btngiltineweekly",
                     70,
-                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_51"),
+                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_84"),
                     "WORKPANEL_BUYITEM_GILTINE",
-                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_51")
+                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_84")
                 )
                 .next("button", "btngiltine", 50, WORKPANEL_GETINDUNENTERCOUNT(635), "WORKPANEL_ENTER_GILTINE")
                 .upper(
@@ -341,9 +347,9 @@ function WORKPANEL_INITFRAME()
                     "button",
                     "btnrelicweekly",
                     70,
-                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_46"),
+                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_83"),
                     "WORKPANEL_BUYITEM_RELIC",
-                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_46")
+                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_83")
                 )
                 .next("richtext", "dummy", 1, "", "")
                 .upper(
@@ -410,6 +416,13 @@ function WORKPANEL_INITFRAME()
                     "Left:" .. GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 652).PlayPerResetType),
                     "WORKPANEL_ENTER_HEROIC"
                 )
+                .next(
+                    "button",
+                    "btnrefresh",
+                    50,
+                    "Refresh",
+                    "WORKPANEL_REFRESH"
+                )
             end
             g.disablevelnicescoreboard = false
         end,
@@ -453,16 +466,7 @@ end
 
 function WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName)
     local recipeCls = GetClass("ItemTradeShop", recipeName)
-    
-    if  recipeName ~= "PVP_MINE_41" then
- 
-        local aObj = GetMyAccountObj()
-        local sCount = TryGetProp(aObj, recipeCls.AccountNeedProperty)
-
-        if sCount then
-            return sCount
-        end
-    end
+    DBGOUT("recipeCls: " .. recipeName)
     if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" then
         local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
         local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
@@ -494,16 +498,7 @@ function WORKPANEL_IS_EXCEEDED_OVERBUY(ticketname)
     return false
 end
 function WORKPANEL_GET_TICKET_PRICE(ticketname)
-    if(GetClass("ItemTradeShop", "PVP_MINE_84")) then
-        -- giltine
-        if(ticketname=='PVP_MINE_51') then
-            ticketname='PVP_MINE_84'
-        end
-        --mythic
-        if(ticketname=='PVP_MINE_46') then
-            ticketname='PVP_MINE_83'
-        end
-    end
+
     local recipeCls = GetClass("ItemTradeShop", ticketname)
     local baseprice = recipeCls.Item_1_1_Cnt
 
@@ -579,14 +574,14 @@ function WORKPANEL_BUYITEM_WITCH()
 end
 function WORKPANEL_BUYITEM_GILTINE()
 
-    WORKPANEL_BUYANDUSE("PVP_MINE_51", 635)
+    WORKPANEL_BUYANDUSE("PVP_MINE_84", 635)
 end
 function WORKPANEL_BUYITEM_VASILISSA()
     WORKPANEL_BUYANDUSE("PVP_MINE_53", 656)
 end
 function WORKPANEL_BUYITEM_RELIC()
    
-    WORKPANEL_BUYANDUSE("PVP_MINE_46", WORKPANEL_GET_RELIC_CLSID())
+    WORKPANEL_BUYANDUSE("PVP_MINE_83", WORKPANEL_GET_RELIC_CLSID())
 end
 function WORKPANEL_BUYITEM_VELNICE()
     WORKPANEL_BUYANDUSE("PVP_MINE_52", 201)
@@ -598,16 +593,7 @@ end
 function WORKPANEL_BUYANDUSE(recipeName, indunclsid, force)
     EBI_try_catch {
         try = function()
-            if(GetClass("ItemTradeShop", "PVP_MINE_84")) then
-                -- giltine
-                if(ticketname=='PVP_MINE_51') then
-                    ticketname='PVP_MINE_84'
-                end
-                --mythic
-                if(ticketname=='PVP_MINE_46') then
-                    ticketname='PVP_MINE_83'
-                end
-            end
+
             local count = WORKPANEL_GET_MAX_RECIPE_TRADE_COUNT(recipeName) -(WORKPANEL_GET_RECIPE_TRADE_COUNT(recipeName) or 0)
             local overbuy = WORKPANEL_GET_MAX_OVERBUY_RECIPE_TRADE_COUNT(recipeName) or 0
             if overbuy <= -1 then
@@ -814,7 +800,7 @@ function WORKPANEL_ENTER_GILTINE()
         return
     end
     if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(635) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_51"}, "WORKPANEL_ENTER_GILTINE",rep)
+        WORKPANEL_BUY_ITEM({"PVP_MINE_84"}, "WORKPANEL_ENTER_GILTINE",rep)
     else
         ReqRaidAutoUIOpen(635)
     end
@@ -891,7 +877,7 @@ function WORKPANEL_ENTER_RELIC(rep)
     EBI_try_catch {
         try = function()
             if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(WORKPANEL_GET_RELIC_CLSID()) == 0 then
-                WORKPANEL_BUY_ITEM({"PVP_MINE_46"}, "WORKPANEL_ENTER_RELIC",rep)
+                WORKPANEL_BUY_ITEM({"PVP_MINE_83"}, "WORKPANEL_ENTER_RELIC",rep)
             else
                 local pattern_info = mythic_dungeon.GetPattern(mythic_dungeon.GetCurrentSeason())
                 local mapCls = GetClassByType("Map", pattern_info.mapID)

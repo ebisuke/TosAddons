@@ -1,5 +1,5 @@
-VERSION=0.2.6
-NAME=workpanel
+VERSION=0.0.0
+NAME=chatmaster
 
 
 include ../_makefile/common.mk
