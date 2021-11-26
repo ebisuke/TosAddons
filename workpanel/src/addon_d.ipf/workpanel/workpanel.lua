@@ -200,7 +200,7 @@ function WORKPANEL_INITFRAME()
                 --frame:SetMargin(0,0,0,0)
                 WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, "<<", "WORKPANEL_TOGGLE_PANEL")
             else
-                frame:Resize(1850, 40)
+                frame:Resize(1730, 40)
                 local aObj = GetMyAccountObj()
                 local pvpmine = TryGetProp(aObj, "MISC_PVP_MINE2", "0")
                 if(pvpmine=='None')then
@@ -271,23 +271,14 @@ function WORKPANEL_INITFRAME()
                     ""
                 )
                 .upper("button", "btnchallenge440Solo", 70, "440Solo", "WORKPANEL_ENTER_CHALLENGE440Solo")
-                .under(
-                    "button",
-                    "btnchallenge440PT",
-                    70,
-                    "440PT",
-                    "WORKPANEL_ENTER_CHALLENGE440Party"
+                .under("button", "btnchallenge440Party", 70, "440Party", "WORKPANEL_ENTER_CHALLENGE440Party")
+                .next(
+                    "richtext",
+                    "dummy_1",
+                    1,
+                    "",
+                    ""
                 )
-                .next("richtext", "dummy", 1, "", "").upper("richtext", "label3", 70, "{ol}Moring", "")
-                .under(
-                    "button",
-                    "btnmorweekly",
-                    70,
-                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_45"),
-                    "WORKPANEL_BUYITEM_MORING",
-                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_45")
-                )
-                .next("button", "btnmoring", 50, WORKPANEL_GETINDUNENTERCOUNT(608), "WORKPANEL_ENTER_MORING")
                 .upper(
                     "richtext",
                     "label4",
@@ -991,7 +982,7 @@ function WORKPANEL_ENTER_HEROIC(rep)
         return
     end
 
-    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(652) == 0 then
+    if not rep and GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 652).PlayPerResetType) == 0 then
         WORKPANEL_BUY_ITEM({"PVP_MINE_54"}, "WORKPANEL_ENTER_HEROIC",rep)
     else
         ReqTOSHeroEnter(652)
