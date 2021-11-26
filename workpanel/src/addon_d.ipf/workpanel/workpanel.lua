@@ -200,7 +200,7 @@ function WORKPANEL_INITFRAME()
                 --frame:SetMargin(0,0,0,0)
                 WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, "<<", "WORKPANEL_TOGGLE_PANEL")
             else
-                frame:Resize(1700, 40)
+                frame:Resize(1850, 40)
                 local aObj = GetMyAccountObj()
                 local pvpmine = TryGetProp(aObj, "MISC_PVP_MINE2", "0")
                 if(pvpmine=='None')then
@@ -319,7 +319,7 @@ function WORKPANEL_INITFRAME()
                     "WORKPANEL_BUYITEM_GILTINE",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_84")
                 )
-                .next("button", "btngiltine", 50, WORKPANEL_GETINDUNENTERCOUNT(635), "WORKPANEL_ENTER_GILTINE")
+                .next("button", "btngiltineparty", 50,WORKPANEL_GETINDUNENTERCOUNT(635), "WORKPANEL_ENTER_GILTINE")
                 .upper(
                     "richtext",
                     "label6",
@@ -335,7 +335,22 @@ function WORKPANEL_INITFRAME()
                     "WORKPANEL_BUYITEM_VASILISSA",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_53")
                 )
-                .next("button", "btnvasilissa", 50, WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA")
+                .next(
+                    "richtext",
+                    "dummy2",
+                    1,
+                    "",
+                    ""
+                )
+                .upper("button", "btnvasilissasolo", 100,  "{s12}Solo:{/}"..WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA_SOLO")
+                .under("button", "btnvasilissaparty", 100,  "{s12}Party:{/}"..WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA")
+                .next(
+                    "richtext",
+                    "dummy3",
+                    1,
+                    "",
+                    ""
+                )
                 .upper(
                     "richtext",
                     "label7",
@@ -351,12 +366,26 @@ function WORKPANEL_INITFRAME()
                     "WORKPANEL_BUYITEM_RELIC",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_83")
                 )
-                .next("richtext", "dummy", 1, "", "")
+                .next("richtext", "dummy3", 1, "", "")
                 .upper(
                     "button",
-                    "btnrelic",
+                    "btnrelicsolo",
                     100,
-                    "{s12}Normal:{/}" ..
+                    "{s12}Solo:{/}" ..
+                        GET_CURRENT_ENTERANCE_COUNT(
+                            GetClassByType("Indun", WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType
+                        ) ..
+                            "/" ..
+                                GET_INDUN_MAX_ENTERANCE_COUNT(
+                                    GetClassByType("Indun", WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType
+                                ),
+                    "WORKPANEL_ENTER_RELIC_SOLO"
+                )
+                .under(
+                    "button",
+                    "btnrelicparty",
+                    100,
+                    "{s12}Party:{/}" ..
                         GET_CURRENT_ENTERANCE_COUNT(
                             GetClassByType("Indun", WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType
                         ) ..
@@ -366,7 +395,7 @@ function WORKPANEL_INITFRAME()
                                 ),
                     "WORKPANEL_ENTER_RELIC"
                 )
-                .under(
+                .next(
                     "button",
                     "btnrelichard",
                     100,
@@ -806,6 +835,7 @@ function WORKPANEL_ENTER_GILTINE()
     end
 
 end
+
 function WORKPANEL_ENTER_VELNICE(rep)
     if WORKPANEL_ISINCITY() == false then
         ui.SysMsg("Cannot use outside city.")
@@ -833,7 +863,7 @@ function WORKPANEL_ENTER_VELNICE(rep)
         end
     end
 end
-function WORKPANEL_ENTER_VASILISSA()
+function WORKPANEL_ENTER_VASILISSA(rep)
     if WORKPANEL_ISINCITY() == false then
         ui.SysMsg("Cannot use outside city.")
         return
@@ -842,6 +872,17 @@ function WORKPANEL_ENTER_VASILISSA()
         WORKPANEL_BUY_ITEM({"PVP_MINE_53"}, "WORKPANEL_ENTER_VASILISSA",rep)
     else
         ReqRaidAutoUIOpen(656)
+    end
+end
+function WORKPANEL_ENTER_VASILISSA_SOLO(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(657) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_53"}, "WORKPANEL_ENTER_VASILISSA_SOLO",rep)
+    else
+        ReqRaidAutoUIOpen(657)
     end
 end
 function WORKPANEL_ENTER_ASSISTER()
@@ -889,6 +930,33 @@ function WORKPANEL_ENTER_RELIC(rep)
                 }
                 
                 local cls = GetClass("Indun", auto[mapCls.ClassName])
+                ReqRaidAutoUIOpen(cls.ClassID)
+            end
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function WORKPANEL_ENTER_RELIC_SOLO(rep)
+    EBI_try_catch {
+        try = function()
+            if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(WORKPANEL_GET_RELIC_CLSID()) == 0 then
+                WORKPANEL_BUY_ITEM({"PVP_MINE_83"}, "WORKPANEL_ENTER_RELIC",rep)
+            else
+                local pattern_info = mythic_dungeon.GetPattern(mythic_dungeon.GetCurrentSeason())
+                local mapCls = GetClassByType("Map", pattern_info.mapID)
+                local auto = {
+                    Mythic_firetower = "Mythic_FireTower_Auto_Solo",
+                    Mythic_startower = "Mythic_startower_Auto_Solo",
+                    Mythic_castle = "Mythic_castle_Auto_Solo"
+                }
+                
+                local cls = GetClass("Indun", auto[mapCls.ClassName])
+                if(cls==nil)then
+                    ERROUT("Unknown Raid. Please report to the author.")
+                    return
+                end
                 ReqRaidAutoUIOpen(cls.ClassID)
             end
         end,
