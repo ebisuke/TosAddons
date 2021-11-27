@@ -1539,19 +1539,59 @@ function YAI_UPDATE_STATUS(inc)
     
     local invItemCount = YAI_COUNT();
     --スロット残数を表示
-    local itemcnt = GET_CHILD_RECURSIVELY(awframe, "itemcnt");
-    itemcnt:SetFormat("{@st42}%s/%s")
+    local itemcntold = GET_CHILD_RECURSIVELY(awframe, "itemcnt");
+    itemcntold:ShowWindow(0)
+    local extendbtn = GET_CHILD_RECURSIVELY(awframe, "extend");
+    extendbtn:ShowWindow(0)
+    local richtext_1 = GET_CHILD_RECURSIVELY(awframe, "richtext_1");
+    richtext_1:ShowWindow(0)
+    local itemcnt = itemcntold:GetParent():CreateOrGetControl("richtext", "itemcnt222",30, itemcntold:GetY()-20, 100, 24);
+    local gauge = itemcntold:GetParent():CreateOrGetControl("gauge", "gaugecnt",
+    30, itemcntold:GetY()+16, 
+    560,8);
     
-    if (inc) then
-        local prevcnt = tonumber(itemcnt:GetTextByKey("cnt"))
-        prevcnt = prevcnt + inc
-        itemcnt:SetTextByKey('cnt', invItemCount);
-    else
-        itemcnt:SetTextByKey('cnt', invItemCount);
+    AUTO_CAST(itemcnt)
+    AUTO_CAST(gauge)
+    itemcnt:EnableHitTest(1)
+    itemcnt:SetTextTooltip(L_("Click here to expand one basic slot."))
+    itemcnt:SetEventScript(ui.LBUTTONUP, "ACCOUNT_WAREHOUSE_EXTEND")
+    
+    gauge:EnableHitTest(0)
+    itemcnt:ShowWindow(1)
+
+    gauge:ShowWindow(1)
+
+
+    
+    -- if (inc) then
+    --     local prevcnt = tonumber(itemcnt:GetTextByKey("cnt"))
+    --     prevcnt = prevcnt + inc
+    --     --itemcnt:SetTextByKey('cnt', invItemCount);
+    -- else
+    --     --itemcnt:SetTextByKey('cnt', invItemCount);
+    -- end
+    local account = session.barrack.GetMyAccount();
+    local slotCount = account:GetAccountWarehouseSlotCount();
+    local aObj = GetMyAccountObj();
+    if nil == aObj then
+        return;
     end
+
+    local price = GET_ACCOUNT_WAREHOUSE_EXTEND_PRICE(aObj, GET_COLONY_TAX_RATE_CURRENT_MAP())
+    local expandable
+    if price == nil then -- 추가 창고 슬롯 맥스
+        expandable=   "{s16}("..L_("Basic Slots")..":"..slotCount.." *"..L_("Reached to maximum.")")"
+
+    else
+        expandable=   "{s16}("..L_("Basic Slots")..":"..slotCount.." "..L_("Expandable By")..":'{img icon_item_silver 24 24} "..GET_COMMAED_STRING(price)..")"
     
-    itemcnt:SetTextByKey('slotmax', YAI_SLOT_LIMIT_FIRSTTAB());
-    itemcnt:UpdateFormat()
+    end
+
+   --itemcnt:SetTextByKey('slotmax', YAI_SLOT_LIMIT_FIRSTTAB());
+    itemcnt:SetText("{@st42}{s24}"..L_("Item Count").." "..invItemCount.."/"..LS.storagesize()..expandable
+    );
+    gauge:SetPoint(invItemCount, LS.storagesize());
+    --itemcnt:UpdateFormat()
 end
 
 

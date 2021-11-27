@@ -92,6 +92,28 @@ local l={
     {
         jpn="同時操作スタック数上限"
     },
+    ["Basic Slots"]=
+    {
+        jpn="基本倉庫"
+    },
+    
+    ["Expandable By"]=
+    {
+        jpn="拡張に必要なシルバー"
+    },
+    ["Reached to maximum."]=
+    {
+        jpn="これ以上拡張できません"
+    },
+    [ "Item Count"]=
+    {
+        jpn="アイテム数"
+    },
+    ["Click here to expand one basic slot."]=
+    {
+        jpn="ここをクリックすると基本倉庫を拡張します"
+    }
+  
 }
 
 YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA=l

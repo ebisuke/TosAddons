@@ -168,7 +168,7 @@ function WORKPANEL_INITFRAME()
             local frame = ui.GetFrame(g.framename)
             frame:SetGravity(ui.RIGHT, ui.TOP)
             frame:RemoveAllChild()
-            frame:SetLayerLevel(90)
+            frame:SetLayerLevel(75)
             frame:SetSkinName("bg2")
             local isopen = g.settings.isopen
 
@@ -279,22 +279,18 @@ function WORKPANEL_INITFRAME()
                     "",
                     ""
                 )
-                .upper(
+
+                .next(
                     "richtext",
-                    "label4",
-                    70,
-                    "{ol}Witch",
+                    "label4moring",
+                    60,
+                    "{ol}Moring",
                     ""
                 )
-                .under(
-                    "button",
-                    "btnwitchweekly",
-                    70,
-                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_44"),
-                    "WORKPANEL_BUYITEM_WITCH",
-                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_44")
-                )
-                .next("button", "btnwitch", 50, WORKPANEL_GETINDUNENTERCOUNT(619), "WORKPANEL_ENTER_WITCH")
+           
+                .upper("button", "btnmoringsolo", 70, "{s12}Solo:{/}"..WORKPANEL_GETINDUNENTERCOUNT(525), "WORKPANEL_ENTER_MORING_SOLO")
+                .under("button", "btnmoring", 70, "{s12}Party:{/}"..WORKPANEL_GETINDUNENTERCOUNT(608), "WORKPANEL_ENTER_MORING")
+                .next("richtext", "dummymoring", 1, "", "")
                 .upper(
                     "richtext",
                     "label5",
@@ -407,7 +403,7 @@ function WORKPANEL_INITFRAME()
                 .under(
                     "button",
                     "btnvelniceweekly",
-                    100,
+                    70,
                     "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_52"),
                     "WORKPANEL_BUYITEM_VELNICE",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_52")
@@ -670,7 +666,7 @@ function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring,rep)
             local recipeClsGuid
             local fail = true
             for _, recipeName in ipairs(recipeNameArray) do
-                recipeCls = GetClass("ItemTradeShop", recipeName)
+                local recipeCls = GetClass("ItemTradeShop", recipeName)
                 if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" then
                     local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
                     local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
@@ -797,11 +793,22 @@ function WORKPANEL_ENTER_MORING(rep)
         ui.SysMsg("Cannot use outside city.")
         return
     end
-    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(608) == 0 then
-        WORKPANEL_BUY_ITEM({"PVP_MINE_45"}, "WORKPANEL_ENTER_MORING",rep)
-    else
+    -- if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(608) == 0 then
+    --     WORKPANEL_BUY_ITEM({"PVP_MINE_45"}, "WORKPANEL_ENTER_MORING",rep)
+    -- else
         ReqRaidAutoUIOpen(608)
+    --end
+end
+function WORKPANEL_ENTER_MORING_SOLO(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
     end
+    -- if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(608) == 0 then
+    --     WORKPANEL_BUY_ITEM({"PVP_MINE_45"}, "WORKPANEL_ENTER_MORING",rep)
+    -- else
+        ReqRaidAutoUIOpen(525)
+    --end
 end
 function WORKPANEL_ENTER_WITCH(rep)
     if WORKPANEL_ISINCITY() == false then
