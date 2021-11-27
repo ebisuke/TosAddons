@@ -665,8 +665,9 @@ function WORKPANEL_BUY_ITEM(recipeNameArray, retrystring,rep)
         try = function()
             local recipeClsGuid
             local fail = true
+            local recipeCls
             for _, recipeName in ipairs(recipeNameArray) do
-                local recipeCls = GetClass("ItemTradeShop", recipeName)
+                recipeCls = GetClass("ItemTradeShop", recipeName)
                 if recipeCls.NeedProperty ~= "None" and recipeCls.NeedProperty ~= "" then
                     local sObj = GetSessionObject(GetMyPCObject(), "ssn_shop")
                     local sCount = TryGetProp(sObj, recipeCls.NeedProperty)
