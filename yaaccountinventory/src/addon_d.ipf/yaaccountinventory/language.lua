@@ -112,8 +112,11 @@ local l={
     ["Click here to expand one basic slot."]=
     {
         jpn="ここをクリックすると基本倉庫を拡張します"
+    },
+    ["Storage if full."]=
+    {
+        jpn="倉庫がいっぱいです。"
     }
-  
 }
 
 YETANOTHERACCOUNTINVENTORY_LANGUAGE_DATA=l

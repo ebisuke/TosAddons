@@ -796,9 +796,9 @@ function YAI_CHECKITEM(invItem, silent)
     local sortedCnt = sortedGuidList:Count();
     local frame = ui.GetFrame("accountwarehouse")
     local obj = GetIES(invItem:GetObject())
-    if YAI_SLOT_LIMIT_FIRSTTAB() <= YAI_COUNT() then
+    if LS.storageremain()==0 then
         if (not silent) then
-            ui.SysMsg(ClMsg('CannotPutBecauseMasSlot'));
+            ui.SysMsg(L_("Storage if full."));
         end
         return false;
     
