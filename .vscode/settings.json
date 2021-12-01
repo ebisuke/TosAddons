@@ -12,7 +12,8 @@
         611,
         611,
         "empty-block",
-        "undefined-global"
+        "undefined-global",
+        "unused-local"
     ],
     "lua.targetVersion": "5.3"
 }

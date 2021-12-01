@@ -63,7 +63,8 @@ g.sys = {
         "foodtable_register",
         "camp_register",
         "camp_ui",
-        "coinshopindunenter"
+        "coinshopindunenter",
+        "advancednumberinput_frame"
     }
 }
 

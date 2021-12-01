@@ -1,5 +1,5 @@
-VERSION=0.2.12
-NAME=workpanel
+VERSION=0.6.3
+NAME=awwardrobe
 
 
 include ../_makefile/common.mk

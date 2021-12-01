@@ -510,7 +510,7 @@ function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
         btnawwdeposit = frame:CreateOrGetControl("button", "btnawwdeposit", 215, 180, 70, 30)
         btnawwconfig = frame:CreateOrGetControl("button", "btnawwconfig", 295, 180, 70, 30)
         cbwardrobe = frame:CreateOrGetControl("droplist", "cbwardrobe", 135, 160, 250, 20)
-        btnregister = frame:CreateOrGetControl("button", "btntab", 75, 155, 50, 30)
+        --btnregister = frame:CreateOrGetControl("button", "btntab", 75, 155, 50, 30)
         
         tolua.cast(cbwardrobe, "ui::CDropList")
         btnawwwithdraw:SetText(L_("btnawwwithdraw"))
@@ -523,8 +523,8 @@ function AWWARDROBE_ON_OPEN_ACCOUNT_WAREHOUSE()
         btnawwconfig:SetTextTooltip(L_("tipbtnawwconfig"))
         btnawwconfig:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_TOGGLE_FRAME")
         
-        btnregister:SetText(L_("tabequip"))
-        btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_AW_ON_TAB")
+        --btnregister:SetText(L_("tabequip"))
+        --btnregister:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_AW_ON_TAB")
         g.tab_aw = TAB_EQUIP
         cbwardrobe:SetSkinName("droplist_normal")
         cbwardrobe:SetTextTooltip(L_("tipcbwardrobe"))
@@ -1648,10 +1648,10 @@ function AWWARDROBE_INITIALIZE_FRAME()
         cbwardrobe:SetSkinName("droplist_normal")
         cbwardrobe:SetSelectedScp("AWWARDROBE_WARDROBE_ON_SELECT_DROPLIST")
         
-        local btntab
-        btntab = frame:CreateOrGetControl("button", "btntab", 70, 75, 60, 30)
-        btntab:SetText(L_("tabequip"))
-        btntab:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CONFIG_ON_TAB")
+        -- local btntab
+        -- btntab = frame:CreateOrGetControl("button", "btntab", 70, 75, 60, 30)
+        -- btntab:SetText(L_("tabequip"))
+        -- btntab:SetEventScript(ui.LBUTTONDOWN, "AWWARDROBE_CONFIG_ON_TAB")
         
         local ebname = frame:CreateOrGetControl("edit", "ebname", 20, 430, 250, 30)
         ebname:SetFontName("white_18_ol")
@@ -3418,23 +3418,26 @@ function AWWARDROBE_CLOSE()
 end
 
 function AWWARDROBE_AW_ON_TAB(frame, ctrl)
-    if g.tab_aw == TAB_EQUIP then
-        g.tab_aw = TAB_IKOR
-    else
-        g.tab_aw = TAB_EQUIP
+    ui.SysMsg('AWW for Ichor is DISABLED.')
+    if false then 
+        if g.tab_aw == TAB_EQUIP then
+            g.tab_aw = TAB_IKOR
+        else
+            g.tab_aw = TAB_EQUIP
+        end
+        local tabcfg = g.tab_aw
+        local tabctrl = ctrl
+        
+        
+        if tabcfg == TAB_EQUIP then
+            tabctrl:SetText(L_('tabequip'))
+        elseif tabcfg == TAB_CARD then
+            tabctrl:SetText(L_('tabcard'))
+        elseif tabcfg == TAB_IKOR then
+            tabctrl:SetText(L_('tabikor'))
+        end
+        AWWARDROBE_UPDATE_DROPBOXAW()
     end
-    local tabcfg = g.tab_aw
-    local tabctrl = ctrl
-    
-    
-    if tabcfg == TAB_EQUIP then
-        tabctrl:SetText(L_('tabequip'))
-    elseif tabcfg == TAB_CARD then
-        tabctrl:SetText(L_('tabcard'))
-    elseif tabcfg == TAB_IKOR then
-        tabctrl:SetText(L_('tabikor'))
-    end
-    AWWARDROBE_UPDATE_DROPBOXAW()
 end
 function AWWARDROBE_CONFIG_ON_TAB(frame, ctrl)
     if g.tab_config == TAB_EQUIP then

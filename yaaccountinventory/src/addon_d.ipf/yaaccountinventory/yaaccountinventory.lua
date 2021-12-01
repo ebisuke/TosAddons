@@ -48,6 +48,14 @@ local function L_(str)
         return str
     end
 end
+local function InstalledAWW()
+    if _G['ADDONS']['ebisuke']['AWWARDROBE'] then
+        return true
+    else
+        return false
+    end
+    
+end
 local LS = LIBSTORAGEHELPERV1_3
 --定数
 local c = {}
@@ -1545,10 +1553,31 @@ function YAI_UPDATE_STATUS(inc)
     extendbtn:ShowWindow(0)
     local richtext_1 = GET_CHILD_RECURSIVELY(awframe, "richtext_1");
     richtext_1:ShowWindow(0)
-    local itemcnt = itemcntold:GetParent():CreateOrGetControl("richtext", "itemcnt222",30, itemcntold:GetY()-20, 100, 24);
-    local gauge = itemcntold:GetParent():CreateOrGetControl("gauge", "gaugecnt",
-    30, itemcntold:GetY()+16, 
-    560,8);
+    local itemcnt 
+    local gauge
+    if(InstalledAWW())then
+        local fillgbox = awframe:CreateOrGetControl("groupbox", "fill", 0, 0, 0, 0);
+        AUTO_CAST(fillgbox)
+        fillgbox:SetOffset(0,0)
+        fillgbox:Resize(awframe:GetWidth(),100)
+        fillgbox:SetSkinName("bg")
+        fillgbox:EnableHittestGroupBox(0)
+        local closebtn = fillgbox:CreateOrGetControl("button", "close", 0, 0, 0, 0);
+        AUTO_CAST(closebtn)
+        closebtn:CloneFrom(awframe:GetChildRecursively("close"))
+        closebtn:SetGravity(ui.RIGHT, ui.TOP)
+        closebtn:SetOffset(36,28)
+        closebtn:SetEventScript(ui.LBUTTONUP, "YAI_ACCOUNTWAREHOUSE_CLOSE_FROM_YAI")
+        itemcnt = fillgbox:CreateOrGetControl("richtext", "itemcnt222",30, 20, 100, 24);
+        gauge = fillgbox:CreateOrGetControl("gauge", "gaugecnt",
+        30, 46,560,8);
+    else
+        itemcnt = itemcntold:GetParent():CreateOrGetControl("richtext", "itemcnt222",30, itemcntold:GetY()-20, 100, 24);
+        gauge = itemcntold:GetParent():CreateOrGetControl("gauge", "gaugecnt",
+        30, itemcntold:GetY()+16, 
+        560,8);
+    end
+
     
     AUTO_CAST(itemcnt)
     AUTO_CAST(gauge)
@@ -1580,11 +1609,11 @@ function YAI_UPDATE_STATUS(inc)
     local price = GET_ACCOUNT_WAREHOUSE_EXTEND_PRICE(aObj, GET_COLONY_TAX_RATE_CURRENT_MAP())
     local expandable
     if price == nil then -- 추가 창고 슬롯 맥스
-        expandable=   "{s16}("..L_("Basic Slots")..":"..slotCount.." *"..L_("Reached to maximum.")")"
+        expandable=   "{s16}("..L_("Basic Slots")..":"..slotCount.." *"..L_("Reached to maximum.")..")"
 
     else
         expandable=   "{s16}("..L_("Basic Slots")..":"..slotCount.." "..L_("Expandable By")..":'{img icon_item_silver 24 24} "..GET_COMMAED_STRING(price)..")"
-    
+ 
     end
 
    --itemcnt:SetTextByKey('slotmax', YAI_SLOT_LIMIT_FIRSTTAB());
@@ -1593,7 +1622,10 @@ function YAI_UPDATE_STATUS(inc)
     gauge:SetPoint(invItemCount, LS.storagesize());
     --itemcnt:UpdateFormat()
 end
-
+function YAI_ACCOUNTWAREHOUSE_CLOSE_FROM_YAI()
+    ui.CloseFrame('accountwarehouse')
+    YAI_ACCOUNTWAREHOUSE_CLOSE()
+end
 
 function YAI_WITHDRAW_BY_CATEGORY(titlename)
     EBI_try_catch{
