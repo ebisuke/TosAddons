@@ -6,6 +6,6 @@
 	<skin frameskin="chat_window_2"/>
 	<draw drawframe="false" drawtitlebarframe="false" drawtitlebar="false"/>
 	<option closebutton="false" hideable="false"/>
-
+	<script CloseScp="ADVANCEDNUMBERINPUT_FRAME_CLOSE"/>
 <controls/>
 </uiframe>

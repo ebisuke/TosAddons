@@ -21,7 +21,7 @@ g.personalsettingsFileLoc = ""
 g.framename = "advancednumberinput"
 g.debug = false
 g.targetframename = nil
-g.targetctrl = g.targetctrl or nil
+g.targetctrlpath = g.targetctrlpath or nil
 g.closed = false
 function EBI_try_catch(what)
     local status, result = pcall(what.try)
@@ -88,6 +88,60 @@ local g_account_prop_shop_table = {
         ["propName"] = "TeamBattleCoin"
     }
 }
+function string.split(str, pat)
+    local t = {}  -- NOTE: use {n = 0} in Lua-5.0
+    local fpat = "(.-)" .. pat
+    local last_end = 1
+    local s, e, cap = str:find(fpat, 1)
+    while s do
+       if s ~= 1 or cap ~= "" then
+          table.insert(t, cap)
+       end
+       last_end = e+1
+       s, e, cap = str:find(fpat, last_end)
+    end
+    if last_end <= #str then
+       cap = str:sub(last_end)
+       table.insert(t, cap)
+    end
+    return t
+ end
+  
+local function GetTargetCtrlPath(ctrl)
+    local path = ""
+    local parent = ctrl
+    while parent ~= nil and parent:GetClassName()~='frame' do
+    
+        if( parent:GetClassName()~='nestgroup') then
+            path = parent:GetName() .. "/" .. path
+        end
+        --print(parent:GetClassName()..':'..parent:GetName())
+        parent = parent:GetParent()
+    end
+ 
+    return path
+end
+local function GetCtrlByPath(root, path)
+   
+    local ctrl = root
+    local path_list = string.split(path, "/")
+    for i = 1, #path_list do
+    
+        if(not ctrl) then
+
+            return nil
+        end
+       
+        if(path_list[i]~='')then
+            local pp = ctrl:GetChild(path_list[i])
+            if pp==nil then
+               pp= ctrl:GetControlSet(path_list[i])
+            end
+            ctrl=pp
+        end
+    end
+    return ctrl
+end
 local function GetTradedCount(recipeName)
     local recipeCls = GetClass("ItemTradeShop", recipeName)
 
@@ -140,8 +194,7 @@ local function GetBuyableCount(recipeName)
         end
     end
 
-    if
-        recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" and
+    if recipeCls.AccountNeedProperty ~= "None" and recipeCls.AccountNeedProperty ~= "" and
             recipeCls.AccountNeedProperty ~= 0
      then
         --local aObj = GetMyAccountObj()
@@ -153,7 +206,15 @@ local function GetBuyableCount(recipeName)
     end
     return nil
 end
+local function GetCurrentCtrl()
+    local frame = ui.GetFrame(g.targetframename)
+    if(g.targetctrlpath ~= nil) then
+        return GetCtrlByPath(frame, g.targetctrlpath)
+    else
+        return nil
+    end
 
+end
 local function GetMaxValueForEarthtower(frame, ctrl, value)
     local gbox = ctrl:GetParent()
     if gbox == nil then
@@ -234,7 +295,7 @@ local function GetMaxValueForEarthtower(frame, ctrl, value)
             end
         end
         for name, unit in pairs(unitrequires) do
-            print(name)
+
             if coins[name] ~= nil then
                 limit = math.min(limit, math.floor(coins[name] / unit))
             else
@@ -247,13 +308,13 @@ local function GetMaxValueForEarthtower(frame, ctrl, value)
             end
         end
         local recipecls = GetClass("ItemTradeShop", ctrlset:GetName())
-
+        print(tostring(GetTradedCount(recipecls.ClassName)))
         if (GetBuyableCount(recipecls.ClassName)) then
+            
             limit =
                 math.min(
                 limit,
-                (GetBuyableCount(recipecls.ClassName) or 0) + (GetOverbuyBuyableCount(recipecls.ClassName) or 0) -
-                    (GetTradedCount(recipecls.ClassName) or 0)
+                (GetTradedCount(recipecls.ClassName) or 0) + (GetOverbuyBuyableCount(recipecls.ClassName) or 999999999)
             )
         end
         return limit
@@ -264,12 +325,16 @@ end
 local function HasJoystickEnhancer()
     return _G['ADDONS']['ebisuke']['joystickenhancer']~=nil
 end
+local function HasAdvancedNumberDialog()
+    return ADVANCEDNUMBERDIALOG_ON_INIT ~= nil
+end
 g.specials = {
     ["earthtowershop"] = {
         mode = "editasnumupdown",
         onprechange = function(frame, ctrl, value)
+          
             value = math.max(math.min(GetMaxValueForEarthtower(frame, ctrl, value), value), 0)
-
+ 
             return value
         end,
         onpostchange = function(frame, ctrl, value)
@@ -331,15 +396,18 @@ function ADVANCEDNUMBERINPUT_ON_TIMER()
             if(ui.GetFrame(g.targetframename) == nil) then
                 ADVANCEDNUMBERINPUT_DETACH()
             end
-            if (ui.GetFrame("dialogselect"):IsVisible() == 1 and
-                    ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit"):IsVisible() == 1 and
-                    (ui.GetFocusObject()==nil or ui.GetFocusObject():GetName() ~= "numberEdit"))
-            then
-                AUTO_CAST(ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit")):Focus()
+            if g.targetctrlpath and ui.GetFrame(g.targetframename):IsVisible()==0 then
+                ui.CloseFrame("advancednumberinput_frame")
             end
+            -- if (ui.GetFrame("dialogselect"):IsVisible() == 1 and
+            --         ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit"):IsVisible() == 1 and
+            --         (ui.GetFocusObject()==nil or ui.GetFocusObject():GetName() ~= "numberEdit"))
+            -- then
+            --     AUTO_CAST(ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit")):Focus()
+            -- end
 
-            if g.targetctrl then
-                local framename = g.targetctrl:GetTopParentFrame():GetName()
+            if GetCurrentCtrl() then
+                local framename = g.targetframename
                 if(framename == "dialogselect")then
                     if
                         framename == "dialogselect" and ui.GetFrame("dialogselect"):IsVisible() == 1 and
@@ -348,29 +416,40 @@ function ADVANCEDNUMBERINPUT_ON_TIMER()
                     else
                         ADVANCEDNUMBERINPUT_DETACH()
                     end
+                else
+                    if ui.GetFrame(framename):IsVisible() == 0 then
+                        ADVANCEDNUMBERINPUT_DETACH()
+                    end
                 end
+            elseif g.targetctrlpath then
+                ADVANCEDNUMBERINPUT_DETACH()
+        
             end
 
         
-            local ctrl
-            -- if
-            --     (ui.GetFrame("dialogselect"):IsVisible() == 1 and
-            --         ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit"):IsVisible() == 1)
-            -- then
-            --     ctrl = ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit")
+            local ctrl=ui.GetFocusObject()
+            if(ui.GetFocusFrame()==nil)then
+                ctrl=nil
+            end;
+            if
+                (ui.GetFrame("dialogselect"):IsVisible() == 1 and
+                    ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit"):IsVisible() == 1)
+                    and GetCurrentCtrl()==nil
+            then
+                ctrl = ui.GetFrame("dialogselect"):GetChildRecursively("numberEdit")
                 
-            -- else
-            if ui.GetFocusObject()==nil then
+            end
+            if ctrl==nil then
                 return
             end
-            ctrl = ADVANCEDNUMBERINPUT_FIND_CTRL(ui.GetFocusObject())
+            ctrl = ADVANCEDNUMBERINPUT_FIND_CTRL(ctrl)
             --end
             if (ctrl == nil) then
                 return
             end
             
-            if (g.targetctrl) then
-                if (g.closed==false and g.targetctrl:GetTopParentFrame():GetName() == ctrl:GetTopParentFrame():GetName()) then
+            if (g.targetctrlpath) then
+                if (g.closed==false and GetCurrentCtrl() and GetCurrentCtrl():GetTopParentFrame():GetName() == ctrl:GetTopParentFrame():GetName()) then
                     return
                 end
                 ADVANCEDNUMBERINPUT_DETACH()
@@ -389,19 +468,16 @@ function ADVANCEDNUMBERINPUT_ATTACH(ctrl)
     if (ctrl == nil) then
         return
     end
-    if (g.targetctrl == ctrl) then
+    if (GetCurrentCtrl() == ctrl) then
         return
     end
-    if (g.targetctrl) then
+    if (g.targetctrlpath) then
         ADVANCEDNUMBERINPUT_DETACH()
-        g.targetctrl = nil
+        g.targetctrlpath = nil
     end
     if (ui.GetFrame("dialogselect"):IsVisible() == 1  or keyboard.IsKeyPressed("LSHIFT") == 1) then
         g.closed = false
-        if(HasJoystickEnhancer())then
-            local cursorctrl=ui.GetFrame("advancednumberinput"):GetChildRecursively("p5")
-            SetMousePos_Fixed(cursorctrl:GetGlobalX()+cursorctrl:GetWidth()/2,cursorctrl:GetGlobalY()+cursorctrl:GetHeight()/2)
-        end
+   
     else
         g.closed = true
     end
@@ -409,33 +485,35 @@ function ADVANCEDNUMBERINPUT_ATTACH(ctrl)
     if (g.specials[ctrl:GetTopParentFrame():GetName()] ~= nil) then
         if (g.specials[ctrl:GetTopParentFrame():GetName()].mode == "editasnumupdown") then
             g.isnumupdown = "editasnumupdown"
-            g.targetctrl = ctrl
+            g.targetctrlpath = GetTargetCtrlPath(ctrl)
         elseif (g.specials[ctrl:GetTopParentFrame():GetName()].mode == "numupdown") then
             g.isnumupdown = "numupdown"
-            g.targetctrl = tolua.cast(ctrl, "ui::CNumUpDown")
+            g.targetctrlpath =  GetTargetCtrlPath(ctrl)
         else
-            g.targetctrl = ctrl
+            g.targetctrlpath =  GetTargetCtrlPath(ctrl)
             g.isnumupdown = "edit"
         end
     else
         if (ctrl:GetClassName() == "numupdown") then
             g.isnumupdown = "numupdown"
-            g.targetctrl = tolua.cast(ctrl, "ui::CNumUpDown")
+            g.targetctrlpath = GetTargetCtrlPath(ctrl)
         else
-            g.targetctrl = ctrl
+            g.targetctrlpath = GetTargetCtrlPath(ctrl)
             g.isnumupdown = "edit"
         end
     end
-    g.targetframename = g.targetctrl :GetTopParentFrame():GetName()
+    g.targetframename = ctrl:GetTopParentFrame():GetName()
     local frame = ui.GetFrame("advancednumberinput_frame")
     frame:ShowWindow(1)
     ADVANCEDNUMBERINPUT_INITFRAME(frame)
+
+    
 end
 function ADVANCEDNUMBERINPUT_INITFRAME(frame)
     EBI_try_catch {
         try = function()
             frame = frame or ui.GetFrame("advancednumberinput_frame")
-            local ctrl = g.targetctrl
+            local ctrl = GetCurrentCtrl()
             if (ctrl == nil) then
                 return
             end
@@ -463,7 +541,7 @@ function ADVANCEDNUMBERINPUT_INITFRAME(frame)
                     end
 
                     p1:SetEventScriptArgString(ui.LBUTTONUP, tostring(value))
-                    p1:SetEventScript(ui.RBUTTONUP, "ADVANCEDNUMBERINPUT_DETACH")
+                    p1:SetEventScript(ui.RBUTTONUP, "ADVANCEDNUMBERINPUT_CLOSE")
                     return x + incw, y + inch
                 end
                 --generic
@@ -473,15 +551,16 @@ function ADVANCEDNUMBERINPUT_INITFRAME(frame)
                     local x, y = 8, 8
                     local w, h = 48, 24
                     local incx, incy = 48, 0
-                    x, y = func(x, y, w , h, incx , incy, "<-", "{ol}BS", 1, "ADVANCEDNUMBERINPUT_BACKSPACE")
+               
                     x, y = func(x, y, w , h, incx , incy, "MR", "{ol}{#FFFF00}MR", 1, "ADVANCEDNUMBERINPUT_MC")
                     x, y = func(x, y, w , h, incx , incy, "MS", "{ol}{#00FFFF}MS", 1, "ADVANCEDNUMBERINPUT_MS")
-                    
+                    x, y = func(x, y, w , h, incx , incy, "BS", "{ol}<-", 1, "ADVANCEDNUMBERINPUT_BACKSPACE")
 
                     x, y = 8, 8 + 24 + 24 + 24+ 24+ 24
-                    x, y = func(x, y, w, h, incx*2, incy, "p0", "{ol}0", 0)
-                    
-                    x, y = func(x, y, w, h, incx, incy, "pAC", "{ol}AC", "ADVANCEDNUMBERINPUT_CLEAR")
+                    x, y = func(x, y, w, h, incx, incy, "p0", "{ol}0", 0)
+                    x, y = func(x, y, w, h, incx, incy, "pmp", "{ol}-/+", 0,"ADVANCEDNUMBERINPUT_INV")
+                   
+                    x, y = func(x, y, w, h, incx, incy, "pAC", "{ol}AC", 0,"ADVANCEDNUMBERINPUT_CLEAR")
                     
                     x, y = 8, 8 + 24 + 24 + 24+ 24
                     x, y = func(x, y, w, h, incx, incy, "p1", "{ol}1", 1)
@@ -499,18 +578,20 @@ function ADVANCEDNUMBERINPUT_INITFRAME(frame)
                     x, y = func(x, y, w, h, incx, incy, "p9", "{ol}9", 9)
                     x, y = 8, 8 + 24 
                     x, y = func(x, y, w*1.5 , h, incx*1.5 , incy, "min", "{ol}MIN", 0,"ADVANCEDNUMBERINPUT_SETMIN")
+   
                     x, y = func(x, y, w*1.5 , h, incx*1.5 , incy, "max", "{ol}MAX", 0,"ADVANCEDNUMBERINPUT_SETMAX")
 
                 elseif (ctrl:GetClassName() == "edit") then
                     local x, y = 8, 8
                     local w, h = 48, 24
                     local incx, incy = 48, 0
-                    x, y = func(x, y, w , h, incx , incy, "<-", "{ol}BS", 1, "ADVANCEDNUMBERINPUT_BACKSPACE")
                     x, y = func(x, y, w , h, incx , incy, "MR", "{ol}{#FFFF00}MR", 1, "ADVANCEDNUMBERINPUT_MC")
                     x, y = func(x, y, w , h, incx , incy, "MS", "{ol}{#00FFFF}MS", 1, "ADVANCEDNUMBERINPUT_MS")
+                    x, y = func(x, y, w , h, incx , incy, "BS", "{ol}<-", 1, "ADVANCEDNUMBERINPUT_BACKSPACE")
                     x, y = 8, 8 + 24 + 24 + 24+ 24
-                    x, y = func(x, y, w, h, incx*2, incy, "p0", "{ol}0", 0)
-                    
+                    x, y = func(x, y, w, h, incx, incy, "p0", "{ol}0", 0)
+                    x, y = func(x, y, w, h, incx, incy, "pmp", "{ol}-/+", 0,"ADVANCEDNUMBERINPUT_INV")
+                   
                     x, y = func(x, y, w, h, incx, incy, "pAC", "{ol}AC", 0,"ADVANCEDNUMBERINPUT_CLEAR")
                     x, y = 8, 8 + 24 + 24 + 24
                     x, y = func(x, y, w, h, incx, incy, "p1", "{ol}1", 1)
@@ -534,6 +615,12 @@ function ADVANCEDNUMBERINPUT_INITFRAME(frame)
             frame:SetGravity(ui.LEFT, ui.TOP)
             frame:SetOffset(ctrl:GetGlobalX(), ctrl:GetGlobalY() + ctrl:GetHeight())
             frame:SetLayerLevel(ctrl:GetTopParentFrame():GetLayerLevel() + 1)
+            if(ctrl:GetTopParentFrame():GetName()=='dialogselect')then
+                if(HasJoystickEnhancer())then
+                    local cursorctrl=ui.GetFrame("advancednumberinput_frame"):GetChildRecursively("p5")
+                    SetMousePos_Fixed(cursorctrl:GetGlobalX()+cursorctrl:GetWidth()/2,cursorctrl:GetGlobalY()+cursorctrl:GetHeight()/2)
+                end
+            end
         end,
         catch = function(err)
             ERROUT(err)
@@ -551,12 +638,12 @@ function ADVANCEDNUMBERINPUT_CHANGE(_, _, argstr, argnum)
     EBI_try_catch {
         try = function()
             local value
-            local frame = g.targetctrl:GetTopParentFrame()
-            local ctrl = g.targetctrl
+            local frame = GetCurrentCtrl():GetTopParentFrame()
+            local ctrl = GetCurrentCtrl()
             if (g.isnumupdown) then
-                value = g.targetctrl:GetNumber()
+                value = GetCurrentCtrl():GetNumber()
             else
-                local text = g.targetctrl:GetText()
+                local text = GetCurrentCtrl():GetText()
                 value = tonumber(text)
             end
             if (value == nil) then
@@ -564,35 +651,47 @@ function ADVANCEDNUMBERINPUT_CHANGE(_, _, argstr, argnum)
             end
             value = tostring(value) .. argstr
             value=tonumber(value)
+            ADVANCEDNUMBERINPUT_SETVALUE(ctrl,value)
+        end,
+        catch = function(err)
+            ERROUT(err)
+        end
+    }
+end
+function ADVANCEDNUMBERINPUT_SETVALUE(ctrl,value)
+    EBI_try_catch {
+        try = function()
+
+            value=tonumber(value)
             --SPECIALEFFECTS
-            local framename = g.targetctrl:GetTopParentFrame():GetName()
+            local framename = GetCurrentCtrl():GetTopParentFrame():GetName()
             if (g.specials[framename]) then
                 local special = g.specials[framename]
-                value = special.onprechange(frame, ctrl, value)
+                value = special.onprechange(ctrl:GetTopParentFrame(), ctrl, value)
             end
 
             if (g.isnumupdown == "numupdown") then
-                --local min = g.targetctrl:GetMinValue()
-                --local max = g.targetctrl:GetMinValue()
+                --local min = GetCurrentCtrl():GetMinValue()
+                --local max = GetCurrentCtrl():GetMinValue()
                 --value = math.min(max, math.max(min, value))
-                g.targetctrl:SetNumberValue(value)
+                GetCurrentCtrl():SetNumberValue(value)
             else
-                -- local spc = g.targetctrl:GetEventScript("UI_CMD_TEXTCHANGE")
+                -- local spc = GetCurrentCtrl():GetEventScript("UI_CMD_TEXTCHANGE")
                 -- _G[spc]()
-                --g.targetctrl:SetText(tostring(value))
-                g.targetctrl:SetText(tostring(value))
+                --GetCurrentCtrl():SetText(tostring(value))
+                GetCurrentCtrl():SetText(tostring(value))
             end
             if (g.specials[framename]) then
                 local special = g.specials[framename]
-                special.onpostchange(frame, ctrl, value)
+                special.onpostchange(ctrl:GetTopParentFrame(), ctrl, value)
             end
 
-            local func = g.targetctrl:GetEventScript(ui.PROPERTY_EDIT)
+            local func = GetCurrentCtrl():GetEventScript(ui.PROPERTY_EDIT)
             if (func and _G[func]) then
-                local argstr = g.targetctrl:GetEventScriptArgString(ui.PROPERTY_EDIT)
-                local argnum = g.targetctrl:GetEventScriptArgNumber(ui.PROPERTY_EDIT)
+                local argstr = GetCurrentCtrl():GetEventScriptArgString(ui.PROPERTY_EDIT)
+                local argnum = GetCurrentCtrl():GetEventScriptArgNumber(ui.PROPERTY_EDIT)
 
-                pcall(_G[func], g.targetctrl:GetTopParentFrame(), g.targetctrl, argstr, argnum)
+                pcall(_G[func], GetCurrentCtrl():GetTopParentFrame(), GetCurrentCtrl(), argstr, argnum)
             end
         end,
         catch = function(err)
@@ -600,59 +699,71 @@ function ADVANCEDNUMBERINPUT_CHANGE(_, _, argstr, argnum)
         end
     }
 end
-
 function ADVANCEDNUMBERINPUT_CLEAR(frame, ctrl, argstr, argnum)
-    g.targetctrl:SetText("0")
+      EBI_try_catch {
+        try = function()
+            local value
+            local frame = GetCurrentCtrl():GetTopParentFrame()
+            local ctrl = GetCurrentCtrl()
+            if (g.isnumupdown) then
+                value = GetCurrentCtrl():GetNumber()
+            else
+                local text = GetCurrentCtrl():GetText()
+                value = tonumber(text)
+            end
+            if (value == nil) then
+                value = 0
+            end
+            value = 0
+            ADVANCEDNUMBERINPUT_SETVALUE(ctrl,value)
+        end,
+        catch = function(err)
+            ERROUT(err)
+        end
+    }
 end
 function ADVANCEDNUMBERINPUT_BACKSPACE(frame, ctrl, argstr, argnum)
-    local text=  g.targetctrl:GetText()
+    local text=  GetCurrentCtrl():GetText()
     text=text:sub(1,#text-1)
     if(text=="")then
         text="0"
     end
-    g.targetctrl:SetText(text)
 
+    ADVANCEDNUMBERINPUT_SETVALUE(ctrl,tonumber(text))
 end
 function ADVANCEDNUMBERINPUT_MR(frame, ctrl, argstr, argnum)
     local memory=g.settings.memory or 0
-    if (g.isnumupdown == "numupdown") then
-        --local min = g.targetctrl:GetMinValue()
-        --local max = g.targetctrl:GetMinValue()
-        --value = math.min(max, math.max(min, value))
-        g.targetctrl:SetNumberValue(memory)
-    else
-        -- local spc = g.targetctrl:GetEventScript("UI_CMD_TEXTCHANGE")
-        -- _G[spc]()
-        --g.targetctrl:SetText(tostring(value))
-        g.targetctrl:SetText(tostring(memory))
-    end
+  
+
+    ADVANCEDNUMBERINPUT_SETVALUE(ctrl,tonumber(memory))
 end
 function ADVANCEDNUMBERINPUT_MS(frame, ctrl, argstr, argnum)
     local memory
     if (g.isnumupdown == "numupdown") then
-        --local min = g.targetctrl:GetMinValue()
-        --local max = g.targetctrl:GetMinValue()
+        --local min = GetCurrentCtrl():GetMinValue()
+        --local max = GetCurrentCtrl():GetMinValue()
         --value = math.min(max, math.max(min, value))
-        memory= g.targetctrl:GetNumberValue()
+        memory= GetCurrentCtrl():GetNumberValue()
     else
-        -- local spc = g.targetctrl:GetEventScript("UI_CMD_TEXTCHANGE")
+        -- local spc = GetCurrentCtrl():GetEventScript("UI_CMD_TEXTCHANGE")
         -- _G[spc]()
-        --g.targetctrl:SetText(tostring(value))
-        memory = tonumber(g.targetctrl:GetText()) or 0
+        --GetCurrentCtrl():SetText(tostring(value))
+        memory = tonumber(GetCurrentCtrl():GetText()) or 0
     end
     ADVANCEDNUMBERINPUT_SAVE_SETTINGS()
 end
 function ADVANCEDNUMBERINPUT_DETACH()
-    if (g.targetctrl) then
+    if (g.targetctrlpath) then
         ui.CloseFrame("advancednumberinput_frame")
-        g.targetctrl = nil
+        g.targetctrlpath =nil
+
         g.closed = true
         g.targetframename =nil
     end
 end
 function ADVANCEDNUMBERINPUT_FIND_CTRL(ctrl)
     local framename = ctrl:GetTopParentFrame():GetName()
-    if (framename == "inputstring") then
+    if (framename == "inputstring" and HasAdvancedNumberDialog()) then
         return
     end
     if (framename == "accountwarehouse") then
@@ -678,4 +789,115 @@ function ADVANCEDNUMBERINPUT_FIND_CTRL(ctrl)
         end
     end
     return ctrl
+end
+function ADVANCEDNUMBERINPUT_FRAME_CLOSE()
+
+end
+function ADVANCEDNUMBERINPUT_CLOSE()
+    ui.CloseFrame("advancednumberinput_frame")
+    ADVANCEDNUMBERINPUT_DETACH()
+    if(ui.GetFrame("dialogselect"):IsVisible()==1)then
+        
+        control.DialogCancel();
+
+    end
+end
+function ADVANCEDNUMBERINPUT_SETMIN()
+    EBI_try_catch {
+        try = function()
+            local value
+            local frame = GetCurrentCtrl():GetTopParentFrame()
+            local ctrl = GetCurrentCtrl()
+            if (g.isnumupdown) then
+                value = GetCurrentCtrl():GetNumber()
+            else
+                local text = GetCurrentCtrl():GetText()
+                value = tonumber(text)
+            end
+            if (value == nil) then
+                value = 0
+            end
+            value=tonumber(0)
+            ADVANCEDNUMBERINPUT_SETVALUE(ctrl,value)
+        end,
+        catch = function(err)
+            ERROUT(err)
+        end
+    }
+end
+function ADVANCEDNUMBERINPUT_SETMAX()
+    EBI_try_catch {
+        try = function()
+            local value
+            local frame = GetCurrentCtrl():GetTopParentFrame()
+            local ctrl = GetCurrentCtrl()
+            if (g.isnumupdown) then
+                value = GetCurrentCtrl():GetNumber()
+            else
+                local text = GetCurrentCtrl():GetText()
+                value = tonumber(text)
+            end
+            if (value == nil) then
+                value = 999999999
+            end
+            value=tonumber(999999999)
+            ADVANCEDNUMBERINPUT_SETVALUE(ctrl,value)
+        end,
+        catch = function(err)
+            ERROUT(err)
+        end
+    }
+end
+
+function ADVANCEDNUMBERINPUT_INV()
+    EBI_try_catch {
+        try = function()
+            local value
+            local frame = GetCurrentCtrl():GetTopParentFrame()
+            local ctrl = GetCurrentCtrl()
+            if (g.isnumupdown) then
+                value = GetCurrentCtrl():GetNumber()
+            else
+                local text = GetCurrentCtrl():GetText()
+                value = tonumber(text)
+            end
+            if (value == nil) then
+                value = 0
+            end
+            value=-tonumber(value)
+            --SPECIALEFFECTS
+            local framename = GetCurrentCtrl():GetTopParentFrame():GetName()
+            if (g.specials[framename]) then
+                local special = g.specials[framename]
+                value = special.onprechange(frame, ctrl, value)
+            end
+
+            if (g.isnumupdown == "numupdown") then
+                --local min = GetCurrentCtrl():GetMinValue()
+                --local max = GetCurrentCtrl():GetMinValue()
+                --value = math.min(max, math.max(min, value))
+                GetCurrentCtrl():SetNumberValue(value)
+            else
+                -- local spc = GetCurrentCtrl():GetEventScript("UI_CMD_TEXTCHANGE")
+                -- _G[spc]()
+                --GetCurrentCtrl():SetText(tostring(value))
+                GetCurrentCtrl():SetText(tostring(value))
+            end
+            if (g.specials[framename]) then
+                local special = g.specials[framename]
+                special.onpostchange(frame, ctrl, value)
+            end
+
+            local func = GetCurrentCtrl():GetEventScript(ui.PROPERTY_EDIT)
+            if (func and _G[func]) then
+                local argstr = GetCurrentCtrl():GetEventScriptArgString(ui.PROPERTY_EDIT)
+                local argnum = GetCurrentCtrl():GetEventScriptArgNumber(ui.PROPERTY_EDIT)
+
+                pcall(_G[func], GetCurrentCtrl():GetTopParentFrame(), GetCurrentCtrl(), argstr, argnum)
+            end
+        end,
+        catch = function(err)
+            ERROUT(err)
+        end
+    }
 end

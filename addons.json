@@ -720,7 +720,25 @@
             "zemyna",
             "statue"
         ]
+    }, {
+        "name": "Silent Velnice Ranking",
+        "file": "silentvelniceranking",
+        "extension": "ipf",
+        "fileVersion": "v0.0.1",
+        "releaseTag": "silentvelniceranking-v0.0.1",
+        "unicode": "📖",
+        "description": "ヴェルニケの破片クリア時に表示されるスコアボードを非表示にします",
+        "tags": [
+            "ui",
+            "ranking",
+            "scoreboard",
+            "dialog",
+            "hide",
+            "silent"
+        ]
     }
+
+
 
 
 
