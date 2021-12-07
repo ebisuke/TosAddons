@@ -676,8 +676,8 @@
         "name": "Skill Gem Tooltip",
         "file": "skillgemtooltip",
         "extension": "ipf",
-        "fileVersion": "v0.0.5",
-        "releaseTag": "skillgemtooltip-v0.0.5",
+        "fileVersion": "v0.0.6",
+        "releaseTag": "skillgemtooltip-v0.0.6",
         "unicode": "📖",
         "description": "スキルジェムのツールチップ表示にスキルの説明を追加します",
         "tags": [

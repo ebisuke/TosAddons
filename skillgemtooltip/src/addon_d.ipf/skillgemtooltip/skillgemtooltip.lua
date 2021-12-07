@@ -115,7 +115,7 @@ function SKILLGEMTOOLTIP_UPDATE_ITEM_TOOLTIP(tooltipframe, strarg, numarg1, numa
             return EBI_try_catch {
                 try = function()
     
-                    return SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(tooltipframe,  TryGetProp(itemcls, 'SkillName', 'None') , numarg1, numarg2, userdata, tooltipobj, noTradeCnt,itemObj)	
+                    return SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(tooltipframe,  TryGetProp(itemcls, 'SkillName', 'None') , numarg1, numarg2, userdata, tooltipobj, noTradeCnt,strarg)	
                 end,
                 catch = function(error)
                     ERROUT(error)
@@ -126,7 +126,7 @@ function SKILLGEMTOOLTIP_UPDATE_ITEM_TOOLTIP(tooltipframe, strarg, numarg1, numa
     return UPDATE_ITEM_TOOLTIP_OLD(tooltipframe, strarg, numarg1, numarg2, userdata, tooltipobj, noTradeCnt)
 end
 
-function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numarg2, userData, obj,noTrade,itemObj)
+function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numarg2, userData, obj,noTrade,itemstrarg)
 	local skl = session.GetSkillByName(strarg);
 	local sklObj;
 	local sklLv = 1;
@@ -153,7 +153,7 @@ function SKILLGEMTOOLTIP_UPDATE_SKILL_DUMMY_TOOLTIP(frame, strarg, numarg1, numa
     local originalSkillWidth =440
 
     --frame:Resize(frame:GetWidth()+ui.GetTooltipFrame("skill"):GetWidth(),frame:GetHeight())
-    UPDATE_ITEM_TOOLTIP_OLD(frame,strarg,numarg1,numarg2,userData,obj,noTrade)
+    UPDATE_ITEM_TOOLTIP_OLD(frame,itemstrarg,numarg1,numarg2,userData,obj,noTrade)
     frame:RemoveChild("skill_desc")
     local d=frame:GetChild("skill_desc")
     if(d == nil) then
