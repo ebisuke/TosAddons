@@ -122,7 +122,7 @@ function ITEMBUFFMACHINE_ON_INIT(addon, frame)
             text:SetText("{ol}Buff Machine Time Remain")
             local gg = frame:CreateOrGetControl("gauge", "gauge", 0, 16, 200, 8)
             AUTO_CAST(gg)
-
+            hik = _G["ADDONS"][author]["HIDEINACCESSIBLEKITCHEN"]
             FRAME_AUTO_POS_TO_OBJ(frame, session.GetMyHandle(), -100, -200, 1, 1, 1)
             if not g.loaded then
                 g.loaded = true
