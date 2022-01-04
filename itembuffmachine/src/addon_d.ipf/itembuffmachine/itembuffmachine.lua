@@ -185,12 +185,14 @@ function ITEMBUFFMACHINE_OPEN_FOOD_TABLE_UI(groupName, sellType, handle, sellerC
             return
         end
     end
-    if hik.intrudes[handle] == 1 then
-        return
-    end
-    if hik.intrudes[handle] == 2 then
-        hik.intrudes[handle] = 3
-        return
+    if hik then
+        if hik.intrudes[handle] == 1 then
+            return
+        end
+        if hik.intrudes[handle] == 2 then
+            hik.intrudes[handle] = 3
+            return
+        end
     end
     if not g.eatignore then
         ITEMBUFFMACHINE_CHECK_BUTTON(BUFFSHOP_TYPE.Squire_Kitchen)

@@ -1,5 +1,5 @@
 VERSION=0.0.1
-NAME=hideunaccessiblekitchen
+NAME=hideinaccessiblekitchen
 
 
 include ../_makefile/common.mk
