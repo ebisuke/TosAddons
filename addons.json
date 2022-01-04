@@ -736,13 +736,40 @@
             "hide",
             "silent"
         ]
+    }, {
+        "name": "Buff Machine",
+        "file": "buffmachine",
+        "extension": "ipf",
+        "fileVersion": "v0.1.2",
+        "releaseTag": "buffmachine-v0.1.2",
+        "unicode": "📖",
+        "description": "露店効果を自動適用するアドオンです",
+        "tags": [
+            "ui",
+            "shop",
+            "repair",
+            "foodtable",
+            "camp",
+            "enchantarmor",
+            "joystick",
+            "keyboard",
+            "buff",
+            "kitchen"
+        ]
+    }, {
+        "name": "Hide Inaccessible Kitchen",
+        "file": "hideinaccessiblekitchen",
+        "extension": "ipf",
+        "fileVersion": "v0.0.1",
+        "releaseTag": "hideinaccessiblekitchen-v0.0.1",
+        "unicode": "📖",
+        "description": "ギルド限定公開などでアクセスできないキッチンを隠します",
+        "tags": [
+            "ui",
+            "foodtable",
+            "camp",
+            "kitchen",
+            "balloon"
+        ]
     }
-
-
-
-
-
-
-
-
 ]

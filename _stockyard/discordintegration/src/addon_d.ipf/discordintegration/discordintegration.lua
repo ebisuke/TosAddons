@@ -172,6 +172,37 @@ function DISCORDINTEGRATION_ON_INIT(addon, frame)
         end
     }
 end
+--チャットコマンド処理（acutil使用時）
+function DISCORDINTEGRATION_PROCESS_COMMAND(command)
+    local cmd = "";
+    
+    if #command > 0 then
+        cmd = table.remove(command, 1);
+    else
+        local msg = L_("Usagemsg")
+        return ui.MsgBox(msg, "", "Nope")
+    end
+    CHAT_SYSTEM("POC")
+    print("poc")
+    diapi_req("/users/@me","me")
+    ReserveScript("CHAT_SYSTEM(\"RECV\");print(tostring(diapi_reqrx(),\"me\")", 1)
+    if cmd == "on" then
+        --有効
+        g.settings.itemmanagetempdisabled = false
+        
+        CHAT_SYSTEM(L_("Enablemsg"));
+        DISCORDINTEGRATION_SAVE_SETTINGS()
+        return;
+    elseif cmd == "off" then
+        --無効
+        g.settings.itemmanagetempdisabled = true
+        CHAT_SYSTEM(L_("Disablemsg"));
+        DISCORDINTEGRATION_SAVE_SETTINGS()
+        return;
+    end
+
+end
+
 function DISCORDINTEGRATION_INITFRAME(frame)
     if (frame == nil) then
         frame = ui.GetFrame(g.framename)
