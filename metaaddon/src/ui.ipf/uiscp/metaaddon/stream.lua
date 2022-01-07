@@ -15,9 +15,12 @@ g.cls.MAStream =function(sourceGate,destinationGate)
     {
         _className="MAStream",
         lines = {},
-        color = "FFFF0000",
+        getColor=function(self)
+            return "FFFF0000"
+        end,
         sourceGate = sourceGate,
         destinationGate = destinationGate,
+        
         buildDefaultLine = function(self)
             if self.sourceGate and self.destinationGate  then
                 
@@ -136,14 +139,22 @@ g.cls.MAStream =function(sourceGate,destinationGate)
             end
         end,
         lazyInitImpl=function(self)
-            self.sourceGate:addStream(self)
-
-            self.destinationGate:addStream(self)
-
+            if  self.sourceGate and self.destinationGate then
+                self.sourceGate:addStream(self)
+                self.destinationGate:addStream(self)
+            end
             self:buildDefaultLine()
         end,
         getLines=function(self)
             return self.lines
+        end,
+        removeLine=function(self,line)
+            for k,v in ipairs(self.lines) do
+                if v==line then
+                    table.remove(self.lines,k)
+                    break
+                end
+            end
         end,
         assignImpl=function(self,obj)
             self._supers["MANodeBase"].assignImpl(self,obj)
@@ -154,6 +165,21 @@ g.cls.MAStream =function(sourceGate,destinationGate)
             self.color=obj.color
             self.sourceGate=obj.sourceGate
             self.destinationGate=obj.destinationGate
+        end,
+        releaseImpl=function(self)
+            self._supers["MANodeBase"].releaseImpl(self)
+            if  self.sourceGate then
+             self.sourceGate:removeStream(self)
+            end
+            if  self.destinationGate then
+            self.destinationGate:removeStream(self)
+            end
+            for _,line in ipairs(self.lines) do
+                line:release()
+            end
+            self.lines={}
+            self.sourceGate=nil
+            self.destinationGate=nil
         end,
     }
     local obj= g.fn.inherit(self,g.cls.MANodeBase())
@@ -166,6 +192,17 @@ g.cls.MAPrimitiveStream = function (sourceGate,destinationGate,typename)
     {
         _className="MAPrimitiveStream",
         _typename = typename,
+        getColor=function(self)
+            if self._typename=="boolean" then
+                return "FF227722"
+            elseif  self._typename=="number" then
+                return "FF4444FF"
+            elseif self._typename=="string" then
+                return "FF7777FF"
+            else
+                return "FFAA99FF"
+            end
+        end,
         getTypeName = function(self)
             return self._typename
         end,
@@ -179,10 +216,14 @@ g.cls.MAPrimitiveStream = function (sourceGate,destinationGate,typename)
     return obj
 end
 
-g.cls.MAClassStream = function (sourceGate,destinationGate)
+
+g.cls.MAFlowStream = function (sourceGate,destinationGate)
     local self=
     {
-        _className="MAClassStream",
+        getColor=function(self)
+            return "FF000000"
+        end,
+        _className="MAFlowStream",
 
     }
     local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
@@ -190,11 +231,78 @@ g.cls.MAClassStream = function (sourceGate,destinationGate)
     return obj
 end
 
+g.cls.MAAnyStream = function (sourceGate,destinationGate)
+    local self=
+    {
+        getColor=function(self)
+            return "FF444444"
+        end,
+        _className="MAAnyStream",
 
+    }
+    local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
+
+    return obj
+end
+g.cls.MAVariantStream = function (sourceGate,destinationGate)
+    local self=
+    {
+        getColor=function(self)
+            return "FFFF77FF"
+        end,
+        _className="MAVariantStream",
+
+    }
+    local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
+
+    return obj
+end
 g.cls.MANullStream = function (sourceGate,destinationGate)
     local self=
     {
+        getColor=function(self)
+            return "FF222222"
+        end,
         _className="MANullStream",
+
+    }
+    local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
+
+    return obj
+end
+g.cls.MASkillStream = function (sourceGate,destinationGate)
+    local self=
+    {
+        getColor=function(self)
+            return "FF0000FF"
+        end,
+        _className="MASkillStream",
+
+    }
+    local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
+
+    return obj
+end
+g.cls.MAItemStream = function (sourceGate,destinationGate)
+    local self=
+    {
+        getColor=function(self)
+            return "FFFF6600"
+        end,
+        _className="MAItemStream",
+
+    }
+    local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
+
+    return obj
+end
+g.cls.MAPoseStream = function (sourceGate,destinationGate)
+    local self=
+    {
+        getColor=function(self)
+            return "FF669966"
+        end,
+        _className="MAPoseStream",
 
     }
     local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))

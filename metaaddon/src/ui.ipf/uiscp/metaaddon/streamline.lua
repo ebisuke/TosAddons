@@ -68,9 +68,9 @@ g.cls.MAStreamLine=function(ownerStream,srcpos,destpos)
             
 
             if self:getSourcePos().y==self:getDestinationPos().y then
-                gbox:DrawBrushHorz(x,y,xx,yy,brush,self._ownerStream.color)
+                gbox:DrawBrushHorz(x,y,xx,yy,brush,self._ownerStream:getColor())
             else
-                gbox:DrawBrushVert(x,y,xx,yy,brush,self._ownerStream.color)
+                gbox:DrawBrushVert(x,y,xx,yy,brush,self._ownerStream:getColor())
             end
         end,
         calculateBoundingBox=function(self)
@@ -94,6 +94,10 @@ g.cls.MAStreamLine=function(ownerStream,srcpos,destpos)
         end,
         isHorizontal=function(self)
             return self:getSourcePos().y==self:getDestinationPos().y
+        end,
+        releaseImpl=function(self)
+            self._ownerStream:removeLine(self)
+            self._ownerStream=nil
         end,
     }
     local obj= g.fn.inherit(self,g.cls.MANodeBase())

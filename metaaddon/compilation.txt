@@ -1,0 +1,17 @@
+
+function compile(self,addonlet)
+
+    return init,update
+end
+
+
+初期化処理の実行 -- init
+function hogehoge_init(payload)
+
+end
+毎処理の実行 -- update
+function hogehoge_update(payload,in1,in2,in3,...) 
+    return out1,out2,out3
+end
+
+errorが吐かれたら中断する

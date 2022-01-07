@@ -12,10 +12,10 @@
 	<script OpenScp="METAADDON_NODE_ON_OPEN" CloseScp="METAADDON_NODE_ON_CLOSE"/>
 	<controls>
 		<groupbox name="title_bg" rect="0 0 640 130" margin="0 0 0 0" layout_gravity="center top" draw="true" hittestbox="false" resizebyparent="false" scrollbar="false" skin="test_frame_top"/>
-		<richtext name="title" parent="title_bg" rect="0 0 200 30" margin="0 20 0 0" layout_gravity="center top" caption="{@st42}{s20}Flowers! Config" fontname="brown_16_b" spacey="0"/>
+		<richtext name="title" parent="title_bg" rect="0 0 200 30" margin="0 20 0 0" layout_gravity="center top" caption="{@st42}{s20}MetaAddon Node Config" fontname="brown_16_b" spacey="0"/>
 		<button name="close" rect="0 0 44 44" margin="0 20 28 0" layout_gravity="right top" LBtnUpArgNum="" LBtnUpScp="ui.CloseFrame(&apos;metaaddon_node&apos;)" MouseOffAnim="btn_mouseoff" MouseOnAnim="btn_mouseover" clicksound="button_click_big" image="testclose_button" oversound="button_over"/>
 		<groupbox name="line_h" parent="" rect="0 0 1260 60" margin="0 70 0 0" layout_gravity="center top" skin="cutting_line_h"/>
-		<groupbox name="gbox" rect="0 0 640 60" margin="0 100 0 0" layout_gravity="left top" />
+		<groupbox name="gbox" rect="0 0 640 380" margin="0 100 0 0" layout_gravity="left top" />
 
 		<timer name="addontimer" rect="0 0 10 10"/>
     </controls>

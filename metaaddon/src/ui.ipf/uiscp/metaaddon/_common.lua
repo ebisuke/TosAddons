@@ -311,7 +311,11 @@ g.fn.errout = function(msg)
 		end
 	}
 end
-
+g.fn.tableFirst=function(t)
+	for k,v in pairs(t) do
+		return v
+	end
+end
 
 
 g.fn._uuidgen = M.seed()
@@ -350,6 +354,12 @@ g.fn.CombineTable=function(t1,t2)
     return t
 end 
 
+
+g.fn.len=function (T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
+end
 g.fn.inherit=function(obj,...)
     local chain={...}
     local object=obj
@@ -418,6 +428,7 @@ g.cls.MAObject = function()
 		_id=nil,
 		_hierarchy={},
 		_released=false,
+		_supers={},
 		init=function(self)
 			--don't be confused with the initialize function of the class
 			--don't call in the constructor
@@ -596,10 +607,11 @@ end
 g.cls.MASerializable = function()
 	local self={
 		_className="MASerializable",
-		serialize=function(self,arg)
+		serialize=function(self)
 			--override me
+			return {}
 		end,
-		deserialize=function(self,arg)
+		deserialize=function(self,obj)
 			--override me
 		end,
 		assignImpl=function(self,obj)

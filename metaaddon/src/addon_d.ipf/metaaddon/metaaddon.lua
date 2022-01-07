@@ -17,23 +17,30 @@ g.framename = "classdump"
 g.debug = true
 g.frm = g.frm or {}
 g.fn = g.fn or {}
+g.compliled = nil
+g.settiings = g.settiings or {}
+g.settingsFileLoc = g.basepath.."\\settings.json"
+g.personalsettings=g.personalsettings or {}
+METAADDON_FLAGS = {}
+MF_GAME_START_3SEC = 0x0001
+MF_FPS_UPDATE = 0x0002
+
 g.fn.lazy(
     function()
         g.fn.trycatch {
             try = function()
-                local addonlet = g.cls.MAAddonlet("testaddonlet", "testaddonlet")
-                local addonlet2 = g.cls.MAAddonlet("temp", "temp")
-                local node1=g.cls.MAComparatorNode({x = 0, y = 0}, {w = 100, h = 100}):init()
-                local node2=g.cls.MAComparatorNode({x = 200, y = 0}, {w = 100, h = 100}):init()
-                local stream=g.cls.MAPrimitiveStream(node1:getOutlets()[1],node2:getInlets()[1],"boolean"):init()
-                addonlet:addNode(node1)
-                addonlet:addNode(node2)
-  
-                g.document = {
-                    root = addonlet,
-                    active = addonlet,
-                    temp=addonlet2,
-                }
+                local addonlet = g.cls.MAAddonlet("new", "new"):init()
+    
+                if not g.document then
+                    g.document = {
+                        bootstrap = nil,
+                        active = addonlet,
+                        opened={},
+                    }
+                else
+                    
+                end
+              
             end,
             catch = function(error)
                 g.fn.errout(error)
@@ -53,14 +60,24 @@ function METAADDON_ON_INIT(addon, frame)
                 ["addon"] = addon,
                 ["frame"] = frame
             }
-            acutil.addSysIcon("metaaddon_config", "sysmenu_sys", "Metaaddon Config", "METAADDON_EDITOR_TOGGLE_FRAME")
+            acutil.addSysIcon("metaaddon_config", "sysmenu_sys", "Metaaddon Editor", "METAADDON_EDITOR_TOGGLE_FRAME")
+            acutil.addSysIcon("metaaddon_compile", "sysmenu_sys", "Metaaddon Compile", "METAADDON_COMPILE")
             acutil.addSysIcon(
                 "metaaddon_debug_lua",
                 "sysmenu_sys",
                 "Metaaddon Debug LUA Reload",
                 "METAADDON_DEBUG_RELOAD_LUA"
             )
+            addon:RegisterMsg("FPS_UPDATE", "METAADDON_FPS_UPDATE")
+            addon:RegisterMsg("GAME_START_3SEC", "METAADDON_GAME_START_3SEC")
             g.fn.lazyLoad()
+
+            local timer = frame:GetChild("addontimer")
+            AUTO_CAST(timer)
+            timer:SetUpdateScript("METAADDON_TIMER_UPDATE")
+            timer:Start(0.01)
+            METAADDON_EDITOR_LOADROOTFILE()
+            METAADDON_LOAD_SETTINGS()
         end,
         catch = function(error)
             g.fn.errout(error)
@@ -131,13 +148,73 @@ function METAADDON_DEFAULTSETTINGS()
     return {
         version = g.version,
         --有効/無効
-        enable = false
+        isrunning = false
     }
 end
 function METAADDON_DEFAULTPERSONALSETTINGS()
     return {
         version = g.version,
-        enable = false,
-        unusecommon = false
+        isrunning = false
+    }
+end
+function METAADDON_TIMER_UPDATE()
+    g.fn.trycatch {
+        try = function()
+            if g.compliled and g.personalsettings.isrunning then
+                local ok, err = pcall(g.compliled)
+                if not ok then
+                    g.fn.errout(err)
+                end
+            end
+            METAADDON_FLAGS = {}
+        end,
+        catch = function(error)
+            g.fn.errout(error)
+        end
+    }
+end
+function METAADDON_FPS_UPDATE()
+    g.fn.trycatch {
+        try = function()
+            g.frm.main.frame:ShowWindow(1)
+            METAADDON_FLAGS[MF_FPS_UPDATE] = true
+
+        end,
+        catch = function(error)
+            g.fn.errout(error)
+        end
+    }
+end
+function METAADDON_GAME_START_3SEC()
+    METAADDON_FLAGS[MF_GAME_START_3SEC] = true
+end
+function METAADDON_GET_FLAGS(flag)
+    return METAADDON_FLAGS[flag]
+end
+function METAADDON_COMPILE()
+    return g.fn.trycatch {
+        try = function()
+            local str = g.document.active:compile()
+            local f = io.open("c:\\temp\\metatest.lua", "w")
+            f:write(str)
+            f:flush()
+            f:close()
+            local fn, err = load(str, nil, "t", _G)
+            if err then
+                g.fn.errout(err)
+            end
+            local ok, p = pcall(fn)
+            if ok then
+                g.compliled = p
+                return true
+            else
+                g.fn.errout(p)
+                return false
+            end
+        end,
+        catch = function(error)
+            g.compliled = nil
+            g.fn.errout(error)
+        end
     }
 end

@@ -15,15 +15,9 @@ g.cls.MANodeBase = function(name)
         _className="MANodeBase",
         _name = name,
         _selectable = false,
-        _payload = {},
         _pos={x=0,y=0},
         _temporary=false,
-        getPayload = function(self)
-            return self._payload
-        end,
-        clearPayload = function(self)
-            self._payload = {}
-        end,
+    
         getPos = function(self)
             return self._pos
         end,
@@ -36,7 +30,10 @@ g.cls.MANodeBase = function(name)
         end,
         render = function(self, addonlet, gbox, offset, zoom)
         end,
-        createEditor = function(self, addonlet, gbox)
+        createEditor = function(self, addonlet,frame, gbox)
+            return false
+        end,
+        confirmEditor = function(self, addonlet,frame, gbox)
             return false
         end,
         calculateBoundingBox=function(self)
@@ -56,7 +53,9 @@ g.cls.MANodeBase = function(name)
             self._pos=obj._pos
             self._temporary=obj._temporary
         end,
-        
+        compile=function(self,addonlet)
+            return ""
+        end,
     }
     local obj = g.fn.inherit(self, g.cls.MASerializable())
 
@@ -74,13 +73,34 @@ g.cls.MANode = function(name, pos, size)
         _parent = nil,
         _children={},
         addInlet=function(self,inlet)
-            table.insert(self._inlets,inlet)
-       
+            self._inlets[#self._inlets+1] = inlet
+            inlet.ownerNode=self
             self:addChild(inlet)
         end,
         addOutlet=function(self,outlet)
-            table.insert(self._outlets,outlet)
+            self._outlets[#self._outlets+1] = outlet
+            outlet.ownerNode=self
             self:addChild(outlet)
+        end,
+        removeInlet=function(self,inlet)
+            for i,v in ipairs(self._inlets) do
+                if v:getID()==inlet:getID() then
+                    table.remove(self._inlets,i)
+                    break
+                end
+            end
+            self:removeChild(inlet)
+            inlet:release()
+        end,
+        removeOutlet=function(self,outlet)
+            for i,v in ipairs(self._outlets) do
+                if v:getID()==outlet:getID() then
+                    table.remove(self._outlets,i)
+                    break
+                end
+            end
+            self:removeChild(outlet)
+            outlet:release()
         end,
         addChild=function(self,node)
             self._children[#self._children+1]=node
@@ -152,7 +172,7 @@ g.cls.MANode = function(name, pos, size)
         end,
         hitTestBox=function(self, left,top,right,bottom)
             local rect = self:getRect()
-            g.fn.dbgout(string.format("FF%d,%d,%d,%d",rect.x,rect.y,rect.h+rect.x,rect.y+rect.h))
+        
             return right>=rect.x and left<=rect.x+rect.w and bottom>=rect.y and top<=rect.y+rect.h
         end,
         calculateBoundingBox=function(self)
@@ -204,13 +224,15 @@ g.cls.MANode = function(name, pos, size)
             for i, v in ipairs(self:getOutlets()) do
                 v:render(addonlet, gbox, offset, zoom)
             end
+
+            return g
         end,
         sortGate=function(self,gate)
             for i,v in ipairs(self:getInlets()) do
-                v:setPos(self:getRect().x,self:getRect().h*(i)/(#self:getInlets()+1))
+                v:setPos(self:getRect().x-8,                 self:getRect().y+self:getRect().h*(i)/(#self:getInlets()+1))
             end
             for i,v in ipairs(self:getOutlets()) do
-                v:setPos(self:getRect().x+self:getRect().w,self:getRect().h*(i)/(#self:getOutlets()+1))
+                v:setPos(self:getRect().x+self:getRect().w+8,self:getRect().y+self:getRect().h*(i)/(#self:getOutlets()+1))
             end
         end,
         notifyMoveToGates=function(self)
@@ -239,75 +261,21 @@ g.cls.MANode = function(name, pos, size)
                 self:addOutlet(v:clone())
             end
         end,
+        releaseImpl=function(self)
+            for i,v in ipairs(self:getInlets()) do
+                v:release()
+            end
+            for i,v in ipairs(self:getOutlets()) do
+                v:release()
+            end
+            self._inlets={}
+            self._outlets={}
+            self._children={}
+            self._parent=nil
+        end,
     }
     local obj = g.fn.inherit(self, g.cls.MANodeBase(name))
 
     return obj
 end
-
--- in1 number
--- in2 number
--- in3 number can be none
--- in4 number can be none
--- out1 number
-g.cls.MANodeCalculate = function(pos, size)
-    local self=
-    {
-        _className="MANodeCalculate",
-        initImpl = function(self)
-
-            self:addInlet(g.cls.MAAnyGate("in1", self):init())
-            self:addInlet(g.cls.MAAnyGate("in2", self):init())
-            self:addInlet(g.cls.MAAnyGate("in3", self):init())
-            self:addInlet(g.cls.MAAnyGate("in4", self):init())
-            self:addOutlet(g.cls.MAAnyGate("out1", self):init())
-        end
-    }
-    local obj = g.fn.inherit(self, g.cls.MANode("Calculate", pos, size))
-
-    return obj
-end
--- in1 data
--- in2 condition
-
--- out1 boolean
-g.cls.MAComparatorNode =function(pos, size)
-    local self=
-    {
-        _className="MAComparatorNode",
-        initImpl = function(self)
-
-            self:addInlet(g.cls.MAAnyGate("data", self):init())
-            self:addInlet(g.cls.MAPrimitiveGate("condition", self,"boolean"):init())
-            self:addOutlet(g.cls.MAPrimitiveGate("out1", self,"boolean"):init())
-        end
-    }
-    local obj = g.fn.inherit(self, g.cls.MANode("Comparator", pos, size))
-
-    return obj
-end
-
--- in1 data
--- in2 condituon
--- in3 true
--- in4 false
--- out1 number
-g.cls.MABooleanSwitchNode =function( pos, size)
-    local self=
-    {
-        _className="MABooleanSwitchNode",
-        initImpl = function(self)
-            g.cls.MANode.ctor(self, "Switch", pos, size)
-            self:addInlet(g.cls.MAAnyGate("data", self, "boolean"):init())
-            self:addInlet(g.cls.MAPrimitiveGate("condition", self, "boolean"):init())
-
-            self:addOutlet( g.cls.MAAnyGate("true", self):init())
-            self:addOutlet( g.cls.MAAnyGate("false", self):init())
-        end
-    }
-    local obj = g.fn.inherit(self, g.cls.MANode("BooleanSwitch", pos, size))
-
-    return obj
-end
-
 
