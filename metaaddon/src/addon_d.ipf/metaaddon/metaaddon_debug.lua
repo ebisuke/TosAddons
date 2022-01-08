@@ -37,4 +37,6 @@ function METAADDON_DEBUG_RELOAD_LUA()
 
     g.fn.lazyLoad()
     g.fn._lazyFuncs={}
+
+    METAADDON_EDITOR_RECREATE_TAB()
 end

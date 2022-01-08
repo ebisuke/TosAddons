@@ -592,6 +592,7 @@ function METAADDON_EDITOR_LOADROOTFILE()
         try = function()
             local obj = g.fn.lualoadfromfile(g.basepath .. "\\_bootstrap_" .. info.GetCID(session.GetMyHandle()) .. ".s.lua")
             if obj == nil then
+                CHAT_SYSTEM('[METAADDON]Created empty bootstrap.')
                 g.document.active =
                     g.cls.MAAddonlet("_bootstrap_" .. info.GetCID(session.GetMyHandle()), "(bootstrap)"):init()
             else
@@ -814,6 +815,10 @@ end
 function METAADDON_EDITOR_RECREATE_TAB()
     g.fn.trycatch {
         try = function()
+
+            if g.document.root==nil then
+                METAADDON_EDITOR_LOADROOTFILE()
+            end
             local frame = ui.GetFrame("metaaddon_editor")
             local gboxtab = ui.GetFrame("metaaddon_editor"):GetChildRecursively("gbox_tab")
             local tab = gboxtab:GetChild("tab")

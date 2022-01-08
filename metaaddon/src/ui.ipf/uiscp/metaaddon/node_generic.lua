@@ -132,7 +132,7 @@ g.cls.MAVariableSetNode = function(pos, size)
         end,
         compile = function(self, addonlet)
             return [[
-                variables[ ]]..self._variableName..[[ ] = args[1]
+                variables[ ']]..self._variableName..[[' ] = args[1]
                 return EMPTY
             ]]
         end,
@@ -177,7 +177,7 @@ g.cls.MAVariableGetNode = function(pos, size)
         end,
         compile = function(self, addonlet)
             return [[
-                return variables[ ]]..self._variableName..[[ ]
+                return variables[ ']]..self._variableName..[[' ]
             ]]
         end,
     }
@@ -562,18 +562,7 @@ g.cls.MAGameStart3SecNode = function(pos, size)
 
     return obj
 end
--- out1 any
-g.cls.MAAlwaysNode = function(pos, size)
-    local self = {
-        _className = "MAEvery1SecNode",
-        initImpl = function(self)
-            self:addOutlet(g.cls.MAFlowGate("flow", self):init())
-        end
-    }
-    local obj = g.fn.inherit(self, g.cls.MANode("Always", pos, size))
 
-    return obj
-end
 
 -- out1 any
 g.cls.MAFpsUpdateNode = function(pos, size)
@@ -598,6 +587,28 @@ g.cls.MAFpsUpdateNode = function(pos, size)
     return obj
 end
 
+-- out1 any
+g.cls.MAFirstTouchNode = function(pos, size)
+    local self = {
+        _className = "MAFirstTouchNode",
+        initImpl = function(self)
+            self:addOutlet(g.cls.MAFlowGate("flow", self):init())
+        end,
+        compile = function(self, addonlet)
+            return [[
+                if getFlags(MF_FIRST_TOUCH) then
+                   
+                    return EMPTY
+                else
+                    return nil
+                end
+            ]]
+        end
+    }
+    local obj = g.fn.inherit(self, g.cls.MANode("FirstTouch", pos, size))
+
+    return obj
+end
 -- out1 any
 g.cls.MADebugOutputNode = function(pos, size)
     local self = {
@@ -659,7 +670,7 @@ g.cls.MAEvalLuaNode = function(pos, size)
             ]]
         end
     }
-    local obj = g.fn.inherit(self, g.cls.MANode("MAEvalLuaNode", pos, size))
+    local obj = g.fn.inherit(self, g.cls.MANode("Lua", pos, size))
 
     return obj
 end

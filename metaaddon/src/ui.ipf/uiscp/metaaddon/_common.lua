@@ -461,7 +461,7 @@ function g.fn.luafield2str(v)
 		return string.format("[%d]",v);
 	end;
 	if (vt=="string")then
-		return string.format("%s",v);
+		return string.format("['%s']",v);
 	end;
 	return 'UnknownField';
 end;
@@ -495,23 +495,24 @@ function g.fn.luaserialize(t)
 	return buf;
 end;
 function g.fn.lualoadfromfile_internal(env,path,dummy)
-	local _ENV = env
+	local _ENV=env
     local result,data=pcall(dofile,path)
     if(result)then
         return data
     else
-        --print("FAIL"..data)
+        print("FAIL"..data)
         return dummy
     end
 end
 function g.fn.lualoadfromfile(path,dummy)
-    local env = {dofile=dofile,pcall=pcall}
-    local lff=g.fn.loadfromfile_internal
-   
+    local env = {dofile=dofile,pcall=pcall,print=print}
+    local lff=g.fn.lualoadfromfile_internal
+	
     local result,data=pcall(lff,env,path,dummy)
     if(result)then
         return data
     else
+		print("FAIL2"..data)
         return dummy
     end
 end;
