@@ -32,6 +32,44 @@ local function CalcPosClientToScreen(x, y)
     local oh = frame:GetHeight()
     return x * (sw / ow), y * (sh / oh)
 end
+local function arrayequal(a, b)
+    if type(a) ~= "table" then
+        return a == b
+    end
+    if #a ~= #b then
+        return false
+    end
+    for k, v in pairs(a) do
+        if type(a[k]) == "table" and type(b[k]) == "table" then
+            return arrayequal(a[k], b[k])
+        elseif a[k] ~= b[k] then
+            return false
+        end
+    end
+    return true
+end
+local function uniq(a)
+    local list = {}
+    local f = true
+    for k, v in ipairs(a) do
+        if f then
+            list[k] = v
+            f = false
+        else
+            local ok = true
+            for kk, vv in ipairs(list) do
+                if arrayequal(v, vv) then
+                    ok = false
+                    break
+                end
+            end
+            if ok then
+                list[k] = v
+            end
+        end
+    end
+    return list
+end
 function METAADDON_EDITOR_ON_INIT(addon, frame)
     g.fn.trycatch {
         try = function()
@@ -74,8 +112,9 @@ function METAADDON_EDITOR_ON_INIT(addon, frame)
 
             local gboxtab = ui.GetFrame("metaaddon_editor"):GetChildRecursively("gbox_tab")
             AUTO_CAST(gboxtab)
-            local tab=gboxtab:CreateOrGetControl("tab","tab",0,0,gboxtag:GetWidth(),gboxtab:GetHeight())
+            local tab = gboxtab:CreateOrGetControl("tab", "tab", 20, 0, gboxtab:GetWidth() - 20, gboxtab:GetHeight())
             AUTO_CAST(tab)
+            tab:SetFontName("white_14_ol")
             METAADDON_EDITOR_RECREATE_TAB()
         end,
         catch = function(error)
@@ -104,7 +143,9 @@ function METAADDON_EDITOR_RENDER(document)
             gbox:RemoveAllChild()
             AUTO_CAST(gbox)
             gbox = g.lib.aodrawpic.inject(gbox)
-
+            if not document.active then
+                return
+            end
             document.active:render(gbox, {x = 0, y = 0}, 1)
             if linemode then
                 local sx = linemode:getPos().x * g.document.active.zoom + g.document.active.scrollOffset.x
@@ -170,9 +211,8 @@ function METAADDON_EDITOR_START_LDRAG(frame, ctrl)
                 end
                 if len == 1 then
                     if keyboard.IsKeyPressed("LCTRL") == 1 and node:instanceOf(g.cls.MAGate()) then
-                        g.fn.dbgout("METAADDON_EDITOR_START_LDRAG:"..node._className)
+                        g.fn.dbgout("METAADDON_EDITOR_START_LDRAG:" .. node._className)
                         linemode = node
-                       
                     end
 
                     dragObjects = dragObjects or {}
@@ -280,13 +320,11 @@ function METAADDON_EDITOR_TIMER(frame)
                     METAADDON_EDITOR_RENDER()
                 end
                 if keyboard.IsKeyDown("DELETE") == 1 then
-                    for k,v in pairs(addonlet.selected) do
+                    for k, v in pairs(addonlet.selected) do
                         if v:instanceOf(g.cls.MANode()) then
-                           
                             v:release()
                             addonlet:removeNode(v)
                         end
-   
                     end
                     METAADDON_EDITOR_RENDER()
                     return
@@ -300,9 +338,9 @@ function METAADDON_EDITOR_TIMER(frame)
                     local x, y = CalcPosScreenToClient(mouse.GetX(), mouse.GetY())
                     local gbox = ui.GetFrame("metaaddon_editor"):GetChildRecursively("gbox_editor")
 
-                    x=x-gbox:GetGlobalX()
-                    y=y-gbox:GetGlobalY()
-                    
+                    x = x - gbox:GetGlobalX()
+                    y = y - gbox:GetGlobalY()
+
                     x = (x - g.document.active.scrollOffset.x) / g.document.active.zoom
                     y = (y - g.document.active.scrollOffset.y) / g.document.active.zoom
                     addnodemode:setPos(x, y)
@@ -455,25 +493,160 @@ end
 function METAADDON_EDITOR_MENU_BUTTON()
     local context = ui.CreateContextMenu("CONTEXT_METAADDON_EDITOR", "Menu", 0, 0, 200, 200)
     ui.AddContextMenuItem(context, "New", "METAADDON_EDITOR_NEW()")
-    ui.AddContextMenuItem(context, "Save", "METAADDON_EDITOR_SAVE()")
-    ui.AddContextMenuItem(context, "Load", "METAADDON_EDITOR_LOAD()")
+    ui.AddContextMenuItem(context, "Clear", "METAADDON_EDITOR_CLEAR()")
+    
+    ui.AddContextMenuItem(context, "Save", "METAADDON_EDITOR_SAVEFILE()")
+    ui.AddContextMenuItem(context, "Save As", "METAADDON_EDITOR_SAVEAS()")
+    ui.AddContextMenuItem(context, "Load", "METAADDON_EDITOR_LOADMENU()")
+    ui.AddContextMenuItem(context, "Load From", "METAADDON_EDITOR_LOADFROM()")
     ui.OpenContextMenu(context)
 end
+function METAADDON_EDITOR_LOADMENU()
+    local context = ui.CreateContextMenu("CONTEXT_METAADDON_EDITOR_LOAD", "Load", 0, 0, 300, 200)
+    for k, v in ipairs(g.settings.fileList) do
+        ui.AddContextMenuItem(context, v, "METAADDON_EDITOR_LOADFILE('" .. v .. "')")
+    end
+    ui.OpenContextMenu(context)
+end
+function METAADDON_EDITOR_LOADFROM()
+    INPUT_STRING_BOX("Enter addonlet name.", "METAADDON_EDITOR_DOLOAD", "", 0, 16)
+end
+function METAADDON_EDITOR_DOLOAD(input_frame, ctrl)
+    if ctrl:GetName() == "inputstr" then
+        input_frame = ctrl
+    end
+
+    local new_name = GET_INPUT_STRING_TXT(input_frame)
+    METAADDON_EDITOR_LOADFILE(new_name)
+    input_frame:ShowWindow(0)
+end
+function METAADDON_EDITOR_DOSAVE(input_frame, ctrl)
+    if ctrl:GetName() == "inputstr" then
+        input_frame = ctrl
+    end
+
+    local new_name = GET_INPUT_STRING_TXT(input_frame)
+    METAADDON_EDITOR_SAVEFILE(new_name)
+    input_frame:ShowWindow(0)
+end
+function METAADDON_EDITOR_SAVEAS()
+    INPUT_STRING_BOX("Enter addonlet name.", "METAADDON_EDITOR_DOSAVE", "", 0, 16)
+end
 function METAADDON_EDITOR_NEW()
-    ui.MsgBox("Would you like to clear current document?", "METAADDON_EDITOR_NEW_CONFIRM()", "None")
+    METAADDON_EDITOR_NEW_CONFIRM()
+end
+function METAADDON_EDITOR_CLEAR()
+    ui.MsgBox("Would you like to clear current document?", "METAADDON_EDITOR_CLEAR_CONFIRM()", "None")
+end
+function METAADDON_EDITOR_CLEAR_CONFIRM()
+    local addonlet = g.cls.MAAddonlet("", "(bootstrap)"):init()
+    if  g.document.root ==g.document.active then
+        addonlet.title='(bootstrap)'
+        addonlet.addonletName=""
+        for k,v in pairs(g.document.opened) do
+            if g.document.opened[k] == g.document.active then
+                g.document.opened[k] = addonlet
+                break
+            end
+            
+           
+        end
+        g.document.root = addonlet
+        g.document.active = addonlet
+    else
+        addonlet.title='New Addonlet'
+        addonlet.addonletName=""
+       
+        for k,v in pairs(g.document.opened) do
+            if g.document.opened[k] == g.document.active then
+                g.document.opened[k] = addonlet
+                break
+            end
+            
+           
+        end
+        g.document.active = addonlet
+    end
+    METAADDON_EDITOR_RENDER()
+    METAADDON_EDITOR_RECREATE_TAB()
 end
 function METAADDON_EDITOR_NEW_CONFIRM()
-    g.document.active = g.cls.MAAddonlet():init()
+    
+   
+
+    if g.fn.len(g.document.opened)==0 or  g.document.root ==nil then
+        local addonlet = g.cls.MAAddonlet("", "(bootstrap)"):init()
+        g.document.opened[#g.document.opened + 1] = addonlet
+        g.document.root = addonlet
+        g.document.active = addonlet
+    else
+        local addonlet = g.cls.MAAddonlet("", "New Addonlet"):init()
+        g.document.opened[#g.document.opened + 1] = addonlet
+        g.document.active = addonlet
+    end
     METAADDON_EDITOR_RENDER()
+    METAADDON_EDITOR_RECREATE_TAB()
 end
 function METAADDON_EDITOR_LOADROOTFILE()
     g.fn.trycatch {
         try = function()
-            local obj = acutil.loadJSON(g.basepath.."\\_"..info.GetCID(session.GetMyHandle())..".json")
-            
+            local obj = g.fn.lualoadfromfile(g.basepath .. "\\_bootstrap_" .. info.GetCID(session.GetMyHandle()) .. ".s.lua")
+            if obj == nil then
+                g.document.active =
+                    g.cls.MAAddonlet("_bootstrap_" .. info.GetCID(session.GetMyHandle()), "(bootstrap)"):init()
+            else
+                g.document.active = g.fn.DeserializeObject(obj)
+            end
+            g.document.opened[#g.document.opened + 1] = g.document.active
+            g.document.active.addonletName = "_bootstrap_" .. info.GetCID(session.GetMyHandle())
+            g.document.root = g.document.active
+            METAADDON_EDITOR_RECREATE_TAB()
+            METAADDON_EDITOR_RENDER()
+        end,
+        catch = function(error)
+            g.fn.errout(error)
+        end
+    }
+end
+function METAADDON_EDITOR_LOADFILEORNEW(name, title)
+    g.fn.trycatch {
+        try = function()
+
+            for k,v in pairs(g.document.opened) do
+                if g.document.opened[k].addonletName == name then
+                    g.document.active = g.document.opened[k]
+                    METAADDON_EDITOR_RENDER()
+                    METAADDON_EDITOR_RECREATE_TAB()
+                    return
+                
+                end
+            end
+
+            local obj = g.fn.lualoadfromfile(g.basepath .. "\\" .. name .. ".s.lua")
+            if obj == nil then
+                local addonlet = g.cls.MAAddonlet(name, title):init()
+                g.document.opened[#g.document.opened + 1] = addonlet
+                g.document.active = addonlet
+                METAADDON_EDITOR_RENDER()
+                METAADDON_EDITOR_RECREATE_TAB()
+                return
+            end
             g.document.active = g.fn.DeserializeObject(obj)
-            g.document.opened[#g.document.opened+1] =  g.document.active 
-            g.document.active.addonletName=g.document.active 
+            
+            g.document.opened[#g.document.opened + 1] = g.document.active
+            g.document.active.addonletName = name
+           
+            if name[1] ~= "_" then
+                g.settings.fileList[#g.settings.fileList + 1] = name
+                g.settings.fileList = uniq(g.settings.fileList)
+                table.sort(
+                    g.settings.fileList,
+                    function(a, b)
+                        return a < b
+                    end
+                )
+                METAADDON_SAVE_SETTINGS()
+            end
             METAADDON_EDITOR_RECREATE_TAB()
             METAADDON_EDITOR_RENDER()
         end,
@@ -485,11 +658,41 @@ end
 function METAADDON_EDITOR_LOADFILE(name)
     g.fn.trycatch {
         try = function()
-            local obj = acutil.loadJSON(g.basepath.."\\"..name..".json")
-            
+            for k,v in pairs(g.document.opened) do
+                if g.document.opened[k].addonletName == name then
+                    g.document.active = g.document.opened[k]
+                    METAADDON_EDITOR_RENDER()
+                    METAADDON_EDITOR_RECREATE_TAB()
+                    return
+                
+                end
+            end
+            local obj = g.fn.lualoadfromfile(g.basepath .. "\\" .. name .. ".s.lua")
+            if obj == nil then
+                ui.SysMsg("File not found or loading failed.")
+                for k, v in ipairs(g.settings.fileList) do
+                    if v == name then
+                        table.remove(g.settings.fileList, k)
+                        break
+                    end
+                end
+                METAADDON_SAVE_SETTINGS()
+                return
+            end
             g.document.active = g.fn.DeserializeObject(obj)
-            g.document.opened[#g.document.opened+1] =  g.document.active 
-            g.document.active.addonletName=g.document.active 
+            g.document.opened[#g.document.opened + 1] = g.document.active
+            g.document.active.addonletName = name
+            if name[1] ~= "_" then
+                g.settings.fileList[#g.settings.fileList + 1] = name
+                g.settings.fileList = uniq(g.settings.fileList)
+                table.sort(
+                    g.settings.fileList,
+                    function(a, b)
+                        return a < b
+                    end
+                )
+                METAADDON_SAVE_SETTINGS()
+            end
             METAADDON_EDITOR_RECREATE_TAB()
             METAADDON_EDITOR_RENDER()
         end,
@@ -501,8 +704,33 @@ end
 function METAADDON_EDITOR_SAVEFILE(name)
     g.fn.trycatch {
         try = function()
-            g.document.active.addonletName=name
-            acutil.saveJSON(g.basepath.."\\"..name.."json", g.fn.SerializeObject(g.document.active))
+            if name == nil and g.document.active.addonletName == nil then
+                METAADDON_EDITOR_SAVEAS()
+                return
+            end
+            name=name or g.document.active.addonletName
+            if g.document.root ~= g.document.active then
+                g.document.active.addonletName = name
+                g.document.active.title = name
+            else
+                name = "_bootstrap_" .. info.GetCID(session.GetMyHandle())
+                g.document.active.addonletName = name
+                g.document.active.title = "(bootstrap)"
+            end
+            g.fn.luasavetofile(g.basepath .. "\\" .. name .. ".s.lua", g.fn.SerializeObject(g.document.active))
+            if name[1] ~= "_" then
+                g.settings.fileList[#g.settings.fileList + 1] = name
+                g.settings.fileList = uniq(g.settings.fileList)
+                table.sort(
+                    g.settings.fileList,
+                    function(a, b)
+                        return a < b
+                    end
+                )
+                METAADDON_SAVE_SETTINGS()
+            end
+            METAADDON_EDITOR_RECREATE_TAB()
+            METAADDON_EDITOR_RENDER()
         end,
         catch = function(error)
             g.fn.errout(error)
@@ -512,8 +740,22 @@ end
 function METAADDON_EDITOR_CLOSEFILE()
     g.fn.trycatch {
         try = function()
-            g.document.opened[g.document.active.addonletName] = nil
-            g.document.active=g.fn.tableFirst(g.document.opened)
+            g.document.opened=uniq(g.document.opened)
+            if g.document.root == g.document.active then
+                ui.SysMsg("Cannot close bootstrap addonlet.")
+                return
+            end
+
+            for k, v in ipairs(g.document.opened) do
+                if v == g.document.active then
+                    table.remove(g.document.opened, k)
+                    
+                end
+            end
+
+            g.document.active = g.fn.tableFirst(g.document.opened)
+            METAADDON_EDITOR_RECREATE_TAB()
+            METAADDON_EDITOR_RENDER()
         end,
         catch = function(error)
             g.fn.errout(error)
@@ -523,9 +765,15 @@ end
 function METAADDON_EDITOR_ADD_BUTTON()
     g.fn.trycatch {
         try = function()
+            local blacklist={
+                ["MADependencyBaseNode"]=true
+            }
             local context = ui.CreateContextMenu("CONTEXT_METAADDON_EDITOR_ADD", "Add Node", 0, 0, 200, 200)
             for k, v in pairs(g.fn.GetListOfNodeClasses()) do
-                ui.AddContextMenuItem(context, v, "METAADDON_EDITOR_ADD_NODE('" ..v .. "')")
+                if blacklist[v] == nil then
+                    ui.AddContextMenuItem(context, v, "METAADDON_EDITOR_ADD_NODE('" .. v .. "')")
+                end
+                
             end
 
             ui.OpenContextMenu(context)
@@ -537,7 +785,7 @@ function METAADDON_EDITOR_ADD_BUTTON()
 end
 
 function METAADDON_EDITOR_ADD_NODE(nodename)
-    local node = g.cls[nodename]({x = 0, y = 0},{w=100,h=100}):init()
+    local node = g.cls[nodename]({x = 0, y = 0}, {w = 100, h = 100}):init()
     g.document.active:addNode(node)
     addnodemode = node
 end
@@ -552,42 +800,71 @@ end
 
 function METAADDON_EDITOR_START_BUTTON()
     if METAADDON_COMPILE() then
-        g.personalsettings.isrunning=true
+        g.personalsettings.isrunning = true
     else
         ui.MsgBox("Compile Failed.", "None", "None")
-        g.personalsettings.isrunning=false
+        g.personalsettings.isrunning = false
     end
-   
-
 end
 
 function METAADDON_EDITOR_STOP_BUTTON()
-    g.personalsettings.isrunning=false
+    g.personalsettings.isrunning = false
 end
 
 function METAADDON_EDITOR_RECREATE_TAB()
-    local frame = ui.GetFrame("metaaddon_editor")
-    local gboxtab = ui.GetFrame("metaaddon_editor"):GetChildRecursively("gbox_tab")
-    local tab=gboxtab:CreateOrGetControl("tab","tab",0,0,gboxtab:GetWidth(),gboxtab:GetHeight())
-    AUTO_CAST(tab)
+    g.fn.trycatch {
+        try = function()
+            local frame = ui.GetFrame("metaaddon_editor")
+            local gboxtab = ui.GetFrame("metaaddon_editor"):GetChildRecursively("gbox_tab")
+            local tab = gboxtab:GetChild("tab")
+            AUTO_CAST(tab)
 
-    tab:SetSkinName("tab2")
-    tab:SetEventScript(ui.LBUTTONUP, "METAADDON_EDITOR_TAB_CLICK")
-    for k,v in pairs(g.document.opened) do
-        tab:AddItem(v.title)
-
-    end
+            tab:SetSkinName("tab2")
+            tab:SetEventScript(ui.LBUTTONUP, "METAADDON_EDITOR_TAB_CLICK")
+            tab:SetEventScript(ui.RBUTTONUP, "METAADDON_EDITOR_TAB_RCLICK")
+            tab:SetItemsFixWidth(38)
+            tab:ClearItemAll()
+            for k, v in pairs(g.document.opened) do
+                tab:AddItem("{ol}" .. ((v.title) or "No Name"))
+            end
+            for k, v in pairs(g.document.opened) do
+                if v==g.document.active then
+                    tab:SelectTab(k-1)
+                    break
+                end
+            end
+            
+            tab:Invalidate()
+        end,
+        catch = function(error)
+            g.fn.errout(error)
+        end
+    }
 end
 
 function METAADDON_EDITOR_TAB_CLICK()
     local frame = ui.GetFrame("metaaddon_editor")
     local gboxtab = ui.GetFrame("metaaddon_editor"):GetChildRecursively("gbox_tab")
-    local tab=gboxtab:CreateOrGetControl("tab","tab",0,0,gboxtab:GetWidth(),gboxtab:GetHeight())
+    local tab = gboxtab:GetChild("tab")
     AUTO_CAST(tab)
 
-    local index=tab:GetSelectItemIndex()
-    
-    g.document.active=g.document.opened[index]
+    local index = tab:GetSelectItemIndex()
+    local d= g.document.active
+    for k,v in ipairs(g.document.opened) do
+        if k == index+1 then
+            d = v
+            break
+        end
+    end
+    if  g.document.active==d then
+        g.fn.dbgout("tab click same")
+    end
+    g.document.active=d
     METAADDON_EDITOR_RENDER()
-    
+end
+
+function METAADDON_EDITOR_TAB_RCLICK()
+    local context = ui.CreateContextMenu("CONTEXT_METAADDON_EDITOR", "", 0, 0, 200, 200)
+    ui.AddContextMenuItem(context, "Close", "METAADDON_EDITOR_CLOSEFILE()")
+    ui.OpenContextMenu(context)
 end

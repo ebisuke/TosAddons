@@ -17,30 +17,24 @@ g.framename = "classdump"
 g.debug = true
 g.frm = g.frm or {}
 g.fn = g.fn or {}
-g.compliled = nil
+g.compiled = nil
 g.settiings = g.settiings or {}
 g.settingsFileLoc = g.basepath.."\\settings.json"
 g.personalsettings=g.personalsettings or {}
 METAADDON_FLAGS = {}
 MF_GAME_START_3SEC = 0x0001
 MF_FPS_UPDATE = 0x0002
-
+MF_FIRST_TOUCH = 0x0004
+METAADDON_CONTEXT=METAADDON_CONTEXT or {}
 g.fn.lazy(
     function()
         g.fn.trycatch {
             try = function()
-                local addonlet = g.cls.MAAddonlet("new", "new"):init()
-    
-                if not g.document then
-                    g.document = {
-                        bootstrap = nil,
-                        active = addonlet,
-                        opened={},
-                    }
-                else
-                    
-                end
-              
+                g.document={
+                    active=nil,
+                    opened={},
+                    root=nil,
+                }
             end,
             catch = function(error)
                 g.fn.errout(error)
@@ -69,6 +63,7 @@ function METAADDON_ON_INIT(addon, frame)
                 "METAADDON_DEBUG_RELOAD_LUA"
             )
             addon:RegisterMsg("FPS_UPDATE", "METAADDON_FPS_UPDATE")
+            addon:RegisterMsg("GAME_START", "METAADDON_GAME_START")
             addon:RegisterMsg("GAME_START_3SEC", "METAADDON_GAME_START_3SEC")
             g.fn.lazyLoad()
 
@@ -76,13 +71,16 @@ function METAADDON_ON_INIT(addon, frame)
             AUTO_CAST(timer)
             timer:SetUpdateScript("METAADDON_TIMER_UPDATE")
             timer:Start(0.01)
-            METAADDON_EDITOR_LOADROOTFILE()
+            
             METAADDON_LOAD_SETTINGS()
         end,
         catch = function(error)
             g.fn.errout(error)
         end
     }
+end
+function METAADDON_GAME_START()
+    METAADDON_EDITOR_LOADROOTFILE()
 end
 function METAADDON_SAVE_SETTINGS()
     g.fn.dbgout("SAVE_SETTINGS")
@@ -148,7 +146,8 @@ function METAADDON_DEFAULTSETTINGS()
     return {
         version = g.version,
         --有効/無効
-        isrunning = false
+        isrunning = false,
+        fileList={}
     }
 end
 function METAADDON_DEFAULTPERSONALSETTINGS()
@@ -160,10 +159,12 @@ end
 function METAADDON_TIMER_UPDATE()
     g.fn.trycatch {
         try = function()
-            if g.compliled and g.personalsettings.isrunning then
-                local ok, err = pcall(g.compliled)
-                if not ok then
-                    g.fn.errout(err)
+            if g.compiled and g.personalsettings.isrunning then
+                for k,v in pairs(g.compiled) do
+                    local ok, err = pcall(v)
+                    if not ok then
+                        g.fn.errout(err)
+                    end
                 end
             end
             METAADDON_FLAGS = {}
@@ -194,26 +195,58 @@ end
 function METAADDON_COMPILE()
     return g.fn.trycatch {
         try = function()
-            local str = g.document.active:compile()
-            local f = io.open("c:\\temp\\metatest.lua", "w")
-            f:write(str)
-            f:flush()
-            f:close()
-            local fn, err = load(str, nil, "t", _G)
-            if err then
-                g.fn.errout(err)
+            local tocompile={g.document.root}
+            g.compiled ={}
+            METAADDON_CONTEXT={}
+            
+            while #tocompile > 0 do
+                local addonlet=tocompile[1]
+                table.remove(tocompile,1)
+
+                METAADDON_CONTEXT[addonlet.addonletName]=METAADDON_CONTEXT[addonlet.addonletName] or {
+                    definition={},
+                    datatable={},
+                    context={},
+                    funcs={},
+                    topmost={},
+                    indata=nil,
+                    outdata=nil,
+                }
+                local str = addonlet:compile()
+                if g.debug then
+                    local f = io.open("c:\\temp\\"..addonlet.addonletName..".lua", "w")
+                    f:write(str)
+                    f:flush()
+                    f:close()
+                end
+                local fn, err = load(str, nil, "t", _G)
+                if err then
+                    g.fn.errout(err)
+                end
+                local ok, p = pcall(fn)
+                if ok then
+                    g.compiled[addonlet.addonletName]=p
+                else
+                    g.fn.errout(p)
+                    return false
+                end
+                
+                --load dependencies
+                local depends=addonlet:getDependencies()
+                for i,v in ipairs(depends) do
+                    local obj=g.fn.lualoadfromfile(g.basepath.."\\"..v..".s.lua")
+                    if obj then
+                        table.insert(tocompile,1,g.fn.DeserializeObject(obj))
+                    else
+                        g.fn.errout("dependency not found or cannot load:"..v)
+                    end
+                end
             end
-            local ok, p = pcall(fn)
-            if ok then
-                g.compliled = p
-                return true
-            else
-                g.fn.errout(p)
-                return false
-            end
+            METAADDON_FLAGS[MF_FIRST_TOUCH] = true
+            return true
         end,
         catch = function(error)
-            g.compliled = nil
+            g.compiled = nil
             g.fn.errout(error)
         end
     }

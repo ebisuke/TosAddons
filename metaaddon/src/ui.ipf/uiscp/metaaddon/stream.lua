@@ -309,3 +309,16 @@ g.cls.MAPoseStream = function (sourceGate,destinationGate)
 
     return obj
 end
+g.cls.MATableStream = function (sourceGate,destinationGate)
+    local self=
+    {
+        getColor=function(self)
+            return "FFAAAAAA"
+        end,
+        _className="MATableStream",
+
+    }
+    local obj= g.fn.inherit(self,g.cls.MAStream(sourceGate,destinationGate))
+
+    return obj
+end

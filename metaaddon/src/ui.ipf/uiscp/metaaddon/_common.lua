@@ -420,7 +420,109 @@ g.fn.CreateInstance=function (typename,...)
 	return obj
 end
 
+--referenced from http://d.hatena.ne.jp/Ko-Ta/20100830/p1
+-- lua
+-- テーブルシリアライズ
+function g.fn.luavalue2str(v)
+	local vt = type(v);
+	
+	if (vt=="nil")then
+		return "nil";
+	end;
+	if (vt=="number")then
+		return string.format("%d",v);
+	end;
+	if (vt=="string")then
+		return string.format('"%s"',v);
+	end;
+	if (vt=="boolean")then
+		if (v==true)then
+			return "true";
+		else
+			return "false";
+		end;
+	end;
+	if (vt=="function")then
+		return '"*function"';
+	end;
+	if (vt=="thread")then
+		return '"*thread"';
+	end;
+	if (vt=="userdata")then
+		return '"*userdata"';
+	end;
+	return '"UnsupportFormat"';
+end;
 
+function g.fn.luafield2str(v)
+	local vt = type(v);
+	
+	if (vt=="number")then
+		return string.format("[%d]",v);
+	end;
+	if (vt=="string")then
+		return string.format("%s",v);
+	end;
+	return 'UnknownField';
+end;
+
+function g.fn.luaserialize(t)
+	local f,v,buf;
+	
+	-- テーブルじゃない場合
+	if not(type(t)=="table")then
+		return g.fn.value2str(t);
+	end
+	
+	buf = "";
+	f,v = next(t,nil);
+	while f do
+		-- ,を付加する
+		if (buf~="")then
+			buf = buf .. ",";
+		end;
+		-- 値
+		if (type(v)=="table")then
+			buf = buf .. g.fn.luafield2str(f) .. "=" .. g.fn.luaserialize(v);
+		else
+			buf = buf .. g.fn.luafield2str(f) .. "=" .. g.fn.luavalue2str(v);
+		end;
+		-- 次の要素
+		f,v = next(t,f);
+	end
+	
+	buf = "{" .. buf .. "}";
+	return buf;
+end;
+function g.fn.lualoadfromfile_internal(env,path,dummy)
+	local _ENV = env
+    local result,data=pcall(dofile,path)
+    if(result)then
+        return data
+    else
+        --print("FAIL"..data)
+        return dummy
+    end
+end
+function g.fn.lualoadfromfile(path,dummy)
+    local env = {dofile=dofile,pcall=pcall}
+    local lff=g.fn.loadfromfile_internal
+   
+    local result,data=pcall(lff,env,path,dummy)
+    if(result)then
+        return data
+    else
+        return dummy
+    end
+end;
+function g.fn.luasavetofile(path,data)
+    local s="return "..g.fn.luaserialize(data)
+    --CHAT_SYSTEM(tostring(#s))
+    local fn=io.open(path,"w+")
+    fn:write(s)
+    fn:flush()
+    fn:close()
+end;
 g.cls.MAObject = function()
 	local self={
 

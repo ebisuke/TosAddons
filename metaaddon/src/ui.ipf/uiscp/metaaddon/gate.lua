@@ -390,4 +390,29 @@ g.cls.MAPoseGate=function(title,ownerNode,typename)
     return obj
 end
 
+g.cls.MATableGate=function(title,ownerNode,typename)
+    local self={
+        _className="MATableGate",
+        _typename=typename,
+        getTypeName=function (self)
+            return self._typename
+        end,
+  
+        isConnectableStream=function(self,stream)
+            
+            return stream:instanceOf(g.cls.MAAnyStream()) or stream:instanceOf(g.cls.MATableStream())
+            
+        end,
+        assignImpl=function(self,obj)
+            self._supers["MAGate"].assignImpl(self,obj)
+            self._typename=obj._typename
+        end,
+        createCompatibleStream=function(self,dest)
+            return g.cls.MAPoseStream(self,dest,self._typename):init()
+        end,
+     
+    }
+    local obj= g.fn.inherit(self,g.cls.MAGate("Table","MATableGate",title,ownerNode))
 
+    return obj
+end

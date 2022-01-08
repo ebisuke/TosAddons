@@ -38,10 +38,11 @@ end
 function METAADDON_NODE_SET(node)
     local  frame = ui.GetFrame("metaaddon_node")
     local gbox=ui.GetFrame("metaaddon_node"):GetChildRecursively("gbox") 
+    gbox:RemoveAllChild()
     currentNode=node
     if(node:createEditor(g.document.active,ui.GetFrame("metaaddon_node"),gbox)==false) then
         ui.GetFrame("metaaddon_node"):ShowWindow(0)
-        ui.MsgBox("No confugration editor for this node")
+        --ui.MsgBox("No confugration editor for this node")
     end
 
 end
