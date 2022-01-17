@@ -224,13 +224,30 @@
         "name": "Small UI",
         "file": "smallui",
         "extension": "ipf",
-        "fileVersion": "v0.2.1",
-        "releaseTag": "smallui-v0.2.1",
+        "fileVersion": "v0.3.0",
+        "releaseTag": "smallui-v0.3.0",
         "unicode": "📖",
         "description": "小さいUIを提供します",
         "tags": [
             "ui",
-            "small"
+            "small",
+            "quickslot",
+            "minimap"
+        ]
+    },
+    {
+        "name": "Straight Quick Slot",
+        "file": "straightquickslot",
+        "extension": "ipf",
+        "fileVersion": "v0.0.1",
+        "releaseTag": "straightquickslot-v0.0.1",
+        "unicode": "📖",
+        "description": "ボックス形状のクイックスロットにします",
+        "tags": [
+            "ui",
+            "straight",
+            "box",
+            "quickslot"
         ]
     },
     {

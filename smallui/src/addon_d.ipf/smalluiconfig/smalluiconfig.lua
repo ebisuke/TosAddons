@@ -74,6 +74,13 @@ SMALLUI_CONFIG_DEFS = {
                 type = "boolean",
                 default = true,
             },
+            
+            {
+                name = "smallstraightquickslot",
+                vname = "Straight Small Keyboard Quickslot",
+                type = "boolean",
+                default = false,
+            },
             {
                 name = "quickslotsize",
                 vname = "Quickslot Size",

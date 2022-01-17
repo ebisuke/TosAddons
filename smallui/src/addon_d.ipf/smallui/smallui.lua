@@ -23,6 +23,9 @@ g.x = nil
 g.y = nil
 g.applyjoystick=false
 g.buffs = {}
+
+
+
 --ライブラリ読み込み
 CHAT_SYSTEM("[SU]loaded")
 local acutil = require('acutil')
@@ -237,7 +240,7 @@ function SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
             local margin=slot:GetMargin()
             slot:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
             slot:Resize(slot:GetWidth()*mul,slot:GetHeight()*mul)
-            
+            SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
         end
         --frame:SetMargin(0,0,0,0)
         --frame:SetGravity(ui.CENTER_HORZ,ui.BOTTOM)
@@ -283,7 +286,7 @@ function SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
             local margin=slot:GetMargin()
             slot:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
             slot:Resize(slot:GetWidth()*mul,slot:GetHeight()*mul)
-            
+            SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
         end
     end
     JOYSTICK_QUICKSLOT_UPDATE_ALL_SLOT()
@@ -291,51 +294,102 @@ function SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
 
 end
 function SMALLUI_SMALLIFY_QUICKSLOT()
-    local frame = ui.GetFrame("quickslotnexpbar")
-    local sz = g.settings.quickslotsize
-    local slsz = g.settings.quickslotsize
-    local line = 280
-    local x
-    x = -100
-    for i = 1, 10 do
-        local slot = frame:GetChild("slot" .. tostring(i))
-        slot:SetMargin(x, line, 0, 0)
-        slot:Resize(slsz, slsz)
-        x = x + sz
-    end
-    line = line - sz
-    x = -100 - g.settings.quickslotsize / 2
-    for i = 11, 20 do
-        local slot = frame:GetChild("slot" .. tostring(i))
-        slot:SetMargin(x, line, 0, 0)
-        slot:Resize(slsz, slsz)
-        x = x + sz
-    end
-    line = line - sz
-    x = -100 - g.settings.quickslotsize
-    for i = 21, 30 do
-        local slot = frame:GetChild("slot" .. tostring(i))
-        slot:SetMargin(x, line, 0, 0)
-        slot:Resize(slsz, slsz)
-        x = x + sz
-    end
-    line = line - sz
-    x = -100 - g.settings.quickslotsize / 2
-    for i = 31, 40 do
-        local slot = frame:GetChild("slot" .. tostring(i))
-        slot:SetMargin(x, line, 0, 0)
-        slot:Resize(slsz, slsz)
-        x = x + sz
-    end
-    for i = 1, 40 do
-        local slot = frame:GetChild("slot" .. tostring(i))
-        AUTO_CAST(slot)
 
-        slot:SetFontName("white_10_ol")
-        slot:SetSubBoxFont("white_10_ol")
-        
-        slot:Invalidate()
-        SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
+    if g.settings.smallstraightquickslot then
+        local frame = ui.GetFrame("quickslotnexpbar")
+        local sz = g.settings.quickslotsize
+        local slsz = g.settings.quickslotsize
+        local line = 280
+        local x
+        x = -100
+        for i = 1, 10 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        line = line - sz
+        x = -100 
+        for i = 11, 20 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        line = line - sz
+        x = -100 
+        for i = 21, 30 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        line = line - sz
+        x = -100 
+        for i = 31, 40 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        for i = 1, 40 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            AUTO_CAST(slot)
+
+            slot:SetFontName("white_10_ol")
+            slot:SetSubBoxFont("white_10_ol")
+            
+            slot:Invalidate()
+            SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
+        end
+    else
+
+        local frame = ui.GetFrame("quickslotnexpbar")
+        local sz = g.settings.quickslotsize
+        local slsz = g.settings.quickslotsize
+        local line = 280
+        local x
+        x = -100
+        for i = 1, 10 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        line = line - sz
+        x = -100 - g.settings.quickslotsize / 2
+        for i = 11, 20 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        line = line - sz
+        x = -100 - g.settings.quickslotsize
+        for i = 21, 30 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        line = line - sz
+        x = -100 - g.settings.quickslotsize / 2
+        for i = 31, 40 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            slot:SetMargin(x, line, 0, 0)
+            slot:Resize(slsz, slsz)
+            x = x + sz
+        end
+        for i = 1, 40 do
+            local slot = frame:GetChild("slot" .. tostring(i))
+            AUTO_CAST(slot)
+
+            slot:SetFontName("white_10_ol")
+            slot:SetSubBoxFont("white_10_ol")
+            
+            slot:Invalidate()
+            SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
+        end
     end
     QUICKSLOTNEXTBAR_UPDATE_ALL_SLOT()
 
@@ -345,15 +399,17 @@ function SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
         try = function()
             local x = 2;
             local y = slot:GetHeight() - 11;
-            local width = 32;
+            local width = slot:GetWidth();
             local height = 10;
             local gauge = slot:GetSlotGauge();
             if (gauge) then
-                gauge:SetOffset(0, slot:GetHeight() - 11)
+                gauge:SetGravity(ui.LEFT,ui.BOTTOM)
+                gauge:SetOffset(0, 0)
+                gauge:SetMargin(0,0,0,0)
                 gauge:Resize(width, height)
                 --gauge:SetDrawStyle(ui.GAUGE_DRAW_CELL);
                 gauge:SetSkinName("smallui_dot_skillslot");
-                --slot:InvalidateGauge();
+                slot:InvalidateGauge();
             end
         end,
         catch = function(error)
@@ -457,6 +513,17 @@ function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
     ps=ps+sz
+    frame = ui.GetFrame("minimized_total_shop_button")
+    frame:SetMargin(0, ps, 0, 0)
+    frame:SetSkinName("chat_window")
+    SMALLUI_DO_SMALL_BUTTON(frame)
+    frame = ui.GetFrame("minimized_certificate_shop_button")
+    frame:SetMargin(0, ps, sz*2, 0)
+    frame:SetSkinName("chat_window")
+    SMALLUI_DO_SMALL_BUTTON(frame)
+
+    ps=ps+sz
+    
     frame = ui.GetFrame("minimizedalarm")
     frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BANNER(frame)
@@ -482,6 +549,8 @@ function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     ps=ps+sz
     frame = ui.GetFrame("minimized_godprotection_button")
     frame:SetMargin(0, ps,0, 0)
+
+    
     --SMALLUI_DO_SMALL_BUTTON(frame)
 
 end
