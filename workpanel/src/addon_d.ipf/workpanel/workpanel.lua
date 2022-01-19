@@ -109,7 +109,7 @@ function WORKPANEL_ON_INIT(addon, frame)
     }
 end
 function WORKPANEL_REFRESH()
-    REQ_PVP_MINE_SHOP_OPEN()
+    pc.ReqExecuteTx_NumArgs("SCR_PVP_MINE_SHOP_OPEN", 0);
     ReserveScript("ui.CloseFrame('earthtowershop')", 1.1)
     ReserveScript("WORKPANEL_INITFRAME()", 2.8)
 end

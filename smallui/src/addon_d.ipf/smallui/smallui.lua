@@ -240,6 +240,7 @@ function SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
             local margin=slot:GetMargin()
             slot:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
             slot:Resize(slot:GetWidth()*mul,slot:GetHeight()*mul)
+            AUTO_CAST(slot)
             SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
         end
         --frame:SetMargin(0,0,0,0)
@@ -286,6 +287,7 @@ function SMALLUI_SMALLIFY_JOYSTICK_QUICKSLOT()
             local margin=slot:GetMargin()
             slot:SetMargin(margin.left*mul,margin.top*mul,margin.right*mul,margin.bottom*mul)
             slot:Resize(slot:GetWidth()*mul,slot:GetHeight()*mul)
+            AUTO_CAST(slot)
             SMALLUI_QUICKSLOT_MOVE_GAUGE(slot)
         end
     end
