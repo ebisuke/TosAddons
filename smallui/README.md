@@ -26,6 +26,8 @@ To configure, please enter `/suic` in chat window.
 
 
 # リリースノート
+## v0.3.3
+* 傭兵団コイン商店ボタンの位置を調整
 ## v0.3.2
 * テスト用プロジェクトに入れていたON_INIT関数一覧を吐き出す処理が混入していたのを削除
 

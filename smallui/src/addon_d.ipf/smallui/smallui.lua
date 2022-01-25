@@ -519,11 +519,17 @@ function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     frame:SetMargin(0, ps, 0, 0)
     frame:SetSkinName("chat_window")
     SMALLUI_DO_SMALL_BUTTON(frame)
+    frame = ui.GetFrame("minimized_folding_button")
+    frame:SetMargin(0, ps, 0, 0)
+    frame:SetSkinName("chat_window")
+    SMALLUI_DO_SMALL_BUTTON(frame)
     frame = ui.GetFrame("minimized_certificate_shop_button")
     frame:SetMargin(0, ps, sz*2, 0)
     frame:SetSkinName("chat_window")
     SMALLUI_DO_SMALL_BUTTON(frame)
-
+    frame = ui.GetFrame("minimized_pvpmine_shop_button")
+    frame:SetMargin(0, ps, sz*1, 0)
+    SMALLUI_DO_SMALL_BUTTON(frame)
     ps=ps+sz
     
     frame = ui.GetFrame("minimizedalarm")
@@ -541,10 +547,7 @@ function SMALLUI_SMALLIFY_MINIMIZED_BUTTON()
     frame:SetMargin(0, ps, 0, 0)
     SMALLUI_DO_SMALL_BUTTON(frame)
     ps=ps+sz
-    frame = ui.GetFrame("minimized_pvpmine_shop_button")
-    frame:SetMargin(0, ps, 0, 0)
-    SMALLUI_DO_SMALL_BUTTON(frame)
-    ps=ps+sz
+
     frame = ui.GetFrame("minimizedeventbanner")
     frame:SetMargin(0, ps,0 , 0)
     SMALLUI_DO_SMALL_BANNER(frame)

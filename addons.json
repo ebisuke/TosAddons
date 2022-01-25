@@ -224,8 +224,8 @@
         "name": "Small UI",
         "file": "smallui",
         "extension": "ipf",
-        "fileVersion": "v0.3.2",
-        "releaseTag": "smallui-v0.3.2",
+        "fileVersion": "v0.3.3",
+        "releaseTag": "smallui-v0.3.3",
         "unicode": "📖",
         "description": "小さいUIを提供します",
         "tags": [
