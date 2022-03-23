@@ -195,6 +195,9 @@ local function ERROUT(msg)
     }
 
 end
+local function IsBlackListedTabName(name)
+    return name=='Quest'
+end
 
 function YAACCOUNTINVENTORY_ON_INIT(addon, frame)
     EBI_try_catch{
@@ -946,11 +949,14 @@ function YAI_FIND_ACTIVEGBOX()
             
             
             for typeNo = 1, #g_invenTypeStrList do
-                local tree_box = GET_CHILD_RECURSIVELY(frame, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
-                if (tree_box:IsVisible() == 1) then
-                    
-                    return tree_box
+                if not IsBlackListedTabName(g_invenTypeStrList[typeNo]) then
+                    local tree_box = GET_CHILD_RECURSIVELY(frame, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
+                    if (tree_box:IsVisible() == 1) then
+                        
+                        return tree_box
+                    end
                 end
+                
             end
             return nil
         end,
@@ -996,41 +1002,43 @@ function YAI_UPDATE()
             frame:SetUserValue("INVENTORY_CUR_SCROLL_POS", curpos);
             
             for typeNo = 1, #g_invenTypeStrList do
-                if (invenTypeStr == nil or invenTypeStr == g_invenTypeStrList[typeNo] or typeNo == 1) then
-                    local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox')
-                    local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl')
-                    
-                    local groupfontname = frame:GetUserConfig("TREE_GROUP_FONT");
-                    local tabwidth = frame:GetUserConfig("TREE_TAB_WIDTH");
-                    
-                    tree:Clear();
-                    tree:EnableDrawFrame(false)
-                    tree:SetFitToChild(true, 60)
-                    tree:SetFontName(groupfontname);
-                    tree:SetTabWidth(tabwidth);
-                    
-                    --local slotSetNameListCnt = ui.inventory.GetInvenSlotSetNameCount();
-                    --for i = 1, slotSetNameListCnt do
-                    --    local slotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
-                    --    ui.inventory.RemoveInvenSlotSetName(slotSetName);
-                    --end
-                    
-                    -- local groupNameListCnt = ui.inventory.GetInvenGroupNameCount();
-                    -- for i = 1, groupNameListCnt do
-                    --     local groupName = ui.inventory.GetInvenGroupNameByIndex(i - 1);
-                    --     ui.inventory.RemoveInvenGroupName(groupName);
-                    -- end
-                    
-                    -- local customFunc = nil;
-                    -- local scriptName = invframe:GetUserValue("CUSTOM_ICON_SCP");
-                    -- local scriptArg = nil;
-                    -- if scriptName ~= nil then
-                    --     customFunc = _G[scriptName];
-                    --     local getArgFunc = _G[invframe:GetUserValue("CUSTOM_ICON_ARG_SCP")];
-                    --     if getArgFunc ~= nil then
-                    --         scriptArg = getArgFunc();
-                    --     end
-                    -- end
+                if not IsBlackListedTabName(g_invenTypeStrList[typeNo]) then
+                    if (invenTypeStr == nil or invenTypeStr == g_invenTypeStrList[typeNo] or typeNo == 1) then
+                        local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox')
+                        local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl')
+                        
+                        local groupfontname = frame:GetUserConfig("TREE_GROUP_FONT");
+                        local tabwidth = frame:GetUserConfig("TREE_TAB_WIDTH");
+                        
+                        tree:Clear();
+                        tree:EnableDrawFrame(false)
+                        tree:SetFitToChild(true, 60)
+                        tree:SetFontName(groupfontname);
+                        tree:SetTabWidth(tabwidth);
+                        
+                        --local slotSetNameListCnt = ui.inventory.GetInvenSlotSetNameCount();
+                        --for i = 1, slotSetNameListCnt do
+                        --    local slotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
+                        --    ui.inventory.RemoveInvenSlotSetName(slotSetName);
+                        --end
+                        
+                        -- local groupNameListCnt = ui.inventory.GetInvenGroupNameCount();
+                        -- for i = 1, groupNameListCnt do
+                        --     local groupName = ui.inventory.GetInvenGroupNameByIndex(i - 1);
+                        --     ui.inventory.RemoveInvenGroupName(groupName);
+                        -- end
+                        
+                        -- local customFunc = nil;
+                        -- local scriptName = invframe:GetUserValue("CUSTOM_ICON_SCP");
+                        -- local scriptArg = nil;
+                        -- if scriptName ~= nil then
+                        --     customFunc = _G[scriptName];
+                        --     local getArgFunc = _G[invframe:GetUserValue("CUSTOM_ICON_ARG_SCP")];
+                        --     if getArgFunc ~= nil then
+                        --         scriptArg = getArgFunc();
+                        --     end
+                        -- end
+                    end
                 end
             end
             
@@ -1164,56 +1172,61 @@ function YAI_UPDATE()
             end
             
             for typeNo = 1, #g_invenTypeStrList do
-                local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
-                local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl');
-                tree_box:Resize(g.w - 48, g.h)
+                if not IsBlackListedTabName(g_invenTypeStrList[typeNo]) then
+                    local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
+                    local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl');
+                    tree_box:Resize(g.w - 48, g.h)
+                end
             end
             for typeNo = 1, #g_invenTypeStrList do
-                local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
-                local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl');
-                local slotset
-                
-                --아이템 없는 빈 슬롯은 숨겨라
-                local slotSetNameListCnt = ui.inventory.GetInvenSlotSetNameCount();
-                for i = 1, slotSetNameListCnt do
-                    local getSlotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
-                    slotset = GET_CHILD_RECURSIVELY(tree, getSlotSetName, 'ui::CSlotSet');
-                    if slotset ~= nil then
-                        ui.InventoryHideEmptySlotBySlotSet(slotset);
-                    end
-                end
-                
-                ADD_GROUP_BOTTOM_MARGIN(frame, tree)
-                tree:OpenNodeAll();
-                tree:SetEventScript(ui.LBUTTONDOWN, "INVENTORY_TREE_OPENOPTION_CHANGE");
-                INVENTORY_CATEGORY_OPENCHECK(frame, tree);
-                
-                --검색결과 스크롤 세팅은 여기서 하자. 트리 업데이트 후에 위치가 고정된 다음에.
-                for i = 1, slotSetNameListCnt do
-                    local getSlotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
-                    slotset = GET_CHILD_RECURSIVELY(tree, getSlotSetName, 'ui::CSlotSet');
+                if not IsBlackListedTabName(g_invenTypeStrList[typeNo]) then
+                    local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
+                    local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl');
+                    local slotset
                     
-                    local slotsetnode = tree:FindByValue(getSlotSetName);
-                    --if setpos == 'setpos' then
-                    local savedPos = frame:GetUserValue("INVENTORY_CUR_SCROLL_POS");
-                    if savedPos == 'None' then
-                        savedPos = 0
+                    --아이템 없는 빈 슬롯은 숨겨라
+                    local slotSetNameListCnt = ui.inventory.GetInvenSlotSetNameCount();
+                    for i = 1, slotSetNameListCnt do
+                        local getSlotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
+                        slotset = GET_CHILD_RECURSIVELY(tree, getSlotSetName, 'ui::CSlotSet');
+                        if slotset ~= nil then
+                            ui.InventoryHideEmptySlotBySlotSet(slotset);
+                        end
                     end
                     
-                    tree_box:SetScrollPos(tonumber(savedPos))
-                
-                --end
+                    ADD_GROUP_BOTTOM_MARGIN(frame, tree)
+                    tree:OpenNodeAll();
+                    tree:SetEventScript(ui.LBUTTONDOWN, "INVENTORY_TREE_OPENOPTION_CHANGE");
+                    INVENTORY_CATEGORY_OPENCHECK(frame, tree);
+                    
+                    --검색결과 스크롤 세팅은 여기서 하자. 트리 업데이트 후에 위치가 고정된 다음에.
+                    for i = 1, slotSetNameListCnt do
+                        local getSlotSetName = ui.inventory.GetInvenSlotSetNameByIndex(i - 1);
+                        slotset = GET_CHILD_RECURSIVELY(tree, getSlotSetName, 'ui::CSlotSet');
+                        
+                        local slotsetnode = tree:FindByValue(getSlotSetName);
+                        --if setpos == 'setpos' then
+                        local savedPos = frame:GetUserValue("INVENTORY_CUR_SCROLL_POS");
+                        if savedPos == 'None' then
+                            savedPos = 0
+                        end
+                        
+                        tree_box:SetScrollPos(tonumber(savedPos))
+                    
+                    --end
+                    end
                 end
-
             
             end
             for typeNo = 1, #g_invenTypeStrList do
-                local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
-                local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl');
-                
-                AUTO_CAST(tree)
-                tree:Resize(g.w - 48, tree:GetHeight())
-                
+                if not IsBlackListedTabName(g_invenTypeStrList[typeNo]) then
+                    local tree_box = GET_CHILD_RECURSIVELY(group, 'treeGbox_' .. g_invenTypeStrList[typeNo], 'ui::CGroupBox');
+                    local tree = GET_CHILD_RECURSIVELY(tree_box, 'inventree_' .. g_invenTypeStrList[typeNo], 'ui::CTreeControl');
+                    
+                    AUTO_CAST(tree)
+                    tree:Resize(g.w - 48, tree:GetHeight())
+                    
+                end
             end
             --スロット残数を表示
             YAI_UPDATE_STATUS()
