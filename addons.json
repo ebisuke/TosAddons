@@ -42,8 +42,8 @@
         "name": "Market Favorite",
         "file": "marketfavorite",
         "extension": "ipf",
-        "fileVersion": "v1.1.0",
-        "releaseTag": "marketfavorite-v1.1.0",
+        "fileVersion": "v1.1.1",
+        "releaseTag": "marketfavorite-v1.1.1",
         "unicode": "📖",
         "description": "マーケットでお気に入り登録したアイテムを簡単に検索できるアドオンです",
         "tags": [

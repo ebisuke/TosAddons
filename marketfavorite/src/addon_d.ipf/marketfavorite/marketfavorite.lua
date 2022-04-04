@@ -1147,10 +1147,7 @@ function MARKETFAVORITE_ON_INIT(addon, frame)
     }
 end
 function MARKETFAVORITE_ON_OPEN_MARKET()
-    local frame = ui.GetFrame('market')
-    local obj = frame:CreateOrGetControl('button', 'openbtn', 270, 30, 70, 40)
-    obj:SetText(L_("Favorites"))
-    obj:SetEventScript(ui.LBUTTONDOWN,"MARKETFAVORITE_TOGGLE_FRAME")
+  
 end
 function MARKETFAVORITE_SAVETOSTRUCTURE()
     local frame = ui.GetFrame('marketfavorite')
@@ -1261,6 +1258,11 @@ function MARKETFAVORITE_INIT_FRAME(frame)
                 slot:SetEventScriptArgNumber(ui.RBUTTONDOWN, i)
             end
             MARKETFAVORITE_LOADFROMSTRUCTURE()
+
+			local frame = ui.GetFrame('market')
+			local obj = frame:CreateOrGetControl('button', 'openbtn', 270, 30, 70, 40)
+			obj:SetText(L_("Favorites"))
+			obj:SetEventScript(ui.LBUTTONDOWN,"MARKETFAVORITE_TOGGLE_FRAME")
         end,
         catch = function(error)
             CHAT_SYSTEM(error)

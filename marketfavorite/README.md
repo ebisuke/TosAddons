@@ -20,9 +20,11 @@ https://gist.github.com/Stepets/3b4dbaf5e6e6a60f3862
 ITOSにてアイテムを右クリックしても反応せず、次のアイテムを右クリックすると前のアイテムが表示される。  
 If you right-click an item in ITOS, it does not displayed, and if you right-click the next item, the previous item is displayed.  
 # リリースノート
+## v1.1.1
+* お気に入りボタンが表示されない場合がある問題の暫定修正
 ## v1.1.0
-英語対応。 supported multiligal(EN,JP).  
-ITOS向けバグフィックス。 Bugfix in ITOS environment.
+* 英語対応。 supported multiligal(EN,JP).  
+* ITOS向けバグフィックス。 Bugfix in ITOS environment.
 
 ## v1.0.0
 初回
