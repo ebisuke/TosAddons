@@ -621,8 +621,8 @@
         "name": "Workpanel",
         "file": "workpanel",
         "extension": "ipf",
-        "fileVersion": "v0.2.12",
-        "releaseTag": "workpanel-v0.2.12",
+        "fileVersion": "v0.2.14",
+        "releaseTag": "workpanel-v0.2.14",
         "unicode": "📖",
         "description": "各種レイド・チャレンジに入るためのパネルを表示します",
         "tags": [

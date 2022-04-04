@@ -80,6 +80,7 @@ end
 
 function WORKPANEL_3SEC()
     --pc.ReqExecuteTx_NumArgs("SCR_PVP_MINE_SHOP_OPEN", 0);
+
     WORKPANEL_INITFRAME()
 end
 function WORKPANEL_ON_INIT(addon, frame)
@@ -200,21 +201,22 @@ function WORKPANEL_INITFRAME()
                 --frame:SetMargin(0,0,0,0)
                 WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, "<<", "WORKPANEL_TOGGLE_PANEL")
             else
-                frame:Resize(1730, 40)
+                frame:Resize(1920, 40)
                 local aObj = GetMyAccountObj()
                 local pvpmine = TryGetProp(aObj, "MISC_PVP_MINE2", "0")
                 if(pvpmine=='None')then
                     pvpmine=0
                 end
                 
-                WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, ">>", "WORKPANEL_TOGGLE_PANEL").upper(
+                WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, ">>", "WORKPANEL_TOGGLE_PANEL").
+                upper(
                     "richtext",
                     "labelpvpicon",
-                    80,
+                    60,
                     "{ol}{img icon_item_pvpmine_2 18 18}",
                     ""
                 )
-                .under("richtext", "labelcoins", 80, "{ol}{s16}" .. GET_COMMAED_STRING(pvpmine), "")
+                .under("richtext", "labelcoins", 60, "{ol}{s16}" .. GET_COMMAED_STRING(pvpmine), "")
                 .next(
                     "richtext",
                     "dummy",
@@ -225,7 +227,7 @@ function WORKPANEL_INITFRAME()
                 .upper("richtext", "label1", 120, "{ol}Singularity", "").under(
                     "button",
                     "btnhardchaweekly",
-                    60,
+                    50,
                     "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_42"),
                     "WORKPANEL_BUYITEM_HARDCHALLENGE_WEEKLY",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_42")
@@ -233,7 +235,7 @@ function WORKPANEL_INITFRAME()
                 .under(
                     "button",
                     "btnhardchadaily",
-                    60,
+                    50,
                     "{ol}D " .. WORKPANEL_TICKET_STR("PVP_MINE_41"),
                     "WORKPANEL_BUYITEM_HARDCHALLENGE_DAILY",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_41")
@@ -248,8 +250,8 @@ function WORKPANEL_INITFRAME()
                 .upper(
                     "richtext",
                     "label2",
-                    110,
-                    "{ol}Challenge:" ..
+                    90,
+                    "{ol}{s12}Challenge:{/}" ..
                         GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 646).PlayPerResetType) ..
                             "/" .. GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 646).PlayPerResetType),
                     ""
@@ -257,12 +259,12 @@ function WORKPANEL_INITFRAME()
                 .under(
                     "button",
                     "btnchaweekly",
-                    110,
+                    90,
                     "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_40"),
                     "WORKPANEL_BUYITEM_CHALLENGE_WEEKLY",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_40")
                 )
-                .next("button", "btnchallenge400", 70, "400Solo", "WORKPANEL_ENTER_CHALLENGE400")
+                .next("button", "btnchallenge400", 70, "440Solo", "WORKPANEL_ENTER_CHALLENGE400")
                 .next(
                     "richtext",
                     "dummy",
@@ -270,8 +272,8 @@ function WORKPANEL_INITFRAME()
                     "",
                     ""
                 )
-                .upper("button", "btnchallenge440Solo", 70, "440Solo", "WORKPANEL_ENTER_CHALLENGE440Solo")
-                .under("button", "btnchallenge440Party", 70, "440Party", "WORKPANEL_ENTER_CHALLENGE440Party")
+                .upper("button", "btnchallenge440Solo", 70, "460Solo", "WORKPANEL_ENTER_CHALLENGE440Solo")
+                .under("button", "btnchallenge440Party", 70, "460Party", "WORKPANEL_ENTER_CHALLENGE440Party")
                 .next(
                     "richtext",
                     "dummy_1",
@@ -357,7 +359,7 @@ function WORKPANEL_INITFRAME()
                 .upper(
                     "button",
                     "btnrelicsolo",
-                    100,
+                    80,
                     "{s12}Solo:{/}" ..
                         GET_CURRENT_ENTERANCE_COUNT(
                             GetClassByType("Indun", WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType
@@ -371,7 +373,7 @@ function WORKPANEL_INITFRAME()
                 .under(
                     "button",
                     "btnrelicparty",
-                    100,
+                    80,
                     "{s12}Party:{/}" ..
                         GET_CURRENT_ENTERANCE_COUNT(
                             GetClassByType("Indun", WORKPANEL_GET_RELIC_CLSID()).PlayPerResetType
@@ -385,19 +387,119 @@ function WORKPANEL_INITFRAME()
                 .next(
                     "button",
                     "btnrelichard",
-                    100,
-                    "{s12}Hard:{/}:Left " ..
+                    60,
+                    "{s12}Hard:{/}:{nl}Left " ..
                         GET_CURRENT_ENTERANCE_COUNT(
                             GetClassByType("Indun", WORKPANEL_GET_RELIC_HARD_CLSID()).PlayPerResetType
                         ),
                     "WORKPANEL_ENTER_RELIC_HARD"
                 )
-                .next("richtext", "label8", 70, "{ol}Assister", "").next(
+                .upper(
+                    "richtext",
+                    "label88",
+                    90,
+                    "{ol}{s12}Earring{/}:Left ".. GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 661).PlayPerResetType),
+                    ""
+                )
+                .under(
+                    "button",
+                    "btnearringweekly",
+                    90,
+                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_85"),
+                    "WORKPANEL_BUYITEM_EARRING",
+                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_85")
+                )
+                .next("richtext", "dummyearring", 1, "", "")
+                .upper(
+                    "button",
+                    "btndearringsolo",
+                    40,
+                    "Solo" ,
+                    "WORKPANEL_ENTER_EARRING_NORMAL_SOLO"
+                )
+                .under(
+                    "button",
+                    "btndearringparty",
+                    40,
+                    "PT" ,
+                    "WORKPANEL_ENTER_EARRING_NORMAL_PARTY"
+                )
+                .next("richtext", "dummyearring726", 1, "", "")
+                .next(
+                    "button",
+                    "btndearringpartyhard",
+                    60,
+                    "PTHard" ,
+                    "WORKPANEL_ENTER_EARRING_PARTY_HARD"
+                )
+                -- .under(
+                --     "button",
+                --     "btndearringpartyextreme",
+                --     60,
+                --     "Extreme" ,
+                --     "WORKPANEL_ENTER_EARRING_PARTY_EXTREME"
+                -- )
+                .next("richtext", "dummydelmoreaaa", 1, "", "")
+                .upper(
+                    "richtext",
+                    "label9999",
+                    60,
+                    "{ol}Delmore",
+                    ""
+                )
+                .under(
+                    "button",
+                    "btndelmoreweekly",
+                    70,
+                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_87"),
+                    "WORKPANEL_BUYITEM_DELMORE",
+                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_87")
+                )
+                .next("richtext", "dummydelmore", 1, "", "")
+                .upper(
+                    "button",
+                    "btndelmoresolo",
+                    90,
+                    "Solo:"..  GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 667).PlayPerResetType) ..
+                    "/" .. GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 667).PlayPerResetType),
+                    "WORKPANEL_ENTER_DELMORE_SOLO_NORMAL"
+                )
+                .under(
+                    "button",
+                    "btndelmoreparty",
+                    90,
+                    "PT"..  GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 666).PlayPerResetType) ..
+                    "/" .. GET_INDUN_MAX_ENTERANCE_COUNT(GetClassByType("Indun", 666).PlayPerResetType) ,
+                    "WORKPANEL_ENTER_DELMORE_AUTO_NORMAL"
+                )
+                -- .next(
+                --     "button",
+                --     "btndelmorepartyhard",
+                --     60,
+                --     "{s12}PTHard" ,
+                --     "WORKPANEL_ENTER_DELMORE_PARTY_HARD"
+                -- )
+                .next(
+                    "richtext",
+                    "dummy999991",
+                    1,
+                    "",
+                    ""
+                )
+                .next("richtext", "label8", 70, "{ol}Assister", "")
+                .next(
                     "button",
                     "btnassister",
                     50,
                     "" .. stage,
                     "WORKPANEL_ENTER_ASSISTER"
+                )
+                .next(
+                    "richtext",
+                    "dummy999992",
+                    1,
+                    "",
+                    ""
                 )
                 .upper("richtext", "label9", 100, "{ol}Velnice", "")
                 .under(
@@ -605,7 +707,12 @@ end
 function WORKPANEL_BUYITEM_HEROIC()
     WORKPANEL_BUYANDUSE("PVP_MINE_54", 652)
 end
-
+function WORKPANEL_BUYITEM_EARRING()
+    WORKPANEL_BUYANDUSE("PVP_MINE_87", 661)
+end
+function WORKPANEL_BUYITEM_DELMORE()
+    WORKPANEL_BUYANDUSE("PVP_MINE_87", 667)
+end
 function WORKPANEL_BUYANDUSE(recipeName, indunclsid, force)
     EBI_try_catch {
         try = function()
@@ -983,6 +1090,87 @@ function WORKPANEL_ENTER_RELIC_HARD(rep)
             ERROUT(error)
         end
     }
+end
+function WORKPANEL_ENTER_EARRING_NORMAL_SOLO(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and  GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 661).PlayPerResetType) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_85"}, "WORKPANEL_ENTER_EARRING_NORMAL_SOLO",rep)
+    else
+        ReqRaidAutoUIOpen(661)
+    end
+
+end
+function WORKPANEL_ENTER_EARRING_NORMAL_PARTY(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and  GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 662).PlayPerResetType) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_85"}, "WORKPANEL_ENTER_EARRING_NORMAL_PARTY",rep)
+    else
+        ReqRaidAutoUIOpen(662)
+    end
+
+end
+function WORKPANEL_ENTER_EARRING_PARTY_HARD(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 663).PlayPerResetType) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_85"}, "WORKPANEL_ENTER_EARRING_PARTY_HARD",rep)
+    else
+        ReqRaidAutoUIOpen(663)
+    end
+
+end
+function WORKPANEL_ENTER_EARRING_PARTY_EXTREME(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(664) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_85"}, "WORKPANEL_ENTER_EARRING_PARTY_EXTREME",rep)
+    else
+        ReqRaidAutoUIOpen(664)
+    end
+
+end
+function WORKPANEL_ENTER_DELMORE_SOLO_NORMAL(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(667) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_87"}, "WORKPANEL_ENTER_DELMORE_SOLO_NORMAL",rep)
+    else
+        ReqRaidAutoUIOpen(667)
+    end
+
+end
+function WORKPANEL_ENTER_DELMORE_AUTO_NORMAL(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(666) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_87"}, "WORKPANEL_ENTER_DELMORE_AUTO_NORMAL",rep)
+    else
+        ReqRaidAutoUIOpen(666)
+    end
+
+end
+function WORKPANEL_ENTER_DELMORE_PARTY_HARD(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    ReqRaidAutoUIOpen(668)
+    
+
 end
 function WORKPANEL_ENTER_HEROIC(rep)
     if WORKPANEL_ISINCITY() == false then
