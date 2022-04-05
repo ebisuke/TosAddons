@@ -111,6 +111,12 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
                 type = "boolean",
                 default = false,
             },
+            {
+                name = "relicgemremovedialog",
+                vname = "Remove confirmation dialog when removing a relic gem.",
+                type = "boolean",
+                default = false,
+            },
         }
     }
 }

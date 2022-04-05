@@ -2034,6 +2034,51 @@ function EBIREMOVEDIALOG_APPLY()
                     )
                 )
             end
+            if g.settings.relicgemremovedialog then
+                assert(
+                    pcall(
+                        function()
+                            function RELICMANAGER_GEM_REMOVE_BTN(ctrl, btn, argStr, argNum)
+                                local parent = ctrl:GetParent()
+                                local ctrlset = parent:GetParent()
+                                local gem_type = ctrlset:GetUserIValue('GEM_TYPE')
+                                local frame = ctrlset:GetTopParentFrame()
+                                local relic_id = frame:GetUserValue('RELIC_GUID')
+                                if relic_id == nil or relic_id == 'None' or relic_id == '0' then
+                                    return
+                                end
+                            
+                                local relic_item = session.GetEquipItemBySpot(item.GetEquipSpotNum('RELIC'))
+                                local relic_obj = GetIES(relic_item:GetObject())
+                                if IS_NO_EQUIPITEM(relic_obj) == 1 then
+                                    ui.SysMsg(ClMsg('NO_EQUIP_RELIC'))
+                                    return
+                                end
+                            
+                                local gem_class_id = relic_item:GetEquipGemID(gem_type)
+                                if gem_class_id == 0 then
+                                    -- 장착된 젬이 없어요
+                                    ui.SysMsg(ClMsg('NO_RELIC_GEM_EQUIPPED'))
+                                    return
+                                end
+                            
+                                local gem_class = GetClassByType('Item', gem_class_id)
+                                if gem_class == nil then
+                                    -- no data
+                                    return
+                                end
+                            
+                                local gem_name = GET_RELIC_GEM_NAME_WITH_FONT(gem_class)
+                                local cost = 20000
+                                local msg = ScpArgMsg('REALLY_UNEQUIP_RELIC_GEM', 'NAME', gem_name, 'VALUE', cost)
+                                local yes_scp = string.format('RELICMANAGER_SOCKET_GEM_REMOVE(%d)', gem_type)
+                            
+                                RELICMANAGER_SOCKET_GEM_REMOVE(gem_type)
+                            end
+                        end
+                    )
+                )
+            end
             if g.settings.dimension then
                 assert(
                     pcall(
