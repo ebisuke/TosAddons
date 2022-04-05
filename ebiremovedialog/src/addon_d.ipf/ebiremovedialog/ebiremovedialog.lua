@@ -2079,6 +2079,72 @@ function EBIREMOVEDIALOG_APPLY()
                     )
                 )
             end
+            if g.settings.relicgeminstalldialog then
+                assert(
+                    pcall(
+                        function()
+                            local function RELICMANAGER_GET_EQUIP_RELIC()
+                                local relic_item = session.GetEquipItemBySpot(item.GetEquipSpotNum('RELIC'))
+                                local relic_obj = GetIES(relic_item:GetObject())
+                                if IS_NO_EQUIPITEM(relic_obj) == 1 then
+                                    return
+                                end
+                            
+                                return relic_item, relic_obj
+                            end
+                            function RELICMANAGER_SOCKET_GEM_ADD(frame, inv_item, item_obj)
+                                local relic_item, relic_obj = RELICMANAGER_GET_EQUIP_RELIC()
+                                if relic_item == nil or relic_obj == nil then
+                                    ui.SysMsg(ClMsg('NO_EQUIP_RELIC'))
+                                    return
+                                end
+                            
+                                local group_name = TryGetProp(item_obj, 'GroupName', 'None')
+                                if group_name ~= 'Gem_Relic' then
+                                    -- 성물 젬이 아닙니다
+                                    ui.SysMsg(ClMsg('NOT_A_RELIC_GEM'))
+                                    return
+                                end
+                            
+                                local gem_type_str = TryGetProp(item_obj, 'GemType', 'None')
+                                local gem_type_num = relic_gem_type[gem_type_str]
+                                if gem_type_num == nil then
+                                    -- 존재하지 않는 성물 젬 타입
+                                    return
+                                end
+                            
+                                local gem_class_id = relic_item:GetEquipGemID(gem_type_num)
+                                if gem_class_id ~= 0 then
+                                    -- 이미 다른 젬이 장착되어 있습니다
+                                    ui.SysMsg(ScpArgMsg('RELIC_GEM_EQUIPPED_ALREADY', 'TYPE', ClMsg(gem_type_str)))
+                                    return
+                                end
+                            
+                                if inv_item.isLockState == true then
+                                    ui.SysMsg(ClMsg('MaterialItemIsLock'))
+                                    return
+                                end
+                            
+                                session.ResetItemList()
+                                session.AddItemID(relic_item:GetIESID(), 1)
+                                session.AddItemID(inv_item:GetIESID(), 1)
+                            
+                                local scp_arg_msg = 'REALLY_EQUIP_RELIC_GEM'
+                                local team_belong = TryGetProp(item_obj, 'TeamBelonging', 1)
+                                if team_belong == 0 then
+                                    scp_arg_msg = 'REALLY_EQUIP_RELIC_GEM_IGNORE_BELONGING'
+                                end
+                            
+                                local gem_name = GET_RELIC_GEM_NAME_WITH_FONT(item_obj)
+                                local msg = ScpArgMsg(scp_arg_msg, 'NAME', gem_name)
+                                local yes_scp = '_RELICMANAGER_SOCKET_GEM_ADD()'
+                                _RELICMANAGER_SOCKET_GEM_ADD()
+                            end
+                            
+                        end
+                    )
+                )
+            end
             if g.settings.dimension then
                 assert(
                     pcall(
