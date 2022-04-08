@@ -1207,6 +1207,7 @@ function EBIREMOVEDIALOG_ON_INIT(addon, frame)
             addon:RegisterMsg("FPS_UPDATE", "EBIREMOVEDIALOG_FPS_UPDATE")
 
             addon:RegisterMsg("DIALOG_ADD_SELECT", "EBIREMOVEDIALOG_DIALOG_DO_MULTIPLE")
+            acutil.setupHook(EBIREMOVEDIALOG_BEFORE_APPLIED_YESSCP_OPEN_BASIC_MSG, "BEFORE_APPLIED_YESSCP_OPEN_BASIC_MSG")
             g.latesttest = ""
             g.watchingdialog = false
             g.artsbook = false
@@ -2079,6 +2080,35 @@ function EBIREMOVEDIALOG_APPLY()
                     )
                 )
             end
+            if g.settings.channeldialog then
+                assert(
+                    pcall(
+                        function()
+                            function SELECT_ZONE_MOVE_CHANNEL(index, channelID)
+                                local zoneInsts = session.serverState.GetMap();
+                                if zoneInsts == nil or zoneInsts.pcCount == -1 then
+                                    ui.SysMsg(ClMsg("ChannelIsClosed"));
+                                    return;
+                                end
+                            
+                                local pc = GetMyPCObject();
+                                if IS_BOUNTY_BATTLE_BUFF_APPLIED(pc) == 1 then
+                                    ui.SysMsg(ClMsg("DoingBountyBattle"));
+                                    return;
+                            
+                                end
+                                --bypass comfirmation dialog
+                                -- local msg = ScpArgMsg("ReallyMoveToChannel_{Channel}", "Channel", channelID + 1);
+                                -- local scpString = string.format("RUN_GAMEEXIT_TIMER(\"Channel\", %d)", channelID);
+                                CHAT_SYSTEM("Changing channel to " .. channelID + 1);
+                                RUN_GAMEEXIT_TIMER("Channel",channelID)
+                            end
+                            
+                            
+                        end
+                    )
+                )
+            end
             if g.settings.relicgeminstalldialog then
                 assert(
                     pcall(
@@ -2273,4 +2303,26 @@ function EBIREMOVEDIALOG_APPLY()
             ERROUT(error)
         end
     }
+end
+
+function EBIREMOVEDIALOG_BEFORE_APPLIED_YESSCP_OPEN_BASIC_MSG(invItem)
+    if invItem == nil then
+        return
+    end
+    if (g.settings.brikynitedialog ==  true and invItem.type==11030012)or 
+       (g.settings.emblemfragmentdialog ==  true and invItem.type==699041) then
+        -- bypass default dialog
+        local invFrame = ui.GetFrame("inventory");	
+        local itemobj = GetIES(invItem:GetObject());
+        if itemobj == nil then
+            return;
+        end
+        invFrame:SetUserValue("REQ_USE_ITEM_GUID", invItem:GetIESID());
+        
+        REQUEST_SUMMON_BOSS_TX()
+    else
+        return BEFORE_APPLIED_YESSCP_OPEN_BASIC_MSG_OLD(invItem)
+    end
+        
+    
 end

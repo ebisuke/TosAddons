@@ -34,19 +34,19 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
             
             {
                 name = "artsbook",
-                vname = "Remove dialog of reading Arts book.",
+                vname = "Reading Arts book.",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "cardremove",
-                vname = "Remove the dialog of removing the card.",
+                vname = "Removing the card.",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "cardequip",
-                vname = "Remove the dialog of equipping the card.",
+                vname = "Equipping the card.",
                 type = "boolean",
                 default = false,
             },
@@ -58,70 +58,85 @@ EBIREMOVEDIALOGCONFIG_CONFIG_DEFS = {
             },
             {
                 name = "challengemodenextstep",
-                vname = "Remove dialog of going to next level in challengemode.",
+                vname = "Next level in challengemode.",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "challengemodecomplete",
-                vname = "Remove dialog of complete challengemode",
+                vname = "Complete challengemode",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "challengemodeabort",
-                vname = "Remove dialog of abort challengemode",
+                vname = "Abort challengemode",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "bookreading",
-                vname = "Remove dialog of reading a monster cardbook.",
+                vname = "Reading a monster cardbook.",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "timelimited",
-                vname = "Remove dialog of timelimited item in storage.",
+                vname = "Timelimited item in storage.",
                 type = "boolean",
                 default = false,
             }
             ,
             {
                 name = "dimension",
-                vname = "Remove dialog of using dimension ticket.",
+                vname = "Dimension ticket",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "idticket",
-                vname = "Remove dialog of using instance dungeon ticket.",
+                vname = "Instance dungeon ticket",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "goldroupedialog",
-                vname = "Remove confirmation dialog of Gold Roupe.And keep selected item.",
+                vname = "Gold Roupe.And keep selected item",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "normalroupedialog",
-                vname = "Remove confirmation dialog of Normal Roupe.And keep selected item.",
+                vname = "Normal Roupe.And keep selected item",
                 type = "boolean",
                 default = false,
             },
             {
                 name = "relicgemremovedialog",
-                vname = "Remove confirmation dialog when removing a relic gem.",
+                vname = "Removing a relic gem.",
                 type = "boolean",
                 default = false,
             },{
                 name = "relicgeminstalldialog",
-                vname = "Remove confirmation dialog when installing a relic gem.",
+                vname = "Installing a relic gem.",
                 type = "boolean",
                 default = false,
-            },
+            },{
+                name = "emblemfragmentdialog",
+                vname = "Emblem fragments",
+                type = "boolean",
+                default = false,
+            },{
+                name = "brikynitedialog",
+                vname = "Brikynite fragments",
+                type = "boolean",
+                default = false,
+            },{
+                name = "channeldialog",
+                vname = "Change the channel",
+                type = "boolean",
+                default = false,
+            }
         }
     }
 }
