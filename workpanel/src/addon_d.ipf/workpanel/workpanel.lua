@@ -281,18 +281,29 @@ function WORKPANEL_INITFRAME()
                     "",
                     ""
                 )
-
-                .next(
+                .upper(
                     "richtext",
-                    "label4moring",
-                    60,
-                    "{ol}Moring",
+                    "labeltelharsha",
+                    70,
+                    "{ol}Telharsha",
                     ""
                 )
-           
-                .upper("button", "btnmoringsolo", 70, "{s12}Solo:{/}"..WORKPANEL_GETINDUNENTERCOUNT(525), "WORKPANEL_ENTER_MORING_SOLO")
-                .under("button", "btnmoring", 70, "{s12}Party:{/}"..WORKPANEL_GETINDUNENTERCOUNT(608), "WORKPANEL_ENTER_MORING")
-                .next("richtext", "dummymoring", 1, "", "")
+                .under(
+                    "button",
+                    "btnbuytelharsha",
+                    70,
+                    "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_39"),
+                    "WORKPANEL_BUYITEM_TELHARSHA",
+                    WORKPANEL_GET_TICKET_PRICE("PVP_MINE_39")
+                )
+                .next("button", "btntelharsha", 50, WORKPANEL_GETINDUNENTERCOUNT(623), "WORKPANEL_ENTER_TELHARSHA")
+                .next(
+                    "richtext",
+                    "dummy_2",
+                    1,
+                    "",
+                    ""
+                )
                 .upper(
                     "richtext",
                     "label5",
@@ -713,6 +724,9 @@ end
 function WORKPANEL_BUYITEM_DELMORE()
     WORKPANEL_BUYANDUSE("PVP_MINE_87", 667)
 end
+function WORKPANEL_BUYITEM_TELHARSHA()
+    WORKPANEL_BUYANDUSE("PVP_MINE_39", 623)
+end
 function WORKPANEL_BUYANDUSE(recipeName, indunclsid, force)
     EBI_try_catch {
         try = function()
@@ -927,6 +941,18 @@ function WORKPANEL_ENTER_WITCH(rep)
         WORKPANEL_BUY_ITEM({"PVP_MINE_44"}, "WORKPANEL_ENTER_WITCH",rep)
     else
         ReqRaidAutoUIOpen(619)
+    end
+end
+function WORKPANEL_ENTER_TELHARSHA(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(623) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_39"}, "WORKPANEL_ENTER_TELHARSHA",rep)
+    else
+        ReqRaidAutoUIOpen(623)
+        ReserveScript("ReqMoveToIndun(1,0)", 1.25)
     end
 end
 function WORKPANEL_ENTER_GILTINE()
