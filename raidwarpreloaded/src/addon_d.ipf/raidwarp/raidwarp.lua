@@ -1,4 +1,4 @@
-local addonName = "RAIDWARP"
+local addonName = "RAIDWARPRELOADED"
 local author = "XINXS"
 
 _G["ADDONS"] = _G["ADDONS"] or {}
