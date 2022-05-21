@@ -802,5 +802,18 @@
             "warp",
             "raid"
         ]
+    },
+    {
+        "name": "Silent Login",
+        "file": "silentlogin",
+        "extension": "ipf",
+        "fileVersion": "v0.0.1",
+        "releaseTag": "silentlogin-v0.0.1",
+        "unicode": "📖",
+        "description": "ログイン通知無効を自動でONにします",
+        "tags": [
+            "ui",
+            "login"
+        ]
     }
 ]
