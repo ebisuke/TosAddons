@@ -1,6 +1,6 @@
 # Raid Warp Reloaded
 
-This is reloaded edition of xinsx's [Raid Warp](https://github.com/xinxs/ToS-Addons/tree/master/raidwarp).
+This is reloaded edition of xinxs's [Raid Warp](https://github.com/xinxs/ToS-Addons/tree/master/raidwarp).
 Cannot use this addon with original addon.
 
 
