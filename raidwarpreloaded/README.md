@@ -19,3 +19,5 @@ v1.0.3: Boruta added and little fix to prevents the ui closing by ESC press.
 v1.0.4: Giltine added
 
 v1.0.5: Unique Raids removed since they are removed from the game, ET-Velcoffer-Vasilisa added.
+
+v1.0.6: Removed ET,Velcoffer and White-Crow.

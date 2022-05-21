@@ -7,7 +7,7 @@ _G["ADDONS"][author][addonName] = _G["ADDONS"][author][addonName] or {}
 local g = _G["ADDONS"][author][addonName]
 g.settings = {x = 500, y = 50, mini = 0, isclose = 0};
 local settingsFileLoc = string.format("%s/settings.json", string.lower(addonName));
-local RList = {ET = 50, Velcoffer = 58, Skiaclipse = 510, Moring = 522, Witch = 620, Giltine = 628, Vasilisa = 655,Delmore=665};
+local RList = { Moring = 522, Witch = 620, Giltine = 628, Vasilisa = 655,Delmore=665};
 local acutil = require('acutil');
 
 local function spairs(t, order)
@@ -108,7 +108,7 @@ function RAIDWARP_OPENFRAME()
 		frame:SetOffset(g.settings.x, g.settings.y);
 		return
 	else
-		frame:Resize(160,292+31);
+		frame:Resize(160,230);
 	end
 	frame:SetOffset(g.settings.x, g.settings.y);
 	local i = 0;

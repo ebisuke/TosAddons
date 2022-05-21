@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uiframe name="raidwarp" x="0" y="0" width="160" height="323">
+<uiframe name="raidwarp" x="0" y="0" width="160" height="230">
     <draw drawtitlebar="false"/>
     <frame layout_gravity="center center" margin="0 0 0 0"/>
     <input moveable="true"/>
