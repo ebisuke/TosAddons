@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uiframe name="raidwarp" x="0" y="0" width="160" height="323">
+    <draw drawtitlebar="false"/>
+    <frame layout_gravity="center center" margin="0 0 0 0"/>
+    <input moveable="true"/>
+    <layer layerlevel="80"/>
+    <skin frameskin="black_box_op20"/>
+    <option visible="true" closebutton="false" piptype="right" autoopen="true" hideable="false"/>
+    <controls>
+        <richtext name="TitleText" rect="0 0 32 22" margin="0 3 78 0" layout_gravity="right top" format="{@st43}{s20}/rw{/}"/>
+        <button name="close" rect="0 0 24 24" margin="0 0 51 0" image="testclose_button" layout_gravity="right top" LBtnUpScp="RAIDWARP_CLOSEFRAME"/>
+		<button name="help" rect="0 0 24 24" margin="0 0 26 0" image="testquesten_button" layout_gravity="right top" LBtnUpScp="RAIDWARP_HELP"/>
+		<button name="minimize" rect="0 0 24 24" margin="0 0 1 0" layout_gravity="right top" image="testsmall_button" skinchange="testsmall_button/reduction_simple" LBtnUpScp="RAIDWARP_MINIMIZE"/>
+    </controls>
+</uiframe>

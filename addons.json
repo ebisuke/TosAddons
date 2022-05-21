@@ -788,5 +788,19 @@
             "kitchen",
             "balloon"
         ]
+    },
+    {
+        "name": "Raid Warp Reloaded",
+        "file": "raidwarpreloaded",
+        "extension": "ipf",
+        "fileVersion": "v1.0.3",
+        "releaseTag": "raidwarpreloaded-v1.0.3",
+        "unicode": "📖",
+        "description": "レイド開始地点に移動するボタンを表示するアドオンです",
+        "tags": [
+            "ui",
+            "warp",
+            "raid"
+        ]
     }
 ]
