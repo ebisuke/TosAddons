@@ -247,7 +247,7 @@ function INSTANTCC_ISHIDELOGIN()
     local result = INSTANTCC_ISHIDELOGIN_OLD()
 
     INSTANTCC_LOAD_SETTINGS()
-
+    firsttouch=false
     ReserveScript("INSTANTCC_ISHIDELOGIN_DELAY()", 0.01)
 
     return result
@@ -255,6 +255,9 @@ end
 
 function INSTANTCC_ISHIDELOGIN_DELAY()
     ininfo=nil
+    g.settings={}
+    INSTANTCC_LOAD_SETTINGS()
+    firsttouch = true
     if g.settings.do_cc then
         suppressupdate = true
         ui.DestroyFrame("barrack_charlist")
@@ -332,10 +335,16 @@ function INSTANTCC_GetBarrackSystem(actor)
             if suppressupdate then
                 return
             end
+            if INSTANTCC_GetCurrentLayer()==nil then
+                return
+            end
+            local aidx = session.loginInfo.GetAID();
+            local myHandle = session.GetMyHandle();
+            local myGuildIdx = 0
+            local myTeamName = info.GetFamilyName(myHandle)
             --ui.SysMsg("hoge")
             if firsttouch == false then
-                INSTANTCC_LOAD_SETTINGS()
-                firsttouch = true
+                return
             end
             local brk = INSTANTCC_GetBarrackSystem_OLD(actor)
             local key = brk:GetCIDStr()
@@ -359,12 +368,14 @@ function INSTANTCC_GetBarrackSystem(actor)
             local scrollBox = bcframe:GetChild("scrollBox")
             local info = {
                 name = actor:GetName(),
-                layer = current_layer,
+                layer = INSTANTCC_GetCurrentLayer(),
                 cid = key,
                 job = jobid,
                 gender = gender,
                 level = actor:GetLv(),
-                order = scrollBox:GetChildCount()
+                order = scrollBox:GetChildCount(),
+                server=GetServerGroupID(),
+                aid=aidx,
             }
             local found = false
             for i = 1, #g.settings.charactors do
@@ -378,6 +389,26 @@ function INSTANTCC_GetBarrackSystem(actor)
             else
                 g.settings.charactors[found] = info
             end
+
+            --cleanup
+            local continue=false
+            repeat
+                continue=false
+                for i = 1, #g.settings.charactors do
+
+                    if g.settings.charactors[i].layer == INSTANTCC_GetCurrentLayer() and
+                    g.settings.charactors[i].aid==aidx and
+                    g.settings.charactors[i].server==GetServerGroupID() then
+                        local bpc = barrack.GetBarrackPCInfoByCID(g.settings.charactors[i].cid)
+                        if bpc==nil then
+                            table.remove(g.settings.charactors, i)
+                            continue=true
+                            break
+                        end
+                    end
+                end
+                
+            until continue==false
 
             --sort
 
@@ -403,8 +434,11 @@ function INSTANTCC_GetBarrackSystem(actor)
 end
 
 function INSTANTCC_SAVE_SETTINGS()
-    local myAID = session.loginInfo.GetAID()
-    g.settingsFileLoc = string.format("../addons/%s/" .. myAID .. ".json", addonNameLower)
+    local aidx = session.loginInfo.GetAID();
+    local myHandle = session.GetMyHandle();
+	local myGuildIdx = 0
+	local myTeamName = info.GetFamilyName(myHandle)
+    g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
     --CAMPCHEF_SAVETOSTRUCTURE()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 end
@@ -415,10 +449,11 @@ function INSTANTCC_DEFAULT_SETTINGS()
     }
 end
 function INSTANTCC_LOAD_SETTINGS()
-    local myAID = session.loginInfo.GetAID()
-    g.settingsFileLoc = string.format("../addons/%s/" .. myAID .. ".json", addonNameLower)
+
+    g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
     EBI_try_catch {
         try = function()
+            g.settings={}
             INSTANTCC_DEFAULT_SETTINGS()
             local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
 
@@ -431,7 +466,57 @@ function INSTANTCC_LOAD_SETTINGS()
         end
     }
 end
+function INSTANTCC_GetCurrentLayer()
+    local frame = ui.GetFrame("barrack_charlist");
+    local layer= frame:GetUserIValue("SelectBarrackLayer");
+    if layer==0 then
+        return nil
+    end
+    return layer
+end
+function INSTANTCC_GetMyAccount()
 
+    if ui.GetFrame('barrack_charlist')==nil or ui.GetFrame('barrack_charlist'):IsVisible()==0 or suppressupdate then
+        
+    elseif INSTANTCC_GetCurrentLayer()~=nil and firsttouch then
+
+        local modified=false
+        --cleanup
+        local continue=false
+        repeat
+            continue=false
+            local aidx = session.loginInfo.GetAID();
+            local myHandle = session.GetMyHandle();
+            local myGuildIdx = 0
+            local myTeamName = info.GetFamilyName(myHandle)
+            for i = 1, #g.settings.charactors do
+
+                if g.settings.charactors[i].layer == INSTANTCC_GetCurrentLayer() and
+                g.settings.charactors[i].aid==aidx and
+                g.settings.charactors[i].server==GetServerGroupID()
+                 then
+                    local bpc = barrack.GetBarrackPCInfoByCID(g.settings.charactors[i].cid)
+                    if bpc==nil then
+                        table.remove(g.settings.charactors, i)
+                        continue=true
+                        modified=true
+                        break
+                    end
+                end
+            end
+            
+        until continue==false
+        if modified then
+            INSTANTCC_SAVE_SETTINGS()
+        end
+    end
+    return INSTANTCC_GetMyAccount_OLD()
+end
+if INSTANTCC_GetMyAccount_OLD==nil and session.barrack.GetMyAccount~= INSTANTCC_GetBarrackSystem then
+    INSTANTCC_GetMyAccount_OLD=session.barrack.GetMyAccount
+    session.barrack.GetMyAccount=INSTANTCC_GetMyAccount
+
+end
 if INSTANTCC_ISHIDELOGIN_OLD == nil and barrack.IsHideLogin ~= INSTANTCC_ISHIDELOGIN then
     INSTANTCC_ISHIDELOGIN_OLD = barrack.IsHideLogin
     barrack.IsHideLogin = INSTANTCC_ISHIDELOGIN

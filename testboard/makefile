@@ -1,5 +1,5 @@
 VERSION=0.0.1
-NAME=testboardß
+NAME=testboard
 
 
 include ../_makefile/common.mk

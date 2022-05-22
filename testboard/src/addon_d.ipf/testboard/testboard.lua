@@ -114,7 +114,7 @@ function TESTBOARD_ON_INIT(addon, frame)
             end
             --addon:RegisterMsg("ZONE_TRAFFICS", "TESTBOARD_ON_ZONE_TRAFFICS");
 
-            --addon:RegisterMsg('BUFF_ADD', 'TESTBOARD_BUFF_ON_MSG');
+            addon:RegisterMsg("BUFF_ADD", "TESTBOARD_BUFF_ON_MSG")
             --addon:RegisterMsg('BUFF_REMOVE', 'TESTBOARD_BUFF_ON_MSG');
             --addon:RegisterMsg('BUFF_UPDATE', 'TESTBOARD_BUFF_ON_MSG');
             --  --コンテキストメニュー
@@ -182,26 +182,18 @@ function C_SR_EFT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, 
     effect.PlayGroundEffect(self, eft, scl, x, y, z, lifeTime, key, radAngle, delayTime)
 end
 function EFT_AND_HIT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
-
     CHAT_SYSTEM(tostring(hitInfo))
-
 end
 function SKILL_USE_SCRIPT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
-
-    CHAT_SYSTEM("USESCP"..tostring(hitInfo))
-
+    CHAT_SYSTEM("USESCP" .. tostring(hitInfo))
 end
 
 function SCR_COMMON_POST_HIT(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
-
     CHAT_SYSTEM(tostring(self))
-
 end
 
 function SCR_COMMON_POST_KILL(self, target, sklLevel, hitInfo, hitIndex, eft, scl, x, y, z, lifeTime, delayTime)
-
     CHAT_SYSTEM(tostring(self))
-
 end
 
 -- done , 해당 함수 내용은 cpp로 이전되었습니다. 변경 사항이 있다면 반드시 프로그램팀에 알려주시기 바랍니다.
@@ -436,11 +428,46 @@ end
 function TESTBOARD_ON_TIMER(frame)
     EBI_try_catch {
         try = function()
-            local target = session.GetTargetHandle()
-
-            if not target then
-                return
+            local buff = info.GetBuff(session.GetMyHandle(), 4644)
+            local skillInfo = session.GetSkill(100104, true)
+            local skillInfo2 = session.GetSkill(100105, true)
+            local skillInfo3 = session.GetSkill(100106, true)
+            if skillInfo or skillInfo2 or skillInfo3 then
+                if skillInfo then
+                    local ies = GetIES(skillInfo:GetObject(), true)
+                    local real = GetSkill(GetMyPCObject(), ies.ClassName)
+                    local cd = --CHAT_SYSTEM("SHAKE_FOOT" .. buff.buffID .. "/" .. buff.time)
+                    CHAT_SYSTEM(
+                        "SHAKE_FOOT VIVORA" ..
+                            skillInfo:GetCurrentCoolDownTime() .. "/" .. ies.CoolDown .. ies.ClassName
+                    )
+                end
+                if skillInfo2 then
+                    local ies = GetIES(skillInfo2:GetObject(), true)
+                    local real = GetSkill(GetMyPCObject(), ies.ClassName)
+                    --CHAT_SYSTEM("SHAKE_FOOT" .. buff.buffID .. "/" .. buff.time)
+                    CHAT_SYSTEM(
+                        "SHAKE_FOOT VIVORA" ..
+                            skillInfo2:GetCurrentCoolDownTime() .. "/" .. ies.CoolDown .. "/" .. ies.ClassName
+                    )
+                end
+                if skillInfo3 then
+                    local ies = GetIES(skillInfo3:GetObject(), true)
+                    local real = GetSkill(GetMyPCObject(), ies.ClassName)
+                    --CHAT_SYSTEM("SHAKE_FOOT" .. buff.buffID .. "/" .. buff.time)
+                    CHAT_SYSTEM(
+                        "SHAKE_FOOT VIVORA" ..
+                            skillInfo3:GetCurrentCoolDownTime() ..
+                                "/" .. skillInfo3:GetRemainRefreshTimeMS() .. ies.ClassName
+                    )
+                end
             end
+
+            -- local target = session.GetTargetHandle()
+
+            -- if not target then
+            --     return
+            -- end
 
             -- local stat = info.GetStat(target);
             --CHAT_SYSTEM("HP:" .. stat.HP)
@@ -460,39 +487,142 @@ function TESTBOARD_ON_TIMER(frame)
     }
 end
 -- done , 해당 함수 내용은 cpp로 이전되었습니다. 변경 사항이 있다면 반드시 프로그램팀에 알려주시기 바랍니다.
-function SCR_GET_Heal_Ratio(skill)   
-    print(tostring(skill))     
+function SCR_GET_Heal_Ratio(skill)
+    print(tostring(skill))
     print(tostring(skill.HitScript))
-    skill.HitScript="SKILL_USE_SCRIPT"
-    local pc = GetSkillOwner(skill);
-    local pcINT = TryGetProp(pc, "INT");
+    skill.HitScript = "SKILL_USE_SCRIPT"
+    local pc = GetSkillOwner(skill)
+    local pcINT = TryGetProp(pc, "INT")
     if pcINT == nil then
-        pcINT = 1;
+        pcINT = 1
     end
-    
-    local pcMNA = TryGetProp(pc, "MNA");
-    if pcMNA == nil then
-        pcMNA = 1;
-    end
-    
-    local value = (pcINT + pcMNA) * 2;
-    
-    return math.floor(value);
-end
 
-function TESTBOARD_TEST()
+    local pcMNA = TryGetProp(pc, "MNA")
+    if pcMNA == nil then
+        pcMNA = 1
+    end
+
+    local value = (pcINT + pcMNA) * 2
+
+    return math.floor(value)
+end
+function TESTBOARD_BUFF_ON_MSG(frame, msg, argStr, argNum)
+    local buff = info.GetBuff(session.GetMyHandle(), 4669) or info.GetBuff(session.GetMyHandle(), 4644)
+    if buff == nil then
+        return 0
+    end
+    CHAT_SYSTEM("SHAKE_FOOT" .. buff.buffID .. "/" .. buff.time)
+end
+local function setskill(slot, skill)
+    local skl = skill
+    local icon = CreateIcon(slot)
+    if skl == nil then
+        if icon ~= nil then
+            tolua.cast(icon, "ui::CIcon")
+            icon:SetTooltipNumArg(0)
+        end
+        slot:ClearIcon()
+
+        return
+    end
+    local sklObj = GetIES(skl:GetObject());
+    local type=sklObj.ClassID
+
+   
+    if IS_NEED_CLEAR_SLOT(skl, type) == true then
+        if icon ~= nil then
+            tolua.cast(icon, "ui::CIcon")
+            icon:SetTooltipNumArg(0)
+        end
+        slot:ClearIcon()
+
+        return
+    end
+    local imageName = "icon_" .. GetClassString("Skill", type, "Icon")
+
+    icon:SetOnCoolTimeUpdateScp("ICON_UPDATE_SKILL_COOLDOWN")
+    icon:SetEnableUpdateScp("ICON_UPDATE_SKILL_ENABLE")
+    icon:SetColorTone("FFFFFFFF")
+    icon:ClearText()
+    if imageName ~= "" then
+        if iesID == nil then
+            iesID = ""
+        end
+
+        local category = category
+        local type = type
+
+        slot:SetPosTooltip(0, 0)
+      
+
+        icon:SetTooltipType("skill")
+        local skl = session.GetSkill(type)
+        if skl ~= nil then
+            iesID = skl:GetIESID()
+        end
+
+        -- expand tooltip
+        local sklObj = GetClassByType("Skill", type)
+        if sklObj ~= nil then
+            if TryGetProp(sklObj, "ExpandSkillTooltip", "None") ~= "None" then
+                icon:SetTooltipType("skill_expand")
+            end
+        end
+    
+
+        icon:Set(imageName, category, type, 0, iesID)
+        icon:SetTooltipNumArg(type)
+        icon:SetTooltipStrArg("quickslot")
+        icon:SetTooltipIESID(iesID)
+    
+
+        INIT_QUICKSLOT_SLOT(slot, icon)
+        local sendPacket = 1
+        if false == sendSavePacket then
+            sendPacket = 0
+        end
+
+        local icon = slot:GetIcon()
+        if icon ~= nil then
+            icon:SetDumpArgNum(slot:GetSlotIndex())
+        end
+    else
+        slot:EnableDrag(0)
+    end
+end
+function TESTBOARD_TEST(frame)
     EBI_try_catch {
-     try = function()
-         
-             dofile("\\\\theseventhbody.local\\E\\TosProject\\TosAddons\\testboard\\src\\addon_d.ipf\\testboard\\testboard.lua");
-             debug.ToggleCell()
-             --     DAMAGE_METER_UI_OPEN(ui.GetFrame("damage_meter"),nil,"0/1",100000);
-        --     --local cls=GetClassByStrProp("Skill", "ClassName", "Cleric_Heal");
-        --     --local ssss=geSkillTable.Get(cls.ClassName);
-        --     local ssss=GetClass("Skill","Exorcist_Entity");
-        --     --ssss= GetIES(ssss:GetObject())
-        --     print(tostring(ssss.HitScript))
-        --     ssss.HitScript="SKILL_USE_SCRIPT"
+        try = function()
+            local frame = ui.GetFrame(g.framename)
+
+            dofile(
+                "\\\\theseventhbody.local\\E\\TosProject\\TosAddons\\testboard\\src\\addon_d.ipf\\testboard\\testboard.lua"
+            )
+            local slot = frame:CreateOrGetControl("slot", "saaa", 120, 200, 48, 48)
+            local slot2 = frame:CreateOrGetControl("slot", "saaa2", 170, 200, 48, 48)
+            local slot3 = frame:CreateOrGetControl("slot", "saaa3", 220, 200, 48, 48)
+            AUTO_CAST(slot)
+            AUTO_CAST(slot2)
+            AUTO_CAST(slot3)
+
+            slot:SetSkinName("invenslot2")
+            slot2:SetSkinName("invenslot2")
+            slot3:SetSkinName("invenslot2")
+
+            setskill(slot, session.GetSkill(100104, true))
+            setskill(slot2, session.GetSkill(100105, true))
+            setskill(slot3, session.GetSkill(100106, true))
+
+            slot:ShowWindow(1)
+            slot2:ShowWindow(1)
+            slot3:ShowWindow(1)
+            --     DAMAGE_METER_UI_OPEN(ui.GetFrame("damage_meter"),nil,"0/1",100000);
+            --     --local cls=GetClassByStrProp("Skill", "ClassName", "Cleric_Heal");
+            --     --local ssss=geSkillTable.Get(cls.ClassName);
+            --     local ssss=GetClass("Skill","Exorcist_Entity");
+            --     --ssss= GetIES(ssss:GetObject())
+            --     print(tostring(ssss.HitScript))
+            --     ssss.HitScript="SKILL_USE_SCRIPT"
             --OPEN_PERSONAL_SHOP_REGISTER()
             --DAMAGE_METER_UI_OPEN(ui.GetFrame('damage_meter'),nil,'0/PRACTICE',1)
             --geMGame.ReqMGameCmd("WEEKLY_BOSS_RAID_01",2)

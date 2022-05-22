@@ -97,11 +97,16 @@ function INSTANTCC_APPS_TRY_MOVE_BARRACK3(a,b,c,d,bno)
             ui.AddContextMenuItem(context, "Barrack2", "INSTANTCC_APPS_TRY_MOVE_BARRACK(nil,nil,nil,nil,2)")
             ui.AddContextMenuItem(context, "Barrack3", "INSTANTCC_APPS_TRY_MOVE_BARRACK(nil,nil,nil,nil,3)")
             ui.AddContextMenuItem(context, "------", "None")
-
+            local aidx = session.loginInfo.GetAID();
+            local myHandle = session.GetMyHandle();
+            local myGuildIdx = 0
+            local myTeamName = info.GetFamilyName(myHandle)
        
             for i = 1, #g.settings.charactors do
 
-                if g.settings.charactors[i].layer==bno then
+                if g.settings.charactors[i].layer==bno  and
+                g.settings.charactors[i].aid==aidx and
+                g.settings.charactors[i].server==GetServerGroupID() then
                     local char=g.settings.charactors[i]
 
                     local pcName = char.name
@@ -136,8 +141,11 @@ function INSTANTCC_DO_MOVE_BARRACK()
 end
 
 function INSTANTCC_SAVE_SETTINGS()
-    local myAID = session.loginInfo.GetAID();
-    g.settingsFileLoc = string.format("../addons/%s/"..myAID..".json", addonNameLower)
+    local aidx = session.loginInfo.GetAID();
+    local myHandle = session.GetMyHandle();
+	local myGuildIdx = 0
+	local myTeamName = info.GetFamilyName(myHandle)
+    g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
     --CAMPCHEF_SAVETOSTRUCTURE()
     acutil.saveJSON(g.settingsFileLoc, g.settings)
 end
@@ -158,11 +166,14 @@ function INSTANTCC_DEFAULT_SETTINGS()
 
 end
 function INSTANTCC_LOAD_SETTINGS()
-    local myAID = session.loginInfo.GetAID();
-    g.settingsFileLoc = string.format("../addons/%s/"..myAID..".json", addonNameLower)
+    local aidx = session.loginInfo.GetAID();
+    local myHandle = session.GetMyHandle();
+	local myGuildIdx = 0
+	local myTeamName = info.GetFamilyName(myHandle)
+    g.settingsFileLoc = string.format("../addons/%s/settings.json", addonNameLower)
     EBI_try_catch{
         try = function()
-
+            g.settings={}
             local t, err = acutil.loadJSON(g.settingsFileLoc, g.settings)
             if err then
                 --設定ファイル読み込み失敗時処理
