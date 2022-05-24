@@ -815,5 +815,20 @@
             "ui",
             "login"
         ]
+    },
+    {
+        "name": "Instant CC",
+        "file": "instantcc",
+        "extension": "ipf",
+        "fileVersion": "v0.0.4",
+        "releaseTag": "instantcc-v0.0.4",
+        "unicode": "📖",
+        "description": "キャラクタ変更を簡易に行うためのアドオンです",
+        "tags": [
+            "ui",
+            "charactor",
+            "change",
+            "cc"
+        ]
     }
 ]
