@@ -385,7 +385,7 @@ function INSTANTCC_GetBarrackSystem(actor)
                 job = jobid,
                 gender = gender,
                 level = actor:GetLv(),
-                order = scrollBox:GetChildCount(),
+                order = order,
                 server=GetServerGroupID(),
                 aid=aidx,
             }
