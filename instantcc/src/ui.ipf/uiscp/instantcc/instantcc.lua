@@ -359,13 +359,25 @@ function INSTANTCC_GetBarrackSystem(actor)
                 end
                 return
             end
+            local bcframe = ui.GetFrame("barrack_charlist")
+            local scrollBox = bcframe:GetChild("scrollBox")
+            local order=scrollBox:GetChildCount()
+            for i=0, scrollBox:GetChildCount()-1 do
+                local child = scrollBox:GetChildByIndex(i);
+		        if string.find(child:GetName(), 'char_') ~= nil then
+                    local guid = child:GetUserValue("CID");
+                    if guid==key then
+                        order=i
+                        break
+                    end
+                end	
+            end
+            local pcInfo=session.barrack.GetMyAccount():GetByStrCID(key);
             local apc = bpc:GetApc()
             local gender = apc:GetGender()
-            local jobid = apc:GetJob()
-            local order
-            local bcframe = ui.GetFrame("barrack_charlist")
+            local jobid =pcInfo:GetRepID()
+         
 
-            local scrollBox = bcframe:GetChild("scrollBox")
             local info = {
                 name = actor:GetName(),
                 layer = INSTANTCC_GetCurrentLayer(),
