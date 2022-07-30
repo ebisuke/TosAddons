@@ -342,8 +342,33 @@ function WORKPANEL_INITFRAME()
                     "",
                     ""
                 )
-                .upper("button", "btnvasilissasolo", 100,  "{s12}Solo:{/}"..WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA_SOLO")
-                .under("button", "btnvasilissaparty", 100,  "{s12}Party:{/}"..WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA")
+                .upper("button", "btnvasilissasolo", 70,  "{s12}Solo:{/}"..WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA_SOLO")
+                .under("button", "btnvasilissaparty", 70,  "{s12}PT:{/}"..WORKPANEL_GETINDUNENTERCOUNT(656), "WORKPANEL_ENTER_VASILISSA")
+                .next(
+                    "richtext",
+                    "dummy228782",
+                    1,
+                    "",
+                    ""
+                )
+                .upper(
+                    "richtext",
+                    "label988",
+                    70,
+                    "{ol}Jellyzele",
+                    ""
+                )
+                
+                .next(
+                    "richtext",
+                    "dummy228783",
+                    1,
+                    "",
+                    ""
+                )
+                .upper("button", "btnjellyzele", 70,  "{s12}{/}Solo:"..WORKPANEL_GETINDUNENTERCOUNT(672), "WORKPANEL_ENTER_JELLYZELE_SOLO")
+                .under("button", "btnjellyzeleauto", 70,  "{s12}{/}Auto:"..WORKPANEL_GETINDUNENTERCOUNT(671), "WORKPANEL_ENTER_JELLYZELE")
+               
                 .next(
                     "richtext",
                     "dummy3",
@@ -408,14 +433,14 @@ function WORKPANEL_INITFRAME()
                 .upper(
                     "richtext",
                     "label88",
-                    90,
-                    "{ol}{s12}Earring{/}:Left ".. GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 661).PlayPerResetType),
+                    70,
+                    "{ol}{s12}Earring:{s10}Lft {/}".. GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 661).PlayPerResetType),
                     ""
                 )
                 .under(
                     "button",
                     "btnearringweekly",
-                    90,
+                    70,
                     "{ol}W " .. WORKPANEL_TICKET_STR("PVP_MINE_85"),
                     "WORKPANEL_BUYITEM_EARRING",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_85")
@@ -497,8 +522,8 @@ function WORKPANEL_INITFRAME()
                     "",
                     ""
                 )
-                .next("richtext", "label8", 70, "{ol}Assister", "")
-                .next(
+                .upper("richtext", "label8", 70, "{ol}Assister", "")
+                .under(
                     "button",
                     "btnassister",
                     50,
@@ -549,7 +574,7 @@ function WORKPANEL_INITFRAME()
                     "button",
                     "btnrefresh",
                     50,
-                    "Refresh",
+                    "{s12}Refresh",
                     "WORKPANEL_REFRESH"
                 )
             end
@@ -1015,6 +1040,39 @@ function WORKPANEL_ENTER_VASILISSA_SOLO(rep)
         WORKPANEL_BUY_ITEM({"PVP_MINE_53"}, "WORKPANEL_ENTER_VASILISSA_SOLO",rep)
     else
         ReqRaidAutoUIOpen(657)
+    end
+end
+function WORKPANEL_ENTER_JELLYZELE(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(671) == 0 then
+       
+    else
+        ReqRaidAutoUIOpen(671)
+    end
+end
+function WORKPANEL_ENTER_JELLYZELE_SOLO(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(672) == 0 then
+       
+    else
+        ReqRaidAutoUIOpen(672)
+    end
+end
+function WORKPANEL_ENTER_JELLYZELE_HARD(rep)
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(670) == 0 then
+       
+    else
+        ReqRaidAutoUIOpen(670)
     end
 end
 function WORKPANEL_ENTER_ASSISTER()
