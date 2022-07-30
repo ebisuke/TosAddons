@@ -23,3 +23,5 @@ v1.0.5: Unique Raids removed since they are removed from the game, ET-Velcoffer-
 v1.0.6: Removed ET,Velcoffer and White-Crow.
 
 v1.0.7: Fixed a bug that dont save the settings.
+
+v1.0.8: Added jellyzele raid.

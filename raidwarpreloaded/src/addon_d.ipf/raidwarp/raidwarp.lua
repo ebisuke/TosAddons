@@ -7,7 +7,7 @@ _G["ADDONS"][author][addonName] = _G["ADDONS"][author][addonName] or {}
 local g = _G["ADDONS"][author][addonName]
 g.settings = {x = 500, y = 50, mini = 0, isclose = 0};
 local settingsFileLoc = string.format("%s/settings.json", string.lower(addonName));
-local RList = { Moring = 522, Witch = 620, Giltine = 628, Vasilisa = 655,Delmore=665};
+local RList = { Moring = 522, Witch = 620, Giltine = 628, Vasilisa = 655,Delmore=665,Jellyzele=670};
 local acutil = require('acutil');
 
 local function spairs(t, order)
@@ -108,7 +108,7 @@ function RAIDWARP_OPENFRAME()
 		frame:SetOffset(g.settings.x, g.settings.y);
 		return
 	else
-		frame:Resize(160,230);
+		frame:Resize(160,260);
 	end
 	frame:SetOffset(g.settings.x, g.settings.y);
 	local i = 0;
@@ -186,5 +186,6 @@ function RAIDWARP_HELP()
 	text = text .. "{s18}/rw Vasilisa{/}{nl} {s16}Saints Sacellum (Woods of the Linked Bridges){nl} {nl}";
 	text = text .. "{s18}/rw Boruta{/}{nl} {s16}Battle in Sulivinas Lair(Vedas Plateau)";
 	text = text .. "{s18}/rw Delmore{/}{nl} {s16}Battle in Delmore(Delmore Garden)";
+	text = text .. "{s18}/rw Jellyzele{/}{nl} {s16}Battle in Jellyzele(Igti Coast)";
 	return ui.MsgBox(text,"","Nope");
 end
