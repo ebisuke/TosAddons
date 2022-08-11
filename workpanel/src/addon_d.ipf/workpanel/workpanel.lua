@@ -199,7 +199,16 @@ function WORKPANEL_INITFRAME()
                 frame:Resize(50, 40)
 
                 --frame:SetMargin(0,0,0,0)
-                WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, "<<", "WORKPANEL_TOGGLE_PANEL")
+                WORKPANEL_CREATECONTROL(frame)
+                .upper("button", "btntoggleopen", 50, "<<", "WORKPANEL_TOGGLE_PANEL")
+                .next(
+                    "richtext",
+                    "dummy022",
+                    1,
+                    "",
+                    ""
+                )
+                
             else
                 frame:Resize(1920, 40)
                 local aObj = GetMyAccountObj()
@@ -208,8 +217,30 @@ function WORKPANEL_INITFRAME()
                     pvpmine=0
                 end
                 
-                WORKPANEL_CREATECONTROL(frame).next("button", "btntoggleopen", 50, ">>", "WORKPANEL_TOGGLE_PANEL").
-                upper(
+                WORKPANEL_CREATECONTROL(frame)
+                .next(
+                    "richtext",
+                    "dummy022",
+                    1,
+                    "",
+                    ""
+                )
+                .upper("button", "btntoggleopen", 50, ">>", "WORKPANEL_TOGGLE_PANEL")
+                .under(
+                    "button",
+                    "btnrefresh",
+                    50,
+                    "{s12}Refre{nl}sh",
+                    "WORKPANEL_REFRESH"
+                )
+                .next(
+                    "richtext",
+                    "dummy0",
+                    1,
+                    "",
+                    ""
+                )
+                .upper(
                     "richtext",
                     "labelpvpicon",
                     60,
@@ -319,8 +350,22 @@ function WORKPANEL_INITFRAME()
                     "WORKPANEL_BUYITEM_GILTINE",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_84")
                 )
-                .next("button", "btngiltineparty", 50,WORKPANEL_GETINDUNENTERCOUNT(635), "WORKPANEL_ENTER_GILTINE")
-                .upper(
+                .next(
+                    "richtext",
+                    "dummy_212",
+                    1,
+                    "",
+                    ""
+                )
+                .upper("button", "btngiltinesolo", 60,"{s14}Solo:"..WORKPANEL_GETINDUNENTERCOUNT(669), "WORKPANEL_ENTER_GILTINE_SOLO")
+                .under("button", "btngiltineparty", 60,"{s14}PT:"..WORKPANEL_GETINDUNENTERCOUNT(635), "WORKPANEL_ENTER_GILTINE")
+                .next(
+                    "richtext",
+                    "dummy_213",
+                    1,
+                    "",
+                    ""
+                ).upper(
                     "richtext",
                     "label6",
                     70,
@@ -420,16 +465,28 @@ function WORKPANEL_INITFRAME()
                                 ),
                     "WORKPANEL_ENTER_RELIC"
                 )
-                .next(
+                .next("richtext", "dummy441", 1, "", "")
+                .upper(
+                    "button",
+                    "btnrelichardsolo",
+                    90,
+                    "{s11}Hd Solo:{s12}Lft " ..
+                        GET_CURRENT_ENTERANCE_COUNT(
+                            GetClassByType("Indun", WORKPANEL_GET_RELIC_HARD_SOLO_CLSID()).PlayPerResetType
+                        ),
+                    "WORKPANEL_ENTER_RELIC_HARD_SOLO"
+                )
+                .under(
                     "button",
                     "btnrelichard",
-                    60,
-                    "{s12}Hard:{/}:{nl}Left " ..
+                    90,
+                    "{s11}Hd PT:{s12}Lft" ..
                         GET_CURRENT_ENTERANCE_COUNT(
                             GetClassByType("Indun", WORKPANEL_GET_RELIC_HARD_CLSID()).PlayPerResetType
                         ),
                     "WORKPANEL_ENTER_RELIC_HARD"
                 )
+                .next("richtext", "dummy442", 1, "", "")
                 .upper(
                     "richtext",
                     "label88",
@@ -563,6 +620,7 @@ function WORKPANEL_INITFRAME()
                     "WORKPANEL_BUYITEM_HEROIC",
                     WORKPANEL_GET_TICKET_PRICE("PVP_MINE_54")
                 )
+
                 .next(
                     "button",
                     "btnheroic",
@@ -570,13 +628,8 @@ function WORKPANEL_INITFRAME()
                     "Left:" .. GET_CURRENT_ENTERANCE_COUNT(GetClassByType("Indun", 652).PlayPerResetType),
                     "WORKPANEL_ENTER_HEROIC"
                 )
-                .next(
-                    "button",
-                    "btnrefresh",
-                    50,
-                    "{s12}Refresh",
-                    "WORKPANEL_REFRESH"
-                )
+              
+                
             end
             g.disablevelnicescoreboard = false
         end,
@@ -992,7 +1045,18 @@ function WORKPANEL_ENTER_GILTINE()
     end
 
 end
+function WORKPANEL_ENTER_GILTINE_SOLO()
+    if WORKPANEL_ISINCITY() == false then
+        ui.SysMsg("Cannot use outside city.")
+        return
+    end
+    if not rep and WORKPANEL_GETREMAININDUNENTERCOUNT(669) == 0 then
+        WORKPANEL_BUY_ITEM({"PVP_MINE_84"}, "WORKPANEL_ENTER_GILTINE_SOLO",rep)
+    else
+        ReqRaidAutoUIOpen(669)
+    end
 
+end
 function WORKPANEL_ENTER_VELNICE(rep)
     if WORKPANEL_ISINCITY() == false then
         ui.SysMsg("Cannot use outside city.")
@@ -1104,6 +1168,22 @@ function WORKPANEL_GET_RELIC_HARD_CLSID()
     local cls = GetClass("Indun", auto[mapCls.ClassName])
     return cls.ClassID
 end
+function WORKPANEL_GET_RELIC_HARD_SOLO_CLSID()
+    local pattern_info = mythic_dungeon.GetPattern(mythic_dungeon.GetCurrentSeason())
+    local mapCls = GetClassByType("Map", pattern_info.mapID)
+    local auto = {
+        Mythic_firetower = "Mythic_FireTower_Auto_SoloHard",
+        Mythic_startower = "Mythic_startower_Auto_SoloHard",
+        Mythic_thorn1 = "Mythic_thorn2_Auto_Hard",  --no use
+        Mythic_castle = "Mythic_castle_Auto_SoloHard"
+    }
+    if mapCls.ClassName == "Mythic_thorn1" then
+        ERROUT("ERR:Mythic_thorn1 selected. May be bugged.")
+        
+    end
+    local cls = GetClass("Indun", auto[mapCls.ClassName])
+    return cls.ClassID
+end
 function WORKPANEL_ENTER_RELIC(rep)
     EBI_try_catch {
         try = function()
@@ -1168,6 +1248,18 @@ function WORKPANEL_ENTER_RELIC_HARD(rep)
             }
             
             local cls = GetClass("Indun", auto[mapCls.ClassName])
+            ReqRaidAutoUIOpen(cls.ClassID)
+        end,
+        catch = function(error)
+            ERROUT(error)
+        end
+    }
+end
+function WORKPANEL_ENTER_RELIC_HARD_SOLO(rep)
+    EBI_try_catch {
+        try = function()
+     
+            local cls = GetClassByType("Indun", WORKPANEL_GET_RELIC_HARD_SOLO_CLSID())
             ReqRaidAutoUIOpen(cls.ClassID)
         end,
         catch = function(error)
