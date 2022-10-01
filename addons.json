@@ -517,22 +517,6 @@
         ]
     },
     {
-        "name": "advancedstart",
-        "file": "advancedstart",
-        "extension": "ipf",
-        "fileVersion": "v0.0.3",
-        "releaseTag": "advancedstart-v0.0.3",
-        "unicode": "📖",
-        "description": "スタート画面・バラック画面で一部操作をキーボード・ジョイスティックで行えるようにします。 ",
-        "tags": [
-            "ui",
-            "start",
-            "login",
-            "barrack",
-            "joystick"
-        ]
-    },
-    {
         "name": "cursorforhighres",
         "file": "cursorforhighres",
         "extension": "ipf",
@@ -804,24 +788,11 @@
         ]
     },
     {
-        "name": "Silent Login",
-        "file": "silentlogin",
-        "extension": "ipf",
-        "fileVersion": "v0.0.1",
-        "releaseTag": "silentlogin-v0.0.1",
-        "unicode": "📖",
-        "description": "ログイン通知無効を自動でONにします",
-        "tags": [
-            "ui",
-            "login"
-        ]
-    },
-    {
         "name": "Instant CC",
         "file": "instantcc",
         "extension": "ipf",
-        "fileVersion": "v0.0.6",
-        "releaseTag": "instantcc-v0.0.6",
+        "fileVersion": "v0.0.7",
+        "releaseTag": "instantcc-v0.0.7",
         "unicode": "📖",
         "description": "キャラクタ変更を簡易に行うためのアドオンです",
         "tags": [
